@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>SMotaal's Markup</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <style>
+    @import url('https://cdn.jsdelivr.net/npm/@typopro/web-iosevka/TypoPRO-Iosevka.css');
+      .variable { color: red; }
+      .keyword { color: green;  }
+      .punctuator { color: skyblue; font-weight: }
+      /* .punctuation { color: lightblue; } */
+      .sequence { color: grey; }
+      .operator { color: teal; }
+      .breaker { color: grey; }
+      .quote, .es-quote:not(.es-span), .css-quote, .html-quote { color: teal; }
+      #source-code {
+        background-color: #F9F9F9;
+        line-height: 1.375em;
+        text-shadow: 0 1.5px 0 #FFF;
+        text-rendering: optimizeLegibility;
+        color: #444;
+        font-family: 'Iosevka', 'TypoPRO Iosevka Term', monospace;
+        font-variant-ligatures: contextual;
+        white-space: pre-wrap;
+      }
+      .punctuator.opener, .punctuator.closer { color: orange }
+      .punctuator.span { color: #F63 }
+      .comment, .es-comment, .css-comment, .html-comment { color: #AAA; }
+    </style>
+
+</head>
+
+<body>
+  <pre id="source-code"></pre>
+  <script type=module>
+    import './lib/markup-dom.js';
+    import './lib/markup-modes.js';
+    import {markup} from './lib/markup.js';
+
+    const sourceCodeElement = document.body.querySelector('pre#source-code');
+
+    const loadFromURL = async (specifier) => {
+      let fetched, response, result;
+      const url = `${new URL(specifier, location)}`;
+      const source = {specifier, url};
+      try {
+        source.response = await fetch(url);
+        source.sourceText = await source.response.text();
+        return result = source;
+      } finally {
+        result || console.warn('Failed to load source from "%s" — %o', specifier, source);
+      }
+    }
+
+    const renderFromURL = async (specifier, sourceType) => {
+      let elements;
+
+      sourceCodeElement.innerText = 'Loading…';
+
+      try {
+        const {sourceText, response} = await loadFromURL(specifier);
+
+        sourceType || (sourceType = response.headers.get('Content-Type'));
+        sourceCodeElement.innerText = 'Highlighting…';
+        elements = sourceText ? [...  markup(sourceText, {sourceType})] : [];
+        sourceCodeElement.innerText = '';
+        elements.length && sourceCodeElement.append(... elements);
+
+        return elements;
+
+      } finally {
+        !elements && (sourceCodeElement.innerText = 'Failed!');
+      }
+    }
+
+    const renderFromHash = (hash = location.hash) => {
+      const specifier = hash && decodeURIComponent(hash.slice(1));
+      specifier && renderFromURL(specifier);
+    };
+
+    window.addEventListener('hashchange', () => renderFromHash());
+
+    requestAnimationFrame(() => renderFromHash(location.hash !== '#' && location.hash || './lib/markup.js'));
+
+  </script>
+</body>
+
+</html>
