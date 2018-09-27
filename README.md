@@ -5,7 +5,7 @@ Semi-contextual parsing experiments, which fall somewhere between the scope of r
 **Live Demo**
 
 *Markup* — fetches and highlights source from hash
-> https://smotaal.github.io/experimental/markup/markup.html#
+> https://smotaal.github.io/experimental/markup/markup#./lib/markup.js
 
 ## Ideas
 
