@@ -81,7 +81,9 @@
       return items;
     }
 
-    const renderFromURL = async (specifier, sourceType) => {
+    let defaultSoutceType = location.search && location.search.slice(1);
+
+    const renderFromURL = async (specifier, sourceType = defaultSoutceType) => {
       let elements, returned;
 
       await nextFrame();
@@ -98,10 +100,13 @@
 
         await nextFrame();
 
+        sourceType && (sourceType = sourceType.split(';', 1)[0]);
+
         // for (let n = 100; n--;) [...  markup(sourceText, {sourceType})];
         // elements = sourceText ? spread(markup(sourceText, {sourceType})) : [];
         elements = sourceText ? [...  markup(sourceText, {sourceType})] : [];
         sourceCodeElement.innerText = '';
+        // sourceCodeElement.innerHTML = `<div>${sourceType}</div>`;
         while (elements.length > 500) {
           sourceCodeElement.append(... elements.splice(0, 500));
         }
