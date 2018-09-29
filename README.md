@@ -6,6 +6,17 @@ Semi-contextual parsing experiments, which fall somewhere between the scope of r
 
 *Markup* — fetches and highlights source from hash
 > https://smotaal.github.io/experimental/markup/markup#./lib/markup.js
+> https://smotaal.github.io/experimental/markup/markup#./lib/markup-modes.js
+> https://smotaal.github.io/experimental/markup/markup#./lib/markup-dom.js
+
+**What it aims to accomplish**
+- Scan and Highlight various standard formats (like HTML, CSS, JS, JSON... etc).
+- Provide simplified mechisms for defining syntaxes.
+- Generate a single scan for multiple operations.
+- Allow extended modeling of modifications.
+
+**What it does not try to do?**
+- Operate on invalid code (or minified code for now).
 
 ## Ideas
 

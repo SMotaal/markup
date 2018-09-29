@@ -7,28 +7,46 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
   <style>
     @import url('https://cdn.jsdelivr.net/npm/@typopro/web-iosevka/TypoPRO-Iosevka.css');
-      .variable { color: red; }
-      .keyword { color: green;  }
-      .punctuator { color: skyblue; font-weight: }
-      /* .punctuation { color: lightblue; } */
-      .sequence { color: grey; }
-      .operator { color: teal; }
-      .breaker { color: grey; }
-      .quote, .es-quote:not(.es-span), .css-quote, .html-quote { color: teal; }
-      #source-code {
-        background-color: #F9F9F9;
-        line-height: 1.375em;
-        text-shadow: 0 1.5px 0 #FFF;
-        text-rendering: optimizeLegibility;
-        color: #444;
-        font-family: 'Iosevka', 'TypoPRO Iosevka Term', monospace;
-        font-variant-ligatures: contextual;
-        white-space: pre-wrap;
-      }
-      .punctuator.opener, .punctuator.closer { color: orange }
-      .punctuator.span { color: #F63 }
-      .comment, .es-comment, .css-comment, .html-comment { color: #AAA; }
-    </style>
+    .markup.variable { --color: red; }
+    .markup.keyword { --color: olive;  }
+    .markup.punctuator { --color: skyblue; font-weight: bolder; }
+    /* .punctuation { --color: lightblue; } */
+    .markup.sequence { --color: grey; }
+    .markup.operator { --color: limegreen; }
+    .markup.breaker { --color: grey; }
+    .markup.quote, .markup.\@quote { --color: teal; }
+    .markup.opener, .markup.closer { --color: orange }
+    .markup.punctuator.span { --color:coral; }
+    .markup.comment, .markup.\@comment { --color: #AAA; }
+    .markup {
+      --hover: var(--color, #999);
+      color: var(--color, currentColor);
+    }
+    .markup:hover {
+      margin: -2px;
+      border-radius: 1ch;
+      border: 2px solid transparent;
+      background-color: #FFF;
+      background-clip: border-box;
+      box-shadow: 0 0 0.5px 1.5px #FFF, 0 1px 10px -3px #0006, 0 0 5px -1px var(--hover, #999);
+    }
+
+    .markup.\@comment:hover, .markup.whitespace:hover {
+      border-color: #9992;
+      box-shadow: none;
+    }
+    #source-code {
+      background-color: #F9F9F9;
+      line-height: 1.375em;
+      text-shadow: 0 1.5px 0 #FFF;
+      text-rendering: optimizeLegibility;
+      color: #444;
+      font-family: 'Iosevka', 'TypoPRO Iosevka Term', monospace;
+      font-variant-ligatures: contextual;
+      white-space: pre-wrap;
+      /* box-sizing: content-box; */
+    }
+  </style>
 
 </head>
 
@@ -54,24 +72,44 @@
       }
     }
 
-    const renderFromURL = async (specifier, sourceType) => {
-      let elements;
+    const nextFrame = () => new Promise(resolve => requestAnimationFrame(resolve));
+    // const nextStep = () => new Promise(resolve => setTimeout(resolve));
 
-      sourceCodeElement.innerText = 'Loading…';
+    const spread = iterator => {
+      const items = [];
+      for (const item of iterator) items.push(item);
+      return items;
+    }
+
+    const renderFromURL = async (specifier, sourceType) => {
+      let elements, returned;
+
+      await nextFrame();
+
+      sourceCodeElement.innerText = `Loading "${specifier}"…`;
 
       try {
         const {sourceText, response} = await loadFromURL(specifier);
 
+        await nextFrame();
+
         sourceType || (sourceType = response.headers.get('Content-Type'));
-        sourceCodeElement.innerText = 'Highlighting…';
+        sourceCodeElement.innerText = `Rendering "${specifier}"…`;
+
+        await nextFrame();
+
+        // for (let n = 100; n--;) [...  markup(sourceText, {sourceType})];
+        // elements = sourceText ? spread(markup(sourceText, {sourceType})) : [];
         elements = sourceText ? [...  markup(sourceText, {sourceType})] : [];
         sourceCodeElement.innerText = '';
+        while (elements.length > 500) {
+          sourceCodeElement.append(... elements.splice(0, 500));
+        }
         elements.length && sourceCodeElement.append(... elements);
-
-        return elements;
+        return returned = elements;
 
       } finally {
-        !elements && (sourceCodeElement.innerText = 'Failed!');
+        !returned && (sourceCodeElement.innerText = 'Failed!');
       }
     }
 
@@ -82,7 +120,7 @@
 
     window.addEventListener('hashchange', () => renderFromHash());
 
-    requestAnimationFrame(() => renderFromHash(location.hash !== '#' && location.hash || './lib/markup.js'));
+    requestAnimationFrame(() => renderFromHash(location.hash !== '#' && location.hash || '#./lib/markup.js'));
 
   </script>
 </body>
