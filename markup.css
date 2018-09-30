@@ -1,0 +1,67 @@
+@import url('https://cdn.jsdelivr.net/npm/@typopro/web-iosevka/TypoPRO-Iosevka.css');
+.markup.variable {
+  --color: red;
+}
+.markup.keyword {
+  --color: olive;
+}
+.markup.punctuator {
+  --color: green;
+  font-weight: 400;
+}
+/* .punctuation { --color: lightblue; } */
+.markup.sequence {
+  --color: grey;
+}
+.markup.operator {
+  --color: limegreen;
+}
+.markup.combinator {
+  --color: steelblue;
+}
+.markup.breaker {
+  --color: grey;
+}
+.markup.quote,
+.markup.in-quote {
+  --color: teal;
+}
+.markup.opener,
+.markup.closer {
+  --color: orange;
+}
+.markup.punctuator.span {
+  --color: coral;
+}
+.markup.comment,
+.markup.in-comment {
+  --color: #aaa;
+}
+
+.markup.in-comment:hover,
+.markup.whitespace:hover {
+  --ring: #9992;
+}
+
+.markup {
+  --hover: var(--color, #999);
+  --ring: var(--hover, #999);
+  --padding: 1.5px;
+  color: var(--color, currentColor);
+  margin: calc(0px - var(--padding, 2px)) calc(-2 * var(--padding, 2px));
+  border-radius: 1ch;
+  /* border-collapse: collapse; */
+  /* background-clip: content-box; */
+  border: var(--padding, 2px) solid transparent;
+  border-left-width: calc(2 * var(--padding, 2px));
+  border-right-width: calc(2 * var(--padding, 2px));
+}
+
+.markup:hover {
+  background-color: #FFF;
+  /* border-color: #FFFA; */
+  filter: drop-shadow(0 0 1.5px var(--ring, currentColor)) drop-shadow(0 1px 3px #00000003);
+  cursor: crosshair;
+  opacity: 0.9;
+  z-index: 1;
+}

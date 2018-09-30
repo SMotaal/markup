@@ -5,37 +5,8 @@
   <title>SMotaal's Markup</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link rel="stylesheet" href="./markup.css">
   <style>
-    @import url('https://cdn.jsdelivr.net/npm/@typopro/web-iosevka/TypoPRO-Iosevka.css');
-    .markup.variable { --color: red; }
-    .markup.keyword { --color: olive;  }
-    .markup.punctuator { --color: green; font-weight: 400;}
-    /* .punctuation { --color: lightblue; } */
-    .markup.sequence { --color: grey; }
-    .markup.operator { --color: limegreen; }
-    .markup.combinator { --color: skyblue; }
-    .markup.breaker { --color: grey; }
-    .markup.quote, .markup.\@quote { --color: teal; }
-    .markup.opener, .markup.closer { --color: orange }
-    .markup.punctuator.span { --color:coral; }
-    .markup.comment, .markup.\@comment { --color: #AAA; }
-    .markup {
-      --hover: var(--color, #999);
-      color: var(--color, currentColor);
-    }
-    .markup:hover {
-      margin: -2px;
-      border-radius: 1ch;
-      border: 2px solid transparent;
-      background-color: #FFF;
-      background-clip: border-box;
-      box-shadow: 0 0 0.5px 1.5px #FFF, 0 1px 10px -3px #0006, 0 0 5px -1px var(--hover, #999);
-    }
-
-    .markup.\@comment:hover, .markup.whitespace:hover {
-      border-color: #9992;
-      box-shadow: none;
-    }
     #source-code {
       background-color: #F9F9F9;
       line-height: 1.375em;
@@ -48,15 +19,12 @@
       /* box-sizing: content-box; */
     }
   </style>
-
 </head>
 
 <body>
   <pre id="source-code"></pre>
   <script type=module>
-    import './lib/markup-dom.js';
-    import './lib/markup-modes.js';
-    import {markup} from './lib/markup.js';
+    import {markup} from './markup.js';
 
     const defaults = {
       repeats: 0,
@@ -67,7 +35,9 @@
     }
 
     const options = {
-      ... defaults
+      ... defaults,
+      // iterations: 500,
+      // repeats: 50,
     };
 
     const sourceCodeElement = document.querySelector(options.element);
@@ -96,12 +66,20 @@
 
     let defaultSoutceType = location.search && location.search.slice(1);
 
-    const renderMarkup = (target, sourceText, markupOptions) => {
+    const renderMarkup = (sourceText, markupOptions) => {
+      const target = document.createDocumentFragment();
       const nodes = sourceText ? [...  markup(sourceText, markupOptions)] : [];
       while (nodes.length > 500) target.append(... nodes.splice(0, 500));
       nodes.length && target.append(... nodes);
-      return nodes;
+      return target;
     }
+
+    // const renderMarkup = (target, sourceText, markupOptions) => {
+    //   const nodes = sourceText ? [...  markup(sourceText, markupOptions)] : [];
+    //   while (nodes.length > 500) target.append(... nodes.splice(0, 500));
+    //   nodes.length && target.append(... nodes);
+    //   return nodes;
+    // }
 
     const renderFromURL = async (specifier, sourceType = defaultSoutceType) => {
 
@@ -122,14 +100,15 @@
         sourceType && (sourceType = sourceType.split(';', 1)[0]);
         sourceCodeElement.innerText = '';
 
-        const elements = renderMarkup(sourceCodeElement, sourceText, markupOptions);
+        const fragment = renderMarkup(sourceText, markupOptions);
+
+        sourceCodeElement.append(fragment);
 
         if (iterations > 0) for (let n = iterations; n--; [...  markup(sourceText, markupOptions)]);
 
-        if (repeats > 0) for (let n = repeats; n--; renderMarkup(sourceCodeElement, sourceText, markupOptions));
+        if (repeats > 0) for (let n = repeats; n--; sourceCodeElement.append(renderMarkup(sourceText, markupOptions))); //  n % 10 || await nextFrame();
 
-        return returned = elements;
-
+        return returned = fragment;
       } finally {
         !returned && (sourceCodeElement.innerText = 'Failed!');
       }
