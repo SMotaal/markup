@@ -7,7 +7,7 @@ import * as api from './lib/markup.js';
 export let markup = (source, options) => {
   const defaults = {...api.defaults, syntaxes: {}};
   modes.install(defaults);
-  dom.supported && dom.install(defaults);
+  dom.install(defaults); // dom.supported &&
   // Object.setPrototypeOf(defaults, api.defaults);
   markup = (source, options) => api.markup(source, options, defaults);
   return markup(source, options);

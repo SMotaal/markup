@@ -1,10 +1,11 @@
 @import url('https://cdn.jsdelivr.net/npm/@typopro/web-iosevka/TypoPRO-Iosevka.css');
 
 :host {
-  --markup-background: #F9F9F9;
-  --markup-color: #444;
-  --markup-shadow: #FFF;
+  --markup-background: #f9f9f9;
+  --markup-color: #666;
+  --markup-shadow: #fff;
   --markup-variables: red;
+  --markup-identifiers: darkslategrey;
   --markup-keywords: olive;
   --markup-punctators: green;
   --markup-sequences: grey;
@@ -14,7 +15,7 @@
   --markup-quotes: teal;
   --markup-closures: orange;
   --markup-spans: coral;
-  --markup-comments: #AAA;
+  --markup-comments: #aaa;
   --markup-whitespace: #999;
 }
 
@@ -24,32 +25,37 @@
 .markup.keyword {
   --color: var(--markup-keywords, olive);
 }
+.markup:matches(.keyword, .breaker, .opener, .span, .assigner, .operator, .combinator, .comment)
+  + .markup.identifier {
+  --color: var(--markup-identifiers, darkslategrey);
+  /* font-style: italic; */
+}
 .markup.punctuator {
-  --color: var(--markup-punctuators,  green);
+  --color: var(--markup-punctuators, green);
   font-weight: 400;
 }
 .markup.sequence {
-  --color: var(--markup-sequences,  grey);
+  --color: var(--markup-sequences, grey);
 }
 .markup.operator {
-  --color: var(--markup-operators,  limegreen);
+  --color: var(--markup-operators, limegreen);
 }
 .markup.combinator {
-  --color: var(--markup-combinators,  steelblue);
+  --color: var(--markup-combinators, steelblue);
 }
 .markup.breaker {
-  --color: var(--markup-breakers,  grey);
+  --color: var(--markup-breakers, grey);
 }
 .markup.quote,
 .markup.in-quote {
-  --color: var(--markup-quotes,  teal);
+  --color: var(--markup-quotes, teal);
 }
 .markup.opener,
 .markup.closer {
-  --color: var(--markup-closures,  orange);
+  --color: var(--markup-closures, orange);
 }
 .markup.punctuator.span {
-  --color: var(--markup-punctuators,  coral);
+  --color: var(--markup-punctuators, coral);
 }
 .markup.comment,
 .markup.in-comment {
@@ -99,7 +105,7 @@
   /* font-weight: 300; */
   white-space: pre;
 
-  background: #000A;
+  background: #000a;
   color: white;
   text-shadow: 0 1px 0 #000;
 

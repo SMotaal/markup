@@ -16,10 +16,11 @@
 
     #source-code {
       --markup-background: #F9F9F9;
-      --markup-color: #444;
+      --markup-color: #666;
       --markup-shadow: #FFF;
       --markup-variables: red;
       --markup-keywords: olive;
+      --markup-identifiers: darkslategrey;
       --markup-punctators: green;
       --markup-sequences: grey;
       --markup-operators: limegreen;
@@ -105,7 +106,8 @@
 
     const renderMarkup = (sourceText, markupOptions) => {
       const target = document.createDocumentFragment();
-      const nodes = sourceText ? [...  markup(sourceText, markupOptions)] : [];
+      const nodes = markup(`${sourceText}\n`, markupOptions);
+      // sourceText ? [...  markup(sourceText, markupOptions)] : [];
       if (target.append) {
         while (nodes.length > 500) target.append(... nodes.splice(0, 500));
         nodes.length && target.append(... nodes);
@@ -132,17 +134,48 @@
 
         await nextFrame();
 
-        sourceCodeElement.innerHTML = `<header><center><label>source=<q><b>${specifier}</b></q></label>  <label>type=<q><b>${sourceType}</b></q></label>  <label>repeats=<b>${(repeats || 0) + 1}</b></label>  <label>iterations=<b>${(iterations || 0) + 1}</b></label></center></header>`;
+        sourceCodeElement.innerHTML = `<header><center><label>source=<q><em>${specifier}</em></q></label>  <label>type=<q><em>${sourceType}</em></q></label>  <label>repeats=<em>${(repeats || 0) + 1}</em></label><span id=repeats></span>  <label>iterations=<em>${(iterations || 0) + 1}</em></label><span id=iterations></span> — <b><span id=status> Rendering</span></b><span id=render></span></center></header>`;
+
+        const status = sourceCodeElement.querySelector('#status');
+        const renderStatus = sourceCodeElement.querySelector('#render');
+        const repeatStatus = sourceCodeElement.querySelector('#repeats');
+        const iterationStatus = sourceCodeElement.querySelector('#iterations');
 
         await nextFrame();
 
+        let timing = {};
+        let start = Date.now();
+        const elapsed = (last = start) => Math.round(10 * ((start = Date.now()) - last))/10;
+
         const fragment = renderMarkup(sourceText, markupOptions);
+        timing.render = elapsed();
 
         sourceCodeElement.appendChild(fragment);
 
-        if (iterations > 0) for (let n = iterations; n--; [...  markup(sourceText, markupOptions)]);
+        if (repeats > 0) {
+          status.innerText = `Repeating`;
+          await nextFrame();
+          start = Date.now();
+          // const hr = document.createElement('hr');
+          // sourceCodeElement.appendChild(hr.cloneNode())
+          for (let n = repeats; n--; sourceCodeElement.appendChild(renderMarkup(sourceText, markupOptions))); //  n % 10 || await nextFrame();
+          timing.repeats = elapsed();
+          repeatStatus && timing.repeats && (repeatStatus.innerText = ` ~${timing.repeats}ms`);
+        }
 
-        if (repeats > 0) for (let n = repeats; n--; sourceCodeElement.appendChild(renderMarkup(sourceText, markupOptions))); //  n % 10 || await nextFrame();
+        if (iterations > 0) {
+          status.innerText = `Iterating`;
+          await nextFrame();
+          start = Date.now();
+          // for (let n = iterations; n--; [...  markup(sourceText, markupOptions)]);
+          for (let n = iterations; n--; markup(sourceText, markupOptions));
+          timing.iterations = elapsed();
+          iterationStatus && timing.iterations && (iterationStatus.innerText = ` ~${timing.iterations}ms`);
+        }
+        // let times = `~ ${timing.rendered} ms${timing.repeats ? ` * ${repeats + 1} ~= ${timing.repeats} ms` : ''}${timing.iterations ? ` ** ${iterations + 1} ~= ${timing.iterations} ms` : ''}`;
+        status.innerText = 'Done';
+
+        renderStatus && timing.render && (renderStatus.innerText = ` ~${timing.render}ms`);
 
         return returned = fragment;
       } finally {
@@ -152,11 +185,12 @@
 
     const renderFromHash = (hash = location.hash) => {
       // const match = /#(.*?)(?=\!(\d+)|$)/.exec(hash);
-      const match = /#(.*?)(?:\!([a-z]+))?(?:\*(\d+))?$/.exec(hash);
-      const [,specifier, type, repeats = options.repeats] = match || '';
+      const match = /#(.*?)(?:\!([a-z]+))?(?:\*(\d+))?(?:\*{2}(\d+))?$/.exec(hash);
+      const [,specifier, type, repeats = defaults.repeats, iterations = defaults.iterations] = match || '';
       const sourceType = (type && `text/${type}`) || undefined;
-      repeats >= 1 && (options.repeats = parseInt(repeats) - 1);
-      console.log(match, {specifier, type, repeats})
+      options.repeats = repeats >= 1 ? parseInt(repeats) - 1 : defaults.repeats;
+      options.iterations = iterations >= 1 ? parseInt(iterations) - 1 : defaults.iterations;
+      console.log(match, {specifier, type, repeats, iterations});
       // const specifier = hash && decodeURIComponent(hash.slice(1));
       specifier && renderFromURL(specifier, sourceType);
     };
@@ -174,6 +208,18 @@
     //   return nodes;
     // }
 
+  </script>
+  <script>
+    {
+      let worker;
+      try {
+        worker = new Worker(`data:text/javascript;base64,${btoa('console.log(import.meta)')}`, { type: 'module' })
+        console.log(worker);
+      } catch (exception) {
+        console.warn(exception);
+        worker && setTimeout(() => worker.terminate(), 5000);
+      }
+    }
   </script>
 </body>
 
