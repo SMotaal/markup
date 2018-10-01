@@ -9,8 +9,10 @@
   <style>
     body {
       margin: 0;
-      display: grid;
+      display: flex;
+      flex-flow: column;
       min-height: 100vh;
+      width: 100vw;
       background-color: #999;
     }
 
@@ -43,6 +45,8 @@
       position: relative;
       padding: 1ch;
       margin: 0;
+      max-width: 100%;
+      flex: 1;
     }
 
     #source-code > header {
