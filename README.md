@@ -42,3 +42,19 @@ languages can in fact be ecompassed in simple efficient expressions.
 Grouping on the other hand is where modeling often gets tricky and results
 in hard to reason about structures that often lead to inefficiencies.
 
+
+<!--
+https://cdnjs.com/libraries/babel-core
+  https://cdnjs.cloudflare.com/ajax/libs/babel-core/6.1.19/browser.js
+  https://cdnjs.cloudflare.com/ajax/libs/babel-core/6.1.19/browser.min.js
+
+https://cdnjs.com/libraries/popper.js
+  https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.4/esm/popper.js
+
+https://cdnjs.com/libraries/xregexp
+  https://cdnjs.cloudflare.com/ajax/libs/xregexp/3.2.0/xregexp-all.js
+  https://cdnjs.cloudflare.com/ajax/libs/xregexp/3.2.0/xregexp-all.min.js
+
+Stupid
+  https://raw.githubusercontent.com/lappang-cheung/pholio/master/lib/api/routes/profile.js!javascript
+-->

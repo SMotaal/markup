@@ -17,6 +17,12 @@
   --markup-spans: coral;
   --markup-comments: #aaa;
   --markup-whitespace: #999;
+
+  /* DARK */
+  /* --markup-background: #022; */
+  /* --markup-color: white; */
+  /* --markup-shadow: #000; */
+  /* --markup-identifiers: #CCC; */
 }
 
 .markup.variable {
@@ -80,7 +86,7 @@
   border: var(--padding, 2px) solid transparent;
   border-left-width: calc(2 * var(--padding, 2px));
   border-right-width: calc(2 * var(--padding, 2px));
-  position: relative;
+  /* position: relative; */
 }
 
 .markup:hover {
@@ -90,6 +96,7 @@
   cursor: crosshair;
   opacity: 0.9;
   z-index: 2;
+  position: relative;
 }
 .markup:hover::before {
   all: initial;
@@ -122,4 +129,5 @@
   left: calc(-6 * var(--padding, 2px));
   bottom: calc(100% + 0.25ch + -2 * var(--padding, 2px));
   z-index: -1;
+  contain: layout content;
 }
