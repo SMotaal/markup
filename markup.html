@@ -9,11 +9,11 @@
 
   <template id=source-header>
     <header>
-      <span name=source><span id=source></span><time></time></span>
-      <span name=render><span id=render></span><time></time></span>
-      <span name=repeats><span id=repeats></span><time></time></span>
-      <span name=iterations><span id=iterations></span><time></time></span>
-      <span name=controls><a id=rerender onclick="click()"><b>&#10227;</b></a></span>
+      <span title=source>#<span id=source></span><time></time></span>
+      <span title=render><span id=render></span><time></time></span>
+      <span title=repeats><span id=repeats></span><time></time></span>
+      <span title=iterations><span id=iterations></span><time></time></span>
+      <span><a id=rerender title=rerender onclick="click()"><b>&#10227;</b></a></span>
     </header>
   </template>
 
@@ -67,36 +67,52 @@
     #source-code > header {
       display: grid;
       grid-auto-flow: column;
+      grid-template-columns: repeat(auto-fill, 1fr);
+      grid-gap: 2ch;
+      padding: 0.25ch;
 
       margin-bottom: 1ch;
       border-radius: 1ch;
+      white-space: normal;
+      word-break: break-all;
+      line-break: loose;
+      vertical-align: baseline;
+
       user-select: none;
-      /* overflow: hidden; */
-      /* pointer-events: none; */
+      -moz-user-select: none;
 
       background: #9993;
       color: #999;
       opacity: 0.8;
 
       font-family: system-ui -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-      font-weight: 300;
-      font-size: 0.875rem;
+      font-weight: 200;
+      /* font-size: 0.875rem; */
     }
 
     #source-code > header > * {
       justify-content: center;
-      grid-gap: 0.5ch;
       display: grid;
+      grid-gap: 0.25ch;
       grid-auto-flow: column;
+      grid-template-columns: repeat(auto-fill, 1fr);
+      /* white-space: pre-wrap; */
+      /* text-overflow: ellipsis; */
+      /* overflow:hidden; */
     }
 
     #source-code > header [id] {
-      font-weight: 400;
+      font-weight: 300;
+
+      user-select: text;
+      -moz-user-select: text;
     }
     #source-code > header [id] + time {
-      quotes: "(" ")";
       font-size: 87.5%;
-      /* margin: 0 1em; */
+      max-width: max-content;
+
+      user-select: none;
+      -moz-user-select: none;
     }
 
     #source-code > header [id] + time::before {
@@ -112,14 +128,20 @@
       width: 1em;
       width: max-content;
       height: 1em;
-      margin-top: 0.125em;
       border: 0.25ch solid transparent;
       border-radius: 25%;
 
+      background-clip: border-box;
+
+      position: relative;
+      top: 50%;
+      margin-top: -50%;
       line-height: 87.5%;
       vertical-align: text-bottom;
+      text-align: center;
 
       user-select: none;
+      -moz-user-select: none;
     }
 
     #source-code > header a[onclick]:hover  {
@@ -146,8 +168,8 @@
       <!-- Third-party -->
       <link id=acorn rel=preconnect href="https://cdnjs.cloudflare.com/ajax/libs/acorn/5.7.3/acorn_loose.es.js" />
       <link id=esprima rel=preconnect href="https://cdnjs.cloudflare.com/ajax/libs/esprima/2.7.3/esprima.js" />
-      <link id=babel-core rel=preconnect href="https://cdnjs.cloudflare.com/ajax/libs/babel-core/6.1.19/browser.js" />
-      <link id=babel-core-min rel=preconnect href="https://cdnjs.cloudflare.com/ajax/libs/babel-core/6.1.19/browser.min.js" />
+      <link id=babel rel=preconnect href="https://cdnjs.cloudflare.com/ajax/libs/babel-core/6.1.19/browser.js" />
+      <link id=babel-min rel=preconnect href="https://cdnjs.cloudflare.com/ajax/libs/babel-core/6.1.19/browser.min.js" />
       <link id=popper rel=preconnect href="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.4/esm/popper.js" />
       <link id=xregexp rel=preconnect href="https://cdnjs.cloudflare.com/ajax/libs/xregexp/3.2.0/xregexp-all.js" />
       <link id=xregexp-min rel=preconnect href="https://cdnjs.cloudflare.com/ajax/libs/xregexp/3.2.0/xregexp-all.min.js" />
@@ -282,7 +304,8 @@
 
         await nextFrame(header.status('source', `${specifier}…`));
         const { result: {sourceText, response} } = await time('source', () => loadFromURL(specifier));
-        (sourceType = sourceType || response.headers.get('Content-Type') || options.sourceType) && (sourceType = sourceType.split(';', 1)[0]);
+        sourceType = `${sourceType || response.headers.get('Content-Type') || options.sourceType}`.replace(/^(?:.*?\/)?(\w+).*$/, '$1').toLowerCase();
+        sourceType in markup.modes || (sourceType = 'markup');
         const markupOptions = {sourceType};
         header.status('source', `${specifier}`);
 
@@ -333,7 +356,7 @@
     const renderFromHash = (hash = location.hash) => {
       const match = /#(.*?)(?:\!([a-z]+))?(?:\*(\d+))?(?:\*{2}(\d+))?$/.exec(hash);
       const [,specifier, type, repeats = defaults.repeats, iterations = defaults.iterations] = match || '';
-      const sourceType = (type && `text/${type}`) || undefined;
+      const sourceType = type || undefined;
       options.repeats = repeats >= 0 ? parseInt(repeats) : defaults.repeats;
       options.iterations = iterations >= 1 ? parseInt(iterations) : defaults.iterations;
       const link = /^\w[\w\-]*$/.test(specifier) && document.querySelector(`link#${specifier}`);
@@ -347,18 +370,6 @@
     requestAnimationFrame(() => renderFromHash(location.hash !== '#' && location.hash || `#${defaults.sourceURL}`));
 
 </script>
-  <script src>
-    {
-      let worker;
-      try {
-        worker = new Worker(`data:text/javascript;base64,${btoa('console.log(import.meta)')}`, { type: 'module' })
-        console.log(worker);
-      } catch (exception) {
-        console.warn(exception);
-        worker && setTimeout(() => worker.terminate(), 5000);
-      }
-    }
-  </script>
 </body>
 
 </html>

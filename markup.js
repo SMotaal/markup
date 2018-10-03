@@ -56,6 +56,7 @@ export const markup = Object.create(
     render: {get: () => render},
     tokenize: {get: () => tokenize},
     dom: {get: () => dom},
+    modes: {get: () => api.modes},
   }
 );
 
