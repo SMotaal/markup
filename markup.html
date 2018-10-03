@@ -6,6 +6,17 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
   <link rel="stylesheet" href="./markup.css">
+
+  <template id=source-header>
+    <header>
+      <span name=source><span id=source></span><time></time></span>
+      <span name=render><span id=render></span><time></time></span>
+      <span name=repeats><span id=repeats></span><time></time></span>
+      <span name=iterations><span id=iterations></span><time></time></span>
+      <span name=controls><a id=rerender onclick="click()"><b>&#10227;</b></a></span>
+    </header>
+  </template>
+
   <style>
     body {
       margin: 0;
@@ -14,6 +25,7 @@
       min-height: 100vh;
       width: 100vw;
       background-color: #999;
+      font-size: 1rem;
     }
 
     #source-code {
@@ -34,48 +46,113 @@
       --markup-comments: #AAA;
       --markup-whitespace: #999;
 
-      background-color: var(--markup-background, #444);
-      line-height: 1.375em;
-      text-shadow: 0 1px 0 var(--markup-shadow, #FFF);
-      text-rendering: optimizeLegibility;
-      color: var(--markup-color, #444);
-      font-family: 'Iosevka', 'TypoPRO Iosevka Term', monospace;
-      font-variant-ligatures: contextual;
-      white-space: pre-wrap;
-      position: relative;
       padding: 1ch;
       margin: 0;
       max-width: 100%;
       flex: 1;
+
+      background-color: var(--markup-background, #444);
+      color: var(--markup-color, #444);
+      /* text-shadow: 0 0.875px 0 var(--markup-shadow, #FFF); */
+
+      line-height: 1.5em;
+      font-family: 'Iosevka', 'TypoPRO Iosevka Term', monospace;
+      font-variant-ligatures: contextual;
+      text-rendering: optimizeLegibility;
+      white-space: pre-wrap;
       word-break: normal;
       line-break: strict;
-      contain: layout content;
     }
 
     #source-code > header {
-      /* font-family: system-ui; */
-      font-weight: 300;
-      white-space: pre;
+      display: grid;
+      grid-auto-flow: column;
+
+      margin-bottom: 1ch;
+      border-radius: 1ch;
+      user-select: none;
+      /* overflow: hidden; */
+      /* pointer-events: none; */
+
       background: #9993;
       color: #999;
-      margin-bottom: 1ch;
       opacity: 0.8;
-      border-radius: 1ch;
-      overflow: hidden;
-      contain: layout content;
+
+      font-family: system-ui -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      font-weight: 300;
+      font-size: 0.875rem;
+    }
+
+    #source-code > header > * {
+      justify-content: center;
+      grid-gap: 0.5ch;
+      display: grid;
+      grid-auto-flow: column;
+    }
+
+    #source-code > header [id] {
+      font-weight: 400;
+    }
+    #source-code > header [id] + time {
+      quotes: "(" ")";
+      font-size: 87.5%;
+      /* margin: 0 1em; */
+    }
+
+    #source-code > header [id] + time::before {
+      content: ' ≈ ';
+    }
+
+    #source-code > header > * :empty {
+      display: none;
+    }
+
+    #source-code > header a[onclick]  {
+      display: inline-block;
+      width: 1em;
+      width: max-content;
+      height: 1em;
+      margin-top: 0.125em;
+      border: 0.25ch solid transparent;
+      border-radius: 25%;
+
+      line-height: 87.5%;
+      vertical-align: text-bottom;
+
       user-select: none;
-      pointer-events: none;
+    }
+
+    #source-code > header a[onclick]:hover  {
+      background-color: #999;
+      color: #FFF;
     }
 
   </style>
 
-  <link id=leo-routes rel="sample" href="./samples/pholio-routes-profile.js" />
-  <link id=esprima rel="sample" href="https://cdnjs.cloudflare.com/ajax/libs/esprima/2.7.3/esprima.js" />
-  <link id=babel-core rel="sample" href="https://cdnjs.cloudflare.com/ajax/libs/babel-core/6.1.19/browser.js" />
-  <link id=babel-core-min rel="sample" href="https://cdnjs.cloudflare.com/ajax/libs/babel-core/6.1.19/browser.min.js" />
-  <link id=popper rel="sample" href="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.4/esm/popper.js" />
-  <link id=xregexp rel="sample" href="https://cdnjs.cloudflare.com/ajax/libs/xregexp/3.2.0/xregexp-all.js" />
-  <link id=xregexp-min rel="sample" href="https://cdnjs.cloudflare.com/ajax/libs/xregexp/3.2.0/xregexp-all.min.js" />
+  <link-group id=samples>
+    <!-- Source Code Samples -->
+    <link-group id=markup>
+      <!-- Markup -->
+      <link id=markup rel=prefetch href="./lib/markup.js" />
+      <link id=markup-dom rel=prefetch href="./lib/markup-dom.js" />
+      <link id=markup-modes rel=prefetch href="./lib/markup-modes.js" />
+    </link-group>
+    <link-group id=examples>
+      <!-- Examples -->
+      <link id=leo-routes rel=prefetch href="./samples/pholio-routes-profile.js" />
+      <link id=punctuation rel=prefetch href="./samples/punctuation.js" />
+    </link-group>
+    <link-group id=vendor>
+      <!-- Third-party -->
+      <link id=acorn rel=preconnect href="https://cdnjs.cloudflare.com/ajax/libs/acorn/5.7.3/acorn_loose.es.js" />
+      <link id=esprima rel=preconnect href="https://cdnjs.cloudflare.com/ajax/libs/esprima/2.7.3/esprima.js" />
+      <link id=babel-core rel=preconnect href="https://cdnjs.cloudflare.com/ajax/libs/babel-core/6.1.19/browser.js" />
+      <link id=babel-core-min rel=preconnect href="https://cdnjs.cloudflare.com/ajax/libs/babel-core/6.1.19/browser.min.js" />
+      <link id=popper rel=preconnect href="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.4/esm/popper.js" />
+      <link id=xregexp rel=preconnect href="https://cdnjs.cloudflare.com/ajax/libs/xregexp/3.2.0/xregexp-all.js" />
+      <link id=xregexp-min rel=preconnect href="https://cdnjs.cloudflare.com/ajax/libs/xregexp/3.2.0/xregexp-all.min.js" />
+    </link-group>
+  </link-group>
 </head>
 
 <body>
@@ -89,6 +166,7 @@
       sourceURL: './lib/markup.js',
       sourceType: undefined,
       element: 'pre#source-code',
+      headerTemplate: 'template#source-header',
     }
 
     const options = {
@@ -98,6 +176,19 @@
     };
 
     const sourceCodeElement = document.querySelector(options.element);
+    const sourceHeaderTemplate = document.querySelector(options.headerTemplate);
+
+    sourceHeaderTemplate && (sourceHeaderTemplate.selectors = {
+      'source-span': '#source',
+      'source-time': '#source + time',
+      'render-span': '#render',
+      'render-time': '#render + time',
+      'repeats-span': '#repeats',
+      'repeats-time': '#repeats + time',
+      'iterations-span': '#iterations',
+      'iterations-time': '#iterations + time',
+      'rerender-button': '#rerender[onclick]',
+    });
 
     const loadFromURL = async (specifier) => {
       let fetched, response, result;
@@ -112,110 +203,134 @@
       }
     }
 
-    const nextFrame = () => new Promise(resolve => requestAnimationFrame(resolve));
-    // const nextStep = () => new Promise(resolve => setTimeout(resolve));
+    const nextFrame = () => new Promise(ƒ => requestAnimationFrame(ƒ));
 
-    const spread = iterator => {
-      const items = [];
-      for (const item of iterator) items.push(item);
-      return items;
+    const renderMarkup = (sourceText, markupOptions) => (
+      markupOptions.fragment || (markupOptions.fragment = document.createDocumentFragment()),
+      markup.render(sourceText, markupOptions)
+    );
+
+    const renderHeader = ({
+      template = sourceHeaderTemplate,
+      selectors = template.selectors,
+      rerender = console.warn,
+    }) => {
+
+      const header = template.content.firstElementChild.cloneNode(true);
+
+      header.elements = {};
+
+      if (selectors) {
+        for (const [id, selector] of Object.entries(selectors)) {
+          header.elements[id] = selector && header.querySelector(selector) || undefined;
+        }
+      }
+
+      header.elements['rerender-button'] && (header.elements['rerender-button'].click = rerender);
+
+
+      header.status = (name, value) => {
+        header.status[name] === (header.status[name] = value);
+        const element = header.elements[`${name}-span`];
+        const text = `${value || ''}`;
+        element ? element.innerText = text : text && console.info('[%s] %o', name, value);
+      }
+      header.timing = (name, value) => {
+        header.timing[name] === (header.timing[name] = value);
+        const status = header.status[name] || 'done';
+        const element = header.elements[`${name}-time`];
+        const text = value >= 0 ? `${value} ms` : '';
+        element ? element.innerText = text : text && console.info('[%s] %o — %o', name, status, value);
+      }
+
+      header.reset = () => {
+        for (const [id, element] of Object.entries(header.elements)) {
+          /-time|-span/.test(id) && (element.innerText = '');
+        }
+      }
+
+      return header;
     }
 
-    // let defaultSoutceType = location.search && location.search.slice(1);
-
-    const renderMarkup = (sourceText, markupOptions) => {
-      markupOptions.fragment = document.createDocumentFragment();
-      return markup.render(sourceText, markupOptions)
-      // const target = document.createDocumentFragment();
-
-      // const nodes = markup(`${sourceText}\n`, markupOptions);
-      // // sourceText ? [...  markup(sourceText, markupOptions)] : [];
-      // if (target.append) {
-      //   while (nodes.length > 500) target.append(... nodes.splice(0, 500));
-      //   nodes.length && target.append(... nodes);
-      // } else if (target.appendChild) {
-      //   for (const node of nodes) target.appendChild(node);
-      // }
-      // return target;
-    }
+    const round = (value, significance = 1) =>
+      Math.round((significance = 10 ** (~~significance || 0)) * value) / significance;
 
     const renderFromURL = async (specifier, sourceType) => {
+      let returned, fragment, render;
 
-      let returned;
       const {repeats = 1, iterations = 1} = options;
+      const container = sourceCodeElement;
+      const now = options.now || Date.now;
 
-      await nextFrame();
-      sourceCodeElement.innerText = `Loading "${specifier}"…`;
+      const header = renderHeader({rerender: () => render()});
+      const {timing, status} = header;
+      const time = async (name, executor) => {
+        let start, result, end, elapsed;
+        start = now();
+        result = await executor();
+        end = now();
+        elapsed = end - start;
+        timing && timing(name, round(elapsed));
+        return {name, executor, start, result, end, elapsed};
+      }
+
+      container.innerHTML = '';
+      container.appendChild(header);
+      const code = container.appendChild(document.createElement('slot'));
 
       try {
-        const {sourceText, response} = await loadFromURL(specifier);
 
+        await nextFrame(header.status('source', `${specifier}…`));
+        const { result: {sourceText, response} } = await time('source', () => loadFromURL(specifier));
         (sourceType = sourceType || response.headers.get('Content-Type') || options.sourceType) && (sourceType = sourceType.split(';', 1)[0]);
-
         const markupOptions = {sourceType};
+        header.status('source', `${specifier}`);
 
-        await nextFrame();
+        fragment = code;
 
-        sourceCodeElement.innerHTML = `<header><center><small>${
-          `<q>${specifier}</q>`
-        } [${
-          sourceType
-        }] &times; ${repeats || 0}${
-          `<span id=repeats></span>`
-        } — ${
-          `<b><span id=status>Rendering</span></b><span id=render></span><span id=iterations></span>`
-        }</small></center></header>`;
+        render = async () => {
+          code.innerText = '';
+          await nextFrame();
 
-        const status = sourceCodeElement.querySelector('#status');
-        const renderStatus = sourceCodeElement.querySelector('#render');
-        const repeatStatus = sourceCodeElement.querySelector('#repeats');
-        const iterationStatus = sourceCodeElement.querySelector('#iterations');
+          if (repeats > 0) {
+            await nextFrame(header.status('render', `${sourceType}…`));
+            time('render', ƒ => {
+              fragment = renderMarkup(sourceText, markupOptions);
+              code.appendChild(fragment);
+            });
+            header.status('render', `${sourceType}`);
 
-        await nextFrame();
-
-        let timing = {};
-        let start = Date.now();
-        const elapsed = (last = start) => Math.round(10 * ((start = Date.now()) - last))/10;
-
-        let fragment = sourceCodeElement;
-
-        if (repeats > 0) {
-          fragment = renderMarkup(sourceText, markupOptions);
-          timing.render = elapsed();
-
-          sourceCodeElement.appendChild(fragment);
+          }
 
           if (repeats > 1) {
-            status.innerText = `Repeating`;
-            await nextFrame();
-            start = Date.now();
-            for (let n = repeats; --n; sourceCodeElement.appendChild(renderMarkup(sourceText, markupOptions))); //  n % 10 || await nextFrame();
-            timing.repeats = elapsed();
-            repeatStatus && timing.repeats && (repeatStatus.innerText = ` ~${timing.repeats}ms`);
+            await nextFrame(header.status('repeats', `* ${repeats}…`));
+            time('repeats', async ƒ => {
+              for (let n = repeats; --n; code.appendChild(renderMarkup(sourceText, markupOptions)));
+              //  n % 10 || await nextFrame();
+            });
+            header.status('repeats', `×${repeats}`);
           }
-        }
 
-        if (iterations > 1) {
-          status.innerText = `Iterating`;
-          await nextFrame();
-          start = Date.now();
-          for (let n = iterations; n--; [... markup.tokenize(sourceText, markupOptions)]);
-          timing.iterations = elapsed();
-          iterationStatus && timing.iterations && (iterationStatus.innerText = ` (~${timing.iterations}ms / ${iterations})`);
-        }
-        // let times = `~ ${timing.rendered} ms${timing.repeats ? ` * ${repeats + 1} ~= ${timing.repeats} ms` : ''}${timing.iterations ? ` ** ${iterations + 1} ~= ${timing.iterations} ms` : ''}`;
-        status.innerText = 'Done';
+          if (iterations > 1) {
+            await nextFrame(header.status('iterations', `* ${iterations}…`));
+            time('iterations', async ƒ => {
+              for (let n = iterations; n--; [... markup.tokenize(sourceText, markupOptions)]);
+            });
+            header.status('iterations', `×${iterations}`);
+          }
 
-        renderStatus && timing.render && (renderStatus.innerText = ` ~${timing.render}ms`);
+          return fragment;
+        };
+
+        fragment = await render();
 
         return returned = fragment;
       } finally {
-        !returned && (sourceCodeElement.innerText = 'Failed!');
+        !returned && (container.innerText = 'Failed!');
       }
     }
 
     const renderFromHash = (hash = location.hash) => {
-      // const match = /#(.*?)(?=\!(\d+)|$)/.exec(hash);
       const match = /#(.*?)(?:\!([a-z]+))?(?:\*(\d+))?(?:\*{2}(\d+))?$/.exec(hash);
       const [,specifier, type, repeats = defaults.repeats, iterations = defaults.iterations] = match || '';
       const sourceType = (type && `text/${type}`) || undefined;
@@ -224,7 +339,6 @@
       const link = /^\w[\w\-]*$/.test(specifier) && document.querySelector(`link#${specifier}`);
       const source = link && link.href || specifier;
       console.log(match, {specifier, link, source, type, repeats, iterations});
-      // const specifier = hash && decodeURIComponent(hash.slice(1));
       specifier && renderFromURL(source, sourceType);
     };
 
@@ -232,16 +346,7 @@
 
     requestAnimationFrame(() => renderFromHash(location.hash !== '#' && location.hash || `#${defaults.sourceURL}`));
 
-
-
-    // const renderMarkup = (target, sourceText, markupOptions) => {
-    //   const nodes = sourceText ? [...  markup(sourceText, markupOptions)] : [];
-    //   while (nodes.length > 500) target.append(... nodes.splice(0, 500));
-    //   nodes.length && target.append(... nodes);
-    //   return nodes;
-    // }
-
-  </script>
+</script>
   <script src>
     {
       let worker;
