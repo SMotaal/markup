@@ -1,28 +1,59 @@
 @import url('https://cdn.jsdelivr.net/npm/@typopro/web-iosevka/TypoPRO-Iosevka.css');
 
-:host {
-  --markup-background: #f9f9f9;
-  --markup-color: #666;
-  --markup-shadow: #fff;
+:root {
+  --markup-neutral-light: #aaa;
+  --markup-neutral: #999;
+  --markup-neutral-fade: #9993;
+  --markup-neutral-dark: #666;
+
+  --markup-light-text: #666;
+  --markup-light: #f9f9f9;
+  --markup-light-fade: #f9f9f933;
+  --markup-dark-text: #eee;
+  --markup-dark: #333f46;
+  --markup-dark-fade: #333f4633;
+
+  --markup-background: var(--markup-light, #f9f9f9);
+  --markup-color: var(--markup-light-text, #666);
+  --markup-constast: white;
+  --markup-shadow: white;
+
   --markup-variables: red;
   --markup-identifiers: darkslategrey;
-  --markup-keywords: olive;
+  --markup-keywords: chocolate;
   --markup-punctators: green;
   --markup-sequences: grey;
   --markup-operators: limegreen;
-  --markup-combinator: steelblue;
+  --markup-combinators: dodgerblue;
   --markup-breakers: grey;
-  --markup-quotes: teal;
+  --markup-quotes: steelblue;
   --markup-closures: orange;
   --markup-spans: coral;
-  --markup-comments: #aaa;
-  --markup-whitespace: #999;
+  --markup-comments: var(--markup-neutral-light, #aaa);
+  --markup-whitespace: var(--markup-neutral, #999);
+}
 
-  /* DARK */
-  /* --markup-background: #022; */
-  /* --markup-color: white; */
-  /* --markup-shadow: #000; */
-  /* --markup-identifiers: #CCC; */
+.dark-mode, :host(.dark-mode) {
+  --markup-background: var(--markup-dark, #333f46);
+  --markup-color: var(--markup-dark-text, #eee);
+  --markup-constast: #23262f;
+  --markup-shadow: black;
+
+  --markup-identifiers: lightgrey;
+  --markup-punctators: limegreen;
+  --markup-operators: lime;
+  --markup-combinators: cornflowerblue;
+  --markup-closures: darkorange;
+  --markup-quotes: steelblue;
+  --markup-comments: var(--markup-neutral, #999);
+  --markup-whitespace: var(--markup-neutral-dark, #666);
+
+}
+
+.markup:matches(.keyword, .breaker, .opener, .span, .assigner, .operator, .combinator, .comment)
+  + .markup.identifier {
+  --color: var(--markup-identifiers, darkslategrey);
+  /* font-style: italic; */
 }
 
 .markup.variable {
@@ -30,15 +61,11 @@
 }
 .markup.keyword {
   --color: var(--markup-keywords, olive);
-}
-.markup:matches(.keyword, .breaker, .opener, .span, .assigner, .operator, .combinator, .comment)
-  + .markup.identifier {
-  --color: var(--markup-identifiers, darkslategrey);
-  /* font-style: italic; */
+  /* font-weight: 500; */
 }
 .markup.punctuator {
   --color: var(--markup-punctuators, green);
-  font-weight: 400;
+  /* font-weight: 500; */
 }
 .markup.sequence {
   --color: var(--markup-sequences, grey);
@@ -68,19 +95,6 @@
   --color: var(--markup-comments, #aaa);
 }
 
-
 .markup {
-  /* --hover: var(--color, #999); */
-  /* --ring: var(--hover, #999); */
-  /* --padding: 1.5px; */
-  color: var(--color, currentColor);
-  /* margin: calc(-1 * var(--padding, 2px)) calc(-2 * var(--padding, 2px)); */
-  /* border-radius: 1ch; */
-  /* border: var(--padding, 2px) solid transparent; */
-  /* border-left-width: calc(2 * var(--padding, 2px)); */
-  /* border-right-width: calc(2 * var(--padding, 2px)); */
-  /* border-collapse: collapse; */
-  /* background-clip: content-box; */
-  /* position: relative; */
+  color: var(--color, var(--markup-color, var(--markup-light-text, currentColor)));
 }
-

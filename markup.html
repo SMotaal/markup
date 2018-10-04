@@ -5,8 +5,7 @@
   <title>SMotaal's Markup</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <link rel="stylesheet" href="./markup.css">
-  <link rel="stylesheet" href="./markup-hover.css">
+  <link rel="stylesheet" href="./styles.css" />
 
   <template id=source-header>
     <header>
@@ -14,151 +13,12 @@
       <span title=render><span id=render></span><time></time></span>
       <span title=repeats><span id=repeats></span><time></time></span>
       <span title=iterations><span id=iterations></span><time></time></span>
-      <span><a id=rerender title=rerender onclick="click()"><b>&#10227;</b></a></span>
+      <span>
+        <a id=rerender title="Rerender" onclick="click()"><i icon>&#x27f3</i></a>
+        <a id=contrast title="Dark/Light Mode" onclick="click()"><i icon>&#x263C;</i></a>
+      </span>
     </header>
   </template>
-
-  <style>
-    body {
-      margin: 0;
-      display: flex;
-      flex-flow: column;
-      min-height: 100vh;
-      width: 100vw;
-      background-color: #999;
-      font-size: 1rem;
-      overflow-x: hidden;
-      overflow-y: scroll;
-    }
-
-    #source-code {
-      --markup-background: #F9F9F9;
-      --markup-color: #666;
-      --markup-shadow: #FFF;
-      --markup-variables: red;
-      --markup-keywords: olive;
-      --markup-identifiers: darkslategrey;
-      --markup-punctators: green;
-      --markup-sequences: grey;
-      --markup-operators: limegreen;
-      --markup-combinator: steelblue;
-      --markup-breakers: grey;
-      --markup-quotes: teal;
-      --markup-closures: orange;
-      --markup-spans: coral;
-      --markup-comments: #AAA;
-      --markup-whitespace: #999;
-
-      padding: 1ch;
-      margin: 0;
-      max-width: 100%;
-      flex: 1;
-
-      background-color: var(--markup-background, #444);
-      color: var(--markup-color, #444);
-      /* text-shadow: 0 0.875px 0 var(--markup-shadow, #FFF); */
-
-      line-height: 1.5em;
-      font-family: 'Iosevka', 'TypoPRO Iosevka Term', monospace;
-      font-variant-ligatures: contextual;
-      text-rendering: optimizeSpeed;
-      white-space: pre-wrap;
-      word-break: break-all;
-      overflow-wrap: break-word;
-
-      /* will-change: transform; */
-    }
-
-    #source-code > header {
-      display: grid;
-      grid-auto-flow: column;
-      grid-template-columns: repeat(auto-fill, 1fr);
-      grid-gap: 2ch;
-      padding: 0.25ch;
-
-      margin-bottom: 1ch;
-      border-radius: 1ch;
-      white-space: normal;
-      overflow-wrap: break-word;
-      word-break: break-all;
-      vertical-align: baseline;
-      overflow: hidden;
-
-      user-select: none;
-      -moz-user-select: none;
-
-      background: linear-gradient(to right, #9993, #9993), var(--markup-background, #FFF);
-      border: 1px groove #EEE3;
-      color: #999;
-      opacity: 0.9;
-
-      position: sticky;
-      /* TODO:  Fix sticky in Safari (http://cssdeck.com/labs/bu0nx69w) */
-      /* position: fixed; */
-      top: 1ch;
-
-      font-family: system-ui -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-      font-weight: 200;
-    }
-
-    #source-code > header > * {
-      justify-content: center;
-      display: grid;
-      grid-gap: 0.25ch;
-      grid-auto-flow: column;
-      grid-template-columns: repeat(auto-fill, 1fr);
-      text-shadow: 0 0.875px 0 var(--markup-shadow, #FFF);
-    }
-
-    #source-code > header [id] {
-      font-weight: 300;
-
-      user-select: text;
-      -moz-user-select: text;
-    }
-    #source-code > header [id] + time {
-      font-size: 87.5%;
-      max-width: max-content;
-
-      user-select: none;
-      -moz-user-select: none;
-    }
-
-    #source-code > header [id] + time::before {
-      content: ' ≈ ';
-    }
-
-    #source-code > header > * :empty {
-      display: none;
-    }
-
-    #source-code > header a[onclick]  {
-      display: inline-block;
-      width: 1em;
-      width: max-content;
-      height: 1em;
-      border: 0.25ch solid transparent;
-      border-radius: 25%;
-
-      background-clip: border-box;
-
-      position: relative;
-      top: 50%;
-      margin-top: -50%;
-      line-height: 87.5%;
-      vertical-align: text-bottom;
-      text-align: center;
-
-      user-select: none;
-      -moz-user-select: none;
-    }
-
-    #source-code > header a[onclick]:hover  {
-      background-color: #999;
-      color: #FFF;
-    }
-
-  </style>
 
   <link-group id=samples>
     <!-- Source Code Samples -->
@@ -187,7 +47,12 @@
 </head>
 
 <body>
-  <pre id="source-code"></pre>
+  <pre id="source-code">
+    <script>
+      localStorage.darkMode && document.currentScript.parentElement.classList.add('dark-mode');
+    </script>
+  </pre>
+
   <script type=module>
     import markup from './markup.js';
 
@@ -219,6 +84,7 @@
       'iterations-span': '#iterations',
       'iterations-time': '#iterations + time',
       'rerender-button': '#rerender[onclick]',
+      'contrast-button': '#contrast[onclick]',
     });
 
     const loadFromURL = async (specifier) => {
@@ -246,7 +112,7 @@
       selectors = template.selectors,
       rerender = console.warn,
     }) => {
-
+      /** @type {HTMLElement} */
       const header = template.content.firstElementChild.cloneNode(true);
 
       header.elements = {};
@@ -258,6 +124,17 @@
       }
 
       header.elements['rerender-button'] && (header.elements['rerender-button'].click = rerender);
+      header.elements['contrast-button'] && (header.elements['contrast-button'].click = async () => {
+        const parent = header.parentElement;
+        if (parent) {
+          parent.style.transition = 'background 0.375s ease-in-out 0.01s'
+          await nextFrame();
+          parent.classList.toggle('dark-mode')
+          ? localStorage.darkMode = true
+          : delete localStorage.darkMode;
+          setTimeout(() => parent.style.transition = undefined, 500);
+        }
+      });
 
 
       header.status = (name, value) => {
@@ -270,7 +147,7 @@
         header.timing[name] === (header.timing[name] = value);
         const status = header.status[name] || 'done';
         const element = header.elements[`${name}-time`];
-        const text = value >= 0 ? `${value} ms` : '';
+        const text = value === true ? '…' : value >= 0 ? `${value} ms` : '';
         element ? element.innerText = text : text && console.info('[%s] %o — %o', name, status, value);
       }
 
@@ -311,7 +188,7 @@
 
       try {
 
-        await nextFrame(header.status('source', `${specifier}…`));
+        await nextFrame(header.status('source', `${specifier}`), header.timing('source', true));
         const { result: {sourceText, response} } = await time('source', () => loadFromURL(specifier));
         sourceType = `${sourceType || response.headers.get('Content-Type') || options.sourceType}`.replace(/^(?:.*?\/)?(\w+).*$/, '$1').toLowerCase();
         sourceType in markup.modes || (sourceType = 'markup');
@@ -324,8 +201,12 @@
           code.innerText = '';
           await nextFrame();
 
+          header.timing('render', true);
+          repeats > 1 && header.timing('repeats', true);
+          iterations > 1 && header.timing('iterations', true);
+
           if (repeats > 0) {
-            await nextFrame(header.status('render', `${sourceType}…`));
+            await nextFrame(header.status('render', `${sourceType}`), header.timing('render', true));
             time('render', ƒ => {
               fragment = renderMarkup(sourceText, markupOptions);
               code.appendChild(fragment);
@@ -335,7 +216,7 @@
           }
 
           if (repeats > 1) {
-            await nextFrame(header.status('repeats', `* ${repeats}…`));
+            await nextFrame(header.status('repeats', `* ${repeats}…`), header.timing('repeats', true));
             time('repeats', async ƒ => {
               for (let n = repeats; --n; code.appendChild(renderMarkup(sourceText, markupOptions)));
               //  n % 10 || await nextFrame();
@@ -344,7 +225,7 @@
           }
 
           if (iterations > 1) {
-            await nextFrame(header.status('iterations', `* ${iterations}…`));
+            await nextFrame(header.status('iterations', `* ${iterations}…`), header.timing('iterations', true));
             time('iterations', async ƒ => {
               for (let n = iterations; n--; [... markup.tokenize(sourceText, markupOptions)]);
             });
