@@ -42,14 +42,13 @@ body {
   line-height: 1.5em;
   font-family: 'Iosevka', 'TypoPRO Iosevka Term', monospace;
   font-variant-ligatures: contextual;
-  text-rendering: optimizeSpeed;
+  /* text-rendering: optimizeSpeed; */
   white-space: pre-wrap;
   word-break: break-all;
   overflow-wrap: break-word;
 
-  transition: background 0 ease-in-out;
-  /* transition-duration: 0; */
-  /* will-change: transition; */
+  transition: background 0.5s ease-in-out;
+  will-change: transition;
 }
 
 #source-code > header {

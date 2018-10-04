@@ -47,9 +47,13 @@
 </head>
 
 <body>
-  <pre id="source-code">
+  <pre id="source-code" hidden>
     <script>
-      localStorage.darkMode && document.currentScript.parentElement.classList.add('dark-mode');
+      {
+        const element = document.currentScript.parentElement;
+        localStorage.darkMode && element.classList.add('dark-mode');
+        element.hidden = false;
+      }
     </script>
   </pre>
 
@@ -127,12 +131,14 @@
       header.elements['contrast-button'] && (header.elements['contrast-button'].click = async () => {
         const parent = header.parentElement;
         if (parent) {
-          parent.style.transition = 'background 0.375s ease-in-out 0.01s'
-          await nextFrame();
+          // if (!parent.style.transition) {
+          //   parent.style.transition = 'background 375ms ease-in-out';
+          //   await nextFrame();
+          // }
           parent.classList.toggle('dark-mode')
-          ? localStorage.darkMode = true
-          : delete localStorage.darkMode;
-          setTimeout(() => parent.style.transition = undefined, 500);
+            ? (localStorage.darkMode = true)
+            : (delete localStorage.darkMode);
+          // setTimeout(() => parent.style.transition = undefined, 500);
         }
       });
 
