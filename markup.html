@@ -62,11 +62,11 @@
       font-family: 'Iosevka', 'TypoPRO Iosevka Term', monospace;
       font-variant-ligatures: contextual;
       text-rendering: optimizeSpeed;
-      /* text-rendering: optimizeLegibility; */
       white-space: pre-wrap;
-      /* word-break: break-all; */
+      word-break: break-all;
       overflow-wrap: break-word;
-      /* line-break: strict; */
+
+      /* will-change: transform; */
     }
 
     #source-code > header {
@@ -79,21 +79,26 @@
       margin-bottom: 1ch;
       border-radius: 1ch;
       white-space: normal;
-      /* word-break: break-all; */
-      /* line-break: loose; */
       overflow-wrap: break-word;
+      word-break: break-all;
       vertical-align: baseline;
+      overflow: hidden;
 
       user-select: none;
       -moz-user-select: none;
 
-      background: #9993;
+      background: linear-gradient(to right, #9993, #9993), var(--markup-background, #FFF);
+      border: 1px groove #EEE3;
       color: #999;
-      opacity: 0.8;
+      opacity: 0.9;
+
+      position: sticky;
+      /* TODO:  Fix sticky in Safari (http://cssdeck.com/labs/bu0nx69w) */
+      /* position: fixed; */
+      top: 1ch;
 
       font-family: system-ui -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
       font-weight: 200;
-      /* font-size: 0.875rem; */
     }
 
     #source-code > header > * {
@@ -102,9 +107,7 @@
       grid-gap: 0.25ch;
       grid-auto-flow: column;
       grid-template-columns: repeat(auto-fill, 1fr);
-      /* white-space: pre-wrap; */
-      /* text-overflow: ellipsis; */
-      /* overflow:hidden; */
+      text-shadow: 0 0.875px 0 var(--markup-shadow, #FFF);
     }
 
     #source-code > header [id] {
@@ -366,7 +369,8 @@
       options.repeats = repeats >= 0 ? parseInt(repeats) : defaults.repeats;
       options.iterations = iterations >= 1 ? parseInt(iterations) : defaults.iterations;
       const link = /^\w[\w\-]*$/.test(specifier) && document.querySelector(`link#${specifier}`);
-      const source = link && link.href || specifier;
+      const source = link && link.href || specifier || options.source;
+      source && (options.source = source);
       // console.log(match, {specifier, link, source, type, repeats, iterations});
       specifier && renderFromURL(source, sourceType);
     };

@@ -1,7 +1,9 @@
-// Extended Features
 import * as modes from './lib/markup-modes.js';
 import * as dom from './lib/markup-dom.js';
 import * as api from './lib/markup.js';
+
+/** May hold a temporary template element for rendering */
+let template;
 
 const initialize = () => {
   const defaults = {...api.defaults, syntaxes: {}};
@@ -26,13 +28,12 @@ const initialize = () => {
         fragment.append(first.value);
         if (!first.done) for (const element of elements) fragment.append(element);
       } else if ('textContent' in fragment) {
+        // TODO: See if DocumentFragment.innerHTML is possible
         let text = `${first.value}`;
-        // fragment.textContent += `${first.value}`;
         if (!first.done) for (const element of elements) text += `${element}`;
-        const template = document.createElement('template');
+        template || (template = document.createElement('template'));
         template.innerHTML = text;
         fragment.appendChild(template.content);
-        // fragment.appendChild(new Text(text));
       }
     }
 
@@ -50,14 +51,12 @@ export let tokenize = (source, options) => {
   return tokenize(source, options);
 };
 
-export const markup = Object.create(
-  api, {
-    initialize: {get: () => initialize},
-    render: {get: () => render},
-    tokenize: {get: () => tokenize},
-    dom: {get: () => dom},
-    modes: {get: () => api.modes},
-  }
-);
+export const markup = Object.create(api, {
+  initialize: {get: () => initialize},
+  render: {get: () => render},
+  tokenize: {get: () => tokenize},
+  dom: {get: () => dom},
+  modes: {get: () => api.modes},
+});
 
 export default markup;
