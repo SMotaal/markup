@@ -24,11 +24,12 @@
   --markup-punctators: green;
   --markup-sequences: grey;
   --markup-operators: limegreen;
-  --markup-combinators: dodgerblue;
+  --markup-combinators: cornflowerblue;
   --markup-breakers: grey;
-  --markup-quotes: steelblue;
+  --markup-quotes: cadetblue;
   --markup-closures: orange;
   --markup-spans: coral;
+
   --markup-comments: var(--markup-neutral-light, #aaa);
   --markup-whitespace: var(--markup-neutral, #999);
 }
@@ -42,9 +43,8 @@
   --markup-identifiers: lightgrey;
   --markup-punctators: limegreen;
   --markup-operators: lime;
-  --markup-combinators: cornflowerblue;
   --markup-closures: darkorange;
-  --markup-quotes: steelblue;
+
   --markup-comments: var(--markup-neutral, #999);
   --markup-whitespace: var(--markup-neutral-dark, #666);
 
