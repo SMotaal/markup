@@ -6,6 +6,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
   <link rel="stylesheet" href="./markup.css">
+  <link rel="stylesheet" href="./markup-hover.css">
 
   <template id=source-header>
     <header>
@@ -26,6 +27,8 @@
       width: 100vw;
       background-color: #999;
       font-size: 1rem;
+      overflow-x: hidden;
+      overflow-y: scroll;
     }
 
     #source-code {
@@ -58,10 +61,12 @@
       line-height: 1.5em;
       font-family: 'Iosevka', 'TypoPRO Iosevka Term', monospace;
       font-variant-ligatures: contextual;
-      text-rendering: optimizeLegibility;
+      text-rendering: optimizeSpeed;
+      /* text-rendering: optimizeLegibility; */
       white-space: pre-wrap;
-      word-break: normal;
-      line-break: strict;
+      /* word-break: break-all; */
+      overflow-wrap: break-word;
+      /* line-break: strict; */
     }
 
     #source-code > header {
@@ -74,8 +79,9 @@
       margin-bottom: 1ch;
       border-radius: 1ch;
       white-space: normal;
-      word-break: break-all;
-      line-break: loose;
+      /* word-break: break-all; */
+      /* line-break: loose; */
+      overflow-wrap: break-word;
       vertical-align: baseline;
 
       user-select: none;
@@ -166,13 +172,13 @@
     </link-group>
     <link-group id=vendor>
       <!-- Third-party -->
-      <link id=acorn rel=preconnect href="https://cdnjs.cloudflare.com/ajax/libs/acorn/5.7.3/acorn_loose.es.js" />
-      <link id=esprima rel=preconnect href="https://cdnjs.cloudflare.com/ajax/libs/esprima/2.7.3/esprima.js" />
-      <link id=babel rel=preconnect href="https://cdnjs.cloudflare.com/ajax/libs/babel-core/6.1.19/browser.js" />
-      <link id=babel-min rel=preconnect href="https://cdnjs.cloudflare.com/ajax/libs/babel-core/6.1.19/browser.min.js" />
-      <link id=popper rel=preconnect href="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.4/esm/popper.js" />
-      <link id=xregexp rel=preconnect href="https://cdnjs.cloudflare.com/ajax/libs/xregexp/3.2.0/xregexp-all.js" />
-      <link id=xregexp-min rel=preconnect href="https://cdnjs.cloudflare.com/ajax/libs/xregexp/3.2.0/xregexp-all.min.js" />
+      <link id=acorn rel=prefetch href="https://cdnjs.cloudflare.com/ajax/libs/acorn/5.7.3/acorn_loose.es.js" />
+      <link id=esprima rel=prefetch href="https://cdnjs.cloudflare.com/ajax/libs/esprima/2.7.3/esprima.js" />
+      <link id=babel rel=prefetch href="https://cdnjs.cloudflare.com/ajax/libs/babel-core/6.1.19/browser.js" />
+      <link id=babel-min rel=prefetch href="https://cdnjs.cloudflare.com/ajax/libs/babel-core/6.1.19/browser.min.js" />
+      <link id=popper rel=prefetch href="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.4/esm/popper.js" />
+      <link id=xregexp rel=prefetch href="https://cdnjs.cloudflare.com/ajax/libs/xregexp/3.2.0/xregexp-all.js" />
+      <link id=xregexp-min rel=prefetch href="https://cdnjs.cloudflare.com/ajax/libs/xregexp/3.2.0/xregexp-all.min.js" />
     </link-group>
   </link-group>
 </head>
@@ -361,7 +367,7 @@
       options.iterations = iterations >= 1 ? parseInt(iterations) : defaults.iterations;
       const link = /^\w[\w\-]*$/.test(specifier) && document.querySelector(`link#${specifier}`);
       const source = link && link.href || specifier;
-      console.log(match, {specifier, link, source, type, repeats, iterations});
+      // console.log(match, {specifier, link, source, type, repeats, iterations});
       specifier && renderFromURL(source, sourceType);
     };
 
