@@ -51,7 +51,16 @@
     <script>
       {
         const element = document.currentScript.parentElement;
-        localStorage.darkMode && element.classList.add('dark-mode');
+
+        // TODO: Add support for @media (prefers-dark-mode) when it lands
+        const prefersDarkInterface = matchMedia('prefers-dark-interface');
+
+        (
+          matchMedia('prefers-dark-interface').matches &&
+          !element.classList.add('prefers-dark-mode') ||
+          localStorage.darkMode
+        ) && element.classList.add('dark-mode');
+
         element.hidden = false;
       }
     </script>

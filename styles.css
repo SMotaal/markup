@@ -66,7 +66,13 @@ body {
   --outset-shadow: 0 0.875px 0;
   --inset-shadow: 0 -0.875px 0;
   --outset-border: 0.5px groove var(--border);
+}
 
+#source-code.dark-mode > header {
+  --shadow: var(--dark, transparent);
+}
+
+#source-code > header {
   display: grid;
   grid-auto-flow: column;
   grid-template-columns: repeat(1fr);
@@ -114,11 +120,6 @@ body {
 
 #source-code > header > *:last-child {
   justify-content: right;
-}
-
-.dark-mode #source-code > header,
-#source-code.dark-mode > header {
-  --shadow: var(--dark, transparent);
 }
 
 #source-code > header [id] {
