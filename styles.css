@@ -18,11 +18,13 @@
 }
 
 body {
-  margin: 0;
+  box-sizing: border-box;
   display: flex;
-  flex-flow: column;
-  min-height: 100vh;
   width: 100vw;
+  min-height: 100vh;
+  margin: 0;
+
+  flex-flow: column;
   background-color: #999;
   font-size: 1rem;
   overflow-x: hidden;
@@ -30,9 +32,11 @@ body {
 }
 
 #source-code {
+  box-sizing: border-box;
+  /* max-width: 100%; */
+
   padding: 1ch;
   margin: 0;
-  max-width: 100%;
   flex: 1;
 
   background-color: var(--markup-background, transparent);
@@ -43,12 +47,15 @@ body {
   font-family: 'Iosevka', 'TypoPRO Iosevka Term', monospace;
   font-variant-ligatures: contextual;
   /* text-rendering: optimizeSpeed; */
+
   white-space: pre-wrap;
-  word-break: break-all;
-  overflow-wrap: break-word;
 
   transition: background 0.5s ease-in-out;
   will-change: transition;
+}
+
+#source-code.dark-mode > header {
+  --shadow: var(--dark, transparent);
 }
 
 #source-code > header {
@@ -66,26 +73,23 @@ body {
   --outset-shadow: 0 0.875px 0;
   --inset-shadow: 0 -0.875px 0;
   --outset-border: 0.5px groove var(--border);
-}
 
-#source-code.dark-mode > header {
-  --shadow: var(--dark, transparent);
-}
-
-#source-code > header {
   display: grid;
   grid-auto-flow: column;
-  grid-template-columns: repeat(1fr);
+  overflow-x: hidden;
+
+  /* TODO:  Fix sticky in Safari: http://cssdeck.com/labs/bu0nx69w */
+  position: -webkit-sticky;
+  position: sticky;
+  top: 1ch;
+
   grid-gap: 1ch;
   padding: 0.25ch 1ch;
 
   margin-bottom: 1ch;
   border-radius: 1ch;
   white-space: normal;
-  overflow-wrap: break-word;
-  word-break: break-all;
-  vertical-align: baseline;
-  overflow: hidden;
+  /* vertical-align: baseline; */
 
   user-select: none;
   -moz-user-select: none;
@@ -96,61 +100,82 @@ body {
   text-shadow: var(--outset-shadow, 0 0 0) var(--shadow);
   opacity: 0.9;
 
-  /* TODO:  Fix sticky in Safari: http://cssdeck.com/labs/bu0nx69w */
-  position: sticky;
-  top: 1ch;
-
-  font-family: system-ui -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  font-family: system-ui -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu,
+    Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
   font-weight: 200;
+
+  z-index: 1;
 }
 
-#source-code > header > * {
-  justify-content: center;
+#source-code > header div {
   display: grid;
   grid-gap: 0.25ch;
-  padding: 0.125ch;
   grid-auto-flow: column;
-  grid-template-columns: repeat(auto-fit);
-  /* text-shadow: 0 0.875px 0 var(--markup-shadow, #FFF); */
+
+  place-self: center;
+  justify-content: center;
+  padding: 0.125ch;
 }
 
-#source-code > header > *:first-child {
+#source-code > header div:first-child {
   justify-content: left;
 }
 
-#source-code > header > *:last-child {
+#source-code > header div:last-child {
   justify-content: right;
 }
 
-#source-code > header [id] {
-  font-weight: 300;
+#source-code > header div#summary {
+  grid-column: 1 / span 2;
+}
+#source-code > header div#controls {
+  grid-row: 1 / span 1;
+  align-self: center;
+  min-width: max-content;
+}
 
+@media (max-width: 500px) {
+  #source-code > header div#details {
+    grid-row: 2 / span 1;
+    grid-column: 1 / span 3;
+  }
+}
+
+#source-code > header div > [title] > [id] {
+  font-weight: 300;
   user-select: text;
   -moz-user-select: text;
 }
 
-#source-code > header [id] + time {
-  font-size: 87.5%;
-  max-width: max-content;
+#source-code > header div > [title] > [id]:not(empty) {
+  min-width: 10em;
+}
 
+#source-code > header div > [title] > time:not(empty) {
+  min-width: 5em;
+}
+
+#source-code > header div > [title] > [id] + time {
+  font-size: 87.5%;
   user-select: none;
   -moz-user-select: none;
 }
 
-#source-code > header [id] + time::before {
-  content: ' ≈ ';
+#source-code > header div > [title] > [id] + time::before {
+  content: ' ';
 }
 
-#source-code > header > * :empty {
+#source-code > header div :empty {
   display: none;
 }
 
 #source-code > header a[onclick] {
   display: inline-block;
-  width: 2.5ex;
-  width: max-content;
-  height: 2.5ex;
-  border: 0.25ch solid transparent;
+  box-sizing: padding-box;
+  width: 2.5ch;
+  height: 0;
+  padding: 25% 0;
+  border: 2pt solid transparent;
   border-radius: 25%;
 
   background-clip: border-box;
@@ -158,13 +183,9 @@ body {
   border-style: solid;
   border-color: transparent;
 
-  position: relative;
-  /* top: 50%; */
-  /* margin-top: -50%; */
-  /* line-height: 87.5%; */
-  vertical-align: text-bottom;
+  vertical-align: middle;
   text-align: center;
-  padding: 0.25ex 0.5ex 0 0.5ex;
+  overflow: hidden;
 
   user-select: none;
   -moz-user-select: none;
@@ -178,21 +199,21 @@ body {
 
 #source-code > header a[onclick]:active {
   color: var(--text);
-  border-color: var(--clear);
+  border-color: var(--text);
   background-color: var(--clear);
-  /* text-shadow: 0 0.5px 0 var(--text); */
 }
+
+
 
 i[icon] {
   font-style: normal;
-  font-family: cursive;
-  font-weight: 700;
-  font-size-adjust: 0.5;
-  align-self: center;
-  height: 0;
+  font-family: 'Arial';
+  font-weight: 100;
+  display: block;
+  height: 50%;
   line-height: 0;
-  bottom: 15%;
   overflow: visible;
-  display: inline-grid;
-  position: relative;
+  padding: 0;
+  margin: 0;
+  transform: translateY(-100%);
 }

@@ -17,8 +17,8 @@
 
   --markup-light-background: var(--markup-light, #f9f9f9);
   --markup-light-color: var(--markup-light-text, #666);
-  --markup-light-constast: white;
   --markup-light-shadow: white;
+  --markup-light-constast: white;
 
   --markup-light-variables: red;
   --markup-light-identifiers: darkslategrey;
@@ -56,6 +56,7 @@
   --markup-background: var(--markup-light-background);
   --markup-color: var(--markup-light-color);
   --markup-constast: var(--markup-light-constast);
+  --markup-constast-inverse: var(--markup-dark-constast);
   --markup-shadow: var(--markup-light-shadow);
 
   --markup-variables: var(--markup-light-variables);
@@ -81,6 +82,7 @@
   --markup-background: var(--markup-dark-background, var(--markup-light-background));
   --markup-color: var(--markup-dark-color, var(--markup-light-color));
   --markup-constast: var(--markup-dark-constast, var(--markup-light-constast));
+  --markup-constast-inverse: var(--markup-light-constast);
   --markup-shadow: var(--markup-dark-shadow, var(--markup-light-shadow));
 
   --markup-variables: var(--markup-dark-variables, var(--markup-light-variables));

@@ -9,14 +9,20 @@
 
   <template id=source-header>
     <header>
-      <span title=source>#<span id=source></span><time></time></span>
-      <span title=render><span id=render></span><time></time></span>
-      <span title=repeats><span id=repeats></span><time></time></span>
-      <span title=iterations><span id=iterations></span><time></time></span>
-      <span>
-        <a id=rerender title="Rerender" onclick="click()"><i icon>&#x27f3</i></a>
-        <a id=contrast title="Dark/Light Mode" onclick="click()"><i icon>&#x263C;</i></a>
-      </span>
+      <div id=summary>
+        <span title=source>#<span id=source></span><time></time></span>
+      </div>
+      <div id=details>
+        <span title=render><span id=render></span><time></time></span>
+        <span title=repeats><span id=repeats></span><time></time></span>
+        <span title=iterations><span id=iterations></span><time></time></span>
+      </div>
+      <div id=controls>
+        <span>
+          <a id=rerender title="Rerender" onclick="click()"><i icon>&#x27f3</i></a>
+          <a id=contrast title="Dark/Light Mode" onclick="click()"><i icon>&#x263D;</i></a>
+        </span>
+      </div>
     </header>
   </template>
 
