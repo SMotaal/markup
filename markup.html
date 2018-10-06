@@ -4,7 +4,7 @@
 <head>
   <title>SMotaal's Markup</title>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=0, viewport-fit=cover">
   <link rel="stylesheet" href="./styles.css" />
 
   <template id=source-header>
@@ -68,6 +68,8 @@
         ) && element.classList.add('dark-mode');
 
         element.hidden = false;
+
+        (async () => (await navigator.serviceWorker.getRegistrations()).forEach(registration => registration.unregister))();
       }
     </script>
   </pre>
@@ -164,12 +166,20 @@
         const text = `${value || ''}`;
         element ? element.innerText = text : text && console.info('[%s] %o', name, value);
       }
+
       header.timing = (name, value) => {
         header.timing[name] === (header.timing[name] = value);
         const status = header.status[name] || 'done';
         const element = header.elements[`${name}-time`];
         const text = value === true ? '…' : value >= 0 ? `${value} ms` : '';
         element ? element.innerText = text : text && console.info('[%s] %o — %o', name, status, value);
+      }
+
+      header.stats = ({name, status, time}) => {
+        !name || (
+          status === undefined || header.status(name, status),
+          time === undefined ||  header.timing(name, time)
+        );
       }
 
       header.reset = () => {
@@ -222,35 +232,36 @@
           code.innerText = '';
           await nextFrame();
 
-          header.timing('render', true);
-          repeats > 1 && header.timing('repeats', true);
-          iterations > 1 && header.timing('iterations', true);
+          header.stats({name: 'render', status: '', time: -1});
+          header.stats({name: 'repeats', status: '', time: -1});
+          header.stats({name: 'iterations', status: '', time: -1});
 
           if (repeats > 0) {
-            await nextFrame(header.status('render', `${sourceType}`), header.timing('render', true));
+            await nextFrame(header.stats({name: 'render', status: `${sourceType}`, time: true}));
             time('render', ƒ => {
               fragment = renderMarkup(sourceText, markupOptions);
               code.appendChild(fragment);
             });
             header.status('render', `${sourceType}`);
-
           }
 
           if (repeats > 1) {
-            await nextFrame(header.status('repeats', `* ${repeats}…`), header.timing('repeats', true));
+            await nextFrame(header.stats({name: 'repeats', status: `⁎${repeats}`, time: true}))
             time('repeats', async ƒ => {
               for (let n = repeats; --n; code.appendChild(renderMarkup(sourceText, markupOptions)));
               //  n % 10 || await nextFrame();
             });
-            header.status('repeats', `×${repeats}`);
+            header.status('repeats', `⁎${repeats}`);
           }
 
           if (iterations > 1) {
-            await nextFrame(header.status('iterations', `* ${iterations}…`), header.timing('iterations', true));
+            await nextFrame(header.stats({name: 'iterations', status: `⁑${iterations}`, time: true}))
+
             time('iterations', async ƒ => {
               for (let n = iterations; n--; [... markup.tokenize(sourceText, markupOptions)]);
             });
-            header.status('iterations', `×${iterations}`);
+
+            header.status('iterations', `⁑${iterations}`);
           }
 
           return fragment;

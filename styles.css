@@ -17,23 +17,46 @@
   --markup-background: var(--markup-background, var(--markup-neutral-fade));
 }
 
-body {
+html {
+  width: 100vw; height: 100vh;
   box-sizing: border-box;
-  display: flex;
-  width: 100vw;
-  min-height: 100vh;
-  margin: 0;
 
-  flex-flow: column;
+}
+
+body {
+  min-height: 100%;
+  width: 100%;
+
+  display: flex;
+  flex-flow: column nowrap;
+  margin: 0;
+  padding: 0;
+
   background-color: #999;
   font-size: 1rem;
   overflow-x: hidden;
   overflow-y: scroll;
+  /* touch-action: pan-y; */
+  /* user-zoom: fixed; */
+  /* touch-action: pan-y; */
+  /* user-zoom: fixed; */
+  /* zoom: 1; */
+}
+
+@supports (padding: env(safe-area-inset-top)) {
+  body {
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+}
+@supports (touch-action: pan-y) {
+  body {
+    touch-action: pan-y;
+  }
 }
 
 #source-code {
   box-sizing: border-box;
-  /* max-width: 100%; */
+  min-height: 100%;
 
   padding: 1ch;
   margin: 0;
@@ -52,6 +75,8 @@ body {
 
   transition: background 0.5s ease-in-out;
   will-change: transition;
+
+  /* touch-action: none; */
 }
 
 #source-code.dark-mode > header {
@@ -75,7 +100,7 @@ body {
   --outset-border: 0.5px groove var(--border);
 
   display: grid;
-  grid-auto-flow: column;
+  grid-auto-flow: column dense;
   overflow-x: hidden;
 
   /* TODO:  Fix sticky in Safari: http://cssdeck.com/labs/bu0nx69w */
@@ -89,7 +114,6 @@ body {
   margin-bottom: 1ch;
   border-radius: 1ch;
   white-space: normal;
-  /* vertical-align: baseline; */
 
   user-select: none;
   -moz-user-select: none;
@@ -110,10 +134,14 @@ body {
 #source-code > header div {
   display: grid;
   grid-gap: 0.25ch;
-  grid-auto-flow: column;
+  grid-auto-flow: column dense;
 
-  place-self: center;
-  justify-content: center;
+  /* word-break: keep-all; */
+  /* line-break: normal; */
+  overflow-x: hidden;
+  text-overflow: ellipsis;
+  align-content: center;
+
   padding: 0.125ch;
 }
 
@@ -126,34 +154,24 @@ body {
 }
 
 #source-code > header div#summary {
-  grid-column: 1 / span 2;
+  grid-column: 1;
 }
+
 #source-code > header div#controls {
-  grid-row: 1 / span 1;
-  align-self: center;
-  min-width: max-content;
+  grid-row: 1;
 }
 
-@media (max-width: 500px) {
-  #source-code > header div#details {
-    grid-row: 2 / span 1;
-    grid-column: 1 / span 3;
-  }
+#source-code > header div > [title] {
+  white-space: pre;
 }
-
 #source-code > header div > [title] > [id] {
   font-weight: 300;
   user-select: text;
   -moz-user-select: text;
 }
 
-#source-code > header div > [title] > [id]:not(empty) {
-  min-width: 10em;
-}
-
-#source-code > header div > [title] > time:not(empty) {
-  min-width: 5em;
-}
+/* #source-code > header div > [title] > [id]:not(empty) { min-width: 10em; } */
+/* #source-code > header div > [title] > time:not(empty) { min-width: 1em; text-overflow: ellipsis; } */
 
 #source-code > header div > [title] > [id] + time {
   font-size: 87.5%;
@@ -165,7 +183,7 @@ body {
   content: ' ';
 }
 
-#source-code > header div :empty {
+#source-code > header :empty {
   display: none;
 }
 
@@ -202,8 +220,6 @@ body {
   border-color: var(--text);
   background-color: var(--clear);
 }
-
-
 
 i[icon] {
   font-style: normal;
