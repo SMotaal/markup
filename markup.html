@@ -19,7 +19,7 @@
       </div>
       <div id=controls>
         <span>
-          <a id=rerender title="Rerender" onclick="click()"><i icon>&#x27f3</i></a>
+          <a id=rerender title="Rerender" onclick="click()"><i icon>&#x27f3;</i></a>
           <a id=contrast title="Dark/Light Mode" onclick="click()"><i icon>&#x263D;</i></a>
         </span>
       </div>
@@ -69,7 +69,7 @@
 
         element.hidden = false;
 
-        (async () => (await navigator.serviceWorker.getRegistrations()).forEach(registration => registration.unregister))();
+        navigator.serviceWorker && (async () => (await navigator.serviceWorker.getRegistrations()).forEach(registration => registration.unregister))();
       }
     </script>
   </pre>
@@ -79,7 +79,7 @@
 
     const defaults = {
       repeats: 1,
-      iterations: 1,
+      iterations: 0,
       sourceURL: './lib/markup.js',
       sourceType: undefined,
       element: 'pre#source-code',
@@ -197,7 +197,7 @@
     const renderFromURL = async (specifier, sourceType) => {
       let returned, fragment, render;
 
-      const {repeats = 1, iterations = 1} = options;
+      const {repeats = 1, iterations = 0} = options;
       const container = sourceCodeElement;
       const now = options.now || Date.now;
 
@@ -254,7 +254,7 @@
             header.status('repeats', `⁎${repeats}`);
           }
 
-          if (iterations > 1) {
+          if (iterations > 0) {
             await nextFrame(header.stats({name: 'iterations', status: `⁑${iterations}`, time: true}))
 
             time('iterations', async ƒ => {
@@ -280,7 +280,7 @@
       const [,specifier, type, repeats = defaults.repeats, iterations = defaults.iterations] = match || '';
       const sourceType = type || undefined;
       options.repeats = repeats >= 0 ? parseInt(repeats) : defaults.repeats;
-      options.iterations = iterations >= 1 ? parseInt(iterations) : defaults.iterations;
+      options.iterations = iterations >= 0 ? parseInt(iterations) : defaults.iterations;
       const link = /^\w[\w\-]*$/.test(specifier) && document.querySelector(`link#${specifier}`);
       const source = link && link.href || specifier || options.source;
       source && (options.source = source);
