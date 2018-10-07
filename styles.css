@@ -83,6 +83,8 @@ body {
   --shadow: var(--dark, transparent);
 }
 
+#source-code slot:not(:empty)::before { display: block; height: 1em; content: ''; }
+
 #source-code > header {
   --clear: var(--markup-background, #fff);
   --bright: var(--markup-light-fade, #fff3);

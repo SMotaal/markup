@@ -25,8 +25,10 @@
   --markup-light-keywords: chocolate;
   --markup-light-punctators: green;
   --markup-light-sequences: grey;
-  --markup-light-operators: limegreen;
+  /* --markup-light-operators: limegreen; */
+  --markup-light-operators: lightseagreen;
   --markup-light-combinators: cornflowerblue;
+  /* --markup-light-combinators: dodgerblue; */
   --markup-light-breakers: grey;
   --markup-light-quotes: cadetblue;
   --markup-light-closures: orange;
@@ -44,12 +46,11 @@
 
   --markup-dark-identifiers: lightgrey;
   --markup-dark-punctators: limegreen;
-  --markup-dark-operators: lime;
+  /* --markup-dark-operators: lime; */
   --markup-dark-closures: darkorange;
 
   --markup-dark-comments: var(--markup-neutral, #999);
   --markup-dark-whitespace: var(--markup-neutral-dark, #666);
-
 
   /* Light Mode */
 
@@ -60,12 +61,12 @@
   --markup-shadow: var(--markup-light-shadow);
 
   --markup-variables: var(--markup-light-variables);
-  --markup-identifiers: var(--markup-light-identifiersar(--markup-identifiers));
+  --markup-identifiers: var(--markup-light-identifiers);
   --markup-keywords: var(--markup-light-keywords);
   --markup-punctators: var(--markup-light-punctators);
   --markup-sequences: var(--markup-light-sequences);
   --markup-operators: var(--markup-light-operators);
-  --markup-combinators: var(--markup-light-combinatorsar(--markup-combinators));
+  --markup-combinators: var(--markup-light-combinators);
   --markup-breakers: var(--markup-light-breakers);
   --markup-quotes: var(--markup-light-quotes);
   --markup-closures: var(--markup-light-closures);
@@ -73,12 +74,11 @@
 
   --markup-comments: var(--markup-light-comments);
   --markup-whitespace: var(--markup-light-whitespace);
-
-
 }
 
 /* TODO: Add support for @media (prefers-dark-mode) when it lands */
-.dark-mode, :host(.dark-mode) {
+.dark-mode,
+:host(.dark-mode) {
   --markup-background: var(--markup-dark-background, var(--markup-light-background));
   --markup-color: var(--markup-dark-color, var(--markup-light-color));
   --markup-constast: var(--markup-dark-constast, var(--markup-light-constast));
