@@ -18,13 +18,10 @@
   box-shadow: 0 0 2.5px -0.5px var(--ring, currentColor);
   cursor: text;
   position: relative;
-  contain: strict;
   /* z-index: 0; */
 }
 
 .markup:hover::before {
-  all: initial;
-
   display: block;
   position: absolute;
   pointer-events: none;
@@ -32,7 +29,8 @@
   content: attr(class);
   font-size: small;
   font-family: inherit;
-  /* font-weight: 300; */
+  line-height: initial;
+  font-weight: initial;
   white-space: pre;
 
   background-color: #000a;
