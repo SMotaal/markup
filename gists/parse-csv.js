@@ -1,8 +1,8 @@
 /*
 
-Try the following in your chrome console, maybe this function is all you need.
-
 Quick question has anyone done exercise or know any tutorial of parsing CSV to JSON object? I am reading some tutorial but people end up using packages and I am trying to avoid it.
+
+@Leo Try the following in your chrome console, maybe this function is all you need.
 
 @Leo This is the basic logic though, I did not guard for cases where a string value might have an “escaped” separator or even if rows are empty, like having an extra newline in the end of the string (just use csvString.trim() if you encounter that)
 
