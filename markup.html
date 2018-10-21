@@ -7,53 +7,34 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=0, viewport-fit=cover">
   <link rel="stylesheet" href="./styles.css" />
 
-  <template id=source-header>
+  <template id="source-header">
     <header>
-      <div id=summary>
-        <span title=source>#<span id=source></span><time></time></span>
+      <div id="summary">
+        <span title="SourceTextURL">#<span id="source"></span><time></time></span>
       </div>
-      <div id=details>
-        <span title=render><span id=render></span><time></time></span>
-        <span title=repeats><span id=repeats></span><time></time></span>
-        <span title=iterations><span id=iterations></span><time></time></span>
+      <div id="details">
+        <span title="render"><span id="render"></span><time></time></span>
+        <span title="repeats"><span id="repeats"></span><time></time></span>
+        <span title="iterations"><span id="iterations"></span><time></time></span>
       </div>
-      <div id=controls>
+      <div id="controls">
         <span>
-          <a id=rerender title="Rerender" onclick="click()"><i icon>&#x27f3;</i></a>
-          <a id=contrast title="Dark/Light Mode" onclick="click()"><i icon>&#x263D;</i></a>
+          <a id="rerender" title="Rerender" onclick="click()"><i icon>&#x27f3;</i></a>
+          <a id="contrast" title="Dark/Light Mode" onclick="click()"><i icon>&#x263D;</i></a>
         </span>
       </div>
     </header>
   </template>
+  <template>
+    <custom-element custom-attribute=true namespace:attribute=false></custom-element>
+  </template>
 
-  <link-group id=samples>
-    <!-- Source Code Samples -->
-    <link-group id=markup>
-      <!-- Markup -->
-      <link id=markup rel=prefetch href="./lib/markup.js" />
-      <link id=markup-dom rel=prefetch href="./lib/markup-dom.js" />
-      <link id=markup-modes rel=prefetch href="./lib/markup-modes.js" />
-    </link-group>
-    <link-group id=examples>
-      <!-- Examples -->
-      <link id=leo-routes rel=prefetch href="./samples/pholio-routes-profile.js" />
-      <link id=punctuation rel=prefetch href="./samples/punctuation.js" />
-    </link-group>
-    <link-group id=vendor>
-      <!-- Third-party -->
-      <link id=acorn rel=prefetch href="https://cdnjs.cloudflare.com/ajax/libs/acorn/5.7.3/acorn_loose.es.js" />
-      <link id=esprima rel=prefetch href="https://cdnjs.cloudflare.com/ajax/libs/esprima/2.7.3/esprima.js" />
-      <link id=babel rel=prefetch href="https://cdnjs.cloudflare.com/ajax/libs/babel-core/6.1.19/browser.js" />
-      <link id=babel-min rel=prefetch href="https://cdnjs.cloudflare.com/ajax/libs/babel-core/6.1.19/browser.min.js" />
-      <link id=popper rel=prefetch href="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.4/esm/popper.js" />
-      <link id=xregexp rel=prefetch href="https://cdnjs.cloudflare.com/ajax/libs/xregexp/3.2.0/xregexp-all.js" />
-      <link id=xregexp-min rel=prefetch href="https://cdnjs.cloudflare.com/ajax/libs/xregexp/3.2.0/xregexp-all.min.js" />
-    </link-group>
-  </link-group>
+  <!-- <script src="service-worker-client.js"></script> -->
 </head>
 
 <body>
-  <pre id="source-code" hidden>
+  <script>new Worker('./rollup-worker.js');</script>
+  <pre id="source-code" class="markup-container" hidden>
     <script>
       {
         const element = document.currentScript.parentElement;
@@ -69,49 +50,31 @@
 
         element.hidden = false;
 
-        navigator.serviceWorker && (async () => (await navigator.serviceWorker.getRegistrations()).forEach(registration => registration.unregister))();
+        // navigator.serviceWorker && (async () => (await navigator.serviceWorker.getRegistrations()).forEach(registration => registration.unregister))();
       }
     </script>
   </pre>
 
-  <script type=module>
-    import markup from './markup.js';
+  <script type="module">
+    import markup from './lib/markup.js';
 
     const defaults = {
       repeats: 1,
       iterations: 0,
-      sourceURL: './lib/markup.js',
+      sourceURL: './lib/markup-modes.js',
       sourceType: undefined,
       element: 'pre#source-code',
       headerTemplate: 'template#source-header',
     }
-
-    const options = {
-      ... defaults,
-      // iterations: 500,
-      // repeats: 0,
-    };
-
+    const hashMatcher = /#(.*?)(?:\!([a-z]+)|\!.*?)?(?:\*(?!\*)(\d+))?(?:\*{2}(\d+))?$/;
+    const options = Object.create(defaults);
     const sourceCodeElement = document.querySelector(options.element);
     const sourceHeaderTemplate = document.querySelector(options.headerTemplate);
-
-    sourceHeaderTemplate && (sourceHeaderTemplate.selectors = {
-      'source-span': '#source',
-      'source-time': '#source + time',
-      'render-span': '#render',
-      'render-time': '#render + time',
-      'repeats-span': '#repeats',
-      'repeats-time': '#repeats + time',
-      'iterations-span': '#iterations',
-      'iterations-time': '#iterations + time',
-      'rerender-button': '#rerender[onclick]',
-      'contrast-button': '#contrast[onclick]',
-    });
 
     const loadFromURL = async (specifier) => {
       let fetched, response, result;
       const url = `${new URL(specifier, location)}`;
-      const source = {specifier, url};
+      const source = { specifier, url };
       try {
         source.response = await fetch(url);
         source.sourceText = await source.response.text();
@@ -148,14 +111,9 @@
       header.elements['contrast-button'] && (header.elements['contrast-button'].click = async () => {
         const parent = header.parentElement;
         if (parent) {
-          // if (!parent.style.transition) {
-          //   parent.style.transition = 'background 375ms ease-in-out';
-          //   await nextFrame();
-          // }
           parent.classList.toggle('dark-mode')
             ? (localStorage.darkMode = true)
             : (delete localStorage.darkMode);
-          // setTimeout(() => parent.style.transition = undefined, 500);
         }
       });
 
@@ -175,10 +133,10 @@
         element ? element.innerText = text : text && console.info('[%s] %o — %o', name, status, value);
       }
 
-      header.stats = ({name, status, time}) => {
+      header.stats = ({ name, status, time }) => {
         !name || (
           status === undefined || header.status(name, status),
-          time === undefined ||  header.timing(name, time)
+          time === undefined || header.timing(name, time)
         );
       }
 
@@ -197,20 +155,20 @@
     const renderFromURL = async (specifier, sourceType) => {
       let returned, fragment, render;
 
-      const {repeats = 1, iterations = 0} = options;
+      const { repeats = 1, iterations = 0 } = options;
       const container = sourceCodeElement;
       const now = options.now || Date.now;
 
-      const header = renderHeader({rerender: () => render()});
-      const {timing, status} = header;
-      const time = async (name, executor) => {
+      const header = renderHeader({ rerender: () => render() });
+      const { timing, status } = header;
+      const time = async (name, executor, cycles = 1) => {
         let start, result, end, elapsed;
         start = now();
         result = await executor();
         end = now();
         elapsed = end - start;
-        timing && timing(name, round(elapsed));
-        return {name, executor, start, result, end, elapsed};
+        timing && timing(name, round(elapsed / cycles));
+        return { name, executor, start, result, end, elapsed };
       }
 
       container.innerHTML = '';
@@ -220,24 +178,31 @@
       try {
 
         await nextFrame(header.status('source', `${specifier}`), header.timing('source', true));
-        const { result: {sourceText, response} } = await time('source', () => loadFromURL(specifier));
+        const { result: { sourceText, response } } = await time('source', () => loadFromURL(specifier));
         sourceType = `${sourceType || response.headers.get('Content-Type') || options.sourceType}`.replace(/^(?:.*?\/)?(\w+).*$/, '$1').toLowerCase();
         sourceType in markup.modes || (sourceType = 'markup');
-        const markupOptions = {sourceType};
+        const markupOptions = { sourceType };
         header.status('source', `${specifier}`);
 
         fragment = code;
 
-        render = async () => {
-          code.innerText = '';
-          await nextFrame();
+        const iterate = iterations => {
+          for (let n = iterations; n--; [...markup.tokenize(sourceText, markupOptions)]);
+        };
 
-          header.stats({name: 'render', status: '', time: -1});
-          header.stats({name: 'repeats', status: '', time: -1});
-          header.stats({name: 'iterations', status: '', time: -1});
+        const repeat = repeats => {
+          for (let n = repeats; n--; code.appendChild(renderMarkup(sourceText, markupOptions)));
+        }
+
+        render = async () => {
+          await nextFrame(code.innerText = '');
+
+          header.stats({ name: 'render', status: '', time: -1 });
+          header.stats({ name: 'repeats', status: '', time: -1 });
+          header.stats({ name: 'iterations', status: '', time: -1 });
 
           if (repeats > 0) {
-            await nextFrame(header.stats({name: 'render', status: `${sourceType}`, time: true}));
+            await nextFrame(header.stats({ name: 'render', status: `${sourceType}`, time: true }));
             time('render', ƒ => {
               fragment = renderMarkup(sourceText, markupOptions);
               code.appendChild(fragment);
@@ -246,20 +211,15 @@
           }
 
           if (repeats > 1) {
-            await nextFrame(header.stats({name: 'repeats', status: `⁎${repeats}`, time: true}))
-            time('repeats', async ƒ => {
-              for (let n = repeats; --n; code.appendChild(renderMarkup(sourceText, markupOptions)));
-              //  n % 10 || await nextFrame();
-            });
+            await nextFrame(header.stats({ name: 'repeats', status: `⁎${repeats}`, time: true }))
+            time('repeats', async ƒ => repeat(repeats - 1), repeats - 1);
             header.status('repeats', `⁎${repeats}`);
           }
 
           if (iterations > 0) {
-            await nextFrame(header.stats({name: 'iterations', status: `⁑${iterations}`, time: true}))
+            await nextFrame(header.stats({ name: 'iterations', status: `⁑${iterations}`, time: true }))
 
-            time('iterations', async ƒ => {
-              for (let n = iterations; n--; [... markup.tokenize(sourceText, markupOptions)]);
-            });
+            time('iterations', async ƒ => iterate(iterations), iterations);
 
             header.status('iterations', `⁑${iterations}`);
           }
@@ -267,6 +227,7 @@
           return fragment;
         };
 
+        await nextFrame();
         fragment = await render();
 
         return returned = fragment;
@@ -275,24 +236,58 @@
       }
     }
 
-    const renderFromHash = (hash = location.hash) => {
-      const match = /#(.*?)(?:\!([a-z]+))?(?:\*(\d+))?(?:\*{2}(\d+))?$/.exec(hash);
-      const [,specifier, type, repeats = defaults.repeats, iterations = defaults.iterations] = match || '';
-      const sourceType = type || undefined;
+    const renderFromHash = (hash = location.hash || '#') => {
+      const [, specifier, type, repeats = defaults.repeats, iterations = defaults.iterations] = hashMatcher.exec(hash.trim());
+
       options.repeats = repeats >= 0 ? parseInt(repeats) : defaults.repeats;
       options.iterations = iterations >= 0 ? parseInt(iterations) : defaults.iterations;
-      const link = /^\w[\w\-]*$/.test(specifier) && document.querySelector(`link#${specifier}`);
-      const source = link && link.href || specifier || options.source;
-      source && (options.source = source);
-      // console.log(match, {specifier, link, source, type, repeats, iterations});
-      specifier && renderFromURL(source, sourceType);
+
+      const source = (specifier && (/^\w[\w\-]*$/.test(specifier) && examples[specifier]) || specifier);
+
+      const sourceURL = (source && (options.source = source)) || options.source || (options.source = defaults.sourceURL);
+      const sourceType = type || undefined;
+
+      // console.log({sourceURL, sourceType},  {specifier, type, repeats, iterations}, {source});
+
+      renderFromURL(sourceURL, sourceType);
     };
 
     window.addEventListener('hashchange', () => renderFromHash());
 
     requestAnimationFrame(() => renderFromHash(location.hash !== '#' && location.hash || `#${defaults.sourceURL}`));
 
-</script>
+
+    const examples = {
+      "markup": "./lib/markup-parser.js",
+      "markup-api": "./lib/markup.js",
+      "markup-dom": "./lib/markup-dom.js",
+      "markup-modes": "./lib/markup-modes.js",
+      "leo-routes": "./benchmarks/assets/pholio-routes-profile.js",
+      "punctuation": "./benchmarks/assets/punctuation.js",
+      "babel": "./benchmarks/assets/babel.js",
+      "acorn": "https://cdnjs.cloudflare.com/ajax/libs/acorn/5.7.3/acorn_loose.es.js",
+      "esprima": "https://cdnjs.cloudflare.com/ajax/libs/esprima/2.7.3/esprima.js",
+      "babel-core": "https://cdnjs.cloudflare.com/ajax/libs/babel-core/6.1.19/browser.js",
+      "babel-core-min": "https://cdnjs.cloudflare.com/ajax/libs/babel-core/6.1.19/browser.min.js",
+      "popper": "https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.4/esm/popper.js",
+      "xregexp": "https://cdnjs.cloudflare.com/ajax/libs/xregexp/3.2.0/xregexp-all.js",
+      "xregexp-min": "https://cdnjs.cloudflare.com/ajax/libs/xregexp/3.2.0/xregexp-all.min.js",
+    }
+
+    sourceHeaderTemplate && (sourceHeaderTemplate.selectors = {
+      'source-span': '#source',
+      'source-time': '#source + time',
+      'render-span': '#render',
+      'render-time': '#render + time',
+      'repeats-span': '#repeats',
+      'repeats-time': '#repeats + time',
+      'iterations-span': '#iterations',
+      'iterations-time': '#iterations + time',
+      'rerender-button': '#rerender[onclick]',
+      'contrast-button': '#contrast[onclick]',
+    });
+
+  </script>
 </body>
 
 </html>
