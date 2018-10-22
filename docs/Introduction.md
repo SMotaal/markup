@@ -20,7 +20,7 @@ By such stipulations, markup and syntax are not synonyms, they are merely relate
 
 *Relating to Markup Languages (ML)*
 
-Markup Languages are languages used to declaratively compose texts which rely on nested syntaxes to inline non-textual features such as formatting, sematic artifacts, as well as embed or linked rich media content.
+Markup Languages are languages used to compose texts which rely on highly declaratively nested syntaxes to inline non-textual features such as formatting, sematic artifacts, as well as embed or linked rich media content.
 
 While the syntaxes of ML versus non-ML languages often differ significantly, such differences hardly factor in when contrasted from a markup perspective.
 
