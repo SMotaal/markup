@@ -6,15 +6,15 @@ Semi-contextual parsing experiments, which fall somewhere between the scope of r
 
 _Markup_ — fetches and highlights source from hash and mime from query
 
-> [https://smotaal.github.io/experimental/markup/markup#./lib/markup.js](https://smotaal.github.io/experimental/markup/markup#./lib/markup.js)
+> [markup.html#./lib/markup.js](./markup.html#./lib/markup.js)
 >
-> [https://smotaal.github.io/experimental/markup/markup#./lib/markup-modes.js\*10](https://smotaal.github.io/experimental/markup/markup#./lib/markup-modes.js*10)
+> [markup.html#./lib/markup-modes.js\*10](./markup.html#./lib/markup-modes.js*10)
 >
-> [https://smotaal.github.io/experimental/markup/markup#./lib/markup-dom.js](https://smotaal.github.io/experimental/markup/markup#./lib/markup-dom.js)
+> [markup.html#./lib/markup-dom.js](./markup.html#./lib/markup-dom.js)
 >
-> [https://smotaal.github.io/experimental/markup/markup#./markup.css!css](https://smotaal.github.io/experimental/markup/markup#./markup.css!css)
+> [markup.html#./markup.css!css](./markup.html#./markup.css!css)
 >
-> [https://smotaal.github.io/experimental/markup/markup#./markup.html!html](https://smotaal.github.io/experimental/markup/markup#./markup.html!html)
+> [markup.html#./markup.html!html](./markup.html#./markup.html!html)
 
 **What it aims to accomplish**
 
