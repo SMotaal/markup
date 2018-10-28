@@ -49,11 +49,11 @@ Semi-contextual parsing experiments, which fall somewhere between the scope of r
 >
 > > _Inspection Modes_ — `esm`, `cjs`, `esx`
 > >
-> > [#acorn-esm](./markup.html#acorn-esm) <kbd>preset=esm</kbd> — EMCAScript® > Module features
+> > [#acorn-esm](./markup.html#acorn-esm) <kbd>preset=esm</kbd> — EMCAScript® Module features
 > >
-> > [#acorn-cjs](./markup.html#acorn-cjs) <kbd>preset=cjs</kbd> — CommonJS Module > features
+> > [#acorn-cjs](./markup.html#acorn-cjs) <kbd>preset=cjs</kbd> — CommonJS Module features
 > >
-> > [#acorn-cjs!esx](./markup.html#acorn-cjs!esx) <kbd>esx</kbd> — EMCAScript® > and CommonJS Module features
+> > [#acorn-cjs!esx](./markup.html#acorn-cjs!esx) <kbd>esx</kbd> — EMCAScript® and CommonJS Module features
 >
 > **Iterations**
 >
