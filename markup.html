@@ -42,13 +42,23 @@
         const defaults = { darkMode: true };
         const element = document.currentScript.parentElement;
         // TODO: Add support for @media (prefers-dark-mode) when it lands
-        const prefersDarkInterface = matchMedia('prefers-dark-interface');
+        const prefersColorSchemeDark = matchMedia('(prefers-color-scheme: dark)');
+        const prefersColorSchemeLight = matchMedia('(prefers-color-scheme: light)');
         (
-          matchMedia('prefers-dark-interface').matches &&
+          prefersColorSchemeDark.matches &&
           !element.classList.add('prefers-dark-mode') ||
           localStorage.darkMode ||
-          defaults.darkMode
+          (!prefersColorSchemeLight.matches && defaults.darkMode)
         ) && element.classList.add('dark-mode');
+        prefersColorSchemeDark.addListener && prefersColorSchemeDark.addListener(({ matches = false }) => {
+          !matches ? (
+            localStorage.darkMode || element.classList.remove('dark-mode'),
+            element.classList.remove('prefers-dark-mode')
+          ) : (
+              element.classList.add('prefers-dark-mode'),
+              element.classList.add('dark-mode')
+            )
+        });
         element.hidden = false;
       }
     </script>
