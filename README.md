@@ -63,15 +63,13 @@ Semi-contextual parsing experiments, which fall somewhere between the scope of r
 
 **Rendering**
 >
-> [#markup!es&#42;0&#42;&#42;10](./markup.html#markup!es*1) <kbd>es</kbd> (on)
+> [#markup&#42;1](./markup.html#markup!es*1) <kbd>es</kbd> (on)
 >
-> [#markup!es&#42;0&#42;&#42;10](./markup.html#markup!es*0) <kbd>es</kbd> (off)
+> [#markup&#42;0](./markup.html#markup!es*0) <kbd>es</kbd> (off)
 
 **Benchmarking**
 >
-> [#markup!html&#42;&#42;100](./markup.html#markup!html*0**100) <kbd>html</kbd>
->
-> [#markup!html&#42;&#42;100](./markup.html#markup!html*0**1000) <kbd>html</kbd>
+> [#markup!esm&#42;0&#42;&#42;100](./markup.html#markup!esm*0**100) <kbd>html</kbd>
 
 </center>
 
