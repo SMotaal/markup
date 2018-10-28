@@ -19,46 +19,61 @@ Semi-contextual parsing experiments, which fall somewhere between the scope of r
 
 ### _./markup.html_ — fetches and highlights sources
 
-**Notation**
+**Fragments**
 
-> <code>#[<b>url</b>]![<b>mode</b>]*[<b>replicates</b>]**[<b>iterations</b>]</code>
+<pre>#<samp>specifier</samp>!<samp>mode</samp>*<samp>repeat</samp>**<samp>iterations</samp></pre>
 
 **Syntax Modes** — html, css, es (js or javascript)
 
-> [markup.html#./markup.html!html](./markup.html#./markup.html!html)
+> [#./markup.html](./markup.html#./markup.html!html) <kbd>auto=html</kbd>
 >
-> [markup.html#./markup.css!css](./markup.html#./markup.css!css)
+> [#./markup.html!html](./markup.html#./markup.html!html) <kbd>html</kbd>
 >
-> [markup.html#./lib.markup.js!js](./markup.html#./lib.markup.js!js)
+> [#./markup.css!css](./markup.html#./markup.css!css) <kbd>css</kbd>
+>
+> [#./lib.markup.js!js](./markup.html#./lib.markup.js!js) <kbd>es</kbd>
 
 **Additional Modes** — esm, cjs, esx, (syntax detection model)
 
+> *SourceText scanner — <kbd>esm</kbd>*
+>
+> [#acorn-esm](./markup.html#acorn-esm) <kbd>preset=esm</kbd>
+>
+> [#acorn-cjs!esm](./markup.html#acorn-cjs!esm) <kbd>esm</kbd>
+>
+> [#https://unpkg.com/acorn!esm](./markup.html#https://unpkg.com/acorn!esm) <kbd>esm</kbd>
+
 **Specifiers** — URL or "bare" specifiers
 
-> [markup.html#https://unpkg.com/acorn](./markup.html#https://unpkg.com/acorn)
+> [#https://unpkg.com/acorn](./markup.html#https://unpkg.com/acorn) <kbd>auto=es</kbd>
 >
-> [markup.html#./lib/markup.js](./markup.html#./lib/markup.js)
+> [#./lib/markup.js](./markup.html#./lib/markup.js) <kbd>auto=es</kbd>
 >
-> [markup.html#markup](./markup.html#markup)
+> [#markup](./markup.html#markup) <kbd>auto=es</kbd>
 >
-> [markup.html#acorn](./markup.html#acorn)
+> [#acorn](./markup.html#acorn) <kbd>auto=es</kbd>
 >
-> [markup.html#acorn-esm](./markup.html#acorn-esm)
+> [#acorn-esm](./markup.html#acorn-esm) <kbd>preset=esm</kbd>
 >
-> [markup.html#acorn-cjs](./markup.html#acorn-cjs)
+> [#acorn-cjs](./markup.html#acorn-cjs) <kbd>preset=cjs</kbd>
 >
-> [markup.html#esprima](./markup.html#esprima)
+> [#esprima](./markup.html#esprima) <kbd>auto=es</kbd>
 >
-> [markup.html#babel](./markup.html#markup)
+> [#babel](./markup.html#babel) <kbd>auto=es</kbd>
 
-**Other Parameters**
+**Rendering**
 >
-> [markup.html#markup!es&#42;0&#42;&#42;10](./markup.html#markup!es*0**10)
+> [#markup!es&#42;0&#42;&#42;10](./markup.html#markup!es*1) <kbd>es</kbd> (on)
 >
-> [markup.html#markup!html&#42;&#42;100](./markup.html#markup!html**100)
->
-> [markup.html#markup!esm&#42;2&#42;&#42;10](./markup.html#markup!esm*2**10)
+> [#markup!es&#42;0&#42;&#42;10](./markup.html#markup!es*0) <kbd>es</kbd> (off)
 
+**Benchmarking**
+>
+> [#markup!html&#42;&#42;100](./markup.html#markup!html*0**100) <kbd>html</kbd>
+>
+> [#markup!html&#42;&#42;100](./markup.html#markup!html*0**1000) <kbd>html</kbd>
+
+</center>
 
 <!--
 
