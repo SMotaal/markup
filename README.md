@@ -53,11 +53,11 @@ Semi-contextual parsing experiments, which fall somewhere between the scope of r
 
 **Other Parameters**
 >
-> [markup.html#markup!es*0**10](./markup.html#markup!es*0**10)
+> [markup.html#markup!es&#42;0&#42;&#42;10](./markup.html#markup!es*0**10)
 >
-> [markup.html#markup!html**100](./markup.html#markup!html**100)
+> [markup.html#markup!html&#42;&#42;100](./markup.html#markup!html**100)
 >
-> [markup.html#markup!esm*2**10](./markup.html#markup!esm*2**10)
+> [markup.html#markup!esm&#42;2&#42;&#42;10](./markup.html#markup!esm*2**10)
 
 
 <!--
