@@ -15,64 +15,72 @@ Semi-contextual parsing experiments, which fall somewhere between the scope of r
 
 - Operate on invalid code (or minified code for now).
 
-## Experiments
+## _./markup.html_ — fetches, scans and renders source texts
 
-### _./markup.html_ — fetches and highlights sources
 
-**Fragments**
+### Parameters
 
-<pre>#<samp>specifier</samp>!<samp>mode</samp>*<samp>repeat</samp>**<samp>iterations</samp></pre>
+<pre>markup.html#<samp>specifier</samp>!<samp>mode</samp>*<samp>repeat</samp>**<samp>iterations</samp></pre>
 
-**Syntax Modes** — html, css, es (js or javascript)
 
-> [#./markup.html](./markup.html#./markup.html!html) <kbd>auto=html</kbd>
+> **Specifiers**
 >
-> [#./markup.html!html](./markup.html#./markup.html!html) <kbd>html</kbd>
+> > [#./lib/markup.js](./markup.html#./lib/markup.js)
+> >
+> > [#https://unpkg.com/acorn](./markup.html#https://unpkg.com/acorn)
 >
-> [#./markup.css!css](./markup.html#./markup.css!css) <kbd>css</kbd>
+> **Modes**
 >
-> [#./lib.markup.js!js](./markup.html#./lib.markup.js!js) <kbd>es</kbd>
-
-**Additional Modes** — esm, cjs, esx, (syntax detection model)
-
-> *SourceText scanner — <kbd>esm</kbd>*
+> > _Automatic Mode_ — per content-type or preset
+> >
+> > [#markup](./markup.html#markup) <kbd>auto=es</kbd>
+> >
+> > [#./markup.html](./markup.html#./markup.html) <kbd>auto=html</kbd>
+> >
+> > [#./markup.css](./markup.css#./markup.css) <kbd>auto=css</kbd>
 >
-> [#acorn-esm](./markup.html#acorn-esm) <kbd>preset=esm</kbd>
+> > _Syntax Modes_ — `html`, `css`, and `js` (aka `es` or `javascript`)
+> >
+> > [#./markup.html!html](./markup.html#./markup.html!html) <kbd>html</kbd>
+> >
+> > [#./markup.css!css](./markup.html#./markup.css!css) <kbd>css</kbd>
+> >
+> > [#./lib.markup.js!js](./markup.html#./lib.markup.js!js) <kbd>es</kbd>
 >
-> [#acorn-cjs!esm](./markup.html#acorn-cjs!esm) <kbd>esm</kbd>
+> > _Inspection Modes_ — `esm`, `cjs`, `esx`
+> >
+> > [#acorn-esm](./markup.html#acorn-esm) <kbd>preset=esm</kbd> — EMCAScript® > Module features
+> >
+> > [#acorn-cjs](./markup.html#acorn-cjs) <kbd>preset=cjs</kbd> — CommonJS Module > features
+> >
+> > [#acorn-cjs!esx](./markup.html#acorn-cjs!esx) <kbd>esx</kbd> — EMCAScript® > and CommonJS Module features
 >
-> [#https://unpkg.com/acorn!esm](./markup.html#https://unpkg.com/acorn!esm) <kbd>esm</kbd>
-
-**Specifiers** — URL or "bare" specifiers
-
-> [#https://unpkg.com/acorn](./markup.html#https://unpkg.com/acorn) <kbd>auto=es</kbd>
+> **Iterations**
 >
-> [#./lib/markup.js](./markup.html#./lib/markup.js) <kbd>auto=es</kbd>
+> > [#markup](./markup.html#markup) — Render&times;1 and Tokenize&times;1
+> >
+> > [#markup\*2](./markup.html#markup*2) — Render&times;2 and Tokenize&times;1
+> >
+> > [#markup\*0](./markup.html#markup*0) — Render&times;0 and Tokenize&times;1
+> >
+> > [#markup\*0\*\*100](./markup.html#markup*0**100) — Render&times;0 and Tokenize&times;100
+> >
+> > [#markup\*2\*\*2](./markup.html#markup*2**2) — Render&times;2 and Tokenize&times;2
 >
-> [#markup](./markup.html#markup) <kbd>auto=es</kbd>
+> **Presets**
 >
-> [#acorn](./markup.html#acorn) <kbd>auto=es</kbd>
+> > [#markup](./markup.html#markup) <kbd>auto=es</kbd>
+> >
+> > [#acorn](./markup.html#acorn) <kbd>auto=es</kbd>
+> >
+> > [#acorn-esm](./markup.html#acorn-esm) <kbd>preset=esm</kbd>
+> >
+> > [#acorn-cjs](./markup.html#acorn-cjs) <kbd>preset=cjs</kbd>
+> >
+> > [#esprima](./markup.html#esprima) <kbd>auto=es</kbd>
+> >
+> > [#babel](./markup.html#babel) <kbd>auto=es</kbd>
 >
-> [#acorn-esm](./markup.html#acorn-esm) <kbd>preset=esm</kbd>
->
-> [#acorn-cjs](./markup.html#acorn-cjs) <kbd>preset=cjs</kbd>
->
-> [#esprima](./markup.html#esprima) <kbd>auto=es</kbd>
->
-> [#babel](./markup.html#babel) <kbd>auto=es</kbd>
-
-**Rendering**
->
-> [#markup&#42;1](./markup.html#markup!es*1) <kbd>es</kbd> (on)
->
-> [#markup&#42;0](./markup.html#markup!es*0) <kbd>es</kbd> (off)
-
-**Benchmarking**
->
-> [#markup!esm&#42;0&#42;&#42;100](./markup.html#markup!esm*0**100) <kbd>html</kbd>
-
-</center>
-
 <!--
 
 ## Ideas
