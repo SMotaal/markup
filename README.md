@@ -11,18 +11,18 @@ Semi-contextual parsing experiments, which fall somewhere between the scope of r
 - Generate a single scan for multiple operations.
 - Allow extended modeling of modifications.
 
-**What it does not try to do?**
+**What it does not try to do**
 
 - Operate on invalid code (or minified code for now).
 
 ## _./markup.html_ — fetches, scans and renders source texts
 
-
 ### Parameters
 
-<pre>markup.html#<samp>specifier</samp>!<samp>mode</samp>*<samp>repeat</samp>**<samp>iterations</samp></pre>
-
-
+> **Notation**
+>
+> > <pre>markup.html#<samp>specifier</samp>!<samp>mode</samp>*<samp>repeat</samp>**<samp>iterations</samp></pre>
+>
 > **Specifiers**
 >
 > > [#./lib/markup.js](./markup.html#./lib/markup.js)
@@ -80,7 +80,6 @@ Semi-contextual parsing experiments, which fall somewhere between the scope of r
 > > [#esprima](./markup.html#esprima) <kbd>auto=es</kbd>
 > >
 > > [#babel](./markup.html#babel) <kbd>auto=es</kbd>
->
 
 ## Packages
 
@@ -104,4 +103,46 @@ This package takes a perpetra philosophy into the paradigm of Web Components.
 
 #### September
 
-After exploring the paradigm of implementations dealing with markup and the resulting rants, a motivation for a new take on this topic resulted in the Markup experiment. The fundamental idea was to avoid the obvious pitfalls of coupling creative problem solving with one particular tool (like ASTs) because while they often times result in improved solutions down the road, they make it impossible to actually break from limitations of such tools, more importantly, they shift the focus from the actual problem space to that of the tool, making the lot of us tools.
+After exploring the paradigm of implementations dealing with markup and the resulting rants, a motivation for a new take on this topic resulted in the Markup experiment.
+
+The fundamental idea was to avoid the obvious pitfalls of coupling creative problem solving with one particular tool (like ASTs).
+
+Because, while they often times result in improved solutions down the road, they make it impossible to actually break from limitations of such tools. More importantly, they shift the focus from the actual problem space to that of the tool, making the lot of us tools.
+
+#### October
+
+Now we have a good starting point for a playground, it looks just like another highlighter, it can be if you want, but it is not. Highlighting is just the best way to debug all things markup.
+
+<blockquote>
+
+**Tokens and Fragments**
+
+<details><summary>The two pipelines are often used to deal with markup…</summary>
+
+Tokens are source aspects, not merely the stream of characters, but rather the stream resulting from any level of syntax-related segementation. Fragments come from the other end of the chain, they are generated from tokens, their particular purposes range from basic rendering (highlighters) to any number of things.
+
+Those two streams are fundamentally how markup is handled today, actually names notwithstanding. While it is easier to suppose that tokenization is where the bulk of waste can take place, it is interesting to note that packages often shy away from downstream access to this process.
+
+The myths are many, so the thought that its optimized code that is too complex for anyone to fiddle around with, I guess is a nice way of passively saying to developers that you can be creative but you are not clever enough to actually do it without our magic. So, naturally I explored inverting control of this pandora, taking out the synchronous iteration and replacing it with an iterable.
+
+That is to say, your tokenizer does not incure any overhead, including ones related to syntaxes that have not yet been initialized, until your downstream processing of a fragment is ready to pull the next token. A mouth full, but generally speaking, a theoretical fragment which is the array of all tokens is identical in principle to that of the synchronous iteration of the same source.
+
+With this, tokenization really takes the form of a stream, it literally reads from a stream and pipes into another. It is not asynchronous per say, because while source streams may be asynchronous, tokenization should decouple from any such burdens which better factors in the problem domain of fragments. When it's source starts, so does the tokenizer, when it's source pauses, so does the fragment's attempts to pull tokens, until it resumes and eventually concludes.
+
+</details>
+
+</blockquote>
+
+<blockquote>
+
+**Symbols and Patterns**
+
+<details><summary>The two building blocks of markup…</summary>
+
+Symbols are notoriously ambigious in their definition, but here, symbols are basically one or more characters of a unique and constant order, occuring in a place to be expected. Patterns are just like symbols, except they interlace with entities which are either not constant or not unqiue, or both.
+
+A symbol translates to a sequence. A pattern translates to a group of many sequences or groups. This implies that only symbols will have tokens, and patterns may need other abstractions (like AST nodes).
+
+</details>
+
+</blockquote>
