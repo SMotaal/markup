@@ -81,3 +81,12 @@ Semi-contextual parsing experiments, which fall somewhere between the scope of r
 > >
 > > [#babel](./markup.html#babel) <kbd>auto=es</kbd>
 >
+
+## Packages
+
+The following are extracted packages which can serve other potential work.
+
+### pseu·dom
+
+This package extracts the APIs used to provide a mirrored pipeline to compose DocumentFragments in workers. Due to the improved performance and modularity, a shift to a more complete implementation that could be use in the main thread, workers, and Node.js was more than justified. See [packages/pseudom](./packages/pseudom/) for details.
+
