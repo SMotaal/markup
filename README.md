@@ -90,3 +90,18 @@ The following are extracted packages which can serve other potential work.
 
 This package extracts the APIs used to provide a mirrored pipeline to compose DocumentFragments in workers. Due to the improved performance and modularity, a shift to a more complete implementation that could be use in the main thread, workers, and Node.js was more than justified. See [packages/pseudom](./packages/pseudom/) for details.
 
+### perpetra
+
+This package provides free fall alternatives to common tooling functions. It is more of a philosophy than actual code at the moment. This philosophy states that a particular functionality should be decoupled from any other, including ones that make the functionality more functional, so long as the functionality is implemented to be adequately functional without depending on another and it is designed to be extended by another without depending on a particular loading mechanism. Yeah, it's best to wait on this one.
+
+### perpet·ui
+
+This package takes a perpetra philosophy into the paradigm of Web Components.
+
+## Updates
+
+### 2018
+
+#### September
+
+After exploring the paradigm of implementations dealing with markup and the resulting rants, a motivation for a new take on this topic resulted in the Markup experiment. The fundamental idea was to avoid the obvious pitfalls of coupling creative problem solving with one particular tool (like ASTs) because while they often times result in improved solutions down the road, they make it impossible to actually break from limitations of such tools, more importantly, they shift the focus from the actual problem space to that of the tool, making the lot of us tools.
