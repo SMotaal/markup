@@ -18,7 +18,7 @@ If you find pseu·dom suitable for your particular case, please don't hesitate t
 - Seemlessly go where the DOM can't.
 - Promote fast rendering into the DOM (ie HTMLTemplateElement or innerHTML).
 
-**What it does NOT try to do?**
+**What it does NOT try to do**
 
 - Work with actual documents or elements (ie either or).
 - Act like a DOM or a virtual DOM (ie events and such).
