@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>SMotaal's Markup</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <style>
+    @import url('https://cdn.jsdelivr.net/npm/@typopro/web-iosevka/TypoPRO-Iosevka.css');
+    .markup.variable { --color: red; }
+    .markup.keyword { --color: olive;  }
+    .markup.punctuator { --color: green; font-weight: 400;}
+    /* .punctuation { --color: lightblue; } */
+    .markup.sequence { --color: grey; }
+    .markup.operator { --color: limegreen; }
+    .markup.combinator { --color: skyblue; }
+    .markup.breaker { --color: grey; }
+    .markup.quote, .markup.\@quote { --color: teal; }
+    .markup.opener, .markup.closer { --color: orange }
+    .markup.punctuator.span { --color:coral; }
+    .markup.comment, .markup.\@comment { --color: #AAA; }
+    .markup {
+      --hover: var(--color, #999);
+      color: var(--color, currentColor);
+    }
+    .markup:hover {
+      margin: -2px;
+      border-radius: 1ch;
+      border: 2px solid transparent;
+      background-color: #FFF;
+      background-clip: border-box;
+      box-shadow: 0 0 0.5px 1.5px #FFF, 0 1px 10px -3px #0006, 0 0 5px -1px var(--hover, #999);
+    }
+
+    .markup.\@comment:hover, .markup.whitespace:hover {
+      border-color: #9992;
+      box-shadow: none;
+    }
+    #source-code {
+      background-color: #F9F9F9;
+      line-height: 1.375em;
+      text-shadow: 0 1px 0 #FFF;
+      text-rendering: optimizeLegibility;
+      color: #444;
+      font-family: 'Iosevka', 'TypoPRO Iosevka Term', monospace;
+      font-variant-ligatures: contextual;
+      white-space: pre-wrap;
+      /* box-sizing: content-box; */
+    }
+  </style>
+
+</head>
+
+<body>
+  <pre id="source-code"></pre>
+  <script type=module>
+    import './lib/markup-dom.js';
+    import './lib/markup-modes.js';
+    import {markup} from './lib/markup.js';
+
+    const defaults = {
+      repeats: 100,
+      iterations: 1,
+      sourceURL: './lib/markup.js',
+      sourceType: undefined,
+      element: 'pre#source-code',
+    }
+
+    const options = {
+      ... defaults
+    };
+
+    const sourceCodeElement = document.querySelector(options.element);
+
+    const loadFromURL = async (specifier) => {
+      let fetched, response, result;
+      const url = `${new URL(specifier, location)}`;
+      const source = {specifier, url};
+      try {
+        source.response = await fetch(url);
+        source.sourceText = await source.response.text();
+        return result = source;
+      } finally {
+        result || console.warn('Failed to load source from "%s" — %o', specifier, source);
+      }
+    }
+
+    const nextFrame = () => new Promise(resolve => requestAnimationFrame(resolve));
+    // const nextStep = () => new Promise(resolve => setTimeout(resolve));
+
+    const spread = iterator => {
+      const items = [];
+      for (const item of iterator) items.push(item);
+      return items;
+    }
+
+    let defaultSoutceType = location.search && location.search.slice(1);
+
+    const renderMarkup = (target, sourceText, markupOptions) => {
+      const nodes = sourceText ? [...  markup(sourceText, markupOptions)] : [];
+      while (nodes.length > 500) target.append(... nodes.splice(0, 500));
+      nodes.length && target.append(... nodes);
+      return nodes;
+    }
+
+    const renderFromURL = async (specifier, sourceType = defaultSoutceType) => {
+
+      const {repeats = 1, iterations = 1} = options;
+
+      let elements, returned;
+
+      await nextFrame();
+
+      sourceCodeElement.innerText = `Loading "${specifier}"…`;
+
+      try {
+        const {sourceText, response} = await loadFromURL(specifier);
+
+        await nextFrame();
+        sourceType || (sourceType = response.headers.get('Content-Type'));
+        sourceCodeElement.innerText = `Rendering "${specifier}"…`;
+
+        await nextFrame();
+        sourceType && (sourceType = sourceType.split(';', 1)[0]);
+
+        if (iterations > 1) for (let n = iterations; n--;) [...  markup(sourceText, {sourceType})];
+        // elements = sourceText ? spread(markup(sourceText, {sourceType})) : [];
+
+        const markupOptions = {sourceType};
+        sourceCodeElement.innerText = '';
+        elements = renderMarkup(sourceCodeElement, sourceText, markupOptions);
+
+        if (repeats > 1)
+        for (let n = repeats >  1 && repeats || 1; n--;)
+          elements = renderMarkup(sourceCodeElement, sourceText, markupOptions);
+
+          // elements = sourceText ? [...  markup(sourceText, {sourceType})] : [];
+          // // sourceCodeElement.innerText = '';
+          // // sourceCodeElement.innerHTML = `<div>${sourceType}</div>`;
+          // while (elements.length > 500)
+          //   sourceCodeElement.append(... elements.splice(0, 500));
+          // elements.length && sourceCodeElement.append(... elements);
+        // }
+        return returned = elements;
+
+      } finally {
+        !returned && (sourceCodeElement.innerText = 'Failed!');
+      }
+    }
+
+    const renderFromHash = (hash = location.hash) => {
+      const specifier = hash && decodeURIComponent(hash.slice(1));
+      specifier && renderFromURL(specifier);
+    };
+
+    window.addEventListener('hashchange', () => renderFromHash());
+
+    requestAnimationFrame(() => renderFromHash(location.hash !== '#' && location.hash || `#${defaults.sourceURL}`));
+
+  </script>
+</body>
+
+</html>

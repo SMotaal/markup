@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>SMotaal's Markup</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <template id=source-header>
+    <header>
+      <span title=source>#<span id=source></span><time></time></span>
+      <span title=render><span id=render></span><time></time></span>
+      <span title=repeats><span id=repeats></span><time></time></span>
+      <span title=iterations><span id=iterations></span><time></time></span>
+      <span>
+        <a id=rerender title="Rerender source" onclick="click()"><b>&#10227;</b></a>
+        <a id=palette title="Toggle Dark/Light Mode" onclick="click()"><b>&#10227;</b></a>
+      </span>
+    </header>
+  </template>
+
+  <style>
+    @import './markup.css';
+    @import './markup-hover.css';
+    body {
+      margin: 0;
+      display: flex;
+      flex-flow: column;
+      min-height: 100vh;
+      width: 100vw;
+      background-color: #999;
+      font-size: 1rem;
+      overflow-x: hidden;
+      overflow-y: scroll;
+    }
+
+    :host {
+      --markup-light: var(--markup-light-text, #f9f9f9);
+      --markup-light-text: var(--markup-light-text, #666);
+      --markup-dark: var(--markup-dark, #345);
+      --markup-dark-text: var(--markup-dark-text, #eee);
+      --markup-neutral-light: var(--markup-neutral-light, #aaa);
+      --markup-neutral: var(--markup-neutral, #999);
+      --markup-neutral-dark: var(--markup-neutral-dark, #666);
+      --markup-neutral-fade: var(--markup-neutral-fade, #9993);
+      --markup-color: var(--markup-color, currentColor);
+      --markup-background: var(--markup-background, #9993);
+
+    }
+
+    #source-code {
+      padding: 1ch;
+      margin: 0;
+      max-width: 100%;
+      flex: 1;
+
+      background-color: var(--markup-background, transparent);
+      color: var(--markup-color, currentColor);
+      /* text-shadow: 0 0.875px 0 var(--markup-shadow, #FFF); */
+
+      line-height: 1.5em;
+      font-family: 'Iosevka', 'TypoPRO Iosevka Term', monospace;
+      font-variant-ligatures: contextual;
+      text-rendering: optimizeSpeed;
+      white-space: pre-wrap;
+      word-break: break-all;
+      overflow-wrap: break-word;
+
+      transition: color 0.125s, background 0.125s;
+
+      /* will-change: transition; */
+    }
+
+    #source-code > header {
+      display: grid;
+      grid-auto-flow: column;
+      grid-template-columns: repeat(auto-fill, 1fr);
+      grid-gap: 2ch;
+      padding: 0.25ch;
+
+      margin-bottom: 1ch;
+      border-radius: 1ch;
+      white-space: normal;
+      overflow-wrap: break-word;
+      word-break: break-all;
+      vertical-align: baseline;
+      overflow: hidden;
+
+      user-select: none;
+      -moz-user-select: none;
+
+      background: linear-gradient(to right, var(--markup-neutral-fade), var(--markup-neutral-fade)), var(--markup-background, #fff);
+      border: 1px groove #eee3;
+      color: var(--markup-neutral, #fff);
+      opacity: 0.9;
+
+      position: sticky;
+      /* TODO:  Fix sticky in Safari (http://cssdeck.com/labs/bu0nx69w) */
+      /* position: fixed; */
+      top: 1ch;
+
+      font-family: system-ui -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      font-weight: 200;
+    }
+
+    #source-code > header > * {
+      justify-content: center;
+      display: grid;
+      grid-gap: 0.25ch;
+      grid-auto-flow: column;
+      grid-template-columns: repeat(auto-fill, 1fr);
+      text-shadow: 0 0.875px 0 var(--markup-background, #fff);
+    }
+
+    #source-code > header [id] {
+      font-weight: 300;
+
+      user-select: text;
+      -moz-user-select: text;
+    }
+    #source-code > header [id] + time {
+      font-size: 87.5%;
+      max-width: max-content;
+
+      user-select: none;
+      -moz-user-select: none;
+    }
+
+    #source-code > header [id] + time::before {
+      content: ' ≈ ';
+    }
+
+    #source-code > header > * :empty {
+      display: none;
+    }
+
+    #source-code > header a[onclick]  {
+      display: inline-block;
+      width: 1em;
+      width: max-content;
+      height: 1em;
+      border: 0.25ch solid transparent;
+      border-radius: 25%;
+
+      background-clip: border-box;
+
+      position: relative;
+      top: 50%;
+      margin-top: -50%;
+      line-height: 87.5%;
+      vertical-align: text-bottom;
+      text-align: center;
+
+      user-select: none;
+      -moz-user-select: none;
+    }
+
+    #source-code > header a[onclick]:hover  {
+      background-color: var(--markup-neutral, #999);
+      color: var(--markup-dark-text, #fff);
+    }
+
+  </style>
+
+  <link-group id=samples>
+    <!-- Source Code Samples -->
+    <link-group id=markup>
+      <!-- Markup -->
+      <link id=markup rel=prefetch href="./lib/markup.js" />
+      <link id=markup-dom rel=prefetch href="./lib/markup-dom.js" />
+      <link id=markup-modes rel=prefetch href="./lib/markup-modes.js" />
+    </link-group>
+    <link-group id=examples>
+      <!-- Examples -->
+      <link id=leo-routes rel=prefetch href="./samples/pholio-routes-profile.js" />
+      <link id=punctuation rel=prefetch href="./samples/punctuation.js" />
+    </link-group>
+    <link-group id=vendor>
+      <!-- Third-party -->
+      <link id=acorn rel=prefetch href="https://cdnjs.cloudflare.com/ajax/libs/acorn/5.7.3/acorn_loose.es.js" />
+      <link id=esprima rel=prefetch href="https://cdnjs.cloudflare.com/ajax/libs/esprima/2.7.3/esprima.js" />
+      <link id=babel rel=prefetch href="https://cdnjs.cloudflare.com/ajax/libs/babel-core/6.1.19/browser.js" />
+      <link id=babel-min rel=prefetch href="https://cdnjs.cloudflare.com/ajax/libs/babel-core/6.1.19/browser.min.js" />
+      <link id=popper rel=prefetch href="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.4/esm/popper.js" />
+      <link id=xregexp rel=prefetch href="https://cdnjs.cloudflare.com/ajax/libs/xregexp/3.2.0/xregexp-all.js" />
+      <link id=xregexp-min rel=prefetch href="https://cdnjs.cloudflare.com/ajax/libs/xregexp/3.2.0/xregexp-all.min.js" />
+    </link-group>
+  </link-group>
+</head>
+
+<body>
+  <pre id="source-code" class=dark-mode></pre>
+  <script type=module>
+    import markup from './markup.js';
+
+    const defaults = {
+      repeats: 1,
+      iterations: 1,
+      sourceURL: './lib/markup.js',
+      sourceType: undefined,
+      element: 'pre#source-code',
+      headerTemplate: 'template#source-header',
+    }
+
+    const options = {
+      ... defaults,
+      // iterations: 500,
+      // repeats: 0,
+    };
+
+    const sourceCodeElement = document.querySelector(options.element);
+    const sourceHeaderTemplate = document.querySelector(options.headerTemplate);
+
+    sourceHeaderTemplate && (sourceHeaderTemplate.selectors = {
+      'source-span': '#source',
+      'source-time': '#source + time',
+      'render-span': '#render',
+      'render-time': '#render + time',
+      'repeats-span': '#repeats',
+      'repeats-time': '#repeats + time',
+      'iterations-span': '#iterations',
+      'iterations-time': '#iterations + time',
+      'rerender-button': '#rerender[onclick]',
+      'palette-button': '#palette[onclick]',
+    });
+
+    const loadFromURL = async (specifier) => {
+      let fetched, response, result;
+      const url = `${new URL(specifier, location)}`;
+      const source = {specifier, url};
+      try {
+        source.response = await fetch(url);
+        source.sourceText = await source.response.text();
+        return result = source;
+      } finally {
+        result || console.warn('Failed to load source from "%s" — %o', specifier, source);
+      }
+    }
+
+    const nextFrame = () => new Promise(ƒ => requestAnimationFrame(ƒ));
+
+    const renderMarkup = (sourceText, markupOptions) => (
+      markupOptions.fragment || (markupOptions.fragment = document.createDocumentFragment()),
+      markup.render(sourceText, markupOptions)
+    );
+
+    const renderHeader = ({
+      template = sourceHeaderTemplate,
+      selectors = template.selectors,
+      rerender = console.warn,
+    }) => {
+
+      const header = template.content.firstElementChild.cloneNode(true);
+
+      header.elements = {};
+
+      if (selectors) {
+        for (const [id, selector] of Object.entries(selectors)) {
+          header.elements[id] = selector && header.querySelector(selector) || undefined;
+        }
+      }
+
+      header.elements['rerender-button'] && (header.elements['rerender-button'].click = rerender);
+      header.elements['palette-button'] && (header.elements['palette-button'].click = async () => {
+        const parent = header.parentElement;
+        if (parent) {
+          // parent.style.willChange = 'transition';
+          // parent.style.transition = 'color 1s';
+
+          parent.classList.toggle('dark-mode');
+        }
+      });
+
+
+      header.status = (name, value) => {
+        header.status[name] === (header.status[name] = value);
+        const element = header.elements[`${name}-span`];
+        const text = `${value || ''}`;
+        element ? element.innerText = text : text && console.info('[%s] %o', name, value);
+      }
+      header.timing = (name, value) => {
+        header.timing[name] === (header.timing[name] = value);
+        const status = header.status[name] || 'done';
+        const element = header.elements[`${name}-time`];
+        const text = value >= 0 ? `${value} ms` : '';
+        element ? element.innerText = text : text && console.info('[%s] %o — %o', name, status, value);
+      }
+
+      header.reset = () => {
+        for (const [id, element] of Object.entries(header.elements)) {
+          /-time|-span/.test(id) && (element.innerText = '');
+        }
+      }
+
+      return header;
+    }
+
+    const round = (value, significance = 1) =>
+      Math.round((significance = 10 ** (~~significance || 0)) * value) / significance;
+
+    const renderFromURL = async (specifier, sourceType) => {
+      let returned, fragment, render;
+
+      const {repeats = 1, iterations = 1} = options;
+      const container = sourceCodeElement;
+      const now = options.now || Date.now;
+
+      const header = renderHeader({rerender: () => render()});
+      const {timing, status} = header;
+      const time = async (name, executor) => {
+        let start, result, end, elapsed;
+        start = now();
+        result = await executor();
+        end = now();
+        elapsed = end - start;
+        timing && timing(name, round(elapsed));
+        return {name, executor, start, result, end, elapsed};
+      }
+
+      container.innerHTML = '';
+      container.appendChild(header);
+      const code = container.appendChild(document.createElement('slot'));
+
+      try {
+
+        await nextFrame(header.status('source', `${specifier}…`));
+        const { result: {sourceText, response} } = await time('source', () => loadFromURL(specifier));
+        sourceType = `${sourceType || response.headers.get('Content-Type') || options.sourceType}`.replace(/^(?:.*?\/)?(\w+).*$/, '$1').toLowerCase();
+        sourceType in markup.modes || (sourceType = 'markup');
+        const markupOptions = {sourceType};
+        header.status('source', `${specifier}`);
+
+        fragment = code;
+
+        render = async () => {
+          code.innerText = '';
+          await nextFrame();
+
+          if (repeats > 0) {
+            await nextFrame(header.status('render', `${sourceType}…`));
+            time('render', ƒ => {
+              fragment = renderMarkup(sourceText, markupOptions);
+              code.appendChild(fragment);
+            });
+            header.status('render', `${sourceType}`);
+
+          }
+
+          if (repeats > 1) {
+            await nextFrame(header.status('repeats', `* ${repeats}…`));
+            time('repeats', async ƒ => {
+              for (let n = repeats; --n; code.appendChild(renderMarkup(sourceText, markupOptions)));
+              //  n % 10 || await nextFrame();
+            });
+            header.status('repeats', `×${repeats}`);
+          }
+
+          if (iterations > 1) {
+            await nextFrame(header.status('iterations', `* ${iterations}…`));
+            time('iterations', async ƒ => {
+              for (let n = iterations; n--; [... markup.tokenize(sourceText, markupOptions)]);
+            });
+            header.status('iterations', `×${iterations}`);
+          }
+
+          return fragment;
+        };
+
+        fragment = await render();
+
+        return returned = fragment;
+      } finally {
+        !returned && (container.innerText = 'Failed!');
+      }
+    }
+
+    const renderFromHash = (hash = location.hash) => {
+      const match = /#(.*?)(?:\!([a-z]+))?(?:\*(\d+))?(?:\*{2}(\d+))?$/.exec(hash);
+      const [,specifier, type, repeats = defaults.repeats, iterations = defaults.iterations] = match || '';
+      const sourceType = type || undefined;
+      options.repeats = repeats >= 0 ? parseInt(repeats) : defaults.repeats;
+      options.iterations = iterations >= 1 ? parseInt(iterations) : defaults.iterations;
+      const link = /^\w[\w\-]*$/.test(specifier) && document.querySelector(`link#${specifier}`);
+      const source = link && link.href || specifier || options.source;
+      source && (options.source = source);
+      // console.log(match, {specifier, link, source, type, repeats, iterations});
+      specifier && renderFromURL(source, sourceType);
+    };
+
+    window.addEventListener('hashchange', () => renderFromHash());
+
+    requestAnimationFrame(() => renderFromHash(location.hash !== '#' && location.hash || `#${defaults.sourceURL}`));
+
+</script>
+</body>
+
+</html>
