@@ -121,6 +121,7 @@ body {
 
   user-select: none;
   -moz-user-select: none;
+  -webkit-user-select: none;
 
   border: var(--outset-border, none);
   background: linear-gradient(to right, var(--fill), var(--fill)), var(--clear);
@@ -173,6 +174,7 @@ body {
   font-weight: 300;
   user-select: text;
   -moz-user-select: text;
+  -webkit-user-select: text;
 }
 
 /* .markup-container > header div > [title] > [id]:not(empty) { min-width: 10em; } */
@@ -182,6 +184,7 @@ body {
   font-size: 87.5%;
   user-select: none;
   -moz-user-select: none;
+  -webkit-user-select: none;
 }
 
 .markup-container > header div > [title] > [id] + time::before {
@@ -212,6 +215,7 @@ body {
 
   user-select: none;
   -moz-user-select: none;
+  -webkit-user-select: none;
 }
 
 .markup-container > header a[onclick]:hover {

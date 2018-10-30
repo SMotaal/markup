@@ -20,7 +20,7 @@
       <div id="controls">
         <span>
           <a id="rerender" title="Rerender" onclick="click()"><i icon>&#x27f3;</i></a>
-          <a id="contrast" title="Dark/Light Mode" onclick="click()"><i icon>&#x263D;</i></a>
+          <a id="contrast" title="Dark/Light Mode" onclick="click()" ondblclick="doubleClick()"><i icon>&#x263D;</i></a>
         </span>
       </div>
     </header>
@@ -47,16 +47,17 @@
         (
           prefersColorSchemeDark.matches &&
           !element.classList.add('prefers-dark-mode') ||
-          localStorage.darkMode ||
-          (!prefersColorSchemeLight.matches && defaults.darkMode)
+          localStorage.darkMode == true ||
+          (defaults.darkMode && !localStorage.lightMode)
         ) && element.classList.add('dark-mode');
         prefersColorSchemeDark.addListener && prefersColorSchemeDark.addListener(({ matches = false }) => {
           !matches ? (
-            localStorage.darkMode || element.classList.remove('dark-mode'),
-            element.classList.remove('prefers-dark-mode')
+            element.classList.remove('prefers-dark-mode'),
+            element.classList.contains('dark-mode') && localStorage.darkMode != true && element.classList.remove('dark-mode')
           ) : (
               element.classList.add('prefers-dark-mode'),
-              element.classList.add('dark-mode')
+              !element.classList.contains('dark-mode') &&
+              localStorage.lightMode != true && element.classList.add('dark-mode')
             )
         });
         element.hidden = false;
@@ -75,7 +76,8 @@
       element: 'pre#source-code',
       headerTemplate: 'template#source-header',
     }
-    const hashMatcher = /#(.*?)(?:\!([a-z]+)|\!.*?)?(?:\*(?!\*)(\d+))?(?:\*{2}(\d+))?$/;
+    // const hashMatcher = /#(.*?)(?:\!([a-z]+)|\!.*?)?(?:\*(?!\*)(\d+))?(?:\*{2}(\d+))?$/;
+    const hashMatcher = /#(.*?)(?:\!([a-z]+))?(?:\*(?!\*)(\d+))?(?:\*{2}(\d+))?$/;
     const options = Object.create(defaults);
     const sourceCodeElement = document.querySelector(options.element);
     const sourceHeaderTemplate = document.querySelector(options.headerTemplate);
@@ -97,10 +99,12 @@
 
     const timeDelay = delay => new Promise(ƒ => setTimeout(ƒ, delay));
 
-    const renderMarkup = async (sourceText, markupOptions) => (
-      markupOptions.fragment || (markupOptions.fragment = document.createDocumentFragment()),
-      await markup.render(sourceText, markupOptions)
-    );
+    const renderMarkup = async (sourceText, markupOptions) => {
+      const fragment = markupOptions.fragment || (markupOptions.fragment = document.createDocumentFragment());
+      await markup.render(sourceText, markupOptions);
+      if (fragment.logs) console.log(...fragment.logs);
+      return fragment;
+    };
 
     const renderHeader = ({
       template = sourceHeaderTemplate,
@@ -118,16 +122,28 @@
         }
       }
 
-      header.elements['rerender-button'] && (header.elements['rerender-button'].click = rerender);
-      header.elements['contrast-button'] && (header.elements['contrast-button'].click = async () => {
-        const parent = header.parentElement;
-        if (parent) {
-          parent.classList.toggle('dark-mode')
-            ? (localStorage.darkMode = true)
-            : (delete localStorage.darkMode);
-        }
-      });
+      {
+        const { 'rerender-button': renderButton, 'contrast-button': contrastButton } = header.elements;
 
+        renderButton && (renderButton.click = rerender);
+
+
+        contrastButton && (
+          contrastButton.click = () => {
+            // if (!header.parentElement) return;
+            header.parentElement.classList.toggle('dark-mode')
+              ? (localStorage.lightMode = !(localStorage.darkMode = true))
+              : (localStorage.darkMode = !(localStorage.lightMode = true))
+          },
+          contrastButton.doubleClick = () => {
+            // if (!header.parentElement) return;
+            delete localStorage.lightMode, delete localStorage.darkMode;
+            const classList = header.parentElement.classList;
+            header.parentElement.classList.contains('prefers-dark-mode') &&
+              header.parentElement.classList.add('dark-mode');
+          }
+        );
+      }
 
       header.status = (name, value) => {
         header.status[name] === (header.status[name] = value);

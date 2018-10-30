@@ -1,14 +1,7 @@
 (async function bundle(
   job = {
     id: 'caches/markup.worker.js',
-    modules: [
-      'lib/worker.js',
-      'lib/markup.js',
-      'lib/markup-parser.js',
-      'lib/markup-modes.js',
-      'lib/markup-patterns.js',
-      'lib/markup-dom.js',
-    ],
+    modules: ['lib/worker.js'],
     format: 'umd',
     options: {context: 'this'},
     sourcemap: 'inline',
@@ -43,7 +36,7 @@
       if (!cache || typeof cache !== 'object') throw Error('Cannot write - no cache');
       const {url, blob = (payload.blob = await this.serialize(payload))} = payload;
       (await cache).put(url, new Response(blob));
-      return payload.cached = url;
+      return (payload.cached = url);
     }
 
     async execute(payload) {
@@ -139,5 +132,4 @@
   }
 
   return job;
-
-})().then(console.log);
+})().then();
