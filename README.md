@@ -123,7 +123,13 @@ Now we have a good starting point for a playground, it looks just like another h
 >
 > The myths are many, so the thought that its optimized code that is too complex for anyone to fiddle around with, I guess is a nice way of passively saying to developers that you can be creative but you are not clever enough to actually do it without our magic. So, naturally I explored inverting control of this pandora, taking out the synchronous iteration and replacing it with an iterable.
 >
-> That is to say, your tokenizer does not incure any overhead, including ones related to syntaxes that have not yet been initialized, until your downstream processing of a fragment is ready to pull the next token. A mouth full, but generally speaking, a theoretical fragment which is the array of all tokens is identical in principle to that of the synchronous iteration of the same source.
+> That is to say, your tokenizer does not incure any overhead, including ones related to syntaxes that have not yet been initialized, until your downstream processing of a fragment is ready to pull the next token. A mouth full best explained through the following example of a baseline fragmenter that performs on par with most eager tokenizers out there:
+>
+> ```js
+> export const skim = tokens => Array.from(tokens);
+> ```
+>
+> This creates a fragment which is the array of all tokens, which makes this pipeline identical in principle to that of the synchronous iteration of an eager tokenizer scanning the same source.
 >
 > With this, tokenization really takes the form of a stream, it literally reads from a stream and pipes into another. It is not asynchronous per say, because while source streams may be asynchronous, tokenization should decouple from any such burdens which better factors in the problem domain of fragments. When it's source starts, so does the tokenizer, when it's source pauses, so does the fragment's attempts to pull tokens, until it resumes and eventually concludes.
 >
