@@ -47,7 +47,7 @@ Semi-contextual parsing experiments, which fall somewhere between the scope of r
 > >
 > > [#./markup.css!css](./markup.html#./markup.css!css) <kbd>css</kbd>
 > >
-> > [#./lib.markup.js!js](./markup.html#./lib.markup.js!js) <kbd>es</kbd>
+> > [#./lib.markup.js!js](./markup.html#./lib/markup.js!js) <kbd>es</kbd>
 >
 > > _Inspection Modes_ — `esm`, `cjs`, `esx`
 > >
