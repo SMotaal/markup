@@ -115,8 +115,8 @@ Now we have a good starting point for a playground, it looks just like another h
 
 > **Tokens and Fragments**
 >
-> <details><summary>The two pipelines are often used to deal with markup…</summary>
-> <!-- -->
+> <details><summary>The two pipelines are often used to deal with markup…</summary></br>
+> 
 >
 > Tokens are source aspects, not merely the stream of characters, but rather the stream resulting from any level of syntax-related segementation. Fragments come from the other end of the chain, they are generated from tokens, their particular purposes range from basic rendering (highlighters) to any number of things.
 >
@@ -138,8 +138,7 @@ Now we have a good starting point for a playground, it looks just like another h
 
 > **Symbols and Patterns**
 >
-> <details><summary>The two building blocks of markup…</summary>
-> <!-- -->
+> <details><summary>The two building blocks of markup…</summary><br/>
 >
 > Symbols are notoriously ambigious in their definition, but here, symbols are basically one or more characters of a unique and constant order, occuring in a place to be expected. Patterns are just like symbols, except they interlace with entities which are either not constant or not unqiue, or both.
 >
