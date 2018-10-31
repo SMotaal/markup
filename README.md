@@ -37,7 +37,9 @@ Semi-contextual parsing experiments, which fall somewhere between the scope of r
 > >
 > > [#./markup.html](./markup.html#./markup.html) <kbd>auto=html</kbd>
 > >
-> > [#./markup.css](./markup.css#./markup.css) <kbd>auto=css</kbd>
+> > [#./markup.css](./markup.html#./markup.css) <kbd>auto=css</kbd>
+> >
+> > [#./README.md](./markup.html#./README.md) <kbd>auto=md</kbd>
 >
 > > _Syntax Modes_ — `html`, `css`, and `js` (aka `es` or `javascript`)
 > >
