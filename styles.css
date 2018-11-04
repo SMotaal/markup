@@ -195,6 +195,14 @@ body {
   display: none;
 }
 
+/* :not(empty) :not(empty) */
+.markup-container > header [value]:not([value=""])[unit]:not([unit=""])::after {
+  content: " " attr(unit);
+  font-size: 50%;
+  font-weight: lighter;
+  text-rendering: optimizeLegibility;
+}
+
 .markup-container > header a[onclick] {
   display: inline-block;
   box-sizing: padding-box;

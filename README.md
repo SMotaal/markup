@@ -25,7 +25,7 @@ Semi-contextual parsing experiments, which fall somewhere between the scope of r
 >
 > **Specifiers**
 >
-> > [#./lib/markup.js](./markup.html#./lib/markup.js)
+> > [#lib/markup.js](./markup.html#lib/markup.js)
 > >
 > > [#https://unpkg.com/acorn](./markup.html#https://unpkg.com/acorn)
 >
@@ -35,19 +35,19 @@ Semi-contextual parsing experiments, which fall somewhere between the scope of r
 > >
 > > [#markup](./markup.html#markup) <kbd>auto=es</kbd>
 > >
-> > [#./markup.html](./markup.html#./markup.html) <kbd>auto=html</kbd>
+> > [#markup.html](./markup.html#markup.html) <kbd>auto=html</kbd>
 > >
-> > [#./markup.css](./markup.html#./markup.css) <kbd>auto=css</kbd>
+> > [#markup.css](./markup.html#markup.css) <kbd>auto=css</kbd>
 > >
-> > [#./README.md](./markup.html#./README.md) <kbd>auto=md</kbd>
+> > [#README.md](./markup.html#README.md) <kbd>auto=md</kbd>
 >
 > > _Syntax Modes_ — `html`, `css`, and `js` (aka `es` or `javascript`)
 > >
-> > [#./markup.html!html](./markup.html#./markup.html!html) <kbd>html</kbd>
+> > [#markup.html!html](./markup.html#markup.html!html) <kbd>html</kbd>
 > >
-> > [#./markup.css!css](./markup.html#./markup.css!css) <kbd>css</kbd>
+> > [#markup.css!css](./markup.html#markup.css!css) <kbd>css</kbd>
 > >
-> > [#./lib.markup.js!js](./markup.html#./lib/markup.js!js) <kbd>es</kbd>
+> > [#lib.markup.js!js](./markup.html#lib/markup.js!js) <kbd>es</kbd>
 >
 > > _Inspection Modes_ — `esm`, `cjs`, `esx`
 > >

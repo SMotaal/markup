@@ -6,30 +6,24 @@ export class Node {
   get children() {
     return defineProperty(this, 'children', {value: new Set()}).children;
   }
-
   get childElementCount() {
     return (this.hasOwnProperty('children') && this.children.size) || 0;
   }
-
   get textContent() {
     return (
       (this.hasOwnProperty('children') && this.children.size && [...this.children].join('')) || ''
     );
   }
-
   set textContent(text) {
     this.hasOwnProperty('children') && this.children.size && this.children.clear();
     text && this.children.add(new String(text));
   }
-
   appendChild(element) {
     return element && this.children.add(element), element;
   }
-
   append(...elements) {
     if (elements.length) for (const element of elements) element && this.children.add(element);
   }
-
   removeChild(element) {
     element &&
       this.hasOwnProperty('children') &&
@@ -37,7 +31,6 @@ export class Node {
       this.children.delete(element);
     return element;
   }
-
   remove(...elements) {
     if (elements.length && this.hasOwnProperty('children') && this.children.size)
       for (const element of elements) element && this.children.delete(element);
@@ -48,35 +41,28 @@ export class Element extends Node {
   get innerHTML() {
     return this.textContent;
   }
-
   set innerHTML(text) {
     this.textContent = text;
   }
-
   get outerHTML() {
     const {className, tag, innerHTML} = this;
     return `<${tag}${(className && ` class="${className}"`) || ''}>${innerHTML || ''}</${tag}>`;
   }
-
   toString() {
     return this.outerHTML;
   }
-
   toJSON() {
     return this.toString();
   }
 }
 
-// class DocumentFragment extends Array {}
 export class DocumentFragment extends Node {
   toString() {
     return this.textContent;
   }
-
   toJSON() {
     return (this.childElementCount && [...this.children]) || [];
   }
-
   [Symbol.iterator]() {
     return ((this.childElementCount && this.children) || '')[Symbol.iterator]();
   }
@@ -99,8 +85,6 @@ export const createElement = (tag, properties, ...children) => {
 };
 
 export const createText = (content = '') => new Text(content);
-
 export const encodeEntity = entity => `&#${entity.charCodeAt(0)};`;
 export const encodeEntities = string => string.replace(/[\u00A0-\u9999<>\&]/gim, encodeEntity);
-
 export const createFragment = () => new DocumentFragment();

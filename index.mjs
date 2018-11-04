@@ -2,7 +2,8 @@
 
 /// Initialize
 import.meta.url.endsWith('#initialize') &&
-  import('./node').then(() => import('./lib/markup.spec.js'));
+  import('./node').then(() => import('./benchmarks/benchmark.js'));
+  // import('./node').then(() => import('./lib/markup.spec.js'));
 
 /// Loader
 /** Node.js ESM loader resolve hook */
@@ -17,3 +18,9 @@ export const resolve = async function resolver(specifier, referrer, resolve) {
   // console.log({resolved, ...resolver});
   return resolved;
 };
+
+
+[
+  '',
+  '\'',
+]
