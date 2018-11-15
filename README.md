@@ -2,6 +2,8 @@
 
 Semi-contextual parsing experiments, which fall somewhere between the scope of regular expressions and the more much more advanced realms of source code parsing.
 
+> **FYI**: Markup is undergoing refactoring to release [espressions v0.1](packages/espressions/README.md)
+
 ## Scope
 
 **What it aims to accomplish**
