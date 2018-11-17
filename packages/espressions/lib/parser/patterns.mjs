@@ -13,18 +13,18 @@ export const all = (...patterns) => patterns.map(p => (p && p.exec ? p.source : 
 
 export const patterns = {
   /** Basic latin Keyword like symbol (inteded to be extended) */
-  // maybeKeyword: /^[a-z](\w*)$/i, // TODO: Consider changing to /^[a-z]+$/i
+  // maybeKeyword: /^[a-z]+$/i,
 };
 
 /** Entities used to construct patterns. */
 export const entities = {
   es: {
     IdentifierStart: raw`_$\p{ID_Start}`,
-    IdentifierPart: raw`_$\u200c\u200d\p{ID_Continue}`,
+    IdentifierPart: raw`_$\u200c\u200d\p{ID_Continue}\u034f`,
   },
 };
 
-/** Interoperability (for some browsers) */
+/** Interoperability (for some browsers)  TODO: Simplify */
 (Ranges => {
   const transforms = [];
 

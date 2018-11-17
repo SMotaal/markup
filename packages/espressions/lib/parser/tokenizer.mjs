@@ -1,9 +1,3 @@
-import {patterns} from './patterns.js';
-import {createGrouper, Grouper} from './grouper.js';
-
-const Null = Object.freeze(Object.create(null));
-
-/// Tokenizer
 /** Tokenizer for a single mode (language) */
 export class Tokenizer {
   constructor(mode, defaults) {
@@ -15,12 +9,15 @@ export class Tokenizer {
   *tokenize(source, state = {}) {
     let done;
 
+    // TODO: Consider supporting Symbol.species
+    const Species = this.constructor;
+
     // Local context
     const contextualizer =
-      this.contextualizer || (this.contextualizer = this.constructor.contextualizer(this));
+      this.contextualizer || (this.contextualizer = Species.contextualizer(this));
     let context = contextualizer.next().value;
-    // if (!context) contextualizer.next().value;
-    const {mode, syntax} = context;
+
+    const {mode, syntax, createGrouper = Species.createGrouper || Object} = context;
 
     // Local grouping
     const groupers = mode.groupers || (mode.groupers = {});
@@ -34,8 +31,6 @@ export class Tokenizer {
         groupings: [syntax],
         context: syntax,
       });
-
-    // const grouping = state.grouping || (state.grouping = new Grouper(syntax, groupers));
 
     // Local matching
     let {match, index = 0} = state;
@@ -284,9 +279,9 @@ export class Tokenizer {
         punctuators: {aggregators = ($punctuators.aggregators = {})},
         patterns: {
           maybeKeyword = (mode.patterns.maybeKeyword =
-            ((defaults && defaults.patterns) || patterns).maybeKeyword || undefined),
+            (defaults && defaults.patterns && defaults.patterns.maybeKeyword) || undefined),
         } = (mode.patterns = {maybeKeyword: null}),
-        spans: {[syntax]: spans} = Null,
+        spans: {[syntax]: spans} = (mode.spans = {}),
       } = mode;
 
       initialize(
@@ -432,5 +427,42 @@ export class Tokenizer {
 
       next = yield token;
     }
+  }
+
+  static createGrouper({
+    /* grouper context */
+    syntax,
+    goal = syntax,
+    quote,
+    comment,
+    closure,
+    span,
+    grouping = comment || closure || span || undefined,
+
+    punctuator,
+    spans = (grouping && grouping.spans) || undefined,
+    matcher = (grouping && grouping.matcher) || undefined,
+    quotes = (grouping && grouping.quotes) || undefined,
+    punctuators = {aggregators: {}},
+    opener = quote || (grouping && grouping.opener) || undefined,
+    closer = quote || (grouping && grouping.closer) || undefined,
+    hinter,
+    open = (grouping && grouping.open) || undefined,
+    close = (grouping && grouping.close) || undefined,
+  }) {
+    return {
+      syntax,
+      goal,
+      punctuator,
+      spans,
+      matcher,
+      quotes,
+      punctuators,
+      opener,
+      closer,
+      hinter,
+      open,
+      close,
+    };
   }
 }

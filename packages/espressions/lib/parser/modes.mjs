@@ -1,4 +1,4 @@
-import {patterns, entities, identifier, sequence, all, raw} from './patterns.js';
+import {patterns, entities, identifier, sequence, all, raw} from './patterns.mjs';
 
 export const mappings = {};
 

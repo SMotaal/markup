@@ -1,5 +1,5 @@
-import {mappings, modes} from './modes.js';
-import {Tokenizer} from './tokenizer.js';
+import {mappings, modes} from './modes.mjs';
+import {Tokenizer} from './tokenizer.mjs';
 
 export const defaults = {
   matcher: modes.default.matcher,
