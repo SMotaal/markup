@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>SMotaal's Tokenizer</title>
+    <meta charset="utf-8" />
+    <base href="." />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=0, viewport-fit=cover"
+    />
+    <link rel="stylesheet" href="styles.css" />
+
+    <template id="source-header">
+      <div id="summary">
+        <span title="source">#<span id="source"></span><time unit="ms"></time></span>
+      </div>
+      <div id="details">
+        <span title="type"><span id="source-type"></span></span>
+        <span title="repeats"><span id="repeats"></span><time unit="ms"></time></span>
+        <span title="iterations"><span id="iterations"></span><time unit="ms"></time></span>
+      </div>
+      <div id="controls">
+        <span>
+          <a id="rerender" title="Repeat" onclick><i icon>&#x27f3;</i></a>
+          <a id="contrast" title="Dark/Light" onclick><i icon>&#x263D;</i></a>
+        </span>
+      </div>
+    </template>
+  </head>
+
+  <body>
+    <pre id="source-code" class="markup-container" hidden>
+    <script>
+      {
+        const defaults = { darkMode: true };
+        const element = document.currentScript.parentElement;
+        const prefersColorSchemeDark = matchMedia('(prefers-color-scheme: dark)');
+        const prefersColorSchemeLight = matchMedia('(prefers-color-scheme: light)');
+        (
+          prefersColorSchemeDark.matches &&
+          !element.classList.add('prefers-dark-mode') ||
+          localStorage.darkMode == "true" ||
+          (defaults.darkMode && localStorage.lightMode != "true")
+        ) && element.classList.add('dark-mode');
+        prefersColorSchemeDark.addListener && prefersColorSchemeDark.addListener(({ matches = false }) => {
+          !matches ? (
+            element.classList.remove('prefers-dark-mode'),
+            element.classList.contains('dark-mode') && localStorage.darkMode != "true" && element.classList.remove('dark-mode')
+          ) : (
+              element.classList.add('prefers-dark-mode'),
+              !element.classList.contains('dark-mode') &&
+              localStorage.lightMode != "true" && element.classList.add('dark-mode')
+            )
+        });
+        element.hidden = false;
+      }
+    </script>
+  </pre>
+    <script type="module" src="index.js"></script>
+  </body>
+</html>
