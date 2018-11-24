@@ -3,5 +3,6 @@
   "displayName": "pseu·dom",
   "version": "0.0.3",
   "description": "Documentless OM for markup",
+  "license": "MIT",
   "main": "index.mjs"
 }

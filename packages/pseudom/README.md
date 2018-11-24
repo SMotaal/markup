@@ -2,6 +2,8 @@
 
 Documentless OM for markup.
 
+> **Note:** This package uses `.mjs` extensions to work with `--experimental-modules` in Node.js
+
 **Why?**
 
 While in most cases, it is best to rely on the DOM directly, there are times when the DOM may not be available, sluggish, or simply hitting edge cases where the overhead is unpredictable or undesirable.
@@ -23,4 +25,3 @@ If you find pseu·dom suitable for your particular case, please don't hesitate t
 - Work with actual documents or elements (ie either or).
 - Act like a DOM or a virtual DOM (ie events and such).
 - Adhere to the standards (ie completeness).
-
