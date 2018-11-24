@@ -3,13 +3,17 @@ export const Null = Object.freeze(Object.create(null));
 
 export const raw = String.raw;
 
+export const RegExpFlags = /^\/((?:g(?=[^g]*$)|i(?=[^i]*$)|m(?=[^m]*$)|s(?=[^s]*$)|u(?=[^u]*$)|y(?=[^y]*$))+)$|/;
+
 /**
  * Create a sequence match expression from patterns.
  *
  * @param  {...Pattern} patterns
  */
-export const sequence = (...patterns) =>
-  new RegExp(Reflect.apply(raw, null, patterns.map(p => (p && p.source) || p || '')), 'g');
+export const sequence = (...patterns) => (
+  patterns.length > 1 && (patterns.flags = RegExpFlags.exec(patterns[patterns.length - 1]).pop()) && (patterns[patterns.length - 1] = ''),
+  new RegExp(Reflect.apply(raw, null, patterns.map(p => (p && p.source) || p || '')), patterns.flags || 'g')
+);
 
 /**
  * Create a maybeIdentifier test (ie [<first>][<other>]*) expression.
@@ -19,12 +23,8 @@ export const sequence = (...patterns) =>
  * @param  {string} [flags] - RegExp flags (defaults to 'u')
  * @param  {unknown} [boundary]
  */
-export const identifier = (
-  first,
-  other = first,
-  flags = 'u',
-  boundary = /yg/.test(flags) && '\\b',
-) => new RegExp(`${boundary || '^'}[${first}][${other}]*${boundary || '$'}`, flags);
+export const identifier = (first, other = first, flags = 'u', boundary = /yg/.test(flags) && '\\b') =>
+  new RegExp(`${boundary || '^'}[${first}][${other}]*${boundary || '$'}`, flags);
 
 /**
  * Create a sequence pattern from patterns.

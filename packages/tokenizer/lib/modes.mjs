@@ -25,8 +25,8 @@ Syntaxes: {
       closures: Closures.from('{…} (…) […]'),
       spans: {'`': Closures.from('${…}')},
       keywords: Symbols.from(
-        // abstract enum interface package  namespace declare type module
-        'arguments as async await break case catch class const continue debugger default delete do else export extends finally for from function get if import in instanceof let new of return set super switch this throw try typeof var void while with yield',
+        // abstract enum interface package namespace declare type module
+        'arguments as async await break case catch class const continue debugger default delete do else export extends finally for from function get if import in instanceof let new of return set static super switch this throw try typeof var void while with yield',
       ),
       assigners: Symbols.from('= += -= *= /= **= %= |= ^= &= <<= >>= >>>='),
       combinators: Symbols.from(

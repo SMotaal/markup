@@ -72,6 +72,9 @@ export class Tokenizer {
 
         if (done) return;
 
+        // if (!match[0] && (index = state.index--)) continue; //  && (index = state.index++)
+        // if (!match[0] && (state.index++)) continue; //  && (index = state.index++)
+
         // Current contextual match
         const {0: text, 1: whitespace, 2: sequence, index: offset} = match;
 
@@ -229,18 +232,20 @@ export class Tokenizer {
             token = token => (
               (token.hint = `${hint} ${token.type || 'code'}`), context.token(token)
             );
-            (tokens = after).end && (nextIndex = after.end);
+            (tokens = after).end > state.index && (nextIndex = after.end);
           }
 
           if (tokens) {
             // console.log({token, tokens, nextIndex});
+            // console.log({index, nextIndex, 'state.index': state.index});
             for (const next of tokens) {
               previous && ((next.previous = previous).next = next);
               token && token(next);
               yield (previous = next);
             }
+            nextIndex > state.index && (state.index = nextIndex);
           }
-          nextIndex > index && (state.index = nextIndex);
+
         }
       }
     }

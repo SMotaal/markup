@@ -28,7 +28,7 @@ _\* Strings including interpolations are expression groups._
 
 | `Punctuators`       | Qualified characters defining the boundaries         |
 | ------------------- | ---------------------------------------------------- |
-| `Operators`         | Marking associations between constructs<sub>\*</sup> |
+| `Operators`         | Marking associations between constructs<sup>\*</sup> |
 | `Nonbreakers`       | Marking a continuation of a construct                |
 | `Breakers`          | Marking the end of a construct                       |
 | `Assigners`         | Marking the sides of an assignment construct         |

@@ -2,11 +2,11 @@
 
 Nestable syntax tokenizer using Regular Expressions.
 
-> **Note:** This package uses `.mjs` extensions to work with `--experimental-modules` in Node.js
+> **Note**: This package uses `.mjs` extensions to work with `--experimental-modules` in Node.js
 
 **Why?**
 
-While Regular Expressions can be confusing to work with sometimes, they come with certain optimization benefits that can be leveraged to minimize overhead costs for scanning texts. While some argument against their ability to safely guard against melicious patters, this argument equally applies to any and all existing ways of scanning texts. The problem is not Regular Expressions, it is simply those particular regular expressions that not well guarded.
+While Regular Expressions can be confusing to work with sometimes, they come with certain optimization benefits that can be leveraged to minimize overhead costs for scanning texts. While some argue against their ability to safely guard against melicious patters, this argument equally applies to any and all existing ways of scanning texts. The problem is not Regular Expressions, it is simply those particular regular expressions that not well guarded.
 
 **What it tries to do**
 
@@ -26,19 +26,23 @@ You can set different options in the following order:
     index.html#specifier!mode*repeat**iterations
 
 <b>#</b>`specifier`
-  - `#` followed by a relative URL
-  - `#https://` followed by an absolute URL
-  - `#unpkg:` followed by package or module path
-  - `#cdnjs:` followed by package or module path
+
+- `#` followed by a relative URL
+- `#https://` followed by an absolute URL
+- `#unpkg:` followed by package or module path
+- `#cdnjs:` followed by package or module path
 
 <b>!</b>`mode`
-  - `!es` JavaScript
-  - `!css` CSS
-  - `!html` HTML
-  - `!md` Markdown
 
-<b>&#42;</b>`repeat`
-  - repeats the tokenized (and rendered) source text
+- `!es` JavaScript
+- `!css` CSS
+- `!html` HTML
+- `!md` Markdown
 
-<b>&#42;&#42;</b>`iterations`
-  - repeats the tokenization of the source text
+<b>\*</b>`repeat`
+
+- repeats the tokenized (and rendered) source text
+
+<b>\*\*</b>`iterations`
+
+- repeats the tokenization of the source text

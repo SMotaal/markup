@@ -29,6 +29,8 @@ export const html = Object.defineProperties(
 
     const HTMLTagClosure = html.closures.get('<');
 
+    HTMLTagClosure.patterns = html.patterns;
+
     HTMLTagClosure.close = (next, state, context) => {
       const parent = next && next.parent;
       const first = parent && parent.next;
