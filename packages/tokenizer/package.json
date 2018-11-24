@@ -10,5 +10,8 @@
   },
   "bundleDependencies": [
     "pseudom"
-  ]
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
 }
