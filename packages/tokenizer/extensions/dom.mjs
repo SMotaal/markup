@@ -1,4 +1,4 @@
-import * as dom from '../../pseudom/index.mjs';
+import * as dom from '../node_modules/pseudom/index.mjs';
 
 /// OPTIONS
 /** The tag name of the element to use for rendering a token. */
