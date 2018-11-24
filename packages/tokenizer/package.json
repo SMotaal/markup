@@ -2,5 +2,13 @@
   "name": "@smotaal/tokenizer",
   "displayName": "SMotaal's Tokenizer",
   "version": "0.0.0",
-  "description": "Nestable syntax tokenizer using Regular Expressions"
+  "description": "Nestable syntax tokenizer using Regular Expressions",
+  "license": "MIT",
+  "main": "lib/tokenzier.mjs",
+  "dependencies": {
+    "pseudom": "*"
+  },
+  "bundleDependencies": [
+    "pseudom"
+  ]
 }

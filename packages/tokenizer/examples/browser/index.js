@@ -235,6 +235,7 @@ const entrypoints = {
   js: '../../lib/tokenizer.mjs',
   css: './markup.css',
   html: './index.html',
+  md: '../../README.md',
 };
 
 const examples = (({js, html, css, md, esm, cjs}, {unpkg, cdnjs}) => ({
@@ -243,7 +244,7 @@ const examples = (({js, html, css, md, esm, cjs}, {unpkg, cdnjs}) => ({
   [js]: {url: entrypoints.js, type: js},
   [esm]: {url: entrypoints.js, type: esm},
   [cjs]: {url: entrypoints.js, type: cjs},
-  [md]: {url: './README.md', type: md},
+  [md]: {url: entrypoints.md, type: md},
   gfm: `${root}/markup/benchmarks/assets/gfm.md`,
   'acorn-esm': {url: `${unpkg}/acorn?module`, type: esm},
   'acorn-cjs': {url: `${unpkg}/acorn`, type: cjs},
