@@ -25,20 +25,20 @@ You can set different options in the following order:
 
     index.html#specifier!mode*repeat**iterations
 
-`#specifier`
+<b>#</b>`specifier`
   - `#` followed by a relative URL
   - `#https://` followed by an absolute URL
   - `#unpkg:` followed by package or module path
   - `#cdnjs:` followed by package or module path
 
-`!mode`
+<b>!</b>`mode`
   - `!es` JavaScript
   - `!css` CSS
   - `!html` HTML
   - `!md` Markdown
 
-`*repeat`
+<b>&#42;</b>`repeat`
   - repeats the tokenized (and rendered) source text
 
-`**iterations`
+<b>&#42;&#42;</b>`iterations`
   - repeats the tokenization of the source text
