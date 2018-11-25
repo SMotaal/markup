@@ -2,7 +2,7 @@
 
 ## Sequences
 
-The smallest units of this tokenizer design is sequences, which are the set of every sequence of one or more characters that are meaningful for a given stream of text to be scanned.
+The smallest units of this tokenizer design is sequences, which are the set of every one or more characters that are meaningful for a given stream of text to be scanned.
 
 ### `Words` ／<samp>\b[\p{𝙸𝙳_𝚂𝚝𝚊𝚛𝚝}][\p{‌𝙸𝙳_𝙲𝚘𝚗𝚝𝚒𝚗𝚞𝚎}]\*\b</samp>／
 
@@ -18,9 +18,9 @@ _\* Keywords refer to a predefined set of words which may be classified as keywo
 
 Keywords are a prescribed set of words, which, in the context of markup, are only there to define a semantic structure.
 
-In languages like JavaScript, the keyword `function` and the class `Function` are separate words. However, there can be languages that have an overlap between a keyword and a value which may represent a primitive for the keyword, chosen carefully to lend to a synthetic style. There can also be languages where unintentional iterations lead to such cases where a keyword and a value may share the name and the mechanics of the language eliminate the confusion.
+In languages like JavaScript, the keyword `function` and the class `Function` are separate words. However, there can be languages that have an overlap between a keyword and a value which may represent a primitive for the keyword, chosen carefully to lend to a synthetic style. There can also be languages where unintentional iterations lead to such cases where a keyword and a value may share a name and the mechanics of the language disambiguates the confusion.
 
-The important thing to note though, is that a keyword from a tokenizer's perspective may be different from what the language references themselves are choosing to refer to as keywords. In many of them, keywords are a subset of the Keywords used here which includes those keywords and other words like reserved words and even operator words, but not words that are Symbols (below).
+The important thing to note though is that a keyword from a tokenizer's perspective may be different from what the language references themselves are choosing to refer to as keywords. In many of them, keywords are a subset of the Keywords used here which includes those keywords and other words like reserved words and even operator words, but not words that are Symbols (below).
 
 **`Identifiers`**
 
@@ -28,31 +28,33 @@ Identifiers are non-prescribed words which follow a set of rules:
 
 1. They must be declared and sometimes this is as simple as assigning to them.
 
-2. They can be assigned to unless they are declared as constants.
+2. They can be assigned to (constants don't fall in the tokenizer's purview).
 
 3. They can be referenced directly or indirectly.
 
-4. They can be used as values or assigned by renference to other identifiers.
+4. They can be used as values or assigned by reference to other identifiers.
 
 **`Symbols`**
 
-Many languages also have a prescribed set of words which follow some of the rules of identifiers. This applies to a degree to the class `Function` in JavaScript. However, a better example is the word `this` which may or may not be defined in the scope a statement that appears in a function dependeing on how the function was called. But, the class `Function`, while qualifies as a Symbol, it is in fact also an Identifier which is predefined onto the global scope.
+Many languages also have a prescribed set of words which follow some of the rules of identifiers. This applies to a degree to the class `Function` in JavaScript, however, some better examples may include `this` and `arguments`.
 
-In reality, setting a hard separation between Symbols and Identifiers is very messy, same as adding additional bins for each special case. So simply adding a word to Symbols does not attribute to it any reserved qualities during lexing.
+A distinction will exist between symbols that are constants of a particular scope and symbols that are overridable, like in JavaScript, where `Function` `undefined` are merely identifiers cascading into the current scope, which unless otherwise defined in a parent scope refer directly to properties of the global object.
+
+While setting a hard separation between Symbols and Identifiers is a slippery slope, it is useful to abort on early errors in invalid syntaxes. But simply adding a word to Symbols does not attribute to it any reserved qualities during lexing.
 
 ### `Literals` ／<samp>\b\w+\b|[\p{Ps}"].\*[\p{Pc}"]</samp>／
 
-| `Literals`    | Special patterns                             |
+| `Literals`    | Special sequence patterns                    |
 | ------------- | -------------------------------------------- |
 | `Numbers`     | Representing a specific quantity             |
 | `Strings`     | Representing a static text<sup>\*</sup>      |
 | `Expressions` | Representing special expressions (ie RegExp) |
 
-_\* Strings including interpolations are expression groups._
+_\* Strings including interpolations are groups and not literals._
 
-**`Numbers`**
+**`Numbers`** (_literal_)
 
-Languages usually include more than one notation for numbers, sharing the same qualities for pattern matching that make them easy to test against regular expressions.
+Languages usually include more than one notation for numbers, sharing the same qualities for pattern matching that make them easy to test against regular expressions. If this is not the case, then those numbers are not considered literals and more likely than not they are are not sequences.
 
 **`Strings`** (_literal_)
 
@@ -84,7 +86,7 @@ _\* Constructs refer to isolated, associated and/or groupped expressions_
 
 **`Nonbreakers`** (_punctuator_)
 
-Nonbreakers are special punctuators with future reserved use.
+Nonbreakers are special punctuators with future reserved use. Some potential uses may include complex escape sequences or adjoining words.
 
 **`Breakers`** (_punctuator_)
 
@@ -130,8 +132,3 @@ Sequences inside the boundaries of a paired Opener and Closer all together form 
 Each syntax (mode) has a top level context and zero or more nested contexts, which include the subset of sequences and groups that are used by the tokenizer while scanning the respective segment of a stream. A single context instance is constructed for each unqiue group, and each context retains a single unqiue instance of it's primed token generator.
 
 > … (more to follow)
-
-<style>
-code:first-child { background-color: rgba(0,0,0,.05); border-radius: 0.25ex; box-shadow: 0 0 0 2px rgba(0,0,0,.05); padding: 0 0.25ex; }
-/* border: 0.25ex transparent rgba(0,0,0,.02); */
-</style>
