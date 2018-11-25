@@ -2,7 +2,7 @@
 
 ## Sequences
 
-The smallest units of this tokenizer design is sequences, which are the set of every one or more characters that are meaningful for a given stream of text to be scanned.
+The smallest constructs of this tokenizer design are sequences, which are the set of every chain of one or more characters that are _potentially meaningful_ for a given stream of text to be scanned.
 
 ### `Words` ／<samp>\b[\p{𝙸𝙳_𝚂𝚝𝚊𝚛𝚝}][\p{‌𝙸𝙳_𝙲𝚘𝚗𝚝𝚒𝚗𝚞𝚎}]\*\b</samp>／
 
@@ -16,9 +16,11 @@ _\* Keywords refer to a predefined set of words which may be classified as keywo
 
 **`Keywords`**
 
-Keywords are a prescribed set of words, which, in the context of markup, are only there to define a semantic structure.
+Keywords are a prescribed set of words, which, in the context of markup, are only there to define a syntax structure.
 
-In languages like JavaScript, the keyword `function` and the class `Function` are separate words. However, there can be languages that have an overlap between a keyword and a value which may represent a primitive for the keyword, chosen carefully to lend to a synthetic style. There can also be languages where unintentional iterations lead to such cases where a keyword and a value may share a name and the mechanics of the language disambiguates the confusion.
+In languages like JavaScript, the keyword `function` and the class `Function` are separate words. However, there can be languages that have an overlap between a keyword and the binding name to it's respective builtin representation which would be chosen carefully to lend to a synthetic style that is syntactically disambigious.
+
+In rare case, there will be languages with syntaxes that will unintentionally lead to cases where a keyword and binding name may overlap and maybe even wiuthout syntactical disambiguity, where it is left to the mechanics of the language sort such confusions, beyond the purview of tokenization nonetheless.
 
 The important thing to note though is that a keyword from a tokenizer's perspective may be different from what the language references themselves are choosing to refer to as keywords. In many of them, keywords are a subset of the Keywords used here which includes those keywords and other words like reserved words and even operator words, but not words that are Symbols (below).
 
