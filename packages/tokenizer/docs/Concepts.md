@@ -94,6 +94,10 @@ Nonbreakers are special punctuators with future reserved use. Some potential use
 
 Breakers are tokens that signal the end of a construct (ie statements).
 
+Those include but are not restricted to statement and list breaks, but also includes individual quotes, brackets… etc. that are used to signal the opening or closing of a nested context (ie with it's own parsing goal).
+
+_Special Note_: A distinct aspect of a sequence-based tokenizer compared to conventional tokenizers, is that it may be able to avoid looking for openers and closers for constructs that are more efficiently matched by a pattern, ie no matter how complicated the construct itself is a continuous sequence.
+
 1. **`Openers`** (_breaker_, _punctuator_)
 
    A special breaker which defines the opening of a nested context.
@@ -106,9 +110,17 @@ Breakers are tokens that signal the end of a construct (ie statements).
 
 Punctuating operators are the subset of non-word sequences of all operators.
 
+Unlike other operators, punctuating operators will in most languages require a syntax where they have either or both left- and right-hand-sides explicity filled. A good example from JavaScript is the fact that `(+)` is invalid while `(yield)` is.
+
+From a tokenizer's perspective, the above criteria is also what distinguishes an Operator punctuator from other types of punctuators.
+
+In that sense, it is possible to further classify two important forms of operators which lead to fast and more verbose tokenization:
+
 1. **`Assigners`** (_operator_, _punctuator_)
 
    Assigners are special operators which define an assignment relationship between a left- and right-hand-side. It does not apply to postfixed notation.
+
+   _Note_: while `++i` and `i++` are assignment expressions, from a tokenizer's perspective, they are not assigners, and are merely operators.
 
 2. **`Combinators`** (_operator_, _punctuator_)
 
