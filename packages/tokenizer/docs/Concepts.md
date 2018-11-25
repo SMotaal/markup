@@ -44,7 +44,7 @@ A distinction will exist between symbols that are constants of a particular scop
 
 While setting a hard separation between Symbols and Identifiers is a slippery slope, it is useful to abort on early errors in invalid syntaxes. But simply adding a word to Symbols does not attribute to it any reserved qualities during lexing.
 
-### `Literals` ／<samp>\b\w+\b|[\p{Ps}"].\*[\p{Pc}"]</samp>／
+### `Literals` ／<samp>\b\w+\b|[\p{𝙿𝚜}"].\*[\p{𝙿𝚌}"]</samp>／
 
 | `Literals`    | Special sequence patterns                    |
 | ------------- | -------------------------------------------- |
@@ -72,7 +72,7 @@ Literal strings are a special subset of Strings which have the following qualiti
 
 Literal expressions are primarily used for Regular Expressions or Set Notations.
 
-### `Punctuators` ／<samp>\p{Ps}.\*\p{Pc}</samp>／
+### `Punctuators` ／<samp>[\p{𝙿}…]</samp>／
 
 | `Punctuators`    | Qualified characters defining the boundaries         |
 | ---------------- | ---------------------------------------------------- |
@@ -100,11 +100,11 @@ _Special Note_: A distinct aspect of a sequence-based tokenizer compared to conv
 
 1. **`Openers`** (_breaker_, _punctuator_)
 
-   A special breaker which defines the opening of a nested context.
+   A special breaker which defines the opening of a new nested context.
 
 2. **`Closers`** (_breaker_, _punctuator_)
 
-   A special breaker which defines the closing of a nested context.
+   A special breaker which defines the closing of the current nested context.
 
 **`Operators`** (_punctuator_)
 
