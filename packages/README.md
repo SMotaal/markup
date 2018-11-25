@@ -13,6 +13,10 @@ Those packages abstract away patterns conceived in the experiment to make it pos
 
 Abstractional document composition without the actual DOM.
 
+**@SMotaal/tokenizer**
+
+A refactored tokenizer from earlier markup experiments.
+
 ## Concrete Packages
 
 Those packages build on concrete outputs of the experiment to make it possible to build solutions reliably.
