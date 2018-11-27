@@ -1,0 +1,2670 @@
+%!PS-Adobe-3.0 EPSF-3.0
+%%BoundingBox: 0 0 792 1224
+%%Title: (Contrast-Resolution Target Ver. 3.3)
+%%Creator: (Franz Sigg)
+%%CreationDate: (Apr. 19, 00, modified June 4, 2012)
+%%Copyright: (Copyright (c) 2000 - 2012, Franz Sigg, CH8405 Winterthur, Switzerland, for design and programming)
+%%+ (All Rights Reserved.)
+%%For: Not Validated
+%%DocumentNeededResources: font Helvetica
+%%DocumentFonts: Helvetica
+%%DocumentProcessColors: Cyan Magenta Yellow Black
+%%Extensions: CMYK
+%%EndComments
+
+%%BeginProlog
+%%EndProlog
+%%BeginSetup
+%%EndSetup
+save mark
+330 dict begin  % Temporary MyDict for EPS
+/mm { 2.834646 mul } bind def
+/in { 72 mul       } bind def
+
+% Since resolution is a function of contrast, when printing the target, possible tone value increase (dot gain) will
+% have an effect on the ConRes response. Therefore it makes sense to first normalize the tone reproduction curve of
+% the printing device. This is done by first making a print with nominal values, measure the steps on the wedges,
+% entering the measurements in the arrays below and then making a second, normalized print.
+% Use the following procedure:
+
+% 1. Make sure that the NominalTVflag is set to 0. This prints the nominal values.
+
+% 2. Print the original version of the EPS target on the (calibrated) output device.
+
+% 3. Read the step wedges which were printed on the 4 cornes of the target. Read and record the wedges of both
+%    pages, a total of 8 wedges.
+
+% 4. Replace the measurements of each step in the 'MeasuredTVprintX' arrays with the readings you have taken.
+%    There is room for the readings of 8 wedges. At least the readings of one wedge are needed, but the measuremenets of
+%    up to 8 wedges can be entered. Empty arrays will be ignored. The program will average these readings, and if there are
+%    more than 3 sets, it will also throw away possible outliers that might result from defects in the print.
+%    Use an i1 Spectrophotometer. You can enter either L* values or Density values.
+
+% 5. Change the NominalTVflag to 1.
+
+% 6. Copy the identification code printed on the first target into the IDcode variable below.
+
+% 7. Print the target again. Now the steps of the gray scale are standardized and should be distinct from one another.
+%    Now the normalized target can be analyzed.
+
+
+/NominalTVflag 1 def    % If the NominalTVflag is set to 0, then the measured values are ignored and the target is
+                        % printed with nominal tone values. If set to 1 then a normalized or standardized target is printed.
+
+/IDcode (Nominal) def   % Copy the value printed on the first print to the IDcode before making the second print.
+
+% HP 9500
+ /NominalToneValue [  0      6    12    18    25    31    37    44    50    56    63    69    75    82    88    94   100 ] def
+
+/MeasuredTVprint1  [ 8.6	9.7	9.5	11.0	13.6	15.3	16.6	18.9	20.6	23.7	27.2	32.4	35.2	40.7	53.3	73.4	73.41 ] def   % Den
+/MeasuredTVprint2  [  ] def
+/MeasuredTVprint3  [  ] def
+/MeasuredTVprint4  [  ] def
+/MeasuredTVprint5  [  ] def
+/MeasuredTVprint6  [  ] def
+/MeasuredTVprint7  [  ] def
+/MeasuredTVprint8  [  ] def
+% /LinearToneValue [  0      6    12    18    25    31    37    44    50    56    63    69    75    82    88    94   100 ] def
+
+% The following parameters can be set to change the target. The values that are set in the original version of the
+% target are optimized for the automated analysis program, using a Tabloid (11x17 inch) or A3 paper size, on two pages.
+% This uses only the recommended black printer and tone vales from 5% to 95% in 5% steps.
+
+
+ /PX     14 def           %   Set the number of contrast steps. Must be between 9 and 26.
+ /PY     14 def           %   Set the number of spatial resolution steps. Must be between 9 and 26.
+ /ptch   5.3 mm def       %   Set the size of one patch with circles
+
+        % When one of the above 3 variables are changed, the %%BoundingBox: statement above needs to
+        % be changed. The first two numbers are always zero. The third number defines the width
+        % of the target, the forth number sets the height of the target. Both numbers must be integers
+        % and in PostScript units.
+        % The easiest way to determine these numbers is to run this EPS through Adobe Acrobat Distiller.
+        % The generated .log file by Distiller will contain the required %%BoundingBox: statement that
+        % then can be copied to this EPS file.
+        % (If you do not have Distiller, those two numbers can also be determined by trial and error)
+
+/LogFlag 0 def          % If set to 1 then does not make target, only reports %%BoundingBox. Speeds up setting %%BBox
+
+
+% You may enter the absolute width in microns of the circles to be used (spatial frequency):
+
+ /startu     80 def     %   Enter starting line width in microns. (Frequency will be displayed in Line pairs / mm)
+
+ /endu      800 def 	%   Enter ending line width in microns.
+
+                        %   The intermediate steps will automatically be generated with log
+                        %   increments. endu should be larger than startu. A range of 10x is
+ 						%   suggested.
+ 						%   This is a test target that is based on visual perception.
+ 						%   The range from 80 to 800 covers the range that is visually
+ 						%   significant at reading distance. For visual significance it
+ 						%   does not make sense to go to higher resolutions.
+ 						%   Line pairs/mm = 1mm / (LineWidthMicrons / 1000 * 2)
+
+
+% You also need to define the beginning and ending contrast to be tested:
+
+ /startc   100	def		%   Enter starting contrast as percent. Cannot be more than 100%.
+ 						%   If RefToneValue is not 50% then starting contrast will
+						%   automatically be set to twice the distance from either
+						%   zero or 100% contast, whichever is less.
+
+ /endc 	     1	def 	%   Enter  ending  contrast as percent. A value of less than
+ 						%   1 percent may not be perceptible by the eye. (1% is about a
+						%   just noticeable difference.)
+						%   The visually significant range is from 100% to 1%.
+
+
+ /RefToneValues  [ 50 ]  def
+                        %   Spatial resolution also depends on the tone value at which it is tested.
+                        %   Set matrix of reference tone values as percent tone value.
+                        %   Set from 1 to max. 9 values. Suggested values: [ 10 30 50 70 90 ]
+						%   Contrast range will be symmetrically centered around these
+						%   points, and as many as possible contrasts will be shown until
+						%   they are limited by either the 0% or 100% value.
+						%   For each tone value, one block of patches is generated.
+
+
+/AddressabilityIndicatorFlag 0 def     % Set to zero or one. If set to 1, these
+/ScreenPatternIndicatorFlag  0 def     % two related targets will also be imaged.
+
+
+/ToneValueBlocksXdirection 1 def
+                        %   Set the number of blocks to be displayed in the horizontal direction.
+                        %   This gives you control over the size of the target, helps to make it
+                        %   fit on a sheet of paper.
+
+/NoOfPages 1 def        % Number of pages in ConRes test target
+
+
+/SplitRef   0 def       %   Define percent tone value difference of reference tone values between
+                        %   top and bottom half of circles. For split of reference tone values.
+                        %   If set to zero, there is no split.
+                        %   This is useful to test resolution when there are only a reduced
+                        %   number of gray levels, such as with single cell screening for
+                        %   a low addressability device. Normally this value is zero or
+                        %   very low, like 1 or up to 3 percent
+
+
+/SetCol (K) def 		%   Define color of target. Choose from (C), (M), (Y), (K),
+                        %   (MY), (CY), (CM), (CMY). This is a CMYK target. It makes sense
+                        %   to only test black since probably the same technology is used for
+                        %   all colors, and black is most visible. Resolution of 2 and 3 color
+                        %   overprints is also sensitive to registration accuracy.
+
+
+
+/DotGrid	1 	def		% Alignment Grid with dots  1 = on   0 = off
+
+/CheckerFlag 0 def      % If set to 1, checkerboard pattern is printed. I makes sense to turn this
+                        % off because, with PDF workflow, different PDFs would have to be made for
+                        % each addressability. The ConRes circles are vector and therefore independent
+                        % of addressability.
+
+%  Note: The above settings are documented in the .log file which is created when
+%        this EPS file is run through Adobe Distiller when making a PDF file.
+
+
+%Start
+
+/SpotCorrection  0	def	%   Set to one or to zero. If set to 1, then one spot will be
+						% subtracted from the calculated line width, to compensate for
+						% the fact that some RIP's draw lines one spot too wide. See
+						% Adobe PostScript Language Reference Manual, 2nd edition, p 508.
+						%   A value of 1 should normally be used for binary systems
+						% where a spot can only be either on or off, such as Graphic
+						% Arts CtP systems with AM screening. For systems where spots
+						% can have gray levels, such as lower resolution ink jet proofers
+						% or electrophotographic systems, SpotCorrection should be set to
+						% zero. This may also apply to FM screeners.
+						%   You can verify that the correct setting is used by checking
+						% the width of fine lines and spaces, they should be both the same
+						% on a given patch as long as there is no dot gain (that is, if
+						% the size of a mark printed on a given spot matches the size of a
+						% single addressability square.)
+						%   In practice, spots are often a little larger than addressability
+						% space due to over-exposure, over-inking or over-toning. Therefore
+						% lines tend to be a little wider than spaces, even if the RIP images
+						% the spots correctly.
+						%   A checkerboard pattern is included in the upper right corner
+						% to aid evaluation of spot reproduction. Under close to perfect
+						% conditions, like on a Creo Thermal CtP, or an Agfa Galileo system,
+						% where single spots can actually be imaged at the addressability
+						% size (if exposed correctly), all checker patches should image with
+						% an area coverage of 50%.
+						%   Spots that are too large can be so for two reasons: 1. The
+						% RIP painted each line or checker one spot too wide, and/or 2.
+						% The output device uses too much ink, toner or exposure, which
+						% leads to 'dot gain'. The checker pattern can differentiate
+						% between the two: If SpotCorrection is applied (set to 1) it
+						% still may be possible that the 1x1 checker prints as a solid,
+						% while the corners of the 4x4 checker do not touch. This is
+						% an indication of too much ink or toner, and therefore spot
+						% correction should not be applied (set to zero).
+
+
+/SetDPI		0	def		%   You can set the addressability that the program will adapt to.
+						% When set to zero, this will be done automatically, by checking
+						% the number of addressability steps per inch of the output device.
+						% Normally this works fine. But if it should be necessary to first
+						% run the file through Photoshop, then the DPI will be reported as
+						% 300, independent of what is selected when opening the file. This
+						% results in a possible false spot correction or spot alignment.
+						% In such a case, you can set the DPI manually to what it should
+						% be for the final output device.
+
+% History:
+% PxDpt01	Apr 22, 00	First version based on G4Bar10
+% PxDpt03	Apr 28, 00	Add RGB and 3col wedges
+% PxDLA01	Apr 30, 00	Log gradients of checker sizes, absolute checker size
+% SysRes1	May  2, 00	Log contrast of checkers
+% ConRes02	May 13, 00	New name: Conrast Res Tgt, Color Level Reference, Aligment dots
+% ConRes04	Jun 20, 00	Use lines instead of checkers, add freq labels on right side of tgt.
+%						Allow for SpotCorrection
+% ConRes05	Jun 27, 00	Allow for Spot alignment. Indicate choice in headder
+% ConRes06	Oct 21, 00	Allow for SetDPI. Add Checkers, Realign text
+% ConRes07	Oct 26, 00	Only C,M,K patches but Horiz and Vert, square blocks
+% ConRes08	Nov  7, 00	Stepped frequencies, therefore no SpotAlignment. Add register marks.
+% ConRes09	Dec 27, 00	New layout, simple labels + table for scales. Allow contrast definition.
+% ConRes1.0	Apr 17, 01	Vignettes added, larger size
+% ConRes1.1	May 11, 01	Red Labels when LineWidth is less than one spot
+% ConRes1.1	May 31, 01	Labels for line width were wrong when target was imaged at other than 100%
+% ConRes1.2	Oct 13, 01	Make checkerboards using patterns
+% ConRes1.3	Apr 24, 02	Make checkerboards using colorimage operator
+% ConRes1.4	Jul  2, 02	Black only for Deepak thesis
+% ConRes1.5	Apr 18, 04	Rearranged for cameras.
+% ConRes1.6	May 11, 05	Using circles instead of lines, 1 color settable.
+% ConRes1.7	Jul 05, 06	Make frequency scale in terms of L/mm.
+% ConRes1.8	Aug 01, 06	Circles are truly centered because of cvi for mt5. Remove SepOps.
+% ConRes1.8	Feb 21, 07	Licensing line uses smaller type when string is too long.
+% CirRes1.9	Sep 17, 07	Add Ref. TV label, other small changes.
+% CirRes2.0	Sep 22, 07	Make entry of resolution steps manual through array rather than automatic.
+% CirRes2.1	Sep 22, 07	Same as 1.9, but split circles to test two tone values. Useful to test for missing graylevels.
+% CirRes2.2	Oct  3, 07	Make the number and size of patches user settable variables.
+% CirRes2.3	Oct 20, 07	Allow to set matrix for several tone values.
+% CirRes2.4	Nov  7, 07	Also correct px magnification for AddrInd and Gradient. Add solid patch. RefChecker is 8x8, not 10x10
+% CirRes2.5	Nov 10, 07	Allow for choosing number of blocks in X direction, add Screen Pattern analyzer if there is room,
+%                       and if an empty block is left over, it will also show a documentation area.
+% CirRes2.6	Nov 23, 07	Add step wedges. Edit and spell check header info. Allow 2 and 3 color overprints
+% CirRes2.6	Dec 15, 07	Print Configuration file in .log for Analysis tool
+% CirRes2.7	Jan 18, 08	Add tone levels in different format to .log file
+% CirRes2.7	Jan 18, 08	Edit two errors in .log file
+% CirRes2.8	Feb 24, 08	Better logic to size Screen Pattern Analyzer
+%           Jun  5, 09	Paint micron sign with inverted h
+% CirRes2.9	Nov 10, 09	Add grayscale and gradient and TechWatch logo. For Excell licensing.
+%                       Paint Copyright sign without symbol font
+% CirRes3.0	May 26, 11  Better DotGrid. Remove remaining Symbol font statements (arrows in addressability target)
+% CirRes3.0	Aug 28, 11  Better spacing of LL text in AddrInd tgt and TechWatch logo line
+% CirRes3.1	Sep 16, 11  Flag for TechWatch text
+% CirRes3.2 May 14, 12  Allow multipage document. Place dot grid outside of patches. Lots of editing.
+% CirRes3.3 Jun  4, 12  Add capability to linearize the tone reproduction.
+
+
+%  /startcount count def
+%  (Stack count at beginning =           ) print count =
+%  /starttime realtime def
+%  (Max. Virtual Memory available:       )   print vmstatus  = dup /membeg exch def
+%  (Memory used at beginning:            ) print = pop ( ) =
+
+/un (Not Validated) def                 % User Name
+/lizdat (Yesterday) def                 % License expiration date
+/LicensedLocation (Not Located) def     % Licensed location
+/PDFcode ( ) def                        % Added by Licensing Excel sheet
+
+%BeginCode
+
+/TWF 0 def  % TechWatch Logo
+
+statusdict /product known { /outdev statusdict /product get def } { /outdev (Unknown output device) def } ifelse
+/PsLevel /languagelevel where { pop languagelevel } { 1 } ifelse def
+
+/devserial /serialnumber where { pop serialnumber }{ ( ) } ifelse  def
+ devserial 0 eq { /devserial ( ) def }{ /devserial devserial 50 string cvs def } ifelse
+/devserial devserial length 10 gt { devserial devserial length 10 sub 10 getinterval }{ devserial } ifelse  def   % take only last 10 numbers
+
+/bd { bind def } bind def
+/ld { load def } bd
+/ver { version 20 string cvs } bd
+/vs /vmstatus ld
+
+72 72 matrix defaultmatrix  dtransform  /dpiy exch abs  cvi def  /dpix exch abs cvi def
+dpix cvi dpiy cvi lt
+   { /DPI dpix def  /m1 0 def  /m2 2 def }
+   { /DPI dpiy def  /m1 1 def  /m2 3 def } ifelse
+
+/magn      % calculate overall magnification including the one applied by Quark
+	 72 DPI                                    % by dividing 72 by the number of
+	  matrix currentmatrix m1 get abs dup mul  % user units per inch in the
+	  matrix currentmatrix m2 get abs dup mul  % CurrentTransformationMatrix CTM
+	  add sqrt
+	 div div
+def
+
+
+SetDPI 0 ne { /DPI SetDPI def } if    % set dpi
+
+
+/dpi DPI 15 string cvs def
+/px 72 DPI div  magn div def    % correct for magnification of Quark
+
+ 1 1   % put two ones on stack
+/pxm { px mul } bd
+/pxr { px div round cvi px mul } bd
+/ll exch def           % define as one
+/in { 72 mul  } bd
+/mu { 100000  DPI 2.54 div  div round cvi 10 div } bind def
+/hc <4E6F742056616C696461746564> def
+/II exch def           % define as one
+/sw /stringwidth ld
+/swp  { sw pop } bd
+/swpa { sw pop add } bd
+/scp  { 10 string cvs print} bd
+/5sc   { 50 string cvs    } bd
+/scspa { 50 string cvs sw pop add } bd
+/scsp  { 50 string cvs sw pop } bd
+/scwpa { 100 string cvs sw pop add } bd
+/slw /setlinewidth ld
+/wi { un 0 exch { add } forall hc 0 exch { add } forall } bd
+/zd <596573746572646179> def
+/csho { dup sw pop 2 div 4 -1 roll exch sub  3 -1 roll mo sh } bd
+/rsho { dup sw pop       4 -1 roll exch sub  3 -1 roll mo sh } bd
+/wz { lizdat 0 exch { add } forall zd 0 exch { add } forall } bd
+/scc { 15 string cvs csho } bd
+/tan { dup sin exch cos div } bd     % Procedure for tangent
+/lizflag 0 def
+
+/mo  /moveto  ld
+/li  /lineto  ld
+/rp  /repeat  ld
+/rli /rlineto ld
+/rmo /rmoveto ld
+/sh /show ld                   % define show as sh
+/ruling  72 1.4142135  pxm div magn div round cvi 10 div def    % for ref tints 10 spots wide
+/show { 0 0 mo .1 .1 rli -.1 0 rli cp clip np } bd    % redefine the PS operator show to trigger no image to protect against someone changing file
+wi ne wz ne or { /ll 0 def } if
+/scs  { 50 string cvs sh } bd
+/scr  { 50 string cvs rsho } bd
+/sct  { 50 string cvs } bd
+/scp  { 50 string cvs print  } bd
+/scsp { 50 string cvs sw pop } bd
+/hl <4E6F74204C6F6361746564> def       % hex location
+/hi { LicensedLocation 0 exch { add } forall hl 0 exch { add } forall } bd
+hi ne { /ll 0 def } if
+/gs /gsave ld
+/gr /grestore ld
+/pa { hc 0 exch { add } forall 1247 } bd
+/la { hl 0 exch { add } forall 1037 } bd
+/cp /closepath ld
+/pz { zd 0 exch { add } forall 954 } bd
+/uc (987654321) def  % user code
+/np /newpath ld
+pa ne pz ne or la ne or { /II 0 def } if
+/mt  { transform .25 sub round cvi .25 add exch .25 sub round cvi .25 add exch itransform mo  } bd
+/rmt { transform .25 sub round cvi .25 add exch .25 sub round cvi .25 add exch itransform rmo } bd
+/mt5 { transform .50 sub round cvi .50 add exch .50 sub round cvi .50 add exch itransform mo  } bd
+/rlt { transform .25 sub round cvi .25 add exch .25 sub round cvi .25 add exch itransform rli } bd
+/tmr { translate 0 0 mo 90 rotate } bd
+ ll II mul 0 eq { 0 0 mo .1 .1 rli -.1 0 rli cp clip np }  if
+/suc <393837363534333231> def % second user code, not used anywhere, just a record
+/ms  {makefont setfont} bd
+/pst { ()= pstack ()= } bd
+
+/setoverprint where { pop false setoverprint } if  % overprint and erase colors underneath
+
+% **************************************************************************************************************
+% **************************************************************************************************************
+
+/colr {
+	/colname exch def
+	        /Kcolor () def    /Ccolor () def   /Mcolor () def   /Ycolor () def
+	        /CMYcolor () def  /CMcolor () def  /CYcolor () def  /MYcolor () def
+		colname (K) eq  { 0 0 0 area setcmykcolor /Kcolor (blk) def }  if
+		colname (C) eq  { area 0 0 0 setcmykcolor /Ccolor (cyn) def }  if
+		colname (M) eq  { 0 area 0 0 setcmykcolor /Mcolor (mag) def }  if
+		colname (Y) eq  { 0 0 area 0 setcmykcolor /Ycolor (yel) def }  if
+		colname (MY) eq  colname (YM) eq or { 0 area area 0 setcmykcolor /MYcolor (red) def }  if
+		colname (CY) eq  colname (YC) eq or { area 0 area 0 setcmykcolor /CYcolor (grn) def }  if
+		colname (CM) eq  colname (MC) eq or { area area 0 0 setcmykcolor /CMcolor (blu) def }  if
+		colname (CMY) eq { area area area 0 setcmykcolor /CMYcolor (cmy) def }  if
+} def
+
+/col {
+        /colname exch def
+		colname (blk) eq  { 0 0 0 area setcmykcolor }  if
+		colname (cyn) eq  { area 0 0 0 setcmykcolor }  if
+		colname (mag) eq  { 0 area 0 0 setcmykcolor }  if
+		colname (yel) eq  { 0 0 area 0 setcmykcolor }  if
+		colname (red) eq  { 0 area area 0 setcmykcolor }  if
+		colname (grn) eq  { area 0 area 0 setcmykcolor }  if
+		colname (blu) eq  { area area 0 0 setcmykcolor }  if
+		colname (cmy) eq  { area area area 0 setcmykcolor }  if
+		colname (wht) eq  { 0 0 0 0 setcmykcolor }  if
+} def
+
+% **************************************************************************************************************
+% **************************************************************************************************************
+
+% Average the measurements
+
+/MeasuredTVprint NominalToneValue length array def
+0 1 NominalToneValue length 1 sub {
+    MeasuredTVprint exch 0 put                          % initialize array
+} for
+
+/mcd 0 def
+
+        MeasuredTVprint1 length 0 ne { /mcd mcd 1 add def } if    MeasuredTVprint2 length 0 ne { /mcd mcd 1 add def } if
+        MeasuredTVprint3 length 0 ne { /mcd mcd 1 add def } if    MeasuredTVprint4 length 0 ne { /mcd mcd 1 add def } if
+        MeasuredTVprint5 length 0 ne { /mcd mcd 1 add def } if    MeasuredTVprint6 length 0 ne { /mcd mcd 1 add def } if
+        MeasuredTVprint7 length 0 ne { /mcd mcd 1 add def } if    MeasuredTVprint8 length 0 ne { /mcd mcd 1 add def } if
+
+0 1 NominalToneValue length 1 sub {
+    /ste exch def
+        MeasuredTVprint1 length 0 ne {          % sum the values of all measuremets
+        MeasuredTVprint ste MeasuredTVprint ste get  MeasuredTVprint1 ste get add put } if
+        MeasuredTVprint2 length 0 ne { MeasuredTVprint ste MeasuredTVprint ste get  MeasuredTVprint2 ste get add put } if
+        MeasuredTVprint3 length 0 ne { MeasuredTVprint ste MeasuredTVprint ste get  MeasuredTVprint3 ste get add put } if
+        MeasuredTVprint4 length 0 ne { MeasuredTVprint ste MeasuredTVprint ste get  MeasuredTVprint4 ste get add put } if
+        MeasuredTVprint5 length 0 ne { MeasuredTVprint ste MeasuredTVprint ste get  MeasuredTVprint5 ste get add put } if
+        MeasuredTVprint6 length 0 ne { MeasuredTVprint ste MeasuredTVprint ste get  MeasuredTVprint6 ste get add put } if
+        MeasuredTVprint7 length 0 ne { MeasuredTVprint ste MeasuredTVprint ste get  MeasuredTVprint7 ste get add put } if
+        MeasuredTVprint8 length 0 ne { MeasuredTVprint ste MeasuredTVprint ste get  MeasuredTVprint8 ste get add put } if
+} for
+
+0 1 NominalToneValue length 1 sub {   % calculate average measured values
+    /ste exch def
+    MeasuredTVprint ste  MeasuredTVprint ste get mcd div put
+} for
+
+% (aa)= (mcd= ) print mcd scp (   MeasuredTVprint=)= MeasuredTVprint {  scp (   ) print } forall (yy)= ()=  ()=
+
+1 1 NominalToneValue length 2 sub {   % make average measured values monotonic
+    /ste exch def
+    MeasuredTVprint ste get  MeasuredTVprint ste 1 sub get  sub  0 lt { MeasuredTVprint ste  MeasuredTVprint ste get  MeasuredTVprint ste 1 add get  MeasuredTVprint ste get sub 2 div add put  } if
+} for
+
+% (yy)= (mcd= ) print mcd scp (   MeasuredTVprint=)= MeasuredTVprint {  scp (   ) print } forall (yy)= ()=  ()=
+
+% End Average the measurements
+
+%***
+
+% Define LabDen flag
+/LabDen 0 def
+1 1 NominalToneValue length 1 sub {
+    /ste exch def
+    /LabDen   LabDen MeasuredTVprint ste get add  def
+} for
+
+/LabDen LabDen NominalToneValue length div def
+
+LabDen 6 gt { /LabDen (L*) def }{ /LabDen (Den.) def } ifelse
+
+
+/ReferenceTVprint NominalToneValue length array def
+
+/StSize   MeasuredTVprint NominalToneValue length 1 sub get   MeasuredTVprint 0 get   sub  NominalToneValue length 1 sub div def
+()= (StSize= ) print StSize scp ()=
+0 1 NominalToneValue length 1 sub {
+    /ste exch def
+    ReferenceTVprint ste MeasuredTVprint 0 get  StSize ste mul add  put
+} for
+
+
+
+LabDen (Den.) eq {
+%  /ReferenceTVprint [  0    .08   .16   .24   .32   .40   .48   .56   .64   .72   .80   .88   .96  1.04  1.12  1.20  1.28 ] def   % Density
+}{
+%  /ReferenceTVprint [    15    20	   25    30    35    40    45    50    55    60    65    70    75    80  85 90 95  ] def   % 100-L*
+} ifelse
+
+% ********************
+
+/Interp4 {          % Function:   x0  y0  x1  y1  x2  y2  x3  y3  x  Interp4
+
+  NominalTVflag 0 ne {
+
+    /x  exch def
+    /y3 exch def    /x3 exch def
+    /y2 exch def    /x2 exch def
+    /y1 exch def    /x1 exch def
+    /y0 exch def    /x0 exch def
+
+    % ******************* Setup **********************
+
+    /a0   y0  def
+    /Xdiv x3  x0 sub            def
+    /Xs1  x1  x0 sub  Xdiv  div def
+    /Xs2  x2  x0 sub  Xdiv  div def
+    /Ys1  y1  y0 sub            def
+    /Ys2  y2  y0 sub            def
+    /Ys3  y3  y0 sub            def
+
+    % ************* Compute Coefficients *************
+
+    /det  Xs1   Xs2 dup mul   mul
+          Xs1 dup mul   Xs2 dup dup mul mul  mul add
+          Xs1 dup dup mul mul   Xs2 mul   add
+          Xs2 dup mul   Xs1 dup dup mul mul  mul sub
+          Xs2 dup dup mul mul  Xs1 mul   sub
+          Xs2  Xs1 dup mul mul  sub
+    def
+
+    /a1  Ys1  Xs2  dup mul  mul
+         Xs1 dup mul  Xs2  dup dup mul mul   mul   Ys3 mul   add
+         Xs1 dup dup mul mul  Ys2 mul   add
+         Ys3  Xs2 dup mul mul  Xs1 dup dup mul mul mul   sub
+         Xs2 dup dup mul mul  Ys1 mul   sub
+         Ys2  Xs1 dup mul mul   sub
+    def
+
+    /a2  Xs1 Ys2  mul
+         Ys1   Xs2 dup dup mul mul  mul   add
+         Xs1 dup dup mul mul  Xs2 mul  Ys3 mul   add
+         Xs1 dup dup mul mul  Ys2 mul   sub
+         Ys3  Xs2 dup dup mul mul   mul  Xs1 mul   sub
+         Xs2  Ys1 mul    sub
+    def
+
+    /a3  Xs1  Xs2 dup mul mul Ys3 mul
+         Xs1 dup mul  Ys2 mul   add
+         Ys1  Xs2 mul   add
+         Xs2  dup mul   Ys1 mul   sub
+         Ys2  Xs1 mul   sub
+         Ys3  Xs2 mul  Xs1 dup mul   mul   sub
+    def
+
+    % ************** output interpolate **************
+
+    /Xpoint    x x0 sub  Xdiv  div  def
+
+  a0
+ 	a1 Xpoint mul
+ 	a2 Xpoint dup mul  mul  add
+ 	a3 Xpoint dup dup mul mul  mul add
+  det div  add  								% this is the interpolated y on top of the stack
+
+ } if
+
+} bd  % End Interp4
+
+%***********
+
+/Interp2 {          % Function:   x0  y0  x1  y1  x2  y2  x3  y3  x  Lin4
+                % linear interpolation between x1 x2 an y1 y2
+
+  NominalTVflag 0 ne {
+
+    /x  exch def
+    /y3 exch def    /x3 exch def
+    /y2 exch def    /x2 exch def
+    /y1 exch def    /x1 exch def
+    /y0 exch def    /x0 exch def
+
+    x x1 sub  y2 y1 sub mul x2 x1 sub div  y1 add     % this is the linearly interpolated y on top of the stack
+
+  } if
+} bd  % End Interp2
+
+%****************
+
+
+% Setup arrays for linearization
+
+/StandardizedToneVal NominalToneValue length array def  % This will contain Tone Values that when printed, will result in densities that match the RefDen
+
+/arrLen NominalToneValue length  2 add  def		% add one step on either side of the array for the end points of the 4 point interpolation
+
+% now use the 4 point interpolation to curve the tone values such that, after printing, the mesasured
+% densities will be the same as the ReferenceTVprint array.
+
+/NomTV  arrLen array def
+	0 1 arrLen 3 sub { /con exch def  NomTV con 1 add  NominalToneValue con get  put } for   % copy values of original into expanded array
+		% (xx)= (NomTV=)= NomTV {  scp (   ) print } forall (xx)= ()=
+	NomTV 0  NomTV 2 get neg put        % place the mirrored (neg) value of step 2 into step zero
+
+	NomTV arrLen 1 sub   				% place the mirrored value of the secnod last step into the last step of the extended matrix
+		NomTV arrLen 2 sub get
+		NomTV arrLen 3 sub get
+		sub					   			% to mirror, the difference between the last and second last step is
+		NomTV arrLen 2 sub get
+		add    							% added to the last step
+		put
+% (yy)= (NomTV=)= NomTV {  scp (   ) print } forall (yy)= ()=  ()=
+
+
+/NoMeDe  arrLen array def   % add one step on either side of the array
+	0 1 arrLen 3 sub { /con exch def  NoMeDe con 1 add  MeasuredTVprint con get  put } for   % copy values of original into expanded array
+		% (xx)= (NoMeDe=)= NoMeDe {  scp (   ) print } forall (xx)= ()=
+	NoMeDe 0  NoMeDe 2 get neg put       % place the mirrored value of step
+
+	NoMeDe arrLen 1 sub   				% place the mirrored value of the secnod last step into the last step of the extended matrix
+		NoMeDe arrLen 2 sub get
+		NoMeDe arrLen 3 sub get
+		sub					   			% to mirror, the difference between the last and second last step is
+		NoMeDe arrLen 2 sub get
+		add    							% added to the last step
+		put
+
+% (yy)= (NoMeDe=)= NoMeDe {  scp (   ) print } forall (yy)= ()=  ()=
+
+
+/RefDe  arrLen array def   % add one step on either side of the array
+	0 1 arrLen 3 sub { /con exch def  RefDe con 1 add  ReferenceTVprint con get  put } for   % copy values of original into expanded array
+		% (xx)= (RefDe=)= RefDe {  scp (   ) print } forall (xx)= ()=
+	RefDe 0  RefDe 2 get neg put       % place the mirrored value of step
+
+	RefDe arrLen 1 sub   				% place the mirrored value of the secnod last step into the last step of the extended matrix
+		RefDe arrLen 2 sub get
+		RefDe arrLen 3 sub get
+		sub					   			% to mirror, the difference between the last and second last step is
+		RefDe arrLen 2 sub get
+		add    							% added to the last step
+		put
+
+% (yy)= (RefDe=)= RefDe {  scp (   ) print } forall (yy)= ()=  ()=
+
+%*******************
+
+% ()= (Start Linearization) = ()=
+/StStart 0 def
+
+
+0 1 arrLen 3 sub {  			% normalize range of measured values
+	/TVcount exch def
+
+	0 1 arrLen 3 sub {
+		/TVfit exch def
+
+			 % find the two steps between which the interpolated density value is
+		  ReferenceTVprint TVcount get  MeasuredTVprint TVfit       get ge  	% higher than the lower  step
+		  ReferenceTVprint TVcount get  MeasuredTVprint TVfit 1 add get le   % lower  than the higher step
+		and {   						% both are true
+    									% The starting point is one step lower (because it is searched in
+			/StStart TVfit 0 sub def	% the expanded matrix) so that the to be interpolated density is
+										% between the middle two step of the 4 step interpolation
+			exit for			% the step pair was found and saved in StStart.
+		} if
+	} for
+
+    NominalTVflag 0 ne {
+		NoMeDe  StStart   	   	  get 	% x0		% These are the 9 input values for the
+		NomTV 	StStart   	      get 	% y0		% Interp2 function
+		NoMeDe  StStart 1 add     get 	% x1
+		NomTV 	StStart 1 add     get 	% y1		% the x-y coordinates for the four points
+		NoMeDe  StStart 2 add     get 	% x2
+		NomTV 	StStart 2 add     get 	% y2
+		NoMeDe  StStart 3 add     get 	% x3
+		NomTV 	StStart 3 add     get 	% y3
+		ReferenceTVprint TVcount  get	% x			% the Density value for which we need to find the interpolated TV value
+		Interp2										% now the interpolated TV value is on top of the stack
+		/IntTV exch  10 mul round cvi 10 div  def   %	(       IntTV= ) print IntTV scp ()= ()=
+    }{
+        /IntTV ReferenceTVprint TVcount  get  def   %	(       IntTV= ) print IntTV scp ()= ()=
+    } ifelse
+		StandardizedToneVal TVcount IntTV put
+
+()= (StStart= ) print StStart scp   ( \t x= ) print x scp   (\t  x1= ) print x1 scp   (\t  x2= ) print x2 scp   (\t  y1= ) print y1 scp   (\t  y2= ) print y2 scp    (\t  IntTV= ) print IntTV scp ()=
+
+} for
+
+0 1 arrLen 3 sub {  			% normalize range of measured values
+    /TVcount exch def
+    NominalTVflag 0 eq { StandardizedToneVal TVcount   NominalToneValue TVcount  get  put } if
+} for
+
+ ()= (NominalToneValue=)=    NominalToneValue    { scp (   ) print } forall ()=
+ ()= (ReferenceTVprint=)=    ReferenceTVprint    { scp (   ) print } forall ()=
+ ()= (MeasuredTVprint=)=     MeasuredTVprint     { scp (   ) print } forall ()=
+ ()= (MeasuredTVprint=)=          MeasuredTVprint          { scp (   ) print } forall ()=
+ ()= (StandardizedToneVal=)= StandardizedToneVal { scp (   ) print } forall ()=
+ ()= ()=
+
+% End of Setup arrays for linearization
+
+%***************************************************************************************************
+%***************************************************************************************************
+
+/SingleValInterp {    % standardize single TV value
+
+ NominalTVflag 0 ne {    % do nothing if flag is zero
+
+  /ReqTV exch def
+
+%  ()=	( ReqTV= ) print ReqTV scp (    ) print
+
+	% To correct for a single tone value, we first have to convert the tone value to printed density,
+	% using 4 point interpolation, and then use a reverse interpolation to get the linearized TV.
+	% The first interpolation uses TV as X axis and normalized printed density as Y axis.
+	% The second interpolation uses normalized printed density as X axis and TV as Y axis.
+
+		% find the two  steps between which the nominal TV value is
+		1 1 arrLen 3 sub {		% find the two  steps between which the nominal TV value is
+			/TVfit exch def
+
+			  ReqTV   NomTV TVfit get       ge	% higher than the lower  step
+			  ReqTV   NomTV TVfit 1 add get le	% lower  than the higher step
+			and {   							% both are true
+	    										% The starting point is one step lower (because it is searched in
+				/StStart TVfit 1 sub def		% the expanded matrix) so that the to be interpolated density is
+												% between the middle two step of the 4 step interpolation
+				exit for						% the step pair was found and saved in StStart.
+			} if
+		} for
+%  	 		 (\t StStart= ) print StStart scp ( \t NomTV= ) print NomTV StStart  get scp
+
+	% find the interpolated tone value for input tone value
+
+			NomTV	StStart   	      get 	% x0		% These are the 9 input values for the
+			RefDe	StStart   	   	  get 	% y0		% Interp2 function
+			NomTV	StStart 1 add     get 	% x1		% the x-y coordinates for the four points
+			RefDe	StStart 1 add     get 	% y1
+			NomTV	StStart 2 add     get 	% x2
+			RefDe	StStart 2 add     get 	% y2
+			NomTV	StStart 3 add     get 	% x3
+			RefDe	StStart 3 add     get 	% y3
+			ReqTV							% x			% the TV value for which we need to find the interpolated normalized density value
+			Interp2										% now the interpolated reference density value is on top of the stack
+			/IntDe exch    def
+%  		 ( \t IntDe= ) print IntDe scp ( ) print
+
+	%***
+
+	% find the two steps in the normalized measured density array between which the intepolated reference density value is
+		1 1 arrLen 3 sub {
+			/TVfit exch def
+
+			  IntDe   NoMeDe TVfit get       ge	% higher than the lower  step
+			  IntDe   NoMeDe TVfit 1 add get le	% lower  than the higher step
+			and {   							% both are true
+	    										% The starting point is one step lower (because it is searched in
+				/StStart TVfit 1 sub def		% the expanded matrix) so that the to be interpolated density is
+												% between the middle two step of the 4 step interpolation
+				exit for						% the step pair was found and saved in StStart.
+			} if
+		} for
+%  	 	()=	 (\t StStart= ) print StStart scp ( \t NoMeDe= ) print NoMeDe StStart  get scp
+
+	% find the interpolated tone value for the just calculated interpolated printed density
+			NoMeDe  StStart   	   	  get 	% x0		% These are the 9 input values for the
+			NomTV 	StStart   	      get 	% y0		% Interp2 function
+			NoMeDe  StStart 1 add     get 	% x1
+			NomTV 	StStart 1 add     get 	% y1		% the x-y coordinates for the four points
+			NoMeDe  StStart 2 add     get 	% x2
+			NomTV 	StStart 2 add     get 	% y2
+			NoMeDe  StStart 3 add     get 	% x3
+			NomTV 	StStart 3 add     get 	% y3
+			IntDe						  	% x			% the Density value for which we need to find the interpolated TV value
+			Interp2										% now the interpolated TV value is on top of the stack
+			/IntTV exch   def
+%  	(\t IntTV= ) print IntTV 10 mul round cvi 10 div scp ()=
+            IntTV
+
+  } if   % NominalTVflag is not zero
+
+} bd   % end SingleValInterp
+
+
+% **************************************************************************************************************
+% **************************************************************************************************************
+
+/areafill {
+	% this routine fills a rectangular area with a specified color. Used for background color.
+	% xrectangle yrectangle  colr area ->  areafill  Note: xrectangle and yrectangle must be full number of spots long
+    % example: 30 40 mt    60 72 (C) .75 areafill
+  gs
+   /area exch def
+   colr
+   /yrectangle  exch pxr def
+   /xrectangle  exch pxr def
+   xrectangle 0 rli   0 yrectangle rli  xrectangle neg 0 rli cp fill
+  gr
+} bd
+
+% **************************************************************************************************************
+
+% Make Checker Pattern
+
+/one_pattern  {    % define one ref tint and 4 checkers
+gs
+ translate 0 0 mt  currentpoint translate % 0 0 mo
+ 2 chptchm -1 chptch mul translate  0 0 mt  currentpoint translate 0 0 mo  % origin of ck50 is center of checker target
+ /area 1 def colr
+
+		% strings for checker boards
+		/str1 <55> def  % 0101 0101		% for 1x1 and 10x10
+		/str2 <AA> def  % 1010 1010		% for 1x1 and 10x10
+ 		/str3 <66> def  % 0110 0110		% for 2x2
+		/str4 <99> def  % 1001 1001		% for 2x2
+		/str5 <C71C71> def  % 1100 0111 0001 1100 0111 0001		% for 3x3
+		/str6 <38E38E> def  % 0011 1000 1110 0011 1000 1110		% for 3x3
+
+ gs
+	 2 chptchm 0 mo  0 -1 chptchm rli   -4 chptchm 0 rli  0 1 chptchm rli cp  clip np
+
+    % H 1x1
+	gs		% number of 8 bit bytes bytes per width of image, 8 checkers per byte
+			% each bit is scaled 1 spot wide
+		/nx8 chptch px div 0 add 8 div 1 div cvi 1 add def  % no addition, no offset. 1 div, 1 spot per bit
+		    % number of double rows per hight of image
+			% each row is scaled 1 spot high
+		/ny2 chptch px div 2 div cvi 1 add def
+	    -2 chptchm  nchptch translate
+		nx8 8 mul px mul  ny2 2 mul px mul scale
+
+		/str   nx8 2 mul string def
+		/str00 nx8 2 mul string def   % for non chosen color
+		0   1  nx8        1 sub { str exch str1  putinterval } bind for
+		nx8 1  nx8 2 mul  1 sub { str exch str2  putinterval } bind for
+		colname (C) eq { nx8 8 mul ny2 2 mul 1 [ nx8 8 mul 0 0 ny2 2 mul 0 0 ] { str   } { str00 } { str00 } { str00 } true 4 colorimage } if
+		colname (M) eq { nx8 8 mul ny2 2 mul 1 [ nx8 8 mul 0 0 ny2 2 mul 0 0 ] { str00 } { str   } { str00 } { str00 } true 4 colorimage } if
+		colname (Y) eq { nx8 8 mul ny2 2 mul 1 [ nx8 8 mul 0 0 ny2 2 mul 0 0 ] { str00 } { str00 } { str   } { str00 } true 4 colorimage } if
+		colname (K) eq { nx8 8 mul ny2 2 mul 1 [ nx8 8 mul 0 0 ny2 2 mul 0 0 ] { str00 } { str00 } { str00 } { str   } true 4 colorimage } if
+		colname (CM) eq  colname (MC) eq or { nx8 8 mul ny2 2 mul 1 [ nx8 8 mul 0 0 ny2 2 mul 0 0 ] { str   } { str   } { str00 } { str00 } true 4 colorimage } if
+		colname (MY) eq  colname (YM) eq or { nx8 8 mul ny2 2 mul 1 [ nx8 8 mul 0 0 ny2 2 mul 0 0 ] { str00 } { str   } { str   } { str00 } true 4 colorimage } if
+		colname (CY) eq  colname (YC) eq or { nx8 8 mul ny2 2 mul 1 [ nx8 8 mul 0 0 ny2 2 mul 0 0 ] { str   } { str00 } { str   } { str00 } true 4 colorimage } if
+		colname (CMY) eq { nx8 8 mul ny2 2 mul 1 [ nx8 8 mul 0 0 ny2 2 mul 0 0 ] { str   } { str   } { str   } { str00 } true 4 colorimage } if
+	gr
+
+    % H 2x2
+	gs		% number of 8 bit bytes bytes per width of image, 4 checkers per byte
+		/nx8 chptch px div       8 div       cvi 1 add def
+		/ny4 chptch px div 1 add 4 div       cvi 1 add def
+	    -1 chptchm  chptch 1 pxm add neg translate   % subtract 1 px to start with half a checker in vert. dir.
+		nx8 8 mul px mul  ny4 4 mul px mul scale
+
+		/str   nx8 2 mul string def
+		/str00 nx8 2 mul string def   % for non chosen color
+		0   1  nx8        1 sub { str exch str3  putinterval } bind for
+		nx8 1  nx8 2 mul  1 sub { str exch str4  putinterval } bind for
+
+		colname (C)  eq { nx8 8 mul ny4 2 mul 1 [ nx8 8 mul 0 0 ny4 2 mul 0 0 ] { str   } { str00 } { str00 } { str00 } true 4 colorimage } if
+		colname (M)  eq { nx8 8 mul ny4 2 mul 1 [ nx8 8 mul 0 0 ny4 2 mul 0 0 ] { str00 } { str   } { str00 } { str00 } true 4 colorimage } if
+		colname (Y)  eq { nx8 8 mul ny4 2 mul 1 [ nx8 8 mul 0 0 ny4 2 mul 0 0 ] { str00 } { str00 } { str   } { str00 } true 4 colorimage } if
+		colname (K)  eq { nx8 8 mul ny4 2 mul 1 [ nx8 8 mul 0 0 ny4 2 mul 0 0 ] { str00 } { str00 } { str00 } { str   } true 4 colorimage } if
+		colname (CM) eq  colname (MC) eq or { nx8 8 mul ny4 2 mul 1 [ nx8 8 mul 0 0 ny4 2 mul 0 0 ] { str   } { str   } { str00 } { str00 } true 4 colorimage } if
+		colname (CY) eq  colname (YC) eq or { nx8 8 mul ny4 2 mul 1 [ nx8 8 mul 0 0 ny4 2 mul 0 0 ] { str   } { str00 } { str   } { str00 } true 4 colorimage } if
+		colname (MY) eq  colname (YM) eq or { nx8 8 mul ny4 2 mul 1 [ nx8 8 mul 0 0 ny4 2 mul 0 0 ] { str00 } { str   } { str   } { str00 } true 4 colorimage } if
+		colname (CMY) eq { nx8 8 mul ny4 2 mul 1 [ nx8 8 mul 0 0 ny4 2 mul 0 0 ] { str   } { str   } { str   } { str00 } true 4 colorimage } if
+	gr
+
+    % H 3x3
+	gs	/nx24 chptch px div 24 div cvi 1 add def
+		/ny3 chptch px div 1 add 3 div cvi 1 add def
+	    0  chptch 1 pxm add neg translate
+		nx24 24 mul px mul   ny3 3 mul px mul  scale
+
+		/str   nx24  str5 length mul  2 mul string def
+		/str00 nx24  str5 length mul  2 mul string def
+		0           3  nx24  3 mul       1 sub  { str exch str5  putinterval } bind for
+		nx24 3 mul  3  nx24  3 mul 2 mul 1 sub  { str exch str6  putinterval } bind for
+
+		colname (C)  eq { nx24 24 mul ny3 1 mul 1 [ nx24 24 mul 0 0 ny3 1 mul 0 0 ] { str   } { str00 } { str00 } { str00 } true 4 colorimage } if
+		colname (M)  eq { nx24 24 mul ny3 1 mul 1 [ nx24 24 mul 0 0 ny3 1 mul 0 0 ] { str00 } { str   } { str00 } { str00 } true 4 colorimage } if
+		colname (Y)  eq { nx24 24 mul ny3 1 mul 1 [ nx24 24 mul 0 0 ny3 1 mul 0 0 ] { str00 } { str00 } { str   } { str00 } true 4 colorimage } if
+		colname (K)  eq { nx24 24 mul ny3 1 mul 1 [ nx24 24 mul 0 0 ny3 1 mul 0 0 ] { str00 } { str00 } { str00 } { str   } true 4 colorimage } if
+		colname (CM) eq  colname (MC) eq or { nx24 24 mul ny3 1 mul 1 [ nx24 24 mul 0 0 ny3 1 mul 0 0 ] { str   } { str   } { str00 } { str00 } true 4 colorimage } if
+		colname (CY) eq  colname (YC) eq or { nx24 24 mul ny3 1 mul 1 [ nx24 24 mul 0 0 ny3 1 mul 0 0 ] { str   } { str00 } { str   } { str00 } true 4 colorimage } if
+		colname (MY) eq  colname (YM) eq or { nx24 24 mul ny3 1 mul 1 [ nx24 24 mul 0 0 ny3 1 mul 0 0 ] { str00 } { str   } { str   } { str00 } true 4 colorimage } if
+		colname (CMY) eq { nx24 24 mul ny3 1 mul 1 [ nx24 24 mul 0 0 ny3 1 mul 0 0 ] { str   } { str   } { str   } { str00 } true 4 colorimage } if
+	gr
+
+    % H 4x4
+	gs		% number of 8 bit bytes bytes per width of image, 8 checkers per byte
+			% each bit is scaled 4 spots wide
+		/nx8 chptch px div 2 add 8 div 4 div cvi 1 add def
+		    % number of double rows per hight of image
+			% each row is scaled 4 spots high
+		/ny8 chptch px div 2 add 4 div 2 div cvi 1 add def
+
+	 	chptch nchptch mo  0 chptch rli   chptch 0 rli  0 nchptch  rli cp  clip np
+	    chptch 2 pxm sub  chptch 2 pxm add neg translate
+
+		nx8 8 mul px mul 4 mul   ny8 4 mul px mul 2 mul scale
+
+		/str   nx8 2 mul string def
+		/str00 nx8 2 mul string def
+		0      1  nx8 1 sub     { str exch str1  putinterval } bind for
+		nx8 1  nx8 2 mul  1 sub { str exch str2  putinterval } bind for
+
+		colname (C)  eq { nx8 8 mul ny8 2 mul 1 [ nx8 8 mul 0 0 ny8 2 mul 0 0 ] { str   } { str00 } { str00 } { str00 } true 4 colorimage } if
+		colname (M)  eq { nx8 8 mul ny8 2 mul 1 [ nx8 8 mul 0 0 ny8 2 mul 0 0 ] { str00 } { str   } { str00 } { str00 } true 4 colorimage } if
+		colname (Y)  eq { nx8 8 mul ny8 2 mul 1 [ nx8 8 mul 0 0 ny8 2 mul 0 0 ] { str00 } { str00 } { str   } { str00 } true 4 colorimage } if
+		colname (K)  eq { nx8 8 mul ny8 2 mul 1 [ nx8 8 mul 0 0 ny8 2 mul 0 0 ] { str00 } { str00 } { str00 } { str   } true 4 colorimage } if
+		colname (CM) eq  colname (MC) eq or { nx8 8 mul ny8 2 mul 1 [ nx8 8 mul 0 0 ny8 2 mul 0 0 ] { str   } { str   } { str00 } { str00 } true 4 colorimage } if
+		colname (CY) eq  colname (YC) eq or { nx8 8 mul ny8 2 mul 1 [ nx8 8 mul 0 0 ny8 2 mul 0 0 ] { str   } { str00 } { str   } { str00 } true 4 colorimage } if
+		colname (MY) eq  colname (YM) eq or { nx8 8 mul ny8 2 mul 1 [ nx8 8 mul 0 0 ny8 2 mul 0 0 ] { str00 } { str   } { str   } { str00 } true 4 colorimage } if
+		colname (CMY) eq { nx8 8 mul ny8 2 mul 1 [ nx8 8 mul 0 0 ny8 2 mul 0 0 ] { str   } { str   } { str   } { str00 } true 4 colorimage } if
+	gr
+
+
+  gr
+  gs
+	% 50refrence
+	 2 chptchm 0 mo  0 0.8 chptchm rli   -4 chptchm 0 rli   0 -0.8 chptchm  rli cp  clip np
+
+		    % number of 8 bit bytes bytes per width of image
+			% each bit is scaled 8 spots wide
+		/nx8 4 chptchm px div 8 div 8 div cvi 2 add def
+		    % number of double rows per hight of image
+			% each row is scaled 8 spots high
+		/ny8 chptch px div 8 div 2 div cvi 2 add def
+
+			% Center pattern in its area
+		4   chptchm px div round cvi 8 div dup cvi sub 8 mul  /xoffs exch 8 exch sub 2 div round cvi def
+		0.8 chptchm px div round cvi 8 div dup cvi sub 8 mul  /yoffs exch 8 exch sub 2 div round cvi def
+	    xoffs 0 eq { /xoffs 5 def } if   yoffs 0 eq { /yoffs 5 def } if
+
+		2 chptchm xoffs px mul add neg   0 chptchm yoffs px mul add neg translate
+
+		nx8 8 mul px mul 8 mul   ny8 8 mul px mul 2 mul scale
+
+		/str   nx8 2 mul string def
+		/str00 nx8 2 mul string def
+		0     1  nx8        1 sub { str exch str1  putinterval } bind for
+		nx8  1  nx8 2 mul  1 sub { str exch str2  putinterval } bind for
+
+		colname (C)  eq { nx8 8 mul ny8 2 mul 1 [ nx8 8 mul 0 0 ny8 2 mul 0 0 ] { str   } { str00 } { str00 } { str00 } true 4 colorimage } if
+		colname (M)  eq { nx8 8 mul ny8 2 mul 1 [ nx8 8 mul 0 0 ny8 2 mul 0 0 ] { str00 } { str   } { str00 } { str00 } true 4 colorimage } if
+		colname (Y)  eq { nx8 8 mul ny8 2 mul 1 [ nx8 8 mul 0 0 ny8 2 mul 0 0 ] { str00 } { str00 } { str   } { str00 } true 4 colorimage } if
+		colname (K)  eq { nx8 8 mul ny8 2 mul 1 [ nx8 8 mul 0 0 ny8 2 mul 0 0 ] { str00 } { str00 } { str00 } { str   } true 4 colorimage } if
+		colname (CM) eq  colname (MC) eq or { nx8 8 mul ny8 2 mul 1 [ nx8 8 mul 0 0 ny8 2 mul 0 0 ] { str   } { str   } { str00 } { str00 } true 4 colorimage } if
+		colname (CY) eq  colname (YC) eq or { nx8 8 mul ny8 2 mul 1 [ nx8 8 mul 0 0 ny8 2 mul 0 0 ] { str   } { str00 } { str   } { str00 } true 4 colorimage } if
+		colname (MY) eq  colname (YM) eq or { nx8 8 mul ny8 2 mul 1 [ nx8 8 mul 0 0 ny8 2 mul 0 0 ] { str00 } { str   } { str   } { str00 } true 4 colorimage } if
+		colname (CMY) eq { nx8 8 mul ny8 2 mul 1 [ nx8 8 mul 0 0 ny8 2 mul 0 0 ] { str   } { str   } { str   } { str00 } true 4 colorimage } if
+ gr
+  % make solid
+    -2 chptchm  -1 chptchm  mo   4 chptchm 0 rli  0 -.3 chptchm  rli  -4 chptchm 0 rli  cp  fill % solid bar
+
+	 /Helvetica findfont .52 chptchm scalefont setfont
+     gs
+	   0 0 0 1 setcmykcolor
+       -2 chptchm  -1.8 chptchm  translate  0 0 mo
+	   0.5  chptchm 0 (1x1) csho
+	   1.5  chptchm 0 (2x2) csho
+	   2.5  chptchm 0 (3x3) csho
+	   3.5  chptchm 0 (4x4) csho
+	 gr
+
+gr
+
+} bind def  % one_pattern   of checkers
+
+% **************************************************************************************************************
+
+/AddressabilityAndCircularGradient {    % make circular gradient and addressability indicator
+
+				 gs
+				/AdrGradFlag 1 def
+
+				 % Step Wedge at left of addressability target
+                  NoOfBlocksX 1 eq {
+                    gs
+                      /Helvetica findfont  .3 pwim scalefont setfont
+
+                      .8 pwim    TVX BlockSizeX mul add
+                      -.16 pwim  TVY BlockSizeY mul add  BlockSizeY .5 mul add  TVsteps length pwim 2 div sub     translate   % define from lower left corner
+
+                      0 1 TVsteps length 1 sub {
+                        /ste exch def
+                        /area TVsteps ste get 100 div def  SetCol colr
+                        0   TVsteps length 1 sub ste sub pwim  mo
+                        gs  1 pwim 0  rli   0 1 pwim rli   -1 pwim 0 rli  cp  fill  gr
+                        gs  0 0 0 1 setcmykcolor   1.25 pwim  .5 pwim (0) swp .6 mul sub rmo  currentpoint  area 100 mul round cvi sct csho  gr
+                      } for
+
+                      0 0 0 1 setcmykcolor  .032 pwim  pxr slw
+                      0 0 mo  1.55 pwim 0 rli  0 TVsteps length pwim rli  -1.55 pwim 0 rli  cp  stroke
+                    gr
+                  } if
+
+				            % translate to center of empty area
+					            1.3 ptchx mul .85 pwim add  TVX BlockSizeX mul add  BlockSizeX .5 mul add
+					                         -.16 pwim      TVY BlockSizeY mul add  BlockSizeY .5 mul add
+					            translate 	0 0 mo
+
+					        % scale to smaller of hight or width of free space
+					            BlockSizeX .3 pwim add 192 div   BlockSizeY .3 pwim add 192 div  lt {
+					                 BlockSizeX 192  .3 pwim add div
+					            }{
+					                 BlockSizeY 192 .3 pwim add div
+					            } ifelse
+					        dup scale                          % Adjust image size of AddrInd and Gradient
+
+				%***** Recalculate spot size after scaling
+
+				72 72 matrix defaultmatrix  dtransform  /dpiy exch abs  cvi def  /dpix exch abs cvi def
+				dpix cvi dpiy cvi lt
+				   { /DPI dpix def  /m1 0 def  /m2 2 def }
+				   { /DPI dpiy def  /m1 1 def  /m2 3 def } ifelse
+
+				/magn      % calculate overall magnification including the one applied by Quark
+					 72 DPI                                    % by dividing 72 by the number of
+					  matrix currentmatrix m1 get abs dup mul  % user units per inch in the
+					  matrix currentmatrix m2 get abs dup mul  % CurrentTransformationMatrix CTM
+					  add sqrt
+					 div div
+				def
+
+				SetDPI 0 ne { /DPI SetDPI def } if    % set dpi
+
+				/dpi DPI 15 string cvs def
+				/px 72 DPI div  magn div def    % correct for magnification of Quark
+
+				/pxm { px mul } bd
+				/pxr { px div round cvi px mul } bd
+
+				%*****
+
+				/size 192 def			% Width of frame. Hight will be same.
+				/coarse 280	 def		% specify coarsest spi to be indicated
+				/smu { size mul } bd
+				/FanLength { .78 smu } bd
+				dpiy dpix ne { /FanLength FanLength 0.97 mul def } if
+				/DeltaY 1 in coarse div magn div def 	% Distance between two lines at wide end of fan in PS units.
+				/NoLines 111 coarse mul 245 div 2 mul 1 add magn mul cvi 2 div cvi 1 add def	% odd number
+				/HalfFan NoLines 1 sub 2 div round def
+				/LineStart   HalfFan DeltaY mul  def
+
+				% ******************
+
+				0 0 0 1 setcmykcolor
+
+				size 2 div neg  dup translate  0 0 mo    % set center of addressability target at origine
+
+				% frame
+				gs
+				.25 pxr 2 mul setlinewidth
+				.25 pxr dup  translate 0 0 moveto
+					0 size 0 add cvi .25 pxr 2 mul sub  rlineto
+					size 0 add cvi  .25 pxr 2 mul sub  0 rlineto
+					0 size 0 add cvi  .25 pxr 2 mul sub  neg  rlineto  cp
+					gs 0 0 0 0   setcmykcolor fill  gr stroke
+				gr
+
+				.17 smu  .17 smu  .02 smu add translate 	% set origine at center of pixel for center of fan
+
+				% set origine of fans to center of an output spot
+					0 0  transform 0.5 sub round 0.5 add exch 0.5 sub round 0.5 add exch  itransform  mo currentpoint translate np
+
+				0 slw		% line width is one spot wide when set to zero
+
+
+				%  horizontal fan
+				gs
+                   /area 1 def SetCol colr
+				   HalfFan neg 1 0 {
+					 0 0 mo
+					 FanLength exch DeltaY mul
+					 dup /xmul exch dup mul FanLength dup mul add sqrt FanLength div def	% The dashes needs to be compensated for angle
+					 [ .1 pxm xmul mul   1.9 pxm xmul mul ] 0 setdash	% Using a 1 px dash transfers less toner, therefore, even if there is too much toner, the moire is sill visible!
+					 rli
+					 stroke
+				   } for
+				   0 1 HalfFan {
+					 0 0 mo
+					 FanLength exch DeltaY mul
+					 dup /xmul exch dup mul FanLength dup mul add sqrt FanLength div def	% The dashes needs to be compensated for angle
+					 [  ] 0 setdash				% Using a 1 px dash transfers less toner, therefore, even if there is too much toner, the moire is sill visible!
+					 rli
+					 stroke
+				   } for
+				gr
+
+
+				gs	% start vertical fan
+                   /area 1 def SetCol colr
+				     0 0 mo     90 rotate
+				   HalfFan neg 1 0 {
+					 0 0 mo
+					 FanLength exch DeltaY mul
+					 dup /xmul exch dup mul FanLength dup mul add sqrt FanLength div def
+					 [ .1 pxm xmul mul   1.9 pxm xmul mul ] 0 setdash
+					 rli
+					 stroke
+				   } for
+				   0 1 HalfFan {
+					 0 0 mo
+					 FanLength exch DeltaY mul
+					 dup /xmul exch dup mul FanLength dup mul add sqrt FanLength div def
+					 [  ] 0 setdash
+					 rli
+					 stroke
+				   } for
+				gr
+
+				/Helvetica .028 smu selectfont 				% for labels of arcs
+
+dpiy dpix ne {
+	(Xi) swp 2 div neg FanLength 1.015 mul mo (X) sh
+	gs   % make horizontal arrow sign
+  		(.) swp  .27 mul slw
+  		currentpoint exch  (W) swp .04 mul add exch  (W) swp .4 mul add   mo
+  		   (,) swp 0 rli  currentpoint stroke  mo
+  		   0  (M) swp -.13 mul  rli    (M) swp +.45 mul  (M) swp  .13 mul  rli    (M) swp -.45 mul  (M) swp  .13 mul  rli
+  		   cp fill
+  	gr	(N) swp 0 rmo
+
+	FanLength 1.015 mul -.013 smu          mo (Y) sh
+  	gs   % make Vertical arrow sign
+  		(.) swp  .27 mul slw
+  		currentpoint exch  (J) swp .5 mul add exch  mo
+  		   0 (,) swp rli  currentpoint stroke  mo
+  		   (M) swp -.13 mul 0 rli    (M) swp .13 mul  (M) swp +.45 mul rli    (M) swp  .13 mul  (M) swp -.45 mul  rli
+  		   cp fill
+  	gr	(J) swp 0 rmo
+} if
+
+				gs
+				/ofset {-0.0152 smu} bd				% Half Y distance offset for screen ruling labels
+
+				% define position of arcs and labels for screen ruling:
+				/pos { FanLength  exch coarse div div  } bd
+
+				/ppos 1.05 FanLength mul def		% X position of label for previous position
+
+				% place arc and label for scrnruling
+
+				/al {
+					 sc coarse gt   {		% only labels within range of target and no overlaping
+
+						ppos  sc pos  sub    (0.) swp	gt  {
+							.00056 smu  slw 	% for lines
+							gs 0 0 0 0 setcmykcolor np  sc pos  LineStart neg  mo 0 LineStart 2 mul rli stroke  gr		% this is label line
+							gs 0 0 0 0 setcmykcolor np  LineStart neg  sc pos  translate 0 0 mo 90 rotate   0 LineStart -2 mul rli stroke  gr		% this is label line
+
+							/ly { sc pos .0011 mul NoLines mul 245 coarse div mul magn div (0) swp  add neg } bd
+							 gs  sc pos  (.) swp add   ly  translate 90 rotate 0 0   sc sct rsho   gr % horizontal labels
+							 gs  ly   sc pos  (..) swp .8 mul sub       sc sct rsho   gr   % vertical labels
+							/ppos sc pos def
+
+						} if
+					} if
+				} bd
+
+				% The program is smart enough not to overlap labels of screen ruling. However you still may not get the
+				% specific rulings you want. In this case you eliminate a given ruling at the end of the program
+				% by putting a % sign in front of that program line.
+
+
+					0 0 mt
+
+					/sc	10   def   al
+					/sc	12.5 def   al
+					/sc	15	 def   al
+					/sc	17.5 def   al
+					/sc	20	 def   al
+				%	/sc	22.5 def   al
+					/sc	25	 def   al
+					/sc	30	 def   al
+				%	/sc	35	 def   al
+					/sc	40	 def   al
+				%	/sc	45	 def   al
+					/sc	50	 def   al
+				%	/sc	55	 def   al
+				%	/sc	60	 def   al
+					/sc	65	 def   al
+				%	/sc	70	 def   al
+				%	/sc	75	 def   al
+				%	/sc	80	 def   al
+					/sc	85	 def   al
+				%	/sc	90	 def   al
+					/sc	100	 def   al
+					/sc	110	 def   al
+					/sc	120	 def   al
+					/sc	133	 def   al
+					/sc	150	 def   al
+					/sc	175	 def   al
+					/sc	200	 def   al
+					/sc	250	 def   al
+					/sc	300	 def   al
+					/sc	350	 def   al
+					/sc	400	 def   al
+					/sc	500	 def   al
+					/sc	600	 def   al
+					/sc	700	 def   al
+					/sc	800	 def   al
+					/sc	1000 def   al
+					/sc	1200 def   al
+					/sc	1400 def   al
+					/sc	1600 def   al
+					/sc	1800 def   al
+					/sc	2100 def   al
+					/sc	2400 def   al
+
+				gr
+
+
+				gs
+				   .13 smu .75 smu  mo
+
+					/Helvetica .037 smu selectfont
+						(X-Y Addressability Indicator and Gradient) sh
+
+					/Helvetica .024 smu selectfont
+						.81 smu  .71 smu (Ver. 1.3) rsho
+
+					/linelength   .78 smu  .13 smu  sub    def
+				gr
+
+				gs
+					/Helvetica .029 smu selectfont
+
+					/fact1 { linelength
+					 devserial length 2 lt
+						{ (Output device:  ) sw pop  outdev swpa  }
+						{ (Output device:  ) sw pop  outdev swpa  (   #) swpa   devserial		 scspa }
+					 ifelse
+					div } def	fact1 1 gt { /fact1 1 def } if
+
+					/fact2 {
+						 linelength
+						 (Addressability reported by RIP:  ) sw pop
+							 dpix dpiy ne {     % if the RIP reports different resolutions in x and y direction, report it but only use the lower one
+							   	(spix= ) swpa  dpix scspa   (  spiy= ) swpa  dpiy scspa
+							 }{
+					 		 	/Helvetica .040 smu selectfont  dpi swpa
+					 		 	/Helvetica .029 smu selectfont ( spi,  ) swpa   mu scspa  ( u) swpa  (/spot) swpa
+							 } ifelse
+					  	 div
+					 } def	fact2 1 gt { /fact2 1 def } if
+
+					fact1 fact2 gt { /fact fact2 def }{ /fact fact1 def } ifelse
+					/Helvetica .029 smu fact mul selectfont
+
+
+					gs
+					  -.128 smu -.125 smu   translate 0 0 mo  90 rotate
+					  devserial length 2 lt
+					 	{ (Output device:  ) sh outdev sh   }
+					 	{ (Output device:  ) sh outdev sh  (   #) sh devserial sh }
+					  ifelse
+				    gr
+
+					 .13 smu .66 smu   mo
+				%	 (PostScript Version: ) sh ver scs
+
+
+					 -.145 smu -.16 smu     mo
+					 (Addressability reported by RIP:  ) sh
+					 dpix dpiy ne {  % if the RIP reports different resolutions in x and y direction, report it but only use the lower one
+					   	  (spix= ) sh  dpix scs   (  spiy= ) sh dpiy scs
+					 }{
+						/Helvetica .040 smu fact mul selectfont  dpi sh
+						/Helvetica .029 smu fact mul selectfont  ( spi,  ) sh   mu scs
+
+	    gs    % this code makes a micron sign with Helvetica font
+            [ 1 0  10 sin 1 0 0 ] concat   % make it itallic by shearing. The 10 in front is the angle
+        	0 .029 smu fact mul .48 mul  rmo   % move up by half width of micron sign
+        	/Helvetica findfont [ .029 smu fact mul .9 mul 0 0  -.029 smu fact mul .9 mul 0 0 ] makefont setfont   % invert
+        	(h) sh  % write inverted itallic h to make it look like micron symbol
+        gr  (  ) sh
+
+						(/spot) sh
+					 } ifelse
+				gr
+
+				gs
+						/Helvetica findfont [ 0.023 smu  0 0 0.023 smu 0 0 ] ms
+					/fact3  linelength  (Licensed user: ) swp un swpa	div  def	fact3 1 gt { /fact3 1 def } if
+
+						/Helvetica findfont [ 0.023 smu fact3 mul  0 0 0.023 smu 0 0 ] ms
+
+					gs -.04 smu dup translate -45 rotate 0 0 (spi) csho  gr
+
+				   .82 smu -.16 smu  translate  90 rotate  0 0 mo 	(Licensed user: ) sh un sh
+
+				  lizflag 0 eq {
+				   .13 smu .53 smu  mo		%  (License expires: )
+				%			<4C6963656E736520657870697265733A20> sh lizdat sh
+				  } if
+				gr
+
+
+				% *****************************
+
+				1 1 eq {
+
+				% Make circular gradient
+
+				gs
+				 		.78 smu 0.71 smu sub   .062 smu  translate 0 0 mo
+
+				 0 0 0 1 setcmykcolor
+
+				    .33 smu dup translate
+				    0 0 transform  round .5 add exch   .5 add exch itransform translate  0 0 moveto	% align center at center of pixel
+				/Helvetica findfont 6 scalefont setfont
+				.3 slw
+
+				/radi  .28 smu  def         % Defines size of gradient
+				/ang  360 257 div def	% angle of a wedge
+				/high radi 2 mul 3.1416 mul 255 div  def   % make slightly larger so that triangles overlap
+				/high2 high 2 div  def
+
+				gs				% Gradient
+				      ang 2 div rotate
+					255 -1 0 {
+
+                   SetCol (K) eq { 0 0 0  4 -1 roll  1 add  1 256 div  mul setcmykcolor } if
+                   SetCol (Y) eq { 0 0  3 -1 roll  1 add  1 256 div  mul 0 setcmykcolor } if
+                   SetCol (M) eq { 0  2 -1 roll  1 add  1 256 div  mul 0 0 setcmykcolor } if
+                   SetCol (C) eq {  1 -1 roll  1 add  1 256 div  mul 0 0 0 setcmykcolor } if
+                   SetCol (CM) eq  SetCol (MC) eq or {    1 -1 roll  1 add  1 256 div  mul dup 0 0 setcmykcolor } if
+                   SetCol (MY) eq  SetCol (YM) eq or {  0 2 -1 roll  1 add  1 256 div  mul dup 0   setcmykcolor } if
+                   SetCol (CY) eq  SetCol (YC) eq or {    1 -1 roll  1 add  1 256 div  mul dup 0 exch 0 setcmykcolor } if
+                   SetCol (CMY) eq {  1 -1 roll  1 add  1 256 div  mul dup dup 0 setcmykcolor } if
+
+					  0 0 mo
+				      high2 radi  li        		% there should be no strokes in the target
+				      high neg  radi  li            % because Creo prevents extremely fine lines
+				      cp
+				      fill
+				      ang rotate
+					} for
+				gr
+
+				gs				% 10% tick marks and labels
+					36  36  360  {
+						-36 rotate
+						0 radi 0 add  mo   0 3 rli stroke
+						gs 1.5 rotate  3.6 div round cvi   0 radi 4 add  3 -1 roll scc  (%) sh  gr
+					} for
+				gr
+
+				gs				% 5% tick marks
+					-18 rotate
+					10  {
+						0 radi 1 add  mo   0 2 rli stroke
+						-36 rotate
+					} rp
+				gr
+
+				gr      % End of circular gradient
+				} if
+			  gr
+} bind def           % End of AddressabilityAndCircularGradient
+
+% **************************************************************************************************************
+
+/ScrnPatAnalyzer {
+
+				/ScrPatAnaFlag 1 def
+
+				gs
+
+				% translate to center of empty area
+					    NoOfBlocksX 1 eq {
+					        1.3 ptchx mul .85 pwim add 2 div TVX BlockSizeX mul add  .036 pwim add  BlockSizeX .5 mul add
+					    }{
+					        1.3 ptchx mul .85 pwim add  TVX BlockSizeX mul add  BlockSizeX .5 mul add
+					    } ifelse
+					                     -.16 pwim      TVY BlockSizeY mul add  BlockSizeY .5 mul add
+					translate 	0 0 mo
+
+						         %   0 0 5 0 360 arc stroke 0 0 mo
+
+					 NoOfBlocksX 1 eq {
+					     /Xdist  BlockSizeX 3 pwim add .1 pwim sub    def
+					 }{
+					     /Xdist  BlockSizeX .1 pwim sub    def
+					 } ifelse
+
+                     /Ydist  BlockSizeY .1 pwim sub  def
+
+% 3 slw   gs 0 1 0 0 setcmykcolor 0 0  Xdist   2 div 0 360 arc stroke 0 0 mo gr
+% 2 slw   gs 1 0 1 0 setcmykcolor 0 0  Ydist   2 div 0 360 arc stroke 0 0 mo gr
+
+					       Xdist Ydist lt {    % If Xdist is less than Ydist then need to rotate
+					            Xdist 86 mm .66 mul div   Ydist 86 mm div   lt {    % take the lesser of the two mags
+					                Xdist 86 mm .66 mul div     dup scale  90 rotate
+					            }{
+					                Ydist 86 mm div             dup scale  90 rotate
+					            } ifelse
+					       }{
+					            Xdist 86 mm div   Ydist 86 mm .66 mul div   lt {
+					                Xdist 86 mm div             dup scale
+					            }{
+					                Ydist 86 mm .66 mul div     dup scale
+					            } ifelse
+					       } ifelse
+
+				%***** Recalculate spot size after scaling
+
+								72 72 matrix defaultmatrix  dtransform  /dpiy exch abs  cvi def  /dpix exch abs cvi def
+								dpix cvi dpiy cvi lt
+								   { /DPI dpix def  /m1 0 def  /m2 2 def }
+								   { /DPI dpiy def  /m1 1 def  /m2 3 def } ifelse
+
+								/magn      % calculate overall magnification including the one applied by Quark
+									 72 DPI                                    % by dividing 72 by the number of
+									  matrix currentmatrix m1 get abs dup mul  % user units per inch in the
+									  matrix currentmatrix m2 get abs dup mul  % CurrentTransformationMatrix CTM
+									  add sqrt
+									 div div
+								def
+
+								SetDPI 0 ne { /DPI SetDPI def } if    % set dpi
+
+								/dpi DPI 15 string cvs def
+								/px 72 DPI div  magn div def    % correct for magnification of Quark
+
+								/pxm { px mul } bd
+								/pxr { px div round cvi px mul } bd
+
+								%*****
+
+
+				/size 86 mm def						% Width of frame. Hight will be 66%.
+													%	Size can also be changed in Quark as long as X and Y are changed the same.
+
+                size -2 div  size .66 mul -2 div  translate 0 0 mo
+                /setoverprint where { pop true setoverprint } if  % overprint and erase colors underneath
+                /4colorSPA 0 def   % If set to 0 then SPA is the SetCol, else if set to 1, it will be 4 color
+
+				/coarseSPA 85 def						% specify coarsest screen ruling in lpi
+				/rarea .35 def						% relative area covered by black lines
+				/dashed 1 def						% To get every second screen ruling line dashed, enter 1 else 0
+				SetCol (C) eq { /BackgrTint { .2 0 0 0 } def } if		% cmyk dot areas for background
+				SetCol (M) eq { /BackgrTint { 0 .2 0 0 } def } if		% cmyk dot areas for background
+				SetCol (Y) eq { /BackgrTint { 0 0 .2 0 } def } if		% cmyk dot areas for background
+				SetCol (K) eq { /BackgrTint { 0 0 0 .2 } def } if		% cmyk dot areas for background
+				SetCol (MY) eq  SetCol (YM) eq or { /BackgrTint { 0 .2 .2 0 } def } if		% cmyk dot areas for background
+				SetCol (CY) eq  SetCol (YC) eq or { /BackgrTint { .2 0 .2 0 } def } if		% cmyk dot areas for background
+				SetCol (CM) eq  SetCol (MC) eq or { /BackgrTint { .2 .2 0 0 } def } if		% cmyk dot areas for background
+				SetCol (CMY) eq { /BackgrTint { .2 .2 .2 .2 } def } if		% cmyk dot areas for background
+
+				%Start
+				%BeginCode
+
+				% Coding History:
+				% PrfScn1F.eps	Jan 15, 03	Adapted from Screen Pattern Analyzer
+				% PrfScn2F.eps	Jan 22, 03	With Checkers and doubling grid. License
+				% PrfScn3F.eps	Jan 25, 03	With Step wedges
+				% PrfScn3F.eps	Jan 26, 03	Accomodate uneven magnification in X and Y direction
+
+				%***************
+
+				/sm {size mul} bd
+				/OutRadius {.46 sm} bd						% Outer Radius of fan
+				/InRadius {OutRadius 8.5 div} bd			% Inner Radius of fan
+				/15angle {15 25.4 mm coarseSPA div  OutRadius .95 mul  atan div magn mul cvi} bd	% number of wedges per 15 degrees
+				/angle {15 15angle div} bd				% angle between one line pair
+				/5angle {5 angle div cvi} bd			% number of wedges per 5 degrees
+				/bangle {5angle angle mul} bd	% define angle of beginning and end ca 5 degree sections
+				/fullAngle {180 bangle add bangle add} bd
+
+				% Because every touched pixel becomes black, the triangle that makes one spoke of fan
+				% must be one pixel narrower than the nominal value, which means that it does not
+				% start in the center of the fan. The distance from the center is 1/tan a * px where
+				% a is the angle of a white and black fan line times the area.
+				/dist {1 angle rarea mul tan div px mul} bd
+
+				% The highth of the triangle is OutRadius times sin(a/2) minus 1 pixel
+				/high {OutRadius angle rarea mul sin mul px sub} bd
+
+				% define position of arcs and labels for screen ruling:
+				/pos {25.4 mm exch div angle tan div magn div} bd	% inch/lpi/tan a
+
+				% ******************
+
+				.5 sm    .094 sm translate 0 0 mt 0 0 translate		% set origine at center of fan
+
+				% ***********************************
+
+				gs
+				BackgrTint  setcmykcolor
+            4colorSPA 1 eq { .2 .2 .2 .2 setcmykcolor } if
+				-.5 sm 1 add  -.094 sm 1 add mt   size 2 sub 0 rli   0 size .66 mul 2 sub rli   size neg 2 add 0 rli  closepath fill
+				gr
+
+                /area 1 def SetCol colr
+            4colorSPA 1 eq { 0 0 0 1 setcmykcolor } if
+				2 setflat
+				0 .031 sm translate  0 0 mt 0 0 translate np
+
+				gs
+
+				%	gs	% Yellow center
+				%		bangle neg rotate
+				%		0 0 InRadius 0 fullAngle arc
+				%		cp 0 0 .5 0 setcmykcolor fill
+				%	gr
+
+				             	% define clipping area for fan
+				bangle neg rotate
+				0 0 InRadius 0 fullAngle arc
+				0 0 OutRadius fullAngle 0 arcn
+				cp  clip np
+
+				90 OutRadius .5 high mul  atan sub -1 mul rotate	 % rotate by half thick line
+
+				% start fan
+
+				5angle                 					% # of wedges for 5 degrees
+				{  0 0 mt
+				     OutRadius 0 rli                   	% begin triangle
+				     0  high rli                		% short side
+				     dist 0 li
+				     cp
+				     angle rotate
+					 fill 0 0 mt
+				} rp
+
+				     0 0 mt
+				     OutRadius high   -1 angle .6 mul  coarseSPA sqrt  mul  div	  mul li 	% Thick triangle, relatively thicker
+				     OutRadius high  1 1 angle .6 mul  coarseSPA sqrt  mul  div add  mul li 	% for small angles than big angles
+					 cp								% thick lines go to center  and are evenly thicker on both sides
+					 fill 0 0 mt
+
+				12 {									% 12 segments at 15 degrees each
+
+				  15angle		 	                  	% # of wedges for 15 degrees
+				  {  0 0 mt
+				       OutRadius 0 rli               	% begin triangle
+				       0  high rli                		% short side
+				       dist 0 li
+				       cp
+				       angle rotate
+					   currentpoint fill mt
+				  } rp
+
+				     0 0 mt
+				     OutRadius high   -1 angle .6 mul  coarseSPA sqrt  mul  div	  mul li 	% Thick triangle, relatively thicker
+				     OutRadius high  1 1 angle .6 mul  coarseSPA sqrt  mul  div add  mul li 	% for small angles than big angles
+					 cp								% thick lines go to center
+					 fill 0 0 mt
+
+				} rp
+
+				5angle 1 add            			       	% # of wedges for 5 degrees +1
+				{  0 0 mt
+				     OutRadius 0 rli                   	% begin triangle
+				     0  high rli                		% short side
+				     dist 0 li
+				     cp
+				     angle rotate
+					 fill 0 0 mt
+				} rp
+				gr
+
+				/Helvetica .027 sm selectfont 				% for labels of arcs
+
+				gs
+				/ofset {-0.013 sm} bd						% Half Y distance offset for screen ruling labels
+				/p2lp 1.05 OutRadius mul def				% Initial X position of label for before previous position
+				/p2lw (00)  swp def							% Initial width      of label for before previous position
+				/p1lp 1.05 OutRadius mul def				% Initial X position of label for previous position
+				/p1lw (00) swp def							% Initial width      of label for previous position
+				/dw OutRadius angle tan mul coarseSPA sqrt 5 div mul def		% Width of dash
+				/ds dw px add 2 div def						% Space of dash
+				/dofset ds def								% Offset for dash to make it alternate
+
+				/al {		% place arc and label for scrnruling
+					OutRadius sc pos gt InRadius sc pos lt	and  {		% only labels within range of target
+						% For a label to fit, half the sum of the present label width and the label width of
+						% the one previous to the previous one should not be more than 90% of the distance
+						% between the present position minus one position prior to the previous one. Did you get this? :
+						  	p2lp sc pos sub .9 mul    p2lw  sc 5sc  swp  add 2 div 	gt {
+							dashed 1 eq {/dofset dofset -1 mul def   [ dw  ds dofset add ] 0 setdash} if
+							.09 sm sc div slw 	% for arcs
+							np 0 0 sc pos -1 bangle mul 180 bangle add  arc stroke  	% this is arc
+							/ofset  ofset neg  def   /ly {-.040 sm ofset add} bd		% Labels are alternately up and down
+							-5 rotate  sc pos ly  sc 5sc  gs 0 0 0 1 setcmykcolor csho gr  10 rotate  -1 sc pos mul ly sc 5sc  gs 0 0 0 1 setcmykcolor csho gr  -5 rotate % labels
+							/p2lw p1lw def   /p1lw sc 5sc swp def    /p2lp p1lp def   /p1lp sc pos def
+						} if
+					} if
+				} bd
+
+				% The program is smart enough not to overlap labels of screen ruling. However you still may not get the
+				% specific rulings you want. In this case you eliminate a given ruling at the end of the program
+				% by putting a % sign in front of that program line.
+
+
+					0 0 mt
+
+					/sc	10   def   al
+					/sc	12.5 def   al
+					/sc	15	 def   al
+					/sc	17.5 def   al
+					/sc	20	 def   al
+				%	/sc	22.5 def   al
+					/sc	25	 def   al
+					/sc	30	 def   al
+					/sc	35	 def   al
+					/sc	40	 def   al
+				%	/sc	45	 def   al
+					/sc	50	 def   al
+				%	/sc	55	 def   al
+				%	/sc	60	 def   al
+					/sc	65	 def   al
+				%	/sc	70	 def   al
+				%	/sc	75	 def   al
+				%	/sc	80	 def   al
+					/sc	85	 def   al
+				%	/sc	90	 def   al
+					/sc	100	 def   al
+				%	/sc	110	 def   al
+					/sc	120	 def   al
+					/sc	133	 def   al
+					/sc	150	 def   al
+					/sc	175	 def   al
+					/sc	200	 def   al
+					/sc	250	 def   al
+					/sc	300	 def   al
+					/sc	400	 def   al
+					/sc	500	 def   al
+				gr
+				    0 0 0 1 setcmykcolor
+				gs
+					/Helvetica .021 sm selectfont
+
+				    0 -.08 sm (Lines / inch) csho
+
+					/linlengt
+						outdev swp
+						devserial length 1 gt {(   #) swpa devserial swpa } if
+						DPI cvi 5sc swpa (,   spi,     ) swpa
+						(    2007 Franz Sigg) swpa
+					def
+
+					/fact  .95 sm linlengt div  def     fact 1 gt { /fact 1 def } if
+
+					/Helvetica .021 sm fact mul selectfont
+
+					linlengt fact mul  2 div neg    -.110 sm  mo  % center pos
+
+%					outdev sh  devserial length 1 gt {(   #) sh devserial sh } if
+%				  		(,   ) sh DPI cvi 5sc sh ( spi,    ) sh
+%						gs  /Symbol findfont  .022 sm  scalefont setfont  (\343) sh  gr
+%						(    2007 Franz Sigg) sh
+				gr
+
+				gs
+					/Helvetica findfont [ .035 sm 0 0 .025 sm 0 0 ] ms
+					(Screen Pattern Analyzer for Proofs       ) swp 2 div neg   .5 sm  mo
+
+					/Helvetica findfont  	[ .035 sm 0 0 .025 sm 0 0 ] ms  (Screen Pattern Analyzer for Proofs) sh
+					/Helvetica findfont  	[ .017 sm 0 0 .015 sm 0 0 ] ms  (   Ver. 0.2) sh
+				gr
+
+		%		gs
+		%			/Helvetica findfont  .017 sm scalefont setfont
+		%			-.473 sm   .66 sm .094 sm sub .045 sm sub  translate 0 0 mt 90 rotate %  x=y, y=x
+		%			/fact   .342 sm   (Licensed user: ) swp un swpa   div def
+		%			fact 1 gt { /fact 1 def } if
+		%			/Helvetica findfont  .017 sm fact mul scalefont setfont
+		%			(Licensed user: ) swp un swpa  neg  0 mt
+		%			(Licensed user: ) sh un sh
+		%		gr
+		%		gs
+		%		  lizflag 0 eq { %  (License expires: )
+		%			/Helvetica findfont  .017 sm scalefont setfont
+		%			.485 sm   .66 sm .094 sm sub .044 sm sub  translate 0 0 mt 90 rotate %  x=y, y=x
+		%			/fact   .342 sm   <4C6963656E736520657870697265733A20> swp lizdat swpa   div def
+		%			fact 1 gt { /fact 1 def } if
+		%			/Helvetica findfont  .017 sm fact mul scalefont setfont
+		%			<4C6963656E736520657870697265733A20> swp lizdat swpa neg 0 mt
+		%			<4C6963656E736520657870697265733A20> sh lizdat sh
+		%		  } if
+		%		gr
+
+				/degree { gs currentpoint exch  (o) swp .15 mul add  exch  (o) swp .8 mul add  translate 0 0 mo .6 .5 scale (o) sh gr } bd
+
+				-90 rotate ( 90.)	swp -2 div  OutRadius 0.01 sm add mo ( 90) sh degree
+				 15 rotate ( 75.)	swp -2 div  OutRadius 0.01 sm add mo ( 75) sh degree
+				 15 rotate ( 60.)	swp -2 div  OutRadius 0.01 sm add mo ( 60) sh degree
+				 15 rotate ( 45.)	swp -2 div  OutRadius 0.01 sm add mo ( 45) sh degree
+				 15 rotate ( 30.)	swp -2 div  OutRadius 0.01 sm add mo ( 30) sh degree
+				 15 rotate ( 15.)	swp -2 div  OutRadius 0.01 sm add mo ( 15) sh degree
+				 15 rotate ( 0.)	swp -2 div  OutRadius 0.01 sm add mo  ( 0) sh degree
+				 15 rotate ( -15.)	swp -2 div  OutRadius 0.01 sm add mo (-15) sh degree
+				 15 rotate ( -30.)	swp -2 div  OutRadius 0.01 sm add mo (-30) sh degree
+				 15 rotate ( -45.)	swp -2 div  OutRadius 0.01 sm add mo (-45) sh degree
+				 15 rotate ( -60.)	swp -2 div  OutRadius 0.01 sm add mo (-60) sh degree
+				 15 rotate ( -75.)	swp -2 div  OutRadius 0.01 sm add mo (-75) sh degree
+				 15 rotate ( -90.)	swp -2 div  OutRadius 0.01 sm add mo (-90) sh degree
+
+		gr
+} bind def      % End of ScrnPatAnalyzer
+
+% **************************************************************************************************************
+
+/DocBlock {     % Documentation Block
+				    gs
+				      /DocFlag 1 def
+
+	                  /Helvetica findfont .50 pwim scalefont setfont
+
+				    	1.3 ptchx mul .85 pwim add  TVX BlockSizeX mul add  BlockSizeX .03 mul add
+				    	             -.16 pwim      TVY BlockSizeY mul add  BlockSizeY .85 mul add
+				    	translate 	0 0 mo
+
+						      %     0 0 5 0 360 arc stroke 0 0 mo
+
+	                    (Printer:)   sh     0  -1 pwim mo
+	                    (Rip:)       sh     0 -2 pwim mo
+	                    (Screening:) sh     0 -3 pwim mo
+	                    (Workflow:)  sh     0 BlockSizeY -.78 mul mo
+	                    (Date:)      sh
+	                  gr
+
+} bind def    % end of DocBlock
+
+% **************************************************************************************************************
+
+/OneBlock {
+
+/RefToneValueFile RefToneValue def
+% RefToneValue 50 ne { /startc  1 .5 RefToneValue 100 div sub abs 2 mul sub 100 mul  def } if
+/Helvetica findfont  .42 pwim  scalefont setfont
+
+% 1.67 pwim  PY 1.22 add pwim mo SplitRefFile 0 ne { (Ref1. Tone Value = ) }{ (Ref. Tone Value = ) } ifelse sh
+% RefToneValue scs (%    ) sh
+
+SplitRefFile 0 eq {
+     ( ) sh
+}{
+     (Ref2. TV = ) sh RefToneValue SplitRefFile sub scs (%, split circles) sh
+} ifelse
+
+
+/Helvetica findfont .42 pwim scalefont setfont
+
+SpotCorrection 0 eq { /SpotCorrection 0 def }{ /SpotCorrection px def } ifelse
+
+  gs
+    /color1 exch def
+    /color2 exch def
+
+             /lwidu  endu linemul mul def  % shrink first line because it will be expanded in loop
+	 1 1 PY {			% write resolution labels
+	    /coun exch def
+		/lwidu  lwidu linemul div  def
+	    lwidu   px   lt { 0 0 0 0.3 setcmykcolor } if    % write text gray if circles are finer than one spot and therefore cannot be resolved
+		PX 1.55 add pwimx  PY .85 add coun sub  pwim  coun  scc     % numbers on right side
+		0 0 0 1 setcmykcolor
+	 } for
+
+     /ContrastPrev startc  conmul div  def  % Expand starting value because loop shrinks it
+
+	 1.3 ptchx mul  .5 ptch mul  mt  currentpoint translate
+
+    gs
+  0 1 PX 1 sub {	% Make the PX contrast stripes
+   		/count1 exch def
+		/clabl conlab count1 get def
+
+		/SetColumnAto100 1 def
+
+	 	count1 0 eq SetColumnAto100 1 eq and RefToneValue 50 eq and {
+		     /contrast 100 def
+		     /ContrastPrev ContrastPrev conmul mul def
+		     /RefToneValue 50 def
+		     /SplitRef 0 def
+		}{
+		    /contrast ContrastPrev conmul mul def
+		    /ContrastPrev contrast def
+		    /RefToneValue RefToneValueFile cvi def
+		    /SplitRef SplitRefFile def
+		} ifelse
+
+    % ****
+
+   % paint patches only if contrast of column fits between 0 and 100% Tone Value. Add .2 to avoid rounding problems
+
+  contrast 100 RefToneValue sub 2 mul .2 add  le   contrast RefToneValue 2 mul .2 add le   and {
+		/labl contrast 10 mul round cvi 10 div  dup  100 eq { cvi } if   def 		% contrast label
+
+		gs    % Contrast labels
+           0 0 0 1 setcmykcolor
+
+      	   pwi pwix add .22 mul  PY .15 add pwim    labl 10 string cvs   csho
+
+		   pwi pwix add .22 mul  -0.45 pwim   clabl csho
+        gr
+
+	    gs	 % make circles
+		  	 /lwidu  endu linemul mul def  % expand first line because it will be reduced in loop
+
+		   PY 1 sub  -1 0 {   % Make circles for each of the PY patches of a contrast stripe
+			 /count2 exch def
+			 /lwidu  lwidu linemul div def
+			 lwidu SpotCorrection sub slw
+			 pwi 2 div   pwi count2 mul pwi 2 div add  mo  currentpoint		% center of current patch
+			 gs
+			 	gs
+			 		translate  0 0 mt5    currentpoint  translate  	% make sure it is centered at center of a spot
+
+	                 % Paint background of upper half. Make sure upper part is 2 pixels further down than half patch to make sure it overlaps
+			 		  gs
+                            count1  PX 1 sub lt {   % columns   Reference area is 2 pixels wider exept for last column so that patches overlap
+                                pwi -2 div 2 pxm neg mo   pwix 2 pxm add 0 rli   0 pwi 2 div 2 pxm add  rli   pwi 2 pxm add neg 0 rli cp
+                            }{
+                                pwi -2 div 2 pxm neg mo   pwix           0 rli   0 pwi 2 div 2 pxm add  rli   pwi           neg 0 rli cp
+                            } ifelse
+                            /area RefToneValue SingleValInterp  100 div def    color1  colr fill    % tonevalue of Ref1 for referenc strip
+
+                            pwi -2 div 2 pxm neg mo      pwi 0 rli   0  pwi 2 div 2 pxm add  rli   pwi neg 0 rli cp
+                            gs
+                              color1 /area RefToneValue SingleValInterp 100 div contrast 200 div sub def  colr  fill  % color of background for Ref1 circles
+                            gr %
+                            clip
+		     		   0 2  pwi lwidu div cvi {  % make circles of upper half of one patch
+		     			    /count3 exch def
+                    	    /area RefToneValue SingleValInterp 100 div contrast 200 div add  def   color2 colr  % Set color of dark circles Ref1
+			 			    count3 0 ne {
+			 			        np 0 0 lwidu count3 mul -2 182  arc  stroke
+			 			    }{
+			 			        np 0 0 lwidu 2 div  -2 182  arc  fill   % The center cannot be done as an arc, it needs to be done as fill, otherwise the diameter is not the same as the line width of the other circles.
+			 			    } ifelse
+		     		   } for
+		   		 gr
+
+	                % Paint background of lower half
+			 		  gs
+                            count2 0 ne {       % rows      Patches are 2 pixels higher except for bottom row so that patches overlap
+                                count1  PX 1 sub  lt {   % columns   Reference area is 2 pixels wider exept for last column so that patches overlap
+		     		                pwi -2 div 0 mo   pwix 2 pxm add 0 rli   0 pwi 2 div 2 pxm add neg  rli   pwi 2 pxm add neg 0 rli cp
+		     		            }{
+		     		                pwi -2 div 0 mo   pwix  0 rli            0 pwi 2 div 2 pxm add neg  rli   pwi neg 0 rli cp
+		     		            } ifelse
+                            }{
+                                count1  PX 1 sub  lt {
+		     		                pwi -2 div 0 mo   pwix 2 pxm add 0 rli   0 pwi 2 div  neg  rli            pwi 2 pxm add neg 0 rli cp
+		     		            }{
+		     		                pwi -2 div 0 mo   pwix  0 rli            0 pwi 2 div  neg  rli            pwi neg 0 rli cp
+		     		            } ifelse
+                            } ifelse
+                            /area RefToneValue SingleValInterp 100 div  SplitRef 100 div sub def    color1 colr fill   % tonevalue Ref2 for referenc strip
+
+                            count2 0 ne {
+                                    pwi -2 div 0 mo    pwi 0 rli   0 pwi 2 div 2 pxm add neg  rli   pwi neg 0 rli cp
+                             }{
+                                    pwi -2 div 0 mo    pwi 0 rli   0 pwi 2 div neg rli   pwi neg 0 rli cp
+                             } ifelse
+                            gs
+                              color1 /area RefToneValue SingleValInterp 100 div  contrast 200 div sub  SplitRef 100 div sub def  colr  fill  % color of background for Ref2 circles
+                            gr %
+                            clip
+		     		   0 2 pwi lwidu div cvi {  % make circles of lower half of one patch
+		     		        /count3 exch def
+		     	   	        /area RefToneValue SingleValInterp 100 div contrast 200 div add SplitRef 100 div sub def    color2 colr  % Set color of dark circles Ref2
+			 			    count3 0 ne {
+			 			        np 0 0 lwidu count3 mul 0 360 arc cp stroke     % draw full circle wich is clipped
+			 			    }{
+			 			        np 0 0 lwidu 2 div  0 360  arc  fill    % The center cannot be done as an arc, it needs to be done as fill, otherwise the diameter is not the same as the line width of the other circles.
+			 			    } ifelse
+
+		     		   } for
+			 		 gr
+		     	gr
+			 gr
+		   } for
+	     gr
+
+     } if   % Paint column only if contrast fits in 0 to 100% tone value
+		pwix 0 rmo currentpoint mt currentpoint translate 0 0 mo
+	} for
+   gr
+
+ 		gs    % make sure image not larger than frame
+ 		    PX pwimx  0 mo  0 PY pwim rli .1 pwim pxr 0 rli  0 PY neg pwim rli  cp  0 0 0 0 setcmykcolor fill
+ 		gr
+
+  	    % make tight frame around block
+        gs
+            0 0 0 1 setcmykcolor
+            .022 pwim pxr slw
+		    /setoverprint where { pop true setoverprint } if    % overprint and not erase colors underneath
+ 		    -.06 pwim dup mo   PX pwimx .12 pwim add 0 rli   0 PY pwim .12 pwim add rli PX pwimx .12 pwim add neg 0 rli cp stroke
+
+		    DotGrid 1 eq {  % Make grid of alignemt dots
+			    1 setlinecap   .04 pwim slw   [ 0 pwi ] 0 setdash
+			    colname (K) eq {
+			        RefToneValue 50 lt { 0 0 0 1 setcmykcolor }{ 0 0 0 0 setcmykcolor } ifelse
+			        /setoverprint where { pop false setoverprint } if   % overprint and erase colors underneath
+			    } if
+
+			    % do not paint dots in corners of frame.
+	            0  .02 pwim sub   pwix   PX pwimx {
+	              /LinNo exch def
+	                LinNo  .02 pwim neg  eq    LinNo 2 add  PX pwimx  .02 pwim sub  gt   or {
+	                    LinNo  1 pwim mo  0 PY  2 sub 0.1 add pwim  rli stroke
+	                }{
+	                    LinNo  0 pwim mo  0 PY        0.1 add pwim  rli stroke
+	                } ifelse
+	            } for       % 0.1 add: the line has to be a little longer to make shure that a dot is placed.
+
+		    } if
+		gr
+
+		RefToneValue 50 ne {   % TV label in upper left corner  and ID code
+		 gs
+		    /Helvetica findfont .55 pwim scalefont setfont
+		    .65 pwim (00%) swp 2 div sub    .3 pwim PY 1 sub pwim add mo
+		    RefToneValue scs
+		    /Helvetica findfont [ .35 pwim 0 0  .55 pwim 0 0 ] makefont setfont  ( %) sh
+		 gr
+
+		 % IDcode
+		 gs
+		    /Helvetica findfont .25 pwim scalefont setfont
+		    .635 pwim     .3 pwim  translate 90 rotate 0 0 mo
+		    NominalTVflag 0 eq { (Nominal Tone Values ) }{ (#14A353C92D ) } ifelse sh
+		 gr
+		} if   % TV label in upper left corner and IDcode
+  gr
+
+} bd   % OneBlock
+
+%*********************
+
+/MakeLabelsOfPage {
+
+% White Background
+.0313 pwim pxr dup mt   TargetSizeX 1 sub pxr 0 rli   0 TargetSizeY 1 sub pxr rli   TargetSizeX 1 sub pxr neg 0 rli cp  0 0 0 0 setcmykcolor fill  % white background
+
+% Frame
+.018 pwim  pxr dup mt currentpoint translate 0 0 mo  % Lower left corner of frame
+
+% *****************************
+
+% Vignette on top of target, only if more than one block wide
+
+NoOfBlocksX 1 gt {
+gs
+  TargetSizeX .036 pwim sub pxr   TargetSizeY .036 pwim sub pxr   translate   % define from upper right corner
+
+  /MakeVignette {
+    gs
+
+    % fill string for vignette
+        /str1  256 string def
+        /str0  256 string def
+    0 1 255 {    % for vignette
+        str1  exch dup  put
+    } for
+
+        /area 1 def  col
+        currentpoint translate 0 0 mo
+  		/Helvetica findfont [ .345 pwim 0 0  .29 pwim 0 0 ] makefont setfont
+        gs
+        currentpoint .9 pwim add  (F") swp add rmo  currentpoint  translate
+          0 0 mo   -90 rotate
+            pwi .9 mul   VigLen    scale		% this is the hight and length of the gradient
+
+            colname (C)	eq { 1 256 8 [ 1 0 0 256 0 0 ]  { str1 } { str0 } { str0 } { str0 } true 4 colorimage } if
+            colname (M)	eq { 1 256 8 [ 1 0 0 256 0 0 ]  { str0 } { str1 } { str0 } { str0 } true 4 colorimage } if
+            colname (Y)   eq { 1 256 8 [ 1 0 0 256 0 0 ]  { str0 } { str0 } { str1 } { str0 } true 4 colorimage } if
+            colname (K)   eq { 1 256 8 [ 1 0 0 256 0 0 ]  { str0 } { str0 } { str0 } { str1 } true 4 colorimage } if
+            colname (CM)	eq { 1 256 8 [ 1 0 0 256 0 0 ]  { str1 } { str1 } { str0 } { str0 } true 4 colorimage } if
+            colname (CY)	eq { 1 256 8 [ 1 0 0 256 0 0 ]  { str1 } { str0 } { str1 } { str0 } true 4 colorimage } if
+            colname (MY)	eq { 1 256 8 [ 1 0 0 256 0 0 ]  { str0 } { str1 } { str1 } { str0 } true 4 colorimage } if
+            colname (CMY)	eq { 1 256 8 [ 1 0 0 256 0 0 ]  { str1 } { str1 } { str1 } { str0 } true 4 colorimage } if
+        gr
+
+        % MakeScaleLabels for vignette
+
+        0 0 mo		% white room for labels
+        .025 VigLen 19 div mul slw
+        0 0 0 1 setcmykcolor
+
+ 		0 10 90 {
+ 			/scpos exch def
+            VigLen 100 div scpos mul 0    scpos scc         % make 10% incr. labels
+            VigLen 100 div scpos mul  (F) swp mo
+            0 (") swp rli stroke                            % make tick mark
+        } for
+
+        VigLen  0   100 scc                                 % make 100% label
+			VigLen (F) swp mo  0 (") swp rli stroke         % make tick mark for 10% labels
+
+        5 10 95 {
+ 			/scpos exch def
+			VigLen 100 div scpos mul  (F) swp mo            % no 5% incr labels
+			0 (") swp rli stroke                            % make tick mark for 5% labels
+        } for
+
+  		/Helvetica findfont [ .25 pwim 0 0  .21 pwim 0 0 ] makefont setfont			% small type for labels 2, 4, 6, 8
+        2 2 8 {
+ 			/scpos exch def
+            VigLen 100 div scpos mul 0    scpos scc         % make 2% incr. labels
+            VigLen 100 div scpos mul  (F.) swp mo   0 (') swp rli stroke                                    % make tick mark
+        } for
+    gr
+  } def   % MakeVignette
+
+  % *****************************
+
+  /VigLen PX 1.3 mul ptch mul def
+
+  ToneValueBlocksXdirection 1 gt {
+    VigLen ptch add neg  -1.24 ptch mul mo /area 1 def SetCol colr colname  MakeVignette     % position defined by lower left of horizontal gradient
+  } if
+
+  % *****************************
+
+gr
+} if   % more than one NoOfBlocksX
+
+
+0 0 0 1 setcmykcolor  .032 pwim  pxr slw
+	 0 0 mo   0 TargetSizeY .036 pwim sub pxr rli      TargetSizeX .036 pwim sub pxr 0 rli    0 TargetSizeY .036 pwim sub pxr neg rli  cp    % outside frame
+	 0 TargetSizeY .036 pwim sub pxr 1.3 pwim sub mo   TargetSizeX .036 pwim sub pxr 0 rli
+	 1 1 NoOfBlocksY 1 sub {
+	    BlockSizeY mul 0 exch   mo   TargetSizeX .036 pwim sub pxr 0 rli
+	 } for
+	 stroke
+
+%***************************************************************************
+
+   .16 pwim  dup mt currentpoint translate 0 0 mo  % Lower left corner of images is offset against the frame
+
+%***************************************************************************
+
+% Set Text
+
+    0 0 0 1 setcmykcolor
+
+gs
+	.09 pwim    TargetSizeY  .78 pwim sub translate
+
+	0 0 mo
+
+	/Helvetica findfont  .52 pwim scalefont setfont  (Contrast-Resolution Target) sh
+
+	gs /Helvetica findfont .34 pwim  scalefont setfont  (   Ver. 3.3) sh gr
+    NoOfPages 1 gt { (             Pg.) sh countpage scs } if
+
+	 0 .52 pwim neg mo
+
+   /fact {
+	 (Output device: ) swp  outdev swpa  (  Addressability: ) swpa
+
+	 dpix dpiy ne {  % if the RIP reports different resolutions in x and y direction, report it but only use the lower one
+	   	  (spix= ) swpa  dpix scwpa   (   spiy= ) swpa   dpiy scwpa
+	 }{
+ 	 	dpi swpa ( spi, ) swpa   mu scwpa  ( u) swpa  (/spot) swpa
+	 } ifelse
+	 PX .8 add pwimx  div
+   } def
+    fact 1 lt { /fact 1 def } if
+
+	 /Helvetica findfont .34 pwim fact div  scalefont setfont
+
+	 (Output device: ) sh  outdev sh  (  Addressability: ) sh
+
+	 dpix dpiy ne {  % if the RIP reports different resolutions in x and y direction, report it but only use the lower one
+	   	  (spix= ) sh dpix scs   (   spiy= ) sh dpiy scs
+	 }{
+ 	 	dpi sh ( spi, ) sh   mu scs
+
+	    gs    % this code makes a micron sign with Helvetica font
+            [ 1 0  10 sin 1 0 0 ] concat   % make it itallic by shearing. The 10 in front is the angle
+        	0 .34 pwim .48 mul  rmo   % move up by half width of micron sign
+        	/Helvetica findfont [ .34 pwim .9 mul 0 0  -.34 pwim .9 mul 0 0 ] makefont setfont   % invert
+        	(h) sh  % write inverted itallic h to make it look like micron symbol
+        gr  (  ) sh
+
+		(/spot) sh
+	 } ifelse
+
+gr
+
+gs
+    /Helvetica findfont  .2 pwim scalefont setfont
+    /fact  BlockSizeY   ( Franz Sigg, 2011     Licensed to:  ) swp  un swpa (  ) swpa PDFcode swpa uc swpa div  def
+       fact 1 gt { /fact 1 def } if
+       /Helvetica findfont  .2 pwim fact mul scalefont setfont
+	TargetSizeX .35 pwim sub    TargetSizeY 2.6 pwim sub BlockSizeY 2 div sub  ( Franz Sigg, 2011     Licensed to:  ) swp  un swpa 2 div sub
+	translate 0 0 mo  90 rotate
+
+	gs  % this code makes a copyright sign without using a symbol
+		( ) swp .85 mul  dup .72 mul    rmo			% offset lower case c
+		[ .75 0 0  .75 0 0 ] concat       (c) sh		% make c smaller without redefining font
+		(.) swp  .28 mul  slw							% for circle
+		( ) swp -.87 mul  ( ) swp .95 mul     rmo	% offset circle
+		currentpoint translate np   0 0  (.) swp 1.8 mul  0 360 cp arc stroke
+	gr  (   ) sh
+
+	    ( Franz Sigg, 2011     Licensed to:  ) sh 	un sh  (  ) sh  PDFcode sh  uc sh
+gr
+
+CheckerFlag 1 eq { SetCol   PX .751 add pwimx 2 chptchm sub    TargetSizeY  .325 pwim sub   one_pattern } if   % make checker
+
+% *************************************
+
+% Make general labels
+
+	/Helvetica findfont  .33 pwim scalefont setfont
+
+
+	/Helvetica findfont  .2 pwim  scalefont setfont
+	SpotCorrection 1 eq  { TargetSizeX .5 pwim sub  TargetSizeY 2 pwim sub    (SpotCorrection On) rsho } if
+
+     /Helvetica findfont .42 pwim scalefont setfont
+
+    0 1 NoOfBlocksX 1 sub {
+	    BlockSizeX mul BlockSizeX 2 div add 2.1 pwim add   TargetSizeY 2 pwim sub    (% Contrast,  Log step increments) csho
+	} for
+
+     /SplitRefFile SplitRef def
+
+% Make general resolution labels on left
+% 	     /lwidu  endu linemul mul def  % shrink first line because it will be expanded in loop
+
+        /TVk 0 def    /TVcc 0 def
+        NoOfBlocksY  RefToneValues length gt { /ccc RefToneValues length def }{ /ccc NoOfBlocksY def } ifelse
+
+  NoOfBlocksY 1 sub -1 0 {
+     /Yno exch def
+	   TVk RefToneValues length lt    TVcc ccc lt or  { 	 % Print labels only in blocks with ConRes blocks
+    	    gs  .4 pwim  BlockSizeY Yno mul  BlockSizeY 2 div  add translate 0 0 mo 90 rotate  0 0 (Resolution,  Line Pairs per Millimeter, Log steps) csho  gr
+                /lwidu  endu linemul mul def  % shrink first line because it will be expanded in loop
+        	 1 1 PY {			% write resolution labels
+        	    /coun exch def
+        		/lwidu  lwidu linemul div  def
+        	    lwidu   px   lt { 0 0 0 0.3 setcmykcolor } if    % write text gray if circles are finer than one spot and therefore cannot be resolved
+
+        		1.55 pwimx    BlockSizeY Yno mul PY .85 add coun sub  pwim add  coun  scc     % res patch numbers on left side
+
+        		BlockSizeY Yno mul  PY coun sub .95 add  pwim add  % coordinate of label
+        		    1.2 pwimx exch  lwidu 72 25400 div div magn mul round cvi    dup /LinMic exch def   % 1 line in microns
+        			2 mul    % one linepair in microns
+        			100000 exch div  dup  9999 gt { 10 div round 10 div }{ round 100 div } ifelse     % get 3 significant digits
+        		dup dup 10 mul cvi 10 div eq { 3 -1 roll (0) swp sub 3 1 roll  13 string cvs rsho (0) sh }{ 13 string cvs rsho } ifelse     % if third sig digit is zero, move and add a zero
+
+        		gs
+        		    /Helvetica findfont  .18 pwim  scalefont setfont
+        		    1.2 pwimx (        u) swp sub    BlockSizeY Yno mul  PY .3 sub coun 1 sub sub pwim add   LinMic   scr
+                	    gs    % this code makes a micron sign with Helvetica font without redefining the font
+                            [ .9 0  -10 sin -.95 0 0 ] concat   % make it itallic by shearing. The 10 in front is the angle, the - sign inverts, the .9 makes it a little smaller
+                        	0 (h) swp -.95 mul  rmo   % move up
+                    	    ( h) sh  % write inverted itallic h to make it look like micron symbol
+                        gr (   /line)sh
+                gr
+        	    0 0 0 1 setcmykcolor
+        	 } for
+           /TVk TVk ToneValueBlocksXdirection add def     /TVcc TVcc 1 add def
+	  } if
+  } for
+
+} bd    % End MakeLabelsOfPage
+
+%***********************************************************************
+%***********************************************************************
+
+% WedgeOnSide variables for WedgeOnSide
+
+	/PatchSize  23 def           % PS units for WedgeOnSide
+    /Yratio     1.1 def     % Change aspect ratio of steps on WedgeOnSide
+	/ptchmove  PatchSize def
+	/ptche  ptchmove px div round cvi px mul px add  def  % painted patch is one pix bigger than step to overlap
+	/pwime  { ptchmove mul ll mul }  def
+	/pmd { ptchmove mul 17 div } bd
+	/CornerDots:   1            def           % either 1 or 0
+
+	/FrameWidth .0145 pwime  124 85 div  div pxr 2 mul def
+	 FrameWidth slw
+
+	/Xsize2   NominalToneValue length 1.5 add   PatchSize mul 1 add  FrameWidth 2 mul add 2 div cvi 2 mul def
+	/Ysize2   2 Yratio mul .75 add PatchSize mul   FrameWidth 2 mul add 2 div cvi 2 mul def
+	    %     Xsize2 scp (   ) print   Ysize2 scp ()=
+
+%***********
+
+/WedgeOnSide {     % start of large Variable step wedge on right side. Code for spot colors removed.
+  gs
+	currentpoint translate 0 0 mo   % this must be the center of the frame of the step wedge.
+	rotate                          % This way it is easy to rotate it.
+	Xsize2 2 div neg   Ysize2 2 div neg translate    	% Now go to the LL corner to paint the target
+
+	%*****************************
+
+	% gs 1 0 0 0 setcmykcolor  0 0 mo 0 0 5 0 360 cp arc stroke gr
+
+
+	FrameWidth  dup  translate 0 0 mo		% set origine to inside corner of of frame
+
+	 % make frame
+		0 0 0 1 setcmykcolor
+		   Xsize2 FrameWidth 2 mul sub      0 rli
+		0  Ysize2 FrameWidth 2 mul sub        rli
+		   Xsize2 FrameWidth 2 mul sub neg  0 rli  cp
+		    gs 0 0 0 0 setcmykcolor fill gr
+		stroke
+
+		PatchSize  6 pmd pxr  translate  0 0 mo		% offset inside frame. LR corner
+
+		% Make starter trigger mark for i1Pro hand scanning
+		gs 0 PatchSize 2 mul Yratio mul rli  PatchSize -1 mul  0 rli  0 PatchSize 2 mul Yratio mul neg rli cp 0 0 0 1 setcmykcolor fill gr
+
+		/Helvetica findfont  [ .40 pwime   0 0  .31 pwime  0 0 ] makefont setfont
+	gs
+
+	    /MakePatches {
+		    0   1   NominalToneValue length 1 sub  {
+		        /xdif exch def
+	            /area NominalToneValue xdif  get 100 div def
+
+			    xdif NominalToneValue length 1 sub  eq {   	 % This is 100% last step. Steps overlap, if true, last one is smaller
+					% do nominal last step
+					  /area NominalToneValue xdif   get 100 div def
+			          xdif   pwime  px add      1 pwime Yratio mul  mo
+	        		  gs  colname colr   ptche px sub   0 rli   0 ptche Yratio mul  rli  ptche px sub  neg 0 rli cp 	fill  gr
+					% do linearized last step
+					  /area StandardizedToneVal xdif   get 100 div def
+			          xdif   pwime  px add      0 pwime   mo
+	        		  gs  colname colr   ptche px sub   0 rli   0 ptche Yratio mul  rli  ptche px sub  neg 0 rli cp 	fill  gr
+			    }{
+					% do nominal steps
+					  /area NominalToneValue xdif   get 100 div def
+			          xdif        pwime              			1 Yratio mul pwime   mo
+	        		  gs  colname colr   ptche   		 0 rli   0 ptche Yratio mul  rli  ptche  		 neg 0 rli cp 	fill  gr
+					% do linearized steps
+					  /area StandardizedToneVal xdif   get 100 div def
+			          xdif        pwime              			0 pwime   mo
+	        		  gs  colname colr   ptche   		 0 rli   0 ptche Yratio mul  rli  ptche  		 neg 0 rli cp 	fill  gr
+			    } ifelse
+
+	        } for
+		} bd
+
+		colname (K) eq { /color1 (blk)     def  /color2 (K)   def  MakePatches } if
+		colname (CMY) eq { /color1 (cmy)     def  /color2 (CMY) def  MakePatches } if
+		colname (CY) eq { /color1 (grn)     def  /color2 (CY)  def  MakePatches } if
+		colname (Y) eq { /color1 (yel)     def  /color2 (Y)   def  MakePatches } if
+		colname (MY) eq { /color1 (red)     def  /color2 (MY)  def  MakePatches } if
+		colname (M) eq { /color1 (mag)     def  /color2 (M)   def  MakePatches } if
+		colname (CM) eq { /color1 (blu)     def  /color2 (CM)  def  MakePatches } if
+		colname (C) eq { /color1 (cyn)     def  /color2 (C)   def  MakePatches } if
+
+    	% Make TR labels on Top
+    	/Helvetica findfont [ .31 pwime  0 0 .31 pwime 0 0 ] makefont setfont  0 0 0 1 setcmykcolor
+    	NominalTVflag 0 ne { gs NominalToneValue length .15 add  pwime    .5 Yratio mul pwime    translate  -90 rotate  0 0 (Lin) csho gr } if
+    	gs NominalToneValue length .15 add  pwime   1.55 Yratio mul pwime    translate  -90 rotate  0 0 (Nom) csho gr
+
+
+		% marking dots
+
+			CornerDots: 1 eq {
+	%			1 setlinecap     [ 0 ptchmove Yratio mul  ] 0 setdash  % this command makes dots, without it, lines
+	            0 setlinecap   1 pmd  pxr slw
+
+	            0 1 NominalToneValue length 1 sub {
+	            /DotStep exch def
+
+			    NominalToneValue DotStep   get 50 gt {
+			        0 0 0 0 setcmykcolor
+				    /setoverprint where { pop false setoverprint } if    % overprint and erase colors underneath
+			    }{
+			        0 0 0 1 setcmykcolor
+				    /setoverprint where { pop true setoverprint } if     % overprint and not erase colors underneath
+			    } ifelse
+
+			       DotStep pwime  0  mo
+	 	           gs
+	 	               0 ptche Yratio mul 2 mul rli  stroke
+	 	           gr
+	 	        } for
+	 	    } if
+	gr
+	gs
+		0 0 0 1 setcmykcolor
+
+	  % make labels for nominal step wedge
+	 	0.5 pwime  2 Yratio mul .04 add pwime mo
+		0 1 NominalToneValue length 1 sub { gs currentpoint  NominalToneValue  4 -1 roll   get  scc gr  ptchmove 0 rmo } for
+
+	  % make labels for linearized step wedge
+    	/Helvetica findfont [ .31 pwime  0 0 .31 pwime 0 0 ] makefont setfont  0 0 0 1 setcmykcolor
+	 	0.5 pwime  -0.26 pwime mo
+		0 1 NominalToneValue length 1 sub { gs currentpoint  StandardizedToneVal  4 -1 roll   get  scc gr  ptchmove 0 rmo } for
+	gr
+
+  gr
+
+} bd   % End of WedgeOnSide
+
+
+%**********************
+
+/DocText {    % text for press, paper etc
+
+gs
+    0   NominalToneValue length PatchSize 3 add mul  15 add   translate
+    0 0 mo  90 rotate
+    /Helvetica findfont  7  scalefont setfont
+
+    /fact  TargetSizeY Xsize2 2 mul sub 10 sub  (Only to be used by: ) swp un swpa  (  ) swpa  PDFcode swpa  uc swpa    div def
+    fact 1 gt { /fact 1 def } if
+    /Helvetica findfont  7 fact mul scalefont setfont
+    0 18 rmo  gs (Only to be used by: ) sh un sh  (  ) sh  PDFcode sh  uc sh gr
+
+  LicensedLocation length 2 gt {
+    /fact  TargetSizeY Xsize2 2 mul sub 10 sub  (Only to be used at: ) swp LicensedLocation swpa    div def
+    fact 1 gt { /fact 1 def } if
+
+    /Helvetica findfont  7 fact mul scalefont setfont
+    0  -9 rmo  gs (Only to be used at: ) sh LicensedLocation sh gr
+  } if
+
+gr
+gs
+    /Helvetica findfont  10  scalefont setfont
+    Ysize2 2 sub neg
+     TargetSizeY 2 div    NominalTVflag 0 ne { LabDen swp  ( Standardized Tone Values) swpa }{ (Nominal Tone Values) swp } ifelse   (      Pg. ) swpa  (1) swpa   2 div  sub
+    translate
+
+    0 0 mo  90 rotate
+    0   0 rmo  gs NominalTVflag 0 ne { LabDen sh ( Standardized Tone Values) sh }{ (Nominal Tone Values) sh } ifelse  (      Pg. ) sh  countpage scs gr
+gr
+gs
+    TargetSizeX  .14 pwim sub .85 pwim   add   NominalToneValue length 2 add PatchSize mul 20 add   translate
+    0 0 mo  90 rotate
+    /Helvetica findfont  [ 10   0 0  10  0 0 ] makefont setfont
+    0 -2 rmo  gs (Company:)   sh  gr
+    /Helvetica findfont  [ 10.5   0 0  10  0 0 ] makefont setfont
+    0 -15 Yratio mul rmo  gs (Press:)   sh  gr
+    /Helvetica findfont  [ 10   0 0  10  0 0 ] makefont setfont
+    0 -15 Yratio mul rmo  gs (Paper:)  sh gr
+    0 -15 Yratio mul rmo  gs (Date  :) sh gr
+gr
+
+} bd   % End of DocText
+
+% **************************************************************************************************************
+
+%EndUtilities
+
+% **************************************************************************************************************
+% **************************************************************************************************************
+
+% Define variables
+% This is the one definition of image size by defining size of one patch.
+/ptchx ptch 1.3 mul def  % patchwidth in x direction, defines width of reference strip
+/SplitRef SplitRef 10 mul round cvi 10 div def
+SplitRef cvi   SplitRef eq { /SplitRef SplitRef cvi def } if
+
+  /pwi ptch pxr def  % patch width rounded to full spots. This is used to move within a block of patches
+  /pwix ptchx pxr def
+  /npwi pwi neg def
+  /npwix pwix neg def
+  /pwim   {  pwi  mul ll mul }  def
+  /pwimx  {  pwix mul ll mul }  def
+
+/chptch .3552 pwim pxr  def   /nchptch   chptch neg def   /chptchm { chptch mul } bd      % this is the one definition of patch size for checkers.
+
+ PX  9 lt { /PX  9 def } if
+ PY  9 lt { /PY  9 def } if
+ PX 26 gt { /PX 26 def } if
+ PY 26 gt { /PY 26 def } if
+/PX PX cvi def
+/PY PY cvi def
+
+AddressabilityIndicatorFlag .5 lt { /AddressabilityIndicatorFlag 0 def }{ /AddressabilityIndicatorFlag 1 def } ifelse
+ScreenPatternIndicatorFlag  .5 lt { /ScreenPatternIndicatorFlag  0 def }{ /ScreenPatternIndicatorFlag  1 def } ifelse
+
+ NoOfPages 1 lt { /NoOfPages 1 def } if
+/NoOfPages  NoOfPages round cvi  def
+
+ ToneValueBlocksXdirection 1 lt { /ToneValueBlocksXdirection 1 def } if
+/ToneValueBlocksXdirection  ToneValueBlocksXdirection round cvi  def
+
+/NoOfBlocks  RefToneValues length  ScreenPatternIndicatorFlag add AddressabilityIndicatorFlag add def
+/NoOfBlocksPerPage  NoOfBlocks NoOfPages div .45 add round cvi def
+
+    /NoOfBlocksY NoOfBlocksPerPage ToneValueBlocksXdirection div .01 sub 1 add   cvi  def
+    /NoOfBlocksX ToneValueBlocksXdirection  def
+    /NoOfBlocksPerPage  NoOfBlocksX NoOfBlocksY mul def
+
+  /BlockSizeX   PX .55 add pwimx cvi def
+  /BlockSizeY   PY 1.3 add pwim cvi  def
+  /TargetSizeX  NoOfBlocksX BlockSizeX mul  2.3  pwimx add  def
+  /TargetSizeY  NoOfBlocksY BlockSizeY mul  2.0  pwim  add  def
+
+/startu startu   72 25400  div mul magn div def
+/endu   endu     72 25400  div mul magn div def
+/rangeu endu startu div def
+/lograngeu rangeu log def
+/linemul  10  lograngeu PY 1 sub div exp def
+/yrange pwi PY mul def
+endc startc gt { endc startc /endc exch def /startc exch def } if
+startc 100 gt { /startc 100 def } if
+/conmul 1 10 startc endc div log PX 1 sub div exp  div  def
+/conlab [ (A) (B) (C) (D) (E) (F) (G) (H) (I) (J) (K) (L) (M) (N) (O) (P) (Q) (R) (S) (T) (U) (V) (W) (X) (Y) (Z) ] def    % Contrast labels
+
+% Define variables for Step Wedge on top of target
+NoOfBlocksX 1 gt {
+  PX 20 lt {    % Steps on top wedge is a function of how wide the target is.
+      /TVsteps [ 0 5 10 20 30 40 50 60 70 80 90 95 100 ] def
+  }{
+      /TVsteps [ 0 5 10 15 20 25 30 35 40 45 50 55 60 65 70 75 80 85 90 95 100 ] def
+  } ifelse
+}{          % also define variables for step wedge next to Addressability tgt so values are defined for .log files
+    AddressabilityIndicatorFlag 0 eq {
+        PY 9 eq {
+                /TVsteps [ 10 20 30 40 50 60 70 80 90 100 ] def
+        } if
+           PY 10 eq {
+                /TVsteps [ 0 10 20 30 40 50 60 70 80 90 100 ] def
+           } if
+        PY 11 eq {
+                /TVsteps [ 0 5 10 20 30 40 50 60 70 80 90 100 ] def
+        } if
+           PY 20 lt PY 11 gt  and {
+            /TVsteps [ 0 5 10 20 30 40 50 60 70 80 90 95 100 ] def
+           } if
+        PY 20 ge {
+            /TVsteps [ 0 5 10 15 20 25 30 35 40 45 50 55 60 65 70 75 80 85 90 95 100 ] def
+        } if
+    }{
+        /TVsteps [ ] def
+    } ifelse
+} ifelse
+
+% *************************************************
+
+% Generate data on .log file
+
+/spfrecal {
+        72 25400 div div magn mul round cvi    % 1 line in microns
+		2 mul    % one linepair in microns
+		1000 exch div  % Lp / mm
+		100 mul round cvi 100 div scp  ()=
+} bd
+
+/ptchmm ptch 72 div 25.4 mul 10 mul round cvi 10 div  def
+
+/Helvetica findfont  .33 pwim scalefont setfont
+
+
+% Generate Configuration File
+(Target\011Name) print  ()=
+% (\011Contrast-Resolution Test Target\011\011\011) print  RefToneValues length scp (x) print PX scp (x) print PY scp ()=
+(\011Contrast-Resolution Test Target ) print  RefToneValues length scp (x) print PX scp (x) print PY scp ()=
+()=
+(Fiducials\11ID\011X\011Y)print ()=
+(4\011ULC\0110\0110\011Click on upper-left corner of the target elements.) print ()=
+(\011URC\011) print  ptchmm  1.3 mul  PX mul scp (\011) print (0\011Click on upper-right corner of the target elements.) print ()=
+(\011LRC\011) print  ptchmm  1.3 mul  PX mul scp (\011) print  ptchmm PY mul scp (\011Click on lower-right corner of the target elements.) print ()=
+(\011LLC\0110) print                             (\011) print  ptchmm PY mul scp (\011Click on lower-left corner of the target elements.) print ()=
+()=
+(Channel\011) print  ()=  %   ((R=1, G=2, B=3)) print ()=
+2 scp ()= ()=
+(Measurements\011ID\011X0\011Y0\011dX\011dY\011Xval\011Yval) print ()=
+
+PX scp (\011Contrast\011)  print        % 1st line
+    ptchmm .5 mul 10 mul round cvi 10 div  scp (\011) print
+    ptchmm .5 mul 10 mul round cvi 10 div  scp (\011) print
+    ptchmm scp  (\011) print   ptchmm scp      (\011) print
+    startc 10 mul round cvi 10 div scp         (\011) print  endu  spfrecal
+
+PY scp (\011Frequency\011) print        % 2nd line
+    ptchmm .5 mul ptchmm 1.3 mul add 10 mul round cvi 10 div scp (\011) print
+    ptchmm 1.5 mul 10 mul round cvi 10 div scp         (\011) print
+    ptchmm scp  (\011) print   ptchmm scp              (\011) print
+    startc  conmul mul 10 mul round cvi 10 div scp     (\011) print  endu linemul div spfrecal
+
+3 1  PX PY gt { PX }{ PY } ifelse {     % rest of the lines
+    /count1 exch def
+    (\011\011) print
+    PX count1 ge { ptchmm .5 mul  ptchmm 1.3 mul count1 1 sub mul add 10 mul round cvi 10 div scp (\011) print }{ (\011) print } ifelse
+    PY count1 ge { ptchmm count1 .5 sub mul         10 mul round cvi 10 div scp (\011) print }{ (\011) print } ifelse
+    ptchmm scp  (\011) print       ptchmm scp  (\011) print
+    PX count1 ge { startc  count1 1 sub { conmul mul  } rp 10 mul round cvi 10 div scp (\011) print }{ (\011) print } ifelse
+    PY count1 ge { endu    count1 1 sub { linemul div } rp  spfrecal }{ (\011) print ()= } ifelse
+} for
+
+()=
+(Options\011) print  ()=
+1 scp (\011Nlevels) print
+(\011) print  RefToneValues length scp
+    0 1 RefToneValues length 1 sub    {
+        /count1 exch def
+%	    count1 1 add  (\011) print  RefToneValues count1 get scp
+    } for
+
+()= ()=
+
+
+%***
+
+()= ()= ()=
+        RefToneValues length scp (\011  Number of Tone Values) print  ()= ()=
+    0 1 RefToneValues length 1 sub    {	% Make the PX contrast stripes
+        /count1 exch def
+	    count1 1 add  scp  (\011) print     % count of TV level
+        RefToneValues count1 get scp ()=
+    } for ()= ()=
+
+
+        PX scp (\011  Number of contrast steps, % tone value) print  ()= ()=
+        /ContrastPrev startc  conmul div  def  % Expand starting value because loop shrinks it
+    1 1 PX  {	% Make the PX contrast stripes
+        /count1 exch def
+        conlab count1 1 sub get scp (\011) print
+		ContrastPrev conmul mul dup
+		100 mul round cvi 100 div scp  ()=
+		/ContrastPrev exch def
+    } for ()= ()=
+
+
+        PY scp (\011  Number of resolution steps, line pairs per mm) print    ()= ()=
+        /lwidu  endu linemul mul def  % shrink first line because it will be expanded in loop
+	1 1 PY {			% write resolution labels
+	    /count1 exch def
+	    count1  scp  (\011) print     % print resolution count
+	    /lwidu  lwidu linemul div  def
+		lwidu spfrecal
+    } for ()= ()=
+
+
+        TVsteps length scp (\011  Number of steps on top step wedge) print    ()= ()=
+    0 1 TVsteps length 1 sub {
+        dup  1 add scp  (\011) print     % print step number
+        TVsteps exch get scp ( %) print ()=
+    } for ()= ()=
+
+
+    ptch 35.28 mul round cvi 100 div  scp (\011  Patch Size, mm) print    ()=
+    dpi  scp (\011  Addressability, lpi) print   ()=
+
+    SplitRef scp (\011  SplitRef, % ToneValue difference for split patches) print    ()=
+
+    SetCol print (\011  Color) print    ()=
+
+    ToneValueBlocksXdirection scp (\011  ToneValueBlocksXdirection) print    ()=
+
+
+    SpotCorrection 1 eq { (SpotCorrection is On) print }{ (SpotCorrection is Off) print }ifelse   ()=
+
+	devserial length 2 lt
+	  { outdev  print (\011  Output device  ) print (\011) print ()       print  ()=  ()= }
+	  { outdev  print (\011  Output device, ) print (\011) print devserial  print  (\011  Device serial number) print  ()=  ()=  }
+	ifelse
+
+        ()= (%%BoundingBox: 0 0 ) print  TargetSizeX  pwi 7 mm div  124 3 add mul add  cvi 1 add  scp   ( ) print   TargetSizeY cvi 1 add  scp    ()= ()=
+
+        (Target Size,     inches: \011X= ) print  TargetSizeX  pwi 7 mm div  124 3 add mul add  cvi 1 add   .072 div round cvi 1000 div  dup  scp
+              sct swp (0000000) swp exch sub ( ) swp div round cvi { ( ) print } rp  (\011Y= ) print   TargetSizeY cvi 1 add   cvi 1 add .072 div round cvi 1000 div   scp  ( )=
+        (Target Size, millimeters:\011X= ) print  TargetSizeX  pwi 7 mm div  124 3 add mul add  cvi 1 add   72 div 2540 mul round cvi 100 div  dup scp
+              sct swp (0000000) swp exch sub ( ) swp div round cvi { ( ) print } rp  (\011Y= ) print   TargetSizeY cvi 1 add 72 div 2540 mul round cvi 100 div   scp  ()=  ()= ()=
+
+
+LogFlag 1 eq { End_Of_File,_verify_BBox,_then_set_LogFlag_to_zero } if   % speeds up setting of BoundingBox by causing an error, not printing the rest
+
+%  end log file
+
+
+% **************************************************************************************************************
+% **************************************************************************************************************
+
+/AdrGradFlag 0 def
+/ScrPatAnaFlag 0 def
+/DocFlag 0 def
+
+% *****************************
+% *****************************
+
+% Paint pages
+
+/PaintOnePage {
+  gs
+
+    NoOfBlocksY 1 sub -1 0 {
+        /TVY exch def
+
+        0 1  NoOfBlocksX 1 sub {
+            /TVX exch def
+
+	        TVc RefToneValues length  lt {   % first paint all the conres blocks
+	            gs
+	                .73 pwim   TVX BlockSizeX mul add     TVY BlockSizeY mul   translate
+	                /RefToneValue   RefToneValues  TVc get cvi  def
+	                SetCol SetCol   OneBlock
+                    /TVc TVc 1 add def
+	            gr
+	        }{              % now paint the additional blocks
+                TVc NoOfBlocksPerPage countpage mul lt  AddressabilityIndicatorFlag 1 eq   and   AdrGradFlag 0 eq  and {   % do addressability indicator only once
+				    AddressabilityAndCircularGradient	  /TVc TVc 1 add def
+
+                }{          %   Else, If there is room, print the Screen Pattern Analyzer
+
+			        TVc  NoOfBlocksPerPage countpage mul lt   ScreenPatternIndicatorFlag 1 eq and   ScrPatAnaFlag 0 eq  and  {    % do Screen Pattern Analyzer only once
+				        ScrnPatAnalyzer     /TVc TVc 1 add def
+	                }{
+	                    % Addressability tgt and ScrnPattern have been taken care of, if there is room, print dcumentation frame.
+			            DocFlag 0 eq  { DocBlock   /TVc TVc 1 add def } if
+	                } ifelse    % If ScrnPatTgt has not already been printed
+                } ifelse    % If there is still room after addressability target was painted, do ScrnPatTgt.
+	        } ifelse        % TVc RefToneValues length lt, ie if there is extra room
+        } for               % all blocks in Y dir
+    } for                   % all blocks in X dir
+  gr
+
+} bd   % PaintOnePage
+
+%*************
+
+
+/TVc 0 def              % Counter for all blocks that have been painted
+
+	        1 1 NoOfPages  {
+                27 Ysize2 Yratio div add     25 translate 0 0 moveto
+	            /countpage exch def
+	            %%Page: countpage countpage
+
+%	            MakeLabelsOfPage
+%	            PaintOnePage
+                   /area 1 def SetCol colr
+
+              countpage countpage 2 div cvi 2 mul ne {
+                TargetSizeX .16 pwim sub  Ysize2 2 div add 4 add   Xsize2 2 div .16 pwim sub                   mo    -90   WedgeOnSide  % right Bottom. the number before WedgeOnSide is the rotation angele
+%                 -.16 pwim                Ysize2 2 div sub 4 sub   Xsize2 2 div .16 pwim sub                   mo     90   WedgeOnSide  % left  Bottom. the number before WedgeOnSide is the rotation angele
+%                TargetSizeX .16 pwim sub  Ysize2 2 div add 4 add   TargetSizeY  Xsize2 2 div sub .16 pwim sub  mo    -90   WedgeOnSide  % right Upper. the number before WedgeOnSide is the rotation angele
+%                 -.16 pwim                Ysize2 2 div sub 4 sub   TargetSizeY  Xsize2 2 div sub .16 pwim sub  mo     90   WedgeOnSide  % left  Upper. the number before WedgeOnSide is the rotation angele
+              }{
+                TargetSizeX .16 pwim sub  Ysize2 2 div add 4 add   Xsize2 2 div .16 pwim sub                   mo     90   WedgeOnSide  % right Bottom. The number before WedgeOnSide is the rotation angele
+                 -.16 pwim                Ysize2 2 div sub 4 sub   Xsize2 2 div .16 pwim sub                   mo    -90   WedgeOnSide  % left  Bottom. The number before WedgeOnSide is the rotation angele
+                TargetSizeX .16 pwim sub  Ysize2 2 div add 4 add   TargetSizeY  Xsize2 2 div sub .16 pwim sub  mo     90   WedgeOnSide  % right Upper.  The number before WedgeOnSide is the rotation angele
+                 -.16 pwim                Ysize2 2 div sub 4 sub   TargetSizeY  Xsize2 2 div sub .16 pwim sub  mo    -90   WedgeOnSide  % left  Upper.  The number before WedgeOnSide is the rotation angele
+              } ifelse
+
+%                DocText
+                showpage            % write page, then make next page
+%                (    **End of page ) print countpage scp ( **   TVc=) print TVc scp (  NoOfBlocksPerPage=) print NoOfBlocksPerPage scp   ()= ()=
+	        } for
+
+
+0 1 NominalToneValue length 1 sub {
+    /coun exch def
+    NominalToneValue coun get SingleValInterp
+} for
+
+% End of Conres
+
+%**************************************************************************************************
+%**************************************************************************************************
+TWF 1 eq {
+}{
+} ifelse  % TWF flag
+%******************************************************************************
+
+%%Trailer
+%  (Memory increased during use:           ) print vmstatus  pop membeg sub == pop
+%  (Job Time =                             ) print realtime starttime sub 1000 div 20 string cvs print  (sec) =
+%  (MyDict =                               ) print currentdict  length =
+%  (Stack count before cleartomark =       ) print count =
+  ()= (final stack: )=  pstack
+end % MyDict dictionary
+%  (Memory increased after deleting dict = ) print vmstatus  pop membeg sub = pop ( ) =
+cleartomark
+%  (stack count after  cleartomark =       ) print count =
+restore
+%  (Memory increased after end restore =   ) print vmstatus  pop membeg sub = pop ( ) =
+
+%showpage
+%%EOF

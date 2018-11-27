@@ -3,6 +3,14 @@
           FENCED CODE BLOCKS
 ————————————————————————————————————————
 
+```
+/* Ambiguous Syntax */
+```
+
+``` opening=metadata
+ ``` Ambiguous Syntax
+``` closing=metadata
+
   ```
   /* Ambiguous Syntax */
   ```
@@ -12,6 +20,15 @@
   > ```
 
 ————————————————————————————————————————
+
+```js type=module
+// ECMAScript Syntax
+```
+
+```js
+export function ƒ() {}
+```
+
 
   > ```js
   > // ECMAScript Syntax
