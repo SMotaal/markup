@@ -1,5 +1,3 @@
-// import * as markup from '../markup.mjs';
-
 export default (markup, overrides) => {
   const defaults = {
     version: 1,

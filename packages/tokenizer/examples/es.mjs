@@ -1,11 +1,11 @@
 import {Parser} from '../index.mjs';
 import {javascript} from '../extensions/javascript/javascript-mode.mjs';
+import * as dom from '../extensions/dom.mjs';
+
 const parser = new Parser();
 export const {modes, mappings} = parser;
 
 parser.register(javascript);
-
-import * as dom from '../extensions/dom.mjs';
 
 export const tokenize = (source, options = {}) => parser.tokenize(source, {options});
 
