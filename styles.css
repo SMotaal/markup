@@ -18,9 +18,9 @@
 }
 
 html {
-  width: 100vw; height: 100vh;
+  width: 100vw;
+  height: 100vh;
   box-sizing: border-box;
-
 }
 
 body {
@@ -85,7 +85,11 @@ body {
   --shadow: var(--dark, transparent);
 }
 
-.markup-container slot:not(:empty)::before { display: block; height: 1em; content: ''; }
+.markup-container slot:not(:empty)::before {
+  display: block;
+  height: 1em;
+  content: '';
+}
 
 .markup-container > header {
   --clear: var(--markup-background, #fff);
@@ -129,8 +133,8 @@ body {
   text-shadow: var(--outset-shadow, 0 0 0) var(--shadow);
   opacity: 0.9;
 
-  font-family: system-ui -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu,
-    Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  font-family: system-ui -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans',
+    'Helvetica Neue', sans-serif;
   font-weight: 200;
   line-height: initial;
 
@@ -177,6 +181,10 @@ body {
   -webkit-user-select: text;
 }
 
+.markup-container > header #source-type {
+  font-weight: 700;
+}
+
 /* .markup-container > header div > [title] > [id]:not(empty) { min-width: 10em; } */
 /* .markup-container > header div > [title] > time:not(empty) { min-width: 1em; text-overflow: ellipsis; } */
 
@@ -196,8 +204,8 @@ body {
 }
 
 /* :not(empty) :not(empty) */
-.markup-container > header [value]:not([value=""])[unit]:not([unit=""])::after {
-  content: " " attr(unit);
+.markup-container > header [value]:not([value=''])[unit]:not([unit=''])::after {
+  content: ' ' attr(unit);
   font-size: 50%;
   font-weight: lighter;
   text-rendering: optimizeLegibility;
