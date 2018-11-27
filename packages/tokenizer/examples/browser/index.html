@@ -56,6 +56,10 @@
       }
     </script>
   </pre>
-    <script type="module" src="index.js"></script>
+    <script type="module">
+      import * as markup from '../markup.mjs';
+      import api from './api.js';
+      api(markup);
+    </script>
   </body>
 </html>
