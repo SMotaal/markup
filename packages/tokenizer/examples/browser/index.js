@@ -9,7 +9,7 @@ const defaults = {
   element: 'pre#source-code',
   headerTemplate: 'template#source-header',
 };
-const Hash = /#((?:.*?:)?.*?)(?:(\!+)([a-z]+|[A-Z]+))?(?:\*(?!\*)(\d+))?(?:\*{2}(\d+))?$/;
+const Hash = /#((?:.*?:)?.*?)(?:(\!+)([a-z]+|[A-Z]+)?)?(?:\*(?!\*)(\d+))?(?:\*{2}(\d+))?$/;
 const options = Object.create(defaults);
 const sourceCodeElement = document.querySelector(options.element);
 const sourceHeaderTemplate = document.querySelector(options.headerTemplate);
@@ -19,7 +19,7 @@ const loadFromURL = async specifier => {
   const url = `${new URL(specifier, location)}`;
   const source = {specifier, url};
   try {
-    source.response = await fetch(url);
+    source.response = await fetch(url, {referrerPolicy: 'no-referrer'});
     source.sourceText = await source.response.text();
     return (result = source);
   } finally {
@@ -130,7 +130,7 @@ const renderFromURL = async (specifier, sourceType) => {
     sourceType = sourceType.toLowerCase();
     const version = options.version > 0 ? options.version : defaults.version;
     // console.log({'options.version': options.version, 'defaults.version': defaults.version});
-    sourceType in markup.mappings || (sourceType = 'markup');
+    // sourceType in markup.mappings || (sourceType = 'markup');
     const markupOptions = {sourceType, version};
     header.status('source', `${specifier}`);
 
@@ -224,6 +224,7 @@ const root =
 
 const scopes = {
   ':': `${root}/markup/benchmarks/assets`,
+  '~': '../../',
   lib: '../../lib',
   markup: `${root}/markup`,
   modules: `${root}/modules`,

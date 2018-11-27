@@ -1,18 +1,30 @@
-import '../extensions/extensions.mjs';
-export {modes, mappings} from '../lib/modes.mjs';
-import * as parser from '../lib/parser.mjs';
+// export {modes, mappings} from '../lib/modes.mjs';
+// import * as extensions from '../extensions/extensions.mjs';
+// import * as parser from '../lib/parser.mjs';
+// import * as dom from '../extensions/dom.mjs';
+// for (const mode in extensions.modes) extensions.registerMode(mode);
+
+// import * as extensions from '../extensions/extensions.mjs';
+// import * as dom from '../extensions/dom.mjs';
+// import {Parser} from '../lib/parser.mjs';
+
+// const parser = new Parser();
+// export const {modes, mappings} = parser;
+// for (const id in extensions.modes) parser.register(extensions.modes[id]);
+
+import parser from './extended.mjs';
 import * as dom from '../extensions/dom.mjs';
 
 const versions = [parser];
-
 export const tokenize = (source, options = {}) => {
-  const version = versions[options.version - 1];
+  const version = versions[options.version - 1] || versions[0];
   options.tokenize = (version || parser).tokenize;
   return version.tokenize(source, {options});
 };
 
-export const render = async (source, options) => dom.render(tokenize(source, options), options && options.fragment);
+// export const tokenize = (source, options = {}) => parser.tokenize(source, options);
 
+export const render = async (source, options) => dom.render(tokenize(source, options), options && options.fragment);
 
 export const warmup = (source, options) => {
   const key = (options && JSON.stringify(options)) || '';
@@ -22,7 +34,6 @@ export const warmup = (source, options) => {
   for (const item of tokenize(source, options));
   cache.add(source);
 };
-
 
 // const initialize = () =>
 //   initialized ||

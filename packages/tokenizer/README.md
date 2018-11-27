@@ -17,6 +17,21 @@ While Regular Expressions can be confusing to work with sometimes, they come wit
 
 - Everything else for now
 
+**Getting Started**
+
+> **Example**
+>
+> ```js
+> import {Parser} from '@smotaal/tokenizer/parser.mjs';
+> import * as extensions from '@smotaal/tokenizer/extensions/extensions.mjs';
+>
+> const parser = new Parser();
+> export const {modes, mappings} = parser;
+> for (const id in extensions.modes) parser.register(extensions.modes[id]);
+>
+> parser.tokenize('/* source */', {sourceType: 'javascript'});
+> ```
+
 **Documentation** (_in progress_)
 
 At the moment, you can read the on going drafts for:

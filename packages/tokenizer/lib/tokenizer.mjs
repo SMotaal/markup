@@ -13,8 +13,7 @@ export class Tokenizer {
     const Species = this.constructor;
 
     // Local context
-    const contextualizer =
-      this.contextualizer || (this.contextualizer = Species.contextualizer(this));
+    const contextualizer = this.contextualizer || (this.contextualizer = Species.contextualizer(this));
     let context = contextualizer.next().value;
 
     const {mode, syntax, createGrouper = Species.createGrouper || Object} = context;
@@ -42,6 +41,8 @@ export class Tokenizer {
     let lastContext = context;
 
     state.source = source;
+
+    const tokenize = state.tokenize || (text => [{text}]);
 
     while (true) {
       const {
@@ -99,9 +100,7 @@ export class Tokenizer {
         // Current contextual punctuator (from sequence)
         const closing =
           $$closer &&
-          ($$closer.test
-            ? $$closer.test(text)
-            : $$closer === text || (whitespace && whitespace.includes($$closer)));
+          ($$closer.test ? $$closer.test(text) : $$closer === text || (whitespace && whitespace.includes($$closer)));
 
         let after;
         let punctuator = next.punctuator;
@@ -195,9 +194,7 @@ export class Tokenizer {
 
           if (opened || closed) {
             context = contextualizer.next((state.grouper = grouper || undefined)).value;
-            grouping.hint = `${[...grouping.hints].join(' ')} ${
-              grouping.context ? `in-${grouping.context}` : ''
-            }`;
+            grouping.hint = `${[...grouping.hints].join(' ')} ${grouping.context ? `in-${grouping.context}` : ''}`;
             opened && (after = opened.open && opened.open(next, state, context));
           }
         }
@@ -216,22 +213,13 @@ export class Tokenizer {
             const body = index > offset && source.slice(offset, index - 1);
             if (body) {
               body.length > 0 &&
-                ((tokens = Tokenizer.tokenize(
-                  body,
-                  {options: {sourceType: syntax}},
-                  this.defaults,
-                )),
-                (nextIndex = index));
+                ((tokens = tokenize(body, {options: {sourceType: syntax}}, this.defaults)), (nextIndex = index));
               const hint = `${syntax}-in-${mode.syntax}`;
-              token = token => (
-                (token.hint = `${(token.hint && `${token.hint} `) || ''}${hint}`), token
-              );
+              token = token => ((token.hint = `${(token.hint && `${token.hint} `) || ''}${hint}`), token);
             }
           } else if (after.length) {
             const hint = grouping.hint;
-            token = token => (
-              (token.hint = `${hint} ${token.type || 'code'}`), context.token(token)
-            );
+            token = token => ((token.hint = `${hint} ${token.type || 'code'}`), context.token(token));
             (tokens = after).end > state.index && (nextIndex = after.end);
           }
 
@@ -245,7 +233,6 @@ export class Tokenizer {
             }
             nextIndex > state.index && (state.index = nextIndex);
           }
-
         }
       }
     }
@@ -318,11 +305,7 @@ export class Tokenizer {
     } = mode;
 
     while (true) {
-      if (
-        grouper !== (grouper = yield (grouper && grouper.context) || mode.context) &&
-        grouper &&
-        !grouper.context
-      ) {
+      if (grouper !== (grouper = yield (grouper && grouper.context) || mode.context) && grouper && !grouper.context) {
         const {
           goal = $syntax,
           punctuator,
@@ -356,18 +339,7 @@ export class Tokenizer {
     let done, next;
 
     const {
-      mode: {
-        syntax,
-        keywords,
-        assigners,
-        operators,
-        combinators,
-        nonbreakers,
-        comments,
-        closures,
-        breakers,
-        patterns,
-      },
+      mode: {syntax, keywords, assigners, operators, combinators, nonbreakers, comments, closures, breakers, patterns},
       punctuators,
       aggregators,
       spans,
@@ -409,11 +381,8 @@ export class Tokenizer {
 
         if (type === 'sequence') {
           (next.punctuator =
-            (previous &&
-              (aggregators[text] ||
-                (!(text in aggregators) && (aggregators[text] = aggregate(text))))) ||
-            (punctuators[text] ||
-              (!(text in punctuators) && (punctuators[text] = punctuate(text)))) ||
+            (previous && (aggregators[text] || (!(text in aggregators) && (aggregators[text] = aggregate(text))))) ||
+            (punctuators[text] || (!(text in punctuators) && (punctuators[text] = punctuate(text)))) ||
             undefined) && (next.type = 'punctuator');
         } else if (type === 'whitespace') {
           next.breaks = text.match(LineEndings).length - 1;
