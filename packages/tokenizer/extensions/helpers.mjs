@@ -1,5 +1,3 @@
-// import {raw} from '../lib/helpers.mjs';
-
 /// Helpers
 export const Null = Object.freeze(Object.create(null));
 
