@@ -1,4 +1,4 @@
-import {previousTextFrom, indenter} from '../helpers.mjs';
+import {previousTextFrom, indenter, Closures, sequence, all, raw} from '../helpers.mjs';
 
 const defaults = {syntax: 'markdown', aliases: ['md'], requires: ['html']};
 
@@ -40,7 +40,7 @@ const EXPONENTIAL = /\d+[eE]\-?\d+|\d+\.\d+[eE]\-?\d+/;
 const FRAGMENTS = /\b[^\n\s\[\]\(\)\<\>&`]*[^\n\s\[\]\(\)\<\>&_`]\b|[^\n\s\[\]\(\)\<\>&`]+(?=__?\b)/;
 
 export const markdown = Object.defineProperties(
-  ({Symbols, Closures, raw, sequence, all}, {aliases, syntax} = defaults, {html}) => {
+  ({syntax} = defaults, {html}) => {
     const matcher = ((...matchers) => {
       let matcher = matchers[matchers.length - 1];
       try {
@@ -133,13 +133,9 @@ export const markdown = Object.defineProperties(
           offset += body.length;
         } else {
           [head, ...lines] = body.split(/\r?(\n)\r?/g);
-          // const [head, ...lines] = body.split(/(.*?\n)/g);
-          // const [head, ...lines] = body.split('\n');
-          // const [head, ...lines] = body.split(/(^.*?\n)/);
           if (head) {
             tokens.push({text: head, type: 'comment', offset, parent}), (offset += head.length);
           }
-          // if (indenting) {
           for (const line of lines) {
             if (line === '\n') {
               text = line;
@@ -161,6 +157,7 @@ export const markdown = Object.defineProperties(
               if (text) {
                 tokens.push({text, type: 'code', offset, parent}), (offset += text.length);
               }
+              console.log(line, indent, INDENT);
             }
           }
           // } else {

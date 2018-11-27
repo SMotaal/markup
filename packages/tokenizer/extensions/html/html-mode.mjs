@@ -1,9 +1,10 @@
-import {matchers, patterns} from '../common.mjs';
+import {matchers} from '../common.mjs';
+import {Closures, Symbols, raw} from '../helpers.mjs';
 
-const defaults = {syntax: 'html'};
+const defaults = {syntax: 'html', aliases: ['htm']};
 
 export const html = Object.defineProperties(
-  ({Symbols, Closures, raw}, {aliases, syntax} = defaults) => {
+  ({syntax} = defaults) => {
     const html = {
       syntax,
       keywords: Symbols.from('DOCTYPE doctype'),
@@ -11,7 +12,7 @@ export const html = Object.defineProperties(
       closures: Closures.from('<%…%> <!…> <…/> </…> <…>'),
       quotes: [],
       patterns: {
-        ...patterns,
+        maybeKeyword: /^[a-z](\w*)$/i,
         closeTag: /<\/\w[^<>{}]*?>/g,
         maybeIdentifier: /^(?:(?:[a-z][\-a-z]*)?[a-z]+\:)?(?:[a-z][\-a-z]*)?[a-z]+$/,
       },
@@ -54,10 +55,7 @@ export const html = Object.defineProperties(
         if (!syntax) {
           const openTag = source.slice(parent.offset, index);
           const match = /\stype=.*?\b(.+?)\b/.exec(openTag);
-          syntax =
-            tag === 'SCRIPT' && (!match || !match[1] || /^module$|javascript/i.test(match[1]))
-              ? 'es'
-              : '';
+          syntax = tag === 'SCRIPT' && (!match || !match[1] || /^module$|javascript/i.test(match[1])) ? 'es' : '';
           // console.log({syntax, tag, match, openTag});
         }
 
