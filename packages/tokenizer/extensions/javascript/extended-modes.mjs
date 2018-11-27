@@ -15,7 +15,7 @@ const ESX = sequence`${BLOCKLEVEL}|\bexports\b|\bimport\b|\bmodule.exports\b|\br
 const requires = [javascript.defaults.syntax];
 
 export const mjs = Object.defineProperties(
-  ({syntax} = defaults, {javascript: {quotes, closures, spans, matchers}}) => ({
+  ({syntax} = mjs.defaults, {javascript: {quotes, closures, spans, matchers}}) => ({
     syntax,
     keywords: Symbols.from('import export default'),
     quotes,
@@ -30,7 +30,7 @@ export const mjs = Object.defineProperties(
 );
 
 export const cjs = Object.defineProperties(
-  ({syntax} = defaults, {javascript: {quotes, closures, spans, matchers}}) => ({
+  ({syntax} = cjs.defaults, {javascript: {quotes, closures, spans, matchers}}) => ({
     syntax,
     keywords: Symbols.from('import module exports require'),
     quotes,
@@ -45,7 +45,7 @@ export const cjs = Object.defineProperties(
 );
 
 export const esx = Object.defineProperties(
-  ({syntax} = defaults, {javascript: {quotes, closures, spans, matchers}, mjs, cjs}) => ({
+  ({syntax} = esx.defaults, {javascript: {quotes, closures, spans, matchers}, mjs, cjs}) => ({
     syntax,
     keywords: Symbols.from(mjs.keywords, cjs.keywords),
     quotes,

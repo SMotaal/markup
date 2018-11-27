@@ -19,15 +19,27 @@ While Regular Expressions can be confusing to work with sometimes, they come wit
 
 **Getting Started**
 
-> **Example**
+> **Multi-Mode**
 >
 > ```js
-> import {Parser} from '@smotaal/tokenizer/parser.mjs';
-> import * as extensions from '@smotaal/tokenizer/extensions/extensions.mjs';
+> import {Parser, extensions} from '@smotaal/tokenizer/extended.mjs';
 >
 > const parser = new Parser();
 > export const {modes, mappings} = parser;
 > for (const id in extensions.modes) parser.register(extensions.modes[id]);
+>
+> parser.tokenize('/* source */', {sourceType: 'javascript'});
+> ```
+
+> **Single-Mode**
+>
+> ```js
+> import {Parser} from '@smotaal/tokenizer/index.mjs';
+> import {javascript} from '@smotaal/tokenizer/extensions/javascript/javascript-mode.mjs';
+>
+> const parser = new Parser();
+> export const {modes, mappings} = parser;
+> parser.register(javascript);
 >
 > parser.tokenize('/* source */', {sourceType: 'javascript'});
 > ```

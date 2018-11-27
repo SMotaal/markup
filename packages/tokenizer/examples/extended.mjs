@@ -1,6 +1,4 @@
-import * as extensions from '../extensions/extensions.mjs';
-import * as dom from '../extensions/dom.mjs';
-import {Parser} from '../lib/parser.mjs';
+import {Parser, extensions} from '../extended.mjs';
 
 const parser = new Parser();
 export const {modes, mappings} = parser;

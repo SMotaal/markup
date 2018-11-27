@@ -1,2 +1,4 @@
-// import './extensions.mjs';
-// import * as smotaalTokenizerParser from './packages/tokenizer/lib/parser.mjs';
+export * from './index.mjs';
+import * as extensions from './extensions/extensions.mjs';
+export {extensions};
+

@@ -1,8 +1,13 @@
 import {Tokenizer} from './tokenizer.mjs';
 
-const TOKENIZERS = 'tokenizers';
-const MAPPINGS = 'mappings';
-const MODES = 'modes';
+export const TOKENIZERS = 'tokenizers';
+export const MAPPINGS = 'mappings';
+export const MODES = 'modes';
+
+const none = {
+  syntax: 'markup',
+  matcher: /([\s\n]+)|(\\(?:(?:\\\\)*\\|[^\\\s])?|\/\/+|\/\*+|\*+\/|\(|\)|\[|\]|,|;|\.\.\.|\.|\b:\/\/\b|::|:|\?|`|"|'|\$\{|\{|\}|=>|<\/|\/>|\++|\-+|\*+|&+|\|+|=+|!={0,3}|<{1,3}=?|>{1,2}=?)|[+\-*/&|^%<>~!]=?/g,
+};
 
 const define = (instance, property, value, options) => {
   if (!instance.hasOwnProperty(property))
@@ -24,7 +29,10 @@ export class Parser {
    */
   tokenize(source, state = {}) {
     const {
-      options: {sourceType, mode = (state.options.mode = this.get(sourceType || undefined))} = (state.options = {}),
+      options: {
+        sourceType,
+        mode = (state.options.mode = (sourceType && this.get(sourceType)) || none),
+      } = (state.options = {}),
     } = state;
     let tokenizer = mode && this[TOKENIZERS].get(mode);
     if (!source || !mode) return [];

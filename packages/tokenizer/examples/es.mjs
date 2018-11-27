@@ -1,18 +1,13 @@
-import parser from './extended.mjs';
+import {Parser} from '../index.mjs';
+import {javascript} from '../extensions/javascript/javascript-mode.mjs';
+const parser = new Parser();
+export const {modes, mappings} = parser;
+
+parser.register(javascript);
+
 import * as dom from '../extensions/dom.mjs';
 
-const versions = [parser];
-let lastVersion;
-
-export const tokenize = (source, options = {}) => {
-  const version = versions[options.version - 1] || versions[0];
-  options.tokenize = (version || parser).tokenize;
-  try {
-    return version.tokenize(source, {options});
-  } finally {
-    !version || lastVersion === (lastVersion = version) || console.log({version});
-  }
-};
+export const tokenize = (source, options = {}) => parser.tokenize(source, {options});
 
 export const render = async (source, options) => dom.render(tokenize(source, options), options && options.fragment);
 

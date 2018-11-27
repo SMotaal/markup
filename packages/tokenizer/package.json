@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "description": "Nestable syntax tokenizer using Regular Expressions",
   "license": "MIT",
-  "main": "lib/tokenzier.mjs",
+  "main": "index.mjs",
   "dependencies": {
     "pseudom": "*"
   },

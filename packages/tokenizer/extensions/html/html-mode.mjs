@@ -1,10 +1,8 @@
 import {matchers} from '../common.mjs';
 import {Closures, Symbols, raw} from '../helpers.mjs';
 
-const defaults = {syntax: 'html', aliases: ['htm']};
-
 export const html = Object.defineProperties(
-  ({syntax} = defaults) => {
+  ({syntax} = html.defaults) => {
     const html = {
       syntax,
       keywords: Symbols.from('DOCTYPE doctype'),
@@ -79,6 +77,6 @@ export const html = Object.defineProperties(
     return html;
   },
   {
-    defaults: {get: () => ({...defaults})},
+    defaults: {value: {syntax: 'html', aliases: ['htm']}},
   },
 );
