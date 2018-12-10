@@ -1,5 +1,5 @@
 import {Token} from './token.mjs';
-import {UnknownKind, TextKind} from './kinds.mjs';
+import {UnknownKind, TextKind} from './token-kind.mjs';
 
 export class Matcher extends RegExp {
   constructor(source = '(.*?)', flags = source && source.flags, groups = source && source.groups) {

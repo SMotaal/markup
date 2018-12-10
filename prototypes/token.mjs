@@ -1,3 +1,5 @@
+export * from './token-kind.mjs';
+export * from './token-matcher.mjs';
 export class Token {
   constructor(text, group, index, match, state) {
     Object.defineProperties(this, {
