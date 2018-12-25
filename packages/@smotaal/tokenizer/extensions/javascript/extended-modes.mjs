@@ -1,5 +1,6 @@
-import {javascript, REGEXPS, CLOSURES} from './javascript-mode.mjs';
-import {Symbols, sequence, all} from '../helpers.mjs';
+import {javascript} from './javascript-mode.mjs';
+import {REGEXPS, CLOSURES, segmenter} from './definitions.mjs';
+import {Symbols, sequence, raw, all} from '../helpers.mjs';
 
 // TODO: Undo $ matching once fixed
 const QUOTES = /`|"(?:[^\\"]+|\\.)*(?:"|$)|'(?:[^\\']+|\\.)*(?:'|$)/g;
@@ -21,6 +22,7 @@ export const mjs = Object.defineProperties(
     quotes,
     closures,
     spans,
+    segmenter,
     matcher: MJS,
     matchers: {quote: matchers.quote, closure: CLOSURE},
   }),
@@ -36,6 +38,7 @@ export const cjs = Object.defineProperties(
     quotes,
     closures,
     spans,
+    segmenter,
     matcher: CJS,
     matchers: {quote: matchers.quote, closure: CLOSURE},
   }),
@@ -51,6 +54,7 @@ export const esx = Object.defineProperties(
     quotes,
     closures,
     spans,
+    segmenter,
     matcher: ESX,
     matchers: {quote: matchers.quote, closure: ESX},
   }),

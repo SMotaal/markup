@@ -22,7 +22,7 @@ While Regular Expressions can be confusing to work with sometimes, they come wit
 > **Multi-Mode**
 >
 > ```js
-> import {Parser, extensions} from '@smotaal/tokenizer/extended.mjs';
+> import {Parser, extensions} from '@smotaal/tokenizer/extended.js';
 >
 > const parser = new Parser();
 > export const {modes, mappings} = parser;
@@ -34,8 +34,8 @@ While Regular Expressions can be confusing to work with sometimes, they come wit
 > **Single-Mode**
 >
 > ```js
-> import {Parser} from '@smotaal/tokenizer/index.mjs';
-> import {javascript} from '@smotaal/tokenizer/extensions/javascript/javascript-mode.mjs';
+> import {Parser} from '@smotaal/tokenizer/tokenizer.js';
+> import {javascript} from '@smotaal/tokenizer/modes/javascript.js';
 >
 > const parser = new Parser();
 > export const {modes, mappings} = parser;
@@ -52,7 +52,7 @@ At the moment, you can read the on going drafts for:
 
 **Demo**
 
-You can see a [live demo](https://smotaal.github.io/experimental/markup/packages/tokenizer/examples/browser/) or serve it locally from [examples/browser/index.html](examples/browser/index.html).
+You can see a [live demo](https://smotaal.github.io/experimental/markup/packages/@smotaal/tokenizer/examples/browser/) or serve it locally from [examples/browser/index.html](examples/browser/index.html).
 
 You can set different options in the following order:
 

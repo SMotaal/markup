@@ -1,4 +1,6 @@
 /// Helpers
+export const InspectSymbol = Symbol.for('nodejs.util.inspect.custom');
+
 export const Null = Object.freeze(Object.create(null));
 
 export const raw = String.raw;
@@ -44,10 +46,6 @@ export class Symbols extends Set {
     return new Species(symbols);
   }
 
-  get(symbol) {
-    if (this.has(symbol)) return symbol;
-  }
-
   static split(...sources) {
     const Species = this || Symbols;
     const symbols = [];
@@ -64,16 +62,44 @@ export class Symbols extends Set {
     return symbols;
   }
 
-  toString() {
-    debugger;
+  static inspect(symbol, depth, {stylize = String, compact = false} = {}) {
+    const type = typeof symbol;
+    return `${stylize(
+      type === 'symbol'
+        ? `Symbol(${symbol.description || ''})`
+        : type === 'string'
+        ? JSON.stringify(symbol).slice(1, -1)
+        : `${symbol}`,
+      type,
+    )}`;
+  }
+
+  get includes() {
+    Object.defineProperty(Symbols.prototype, 'includes', Object.getOwnPropertyDescriptor(Set.prototype, 'has'));
+    return this.has;
+  }
+  set includes(value) {
+    this.includes = (this.includes, value);
+  }
+
+  get(symbol) {
+    if (this.has(symbol)) return symbol;
+  }
+
+  [InspectSymbol](depth, {stylize = String, compact = false} = {}) {
+    try {
+      const depth = arguments[0] + 1;
+      const options = arguments[1];
+      let Species = (this && this.constructor) || Symbols;
+      const {inspect = (Species = Closures).inspect} = Species;
+      return `${(this && this.constructor && this.constructor.name) || 'Symbols'} ‹${Array.from(this.values())
+        .map(symbol => Species.inspect(symbol, depth, options))
+        .join('|')}›`;
+    } catch (exception) {
+      return super.toString(this);
+    }
   }
 }
-
-{
-  const {has} = Object.getOwnPropertyDescriptors(Set.prototype);
-  Object.defineProperties(Symbols.prototype, {includes: has});
-}
-
 /// Closures
 
 export class Closure extends String {
@@ -83,9 +109,23 @@ export class Closure extends String {
     this.opener = opener;
     this.closer = closer;
   }
+
+  [InspectSymbol](depth, {stylize = String, compact = false} = {}) {
+    try {
+      const depth = arguments[0] + 1;
+      const options = arguments[1];
+      return `${(this && this.constructor && this.constructor.name) || 'Closure'} ‹${Closures.inspect(this)}›`;
+    } catch (exception) {
+      return `${this}`;
+    }
+  }
 }
 
 export class Closures extends Map {
+  static get splitter() {
+    Object.defineProperty(Closures, 'splitter', {value: / *?([^ ]+…[^ ]+|[^ …]+) *?/});
+  }
+
   static from(...sources) {
     const Species = this || Closures;
     const closures = (sources.length && Species.split(...sources)) || [];
@@ -121,17 +161,41 @@ export class Closures extends Map {
     return closures;
   }
 
-  toString() {
-    debugger;
+  static inspect(closure, depth, {stylize = String, compact = false} = {}) {
+    let opener, openerType, closer, closerType;
+    return closure && 'opener' in closure && 'closer' in closure
+      ? `${stylize(
+          (openerType = typeof (opener = closure.opener)) === 'string' ? JSON.stringify(opener).slice(1, -1) : opener,
+          openerType,
+        )}\u{25CC}${stylize(
+          (closerType = typeof (closer = closure.closer)) === 'string' ? JSON.stringify(closer).slice(1, -1) : closer,
+          closerType,
+        )}`
+      : stylize(`${closure}`, typeof closure);
   }
-}
 
-{
-  const {has} = Object.getOwnPropertyDescriptors(Map.prototype);
-  Object.defineProperties(Closures.prototype, {includes: has});
-  Object.defineProperties(Closures, {
-    splitter: {value: / *?([^ ]+…[^ ]+|[^ …]+) *?/},
-  });
+  get includes() {
+    Object.defineProperty(Closures.prototype, 'includes', Object.getOwnPropertyDescriptor(Map.prototype, 'has'));
+    return this.has;
+  }
+
+  set includes(value) {
+    this.includes = (this.includes, value);
+  }
+
+  [InspectSymbol](depth, {stylize = String, compact = false} = {}) {
+    try {
+      const depth = arguments[0] + 1;
+      const options = arguments[1];
+      let Species = (this && this.constructor) || Closures;
+      const {inspect = (Species = Closures).inspect} = Species;
+      return `${(this && this.constructor && this.constructor.name) || 'Closures'} ‹${Array.from(this.values())
+        .map(closure => Species.inspect(closure, depth, options))
+        .join('|')}›`;
+    } catch (exception) {
+      return super.toString(this);
+    }
+  }
 }
 
 /// TRAVERSING
@@ -160,3 +224,18 @@ export const indenter = (indenting, tabs = 2) => {
   const [, lead, tail] = /^(\s*.*?)(\s*?)$/.exec(source);
   return new RegExp(`^${lead.replace(indent, space)}(?:${tail.replace(indent, `${space}?`)})?`, 'm');
 };
+
+////////////////////////////////////////////////////////////////////////////////
+// {
+//   const {has} = Object.getOwnPropertyDescriptors(Set.prototype);
+//   Object.defineProperties(Symbols.prototype, {includes: has});
+// }
+// {
+//   const {has} = Object.getOwnPropertyDescriptors(Map.prototype);
+//   Object.defineProperties(Closures.prototype, {includes: has});
+//   Object.defineProperties(Closures, {
+//     splitter: {value: / *?([^ ]+…[^ ]+|[^ …]+) *?/},
+//   });
+// }
+////////////////////////////////////////////////////////////////////////////////
+// export const Symbols = new Proxy(…, { apply: (target, thisArg, argumentsList) => Reflect.construct(target, argumentsList) });

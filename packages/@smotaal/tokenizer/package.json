@@ -1,0 +1,29 @@
+{
+  "private": true,
+  "name": "@smotaal/tokenizer",
+  "displayName": "SMotaal's Tokenizer",
+  "version": "0.0.1",
+  "description": "Nestable syntax tokenizer using Regular Expressions",
+  "license": "MIT",
+  "main": "index.mjs",
+  "publishConfig": {
+    "access": "public"
+  },
+  "exports": {
+    "./extended.js": "./extended.mjs",
+    "./lib/": "./lib/",
+    "./extensions/": "./extensions/",
+    "./modes/": "./modes/"
+  },
+  "dependencies": {
+    "pseudom": "*"
+  },
+  "bundledDependencies": [
+    "pseudom"
+  ],
+  "workspaces": {
+    "nohoist": [
+      "pseudom"
+    ]
+  }
+}
