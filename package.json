@@ -1,6 +1,10 @@
 {
-  "name": "markup",
   "private": "true",
-  "version": "0.0.0",
-  "main": "index"
+  "name": "@smotaal/markup",
+  "version": "0.0.0-alpha.1",
+  "main": "index",
+  "exports": {},
+  "devDependencies": {
+    "rollup": "*"
+  }
 }

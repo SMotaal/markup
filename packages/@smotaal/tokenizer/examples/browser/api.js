@@ -225,7 +225,7 @@ export default (markup, overrides) => {
   const mappings = {js: 'es', html: 'html', css: 'css', md: 'md', esm: 'esm', cjs: 'cjs'};
 
   const root =
-    location.href.replace(/^(?!.*\/markup\/packages\/tokenizer\/).*|\/markup\/.*/, '') ||
+    location.href.replace(/^(?!.*\/markup\/packages\/@smotaal\/tokenizer\/).*|\/markup\/.*/, '') ||
     'https://smotaal.github.com/experimental';
 
   const scopes = {
