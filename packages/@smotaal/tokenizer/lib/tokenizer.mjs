@@ -1,3 +1,5 @@
+import {Grouping} from './grouping.mjs';
+
 /** Tokenizer for a single mode (language) */
 export class Tokenizer {
   constructor(mode, defaults) {
@@ -23,13 +25,20 @@ export class Tokenizer {
 
     const grouping =
       state.grouping ||
-      (state.grouping = {
+      (state.grouping = new Grouping({
+        syntax: syntax || mode.syntax,
         groupers,
-        hints: new Set([syntax]),
-        goal: syntax,
-        groupings: [syntax],
-        context: syntax,
-      });
+        createGrouper,
+        contextualizer,
+      }));
+    // (state.grouping = {
+    //   groupers,
+    //   hints: new Set([syntax]),
+    //   goal: syntax,
+    //   hint: syntax,
+    //   groupings: [syntax],
+    //   context: syntax,
+    // });
 
     // Local matching
     let {match, index = 0} = state;
@@ -106,93 +115,18 @@ export class Tokenizer {
         let punctuator = next.punctuator;
 
         if (punctuator || closing) {
-          let hinter = punctuator ? `${syntax}-${punctuator}` : grouping.hint;
           let closed, opened, grouper;
 
           if (closing) {
-            closed = grouper = closing && grouping.groupings.pop();
-            next.closed = closed;
-            grouping.groupings.includes(grouper) || grouping.hints.delete(grouper.hinter);
-            (closed.punctuator === 'opener' && (next.punctuator = 'closer')) ||
-              (closed.punctuator && (next.punctuator = closed.punctuator));
-            after = grouper.close && grouper.close(next, state, context);
-
-            const previousGrouper = (grouper = grouping.groupings[grouping.groupings.length - 1]);
-            grouping.goal = (previousGrouper && previousGrouper.goal) || syntax;
-            parent = (parent && parent.parent) || top;
+            ({after, closed, parent = top, grouper} = grouping.close(next, state, context));
           } else if ($$punctuator !== 'comment') {
-            const group = `${hinter},${text}`;
-            grouper = grouping.groupers[group];
-
-            if ($$spans && punctuator === 'span') {
-              const span = $$spans.get(text);
-              next.punctuator = punctuator = 'span';
-              opened =
-                grouper ||
-                createGrouper({
-                  syntax,
-                  goal: syntax,
-                  span,
-                  matcher: span.matcher || (matchers && matchers.span) || undefined,
-                  spans: (spans && spans[text]) || undefined,
-                  hinter,
-                  punctuator,
-                });
-            } else if ($$punctuator !== 'quote') {
-              if (punctuator === 'quote') {
-                // const quote = quotes.get(text);
-                opened =
-                  grouper ||
-                  createGrouper({
-                    syntax,
-                    goal: punctuator,
-                    quote: text,
-                    matcher: (matchers && matchers.quote) || undefined,
-                    spans: (spans && spans[text]) || undefined,
-                    hinter,
-                    punctuator,
-                  });
-              } else if (punctuator === 'comment') {
-                const comment = comments.get(text);
-                opened =
-                  grouper ||
-                  createGrouper({
-                    syntax,
-                    goal: punctuator,
-                    comment,
-                    matcher: comment.matcher || (matchers && matchers.comment) || undefined,
-                    hinter,
-                    punctuator,
-                  });
-              } else if (punctuator === 'closure') {
-                const closure = (grouper && grouper.closure) || closures.get(text);
-                punctuator = next.punctuator = 'opener';
-                closure &&
-                  (opened =
-                    grouper ||
-                    createGrouper({
-                      syntax,
-                      goal: syntax,
-                      closure,
-                      matcher: closure.matcher || (matchers && matchers.closure) || undefined,
-                      hinter,
-                      punctuator,
-                    }));
-              }
-            }
-
-            if (opened) {
-              // after = opened.open && opened.open(next, state, opened);
-              grouping.groupers[group] || (grouping.groupers[group] = grouper = opened);
-              grouping.groupings.push(grouper), grouping.hints.add(hinter);
-              grouping.goal = (grouper && grouper.goal) || syntax;
-              parent = next;
-            }
+            ({grouper, opened, parent = top, punctuator} = grouping.open(next, context));
           }
 
           state.context = grouping.context = grouping.goal || syntax;
 
           if (opened || closed) {
+            next.type = 'punctuator';
             context = contextualizer.next((state.grouper = grouper || undefined)).value;
             grouping.hint = `${[...grouping.hints].join(' ')} ${grouping.context ? `in-${grouping.context}` : ''}`;
             opened && (after = opened.open && opened.open(next, state, context));
