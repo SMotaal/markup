@@ -157,7 +157,7 @@ export const markdown = Object.defineProperties(
               if (text) {
                 tokens.push({text, type: 'code', offset, parent}), (offset += text.length);
               }
-              console.log(line, indent, INDENT);
+              // console.log(line, indent, INDENT);
             }
           }
           // } else {

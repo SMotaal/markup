@@ -10,7 +10,8 @@ export const tokenize = (source, options = {}) => {
   try {
     return version.tokenize(source, {options});
   } finally {
-    !version || lastVersion === (lastVersion = version) || console.log({version});
+    !version || lastVersion === (lastVersion = version);
+    // || console.info('Markup Version %O', version);
   }
 };
 
