@@ -37,7 +37,7 @@ const SPANS = /(``?(?![`\n]))[^\n]*?[^\\`\n]\5/;
 const INDICIES = /\b(?:[\da-zA-Z]+\.)+[\da-zA-Z]+\.?/;
 const DECIMAL = /[+\-]?\d+(?:,\d{3})*(?:\.\d+)?|[+\-]?\d*\.\d+/;
 const EXPONENTIAL = /\d+[eE]\-?\d+|\d+\.\d+[eE]\-?\d+/;
-const FRAGMENTS = /\b[^\n\s\[\]\(\)\<\>&`]*[^\n\s\[\]\(\)\<\>&_`]\b|[^\n\s\[\]\(\)\<\>&`]+(?=__?\b)/;
+const FRAGMENTS = /\b[^\n\s\[\]\(\)\<\>&`"]*[^\n\s\[\]\(\)\<\>&_`"]\b|[^\n\s\[\]\(\)\<\>&`"]+(?=__?\b)/;
 
 export const markdown = Object.defineProperties(
   ({syntax} = defaults, {html}) => {
