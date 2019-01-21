@@ -40,6 +40,7 @@ export const javascript = Object.defineProperties(
         REGEXPS,
         raw`\/=`,
         COMMENTS,
+        raw`\/`,
         QUOTES,
         CLOSURES,
         /,|;|\.\.\.|\.|\:|\?|=>/,
