@@ -224,9 +224,10 @@ export default (markup, overrides) => {
 
   const mappings = {js: 'es', html: 'html', css: 'css', md: 'md', esm: 'esm', cjs: 'cjs'};
 
-  const root =
-    location.href.replace(/^(?!.*\/markup\/packages\/@smotaal\/tokenizer\/).*|\/markup\/.*/, '') ||
-    'https://smotaal.github.com/experimental';
+  const root = location.pathname.includes('/packages/@smotaal/tokenizer/')
+    ? location.href.slice(0, location.href.indexOf('/packages/@smotaal/tokenizer/'))
+    : location.href.replace(/^(?!.*\/markup\/packages\/@smotaal\/tokenizer\/).*|\/markup\/.*/, '/markup/') ||
+      'https://smotaal.github.com/experimental';
 
   const scopes = {
     ':': `${root}/markup/benchmarks/assets`,
@@ -252,7 +253,7 @@ export default (markup, overrides) => {
     [esm]: {url: entrypoints.js, type: esm},
     [cjs]: {url: entrypoints.js, type: cjs},
     [md]: {url: entrypoints.md, type: md},
-    gfm: `${root}/markup/benchmarks/assets/gfm.md`,
+    gfm: `${root}/benchmarks/assets/gfm.md`,
     'acorn-esm': {url: `${unpkg}/acorn?module`, type: esm},
     'acorn-cjs': {url: `${unpkg}/acorn`, type: cjs},
     'acorn-loose': `${cdnjs}/acorn/5.7.3/acorn_loose.es.js`,
