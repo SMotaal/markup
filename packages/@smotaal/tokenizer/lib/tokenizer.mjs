@@ -76,7 +76,8 @@ export class Tokenizer {
 
         const lastIndex = state.index || 0;
 
-        $$matcher.lastIndex === lastIndex || ($$matcher.lastIndex = lastIndex);
+        // $$matcher.lastIndex === lastIndex || ($$matcher.lastIndex = lastIndex);
+        $$matcher.lastIndex = lastIndex;
         match = state.match = $$matcher.exec(source);
         done = index === (index = state.index = $$matcher.lastIndex) || !match;
 
@@ -87,6 +88,10 @@ export class Tokenizer {
 
         // Current contextual match
         const {0: text, 1: whitespace, 2: sequence, index: offset} = match;
+
+        // if (match.length > 3 && match.slice(4).find(v => v)) {
+        //   console.log(match);
+        // }
 
         // Current quasi-contextual fragment
         const pre = source.slice(lastIndex, offset);
@@ -99,12 +104,13 @@ export class Tokenizer {
             parent,
             hint,
             last,
+            source,
           })),
           yield (previous = next));
 
         // Current contextual fragment
         const type = (whitespace && 'whitespace') || (sequence && 'sequence') || 'text';
-        next = token({type, text, offset, previous, parent, hint, last});
+        next = token({type, text, offset, previous, parent, hint, last, source});
 
         // Current contextual punctuator (from sequence)
         const closing =
@@ -215,7 +221,7 @@ export class Tokenizer {
           maybeKeyword = (mode.patterns.maybeKeyword =
             (defaults && defaults.patterns && defaults.patterns.maybeKeyword) || undefined),
         } = (mode.patterns = {maybeKeyword: null}),
-        spans: {[syntax]: spans} = (mode.spans = {}),
+        spans: {['(spans)']: spans} = (mode.spans = {}),
       } = mode;
 
       initialize(
@@ -281,7 +287,9 @@ export class Tokenizer {
       forming = true,
     } = context;
 
-    const {maybeIdentifier, maybeKeyword} = patterns || context;
+    // const {segments} = patterns || false;
+
+    const {maybeIdentifier, maybeKeyword, segments} = patterns || false;
     const wording = keywords || maybeIdentifier ? true : false;
 
     const LineEndings = /$/gm;
@@ -305,12 +313,13 @@ export class Tokenizer {
         const {
           text, // Text for next production
           type, // Type of next production
-          // offset, // Index of next production
+          offset, // Index of next production
           // breaks, // Linebreaks in next production
           hint, // Hint of next production
           previous, // Previous production
           parent = (next.parent = (previous && previous.parent) || undefined), // Parent of next production
           last, // Last significant production
+          source,
         } = next;
 
         if (type === 'sequence') {
@@ -318,6 +327,26 @@ export class Tokenizer {
             (previous && (aggregators[text] || (!(text in aggregators) && (aggregators[text] = aggregate(text))))) ||
             (punctuators[text] || (!(text in punctuators) && (punctuators[text] = punctuate(text)))) ||
             undefined) && (next.type = 'punctuator');
+
+          if (!next.punctuator) {
+            for (const segment in segments) {
+              if (segments[segment].test(next.text)) {
+                next.hint += ` ${segment}`;
+                next.type = segment;
+                break;
+              }
+            }
+            // console.log(next);
+          }
+
+          // if (text.startsWith('/') && next.punctuator !== 'comment' && source) {
+          //   const br1 = offset - 40; // source.lastIndexOf('\n', offset - 50);
+          //   const br2 = source.indexOf('\n', offset);
+          //   const line = source.slice(br1, br2);
+          //   const pre = line.slice(0, offset - br1).trimStart();
+          //   const post = line.slice(offset - br1 + text.length).trimEnd();
+          //   console.log('\n%c%s%c%s%c%s\n\n%o', 'color:gray', pre, 'color:blue', text, 'color:gray', post, {text, type: next.type});
+          // }
         } else if (type === 'whitespace') {
           next.breaks = text.match(LineEndings).length - 1;
         } else if (forming && wording) {
