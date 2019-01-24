@@ -85,6 +85,7 @@ export const markdown = Object.defineProperties(
       comments: Closures.from('<!--…-->'),
       quotes: [],
       closures: Closures.from(html.closures, CLOSURES),
+      operators: html.operators,
       // patterns: {...html.patterns},
       matcher: matcher,
       spans: Closures.from('``…`` `…`'),
@@ -133,6 +134,7 @@ export const markdown = Object.defineProperties(
           offset += body.length;
         } else {
           [head, ...lines] = body.split(/\r?(\n)\r?/g);
+          // [head, ...lines] = body.split('\n');
           if (head) {
             tokens.push({text: head, type: 'comment', offset, parent}), (offset += head.length);
           }

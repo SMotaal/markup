@@ -122,6 +122,7 @@ export class Grouping {
               goal: syntax,
               closure,
               matcher: closure.matcher || (matchers && matchers.closure) || undefined,
+              // operators: closure.operators || operators,
               hinter,
               punctuator,
             }));

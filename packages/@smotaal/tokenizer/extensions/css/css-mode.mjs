@@ -21,8 +21,3 @@ export const css = Object.defineProperties(
     defaults: {value: {syntax: 'css'}},
   },
 );
-
-
-// const keywords = Symbols.from(
-//   'active after any any-link backdrop before checked default defined dir disabled empty enabled first first-child first-letter first-line first-of-type focus focus-visible focus-within fullscreen host hover in-range indeterminate invalid lang last-child last-of-type left link matches not nth-child nth-last-child nth-last-of-type nth-of-type only-child only-of-type optional out-of-range read-only required right root scope target valid visited',
-// );

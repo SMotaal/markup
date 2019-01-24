@@ -224,18 +224,3 @@ export const indenter = (indenting, tabs = 2) => {
   const [, lead, tail] = /^(\s*.*?)(\s*?)$/.exec(source);
   return new RegExp(`^${lead.replace(indent, space)}(?:${tail.replace(indent, `${space}?`)})?`, 'm');
 };
-
-////////////////////////////////////////////////////////////////////////////////
-// {
-//   const {has} = Object.getOwnPropertyDescriptors(Set.prototype);
-//   Object.defineProperties(Symbols.prototype, {includes: has});
-// }
-// {
-//   const {has} = Object.getOwnPropertyDescriptors(Map.prototype);
-//   Object.defineProperties(Closures.prototype, {includes: has});
-//   Object.defineProperties(Closures, {
-//     splitter: {value: / *?([^ ]+…[^ ]+|[^ …]+) *?/},
-//   });
-// }
-////////////////////////////////////////////////////////////////////////////////
-// export const Symbols = new Proxy(…, { apply: (target, thisArg, argumentsList) => Reflect.construct(target, argumentsList) });

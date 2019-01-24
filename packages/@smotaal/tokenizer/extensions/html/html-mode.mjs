@@ -7,6 +7,7 @@ export const html = Object.defineProperties(
       syntax,
       keywords: Symbols.from('DOCTYPE doctype'),
       comments: Closures.from('<!--…-->'),
+      // operators: Symbols.from('='),
       closures: Closures.from('<%…%> <!…> <…/> </…> <…>'),
       quotes: [],
       patterns: {
@@ -71,6 +72,7 @@ export const html = Object.defineProperties(
         }
       }
     };
+    // HTMLTagClosure.operators = Symbols.from('=');
     HTMLTagClosure.quotes = Symbols.from(`' "`);
     HTMLTagClosure.closer = /\/?>/;
 
