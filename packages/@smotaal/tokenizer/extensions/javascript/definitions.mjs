@@ -1,6 +1,11 @@
 import {sequence, all} from '../helpers.mjs';
 
-export const REGEXPS = /\/(?=[^\*\/\n][^\n]*\/)(?:[^\\\/\n\t\[]+|\\\S|\[(?:\\\S|[^\\\n\t\]]+)+?\])+?\/[a-z]*/g;
+// export const REGEXPS = /\/(?=[^\*\/\n][^\n]*\/)(?:[^\\\/\n\t\[]+|\\\S|\[(?:\\\S|[^\\\n\t\]]+)+?\])+?\/[a-z]*?/g;
+// export const REGEXPS = /(?<![\w\)\]\}][ \t]*)\/(?=[^\*\/\n][^\n]*\/)(?:[^\\\/\n\t\[]+|\\\S|\[(?:\\\S|[^\\\n\t\]]+)+?\])+?\/[a-z]*?/g;
+// export const REGEXPS = /\/(?=[^\?\+\*\/\n][^\n]*\/(?:[a-z]*[ \t]+[^\n\s\(\[\{\w]|[a-z]*[\.\[;,]|[a-z]*[ \t]*[\)\]\}\;\,]))(?:[^\\\/\n\t\[]+|\\\S|\[(?:\\\S|[^\\\n\t\]]+)+?\])+?\/[a-z]*/g;
+// export const REGEXPS = /\/(?=[^\*\/\n][^\n]*\/(?:[a-z]*[ \t]+[^\n\s\(\[\{\w]|[a-z]*[\.\[;,]|[a-z]*[ \t]*[\)\]\}\;\,]))(?:[^\\\/\n\t\[]+|\\\S|\[(?:\\\S|[^\\\n\t\]]+)+?\])+?\/[a-z]*/g;
+export const REGEXPS = /\/(?=[^\*\/\n][^\n]*\/(?:[a-z]+\b)?(?:[ \t]+[^\n\s\(\[\{\w]|[\.\[;,]|[ \t]*[\)\]\}\;\,\n]|\n|$))(?:[^\\\/\n\t\[]+|\\\S|\[(?:\\\S|[^\\\n\t\]]+)+?\])+?\/[a-z]*/g;
+
 
 export const COMMENTS = /\/\/|\/\*|\*\/|\/|^\#\!.*\n/g;
 COMMENTS['(closures)'] = '//…\n /*…*/';
@@ -11,7 +16,10 @@ QUOTES['(symbols)'] = `' " \``;
 export const CLOSURES = /\{|\}|\(|\)|\[|\]/g;
 CLOSURES['(closures)'] = '{…} (…) […]';
 
+// export const SPANS = {'`': {['(closures)']: '${…}'}};
 export const SPANS = {'`': {['(closures)']: '${…}'}};
+
+// '(spans)': {['(closures)']: '?…:'},
 
 export const KEYWORDS = {
   ['(symbols)']:
