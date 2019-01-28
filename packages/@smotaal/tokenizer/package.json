@@ -2,7 +2,7 @@
   "private": true,
   "name": "@smotaal/tokenizer",
   "displayName": "SMotaal's Tokenizer",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Nestable syntax tokenizer using Regular Expressions",
   "license": "MIT",
   "main": "index.mjs",

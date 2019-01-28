@@ -1,9 +1,7 @@
-import {previousTextFrom, indenter, Closures, sequence, all, raw} from '../helpers.mjs';
+import { sequence, all, Closures, raw, previousTextFrom, indenter } from './helpers.mjs';
 
-export const markdown = Object.defineProperties(
+const markdown = Object.defineProperties(
   ({syntax} = defaults, {html}) => {
-    // const {CLOSURES, WHITESPACE, ESCAPES, ENTITIES, FENCES, RULES, BLOCKS, TYPOGRAPHS, TAGS, BRACKETS, INLINES, SPANS, INDICIES, DECIMAL, EXPONENTIAL, FRAGMENTS } = markdown;
-    const EMBEDDED = true;
     const matcher = ((...matchers) => {
       let matcher = matchers[matchers.length - 1];
       try {
@@ -95,11 +93,7 @@ export const markdown = Object.defineProperties(
         const body = source.slice(start, end) || '';
         const tokens = [];
         tokens.end = end;
-        if (!EMBEDDED) {
-          text = body;
-          tokens.push({text, type: 'code', offset, parent});
-          offset += body.length;
-        } else {
+        {
           [head, ...lines] = body.split(/\r?(\n)\r?/g);
           // [head, ...lines] = body.split('\n');
           if (head) {
@@ -197,3 +191,6 @@ Definitions: {
   markdown.EXPONENTIAL = /\d+[eE]\-?\d+|\d+\.\d+[eE]\-?\d+/;
   markdown.FRAGMENTS = /\b[^\n\s\[\]\(\)\<\>&`"]*[^\n\s\[\]\(\)\<\>&_`"]\b|[^\n\s\[\]\(\)\<\>&`"]+(?=__?\b)/;
 }
+
+export { markdown };
+//# sourceMappingURL=markdown-mode.mjs.map

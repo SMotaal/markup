@@ -1,6 +1,6 @@
-import {Closures, Symbols, identifier, sequence, all, raw, patterns, entities} from '../helpers.mjs';
+import { Closures, Symbols, patterns, identifier, entities, sequence, all, raw } from './helpers.mjs';
 
-export const javascript = Object.defineProperties(
+const javascript = Object.defineProperties(
   ({syntax} = defaults) => ({
     syntax,
     comments: Closures.from(javascript.COMMENTS),
@@ -73,3 +73,6 @@ Definitions: {
   javascript.OPERATORS = {['(symbols)']: '++ -- !! ^ ~ ! ...'};
   javascript.BREAKERS = {['(symbols)']: ', ;'};
 }
+
+export { javascript };
+//# sourceMappingURL=javascript-mode.mjs.map
