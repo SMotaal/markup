@@ -1,6 +1,6 @@
-import {Closures, Symbols, raw, matchers} from '../helpers.mjs';
+import { Symbols, Closures, matchers, raw } from './helpers.mjs';
 
-export const html = Object.defineProperties(
+const html = Object.defineProperties(
   ({syntax} = html.defaults) => {
     const html = {
       syntax,
@@ -81,3 +81,6 @@ export const html = Object.defineProperties(
     defaults: {value: {syntax: 'html', aliases: ['htm']}},
   },
 );
+
+export { html };
+//# sourceMappingURL=html-mode.mjs.map

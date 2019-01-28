@@ -3,7 +3,7 @@ export default (markup, overrides) => {
     version: 1,
     repeats: 1,
     iterations: 1,
-    sourceURL: 'index.html',
+    sourceURL: 'sample.html',
     sourceType: undefined,
     element: 'pre#source-code',
     headerTemplate: 'template#source-header',
@@ -19,7 +19,7 @@ export default (markup, overrides) => {
     const url = `${new URL(specifier, location)}`;
     const source = {specifier, url};
     try {
-      source.response = await fetch(url, {referrerPolicy: 'no-referrer'});
+      source.response = await fetch(url, {referrerPolicy: 'no-referrer-when-downgrade'});
       source.sourceText = await source.response.text();
       return (result = source);
     } finally {
@@ -222,47 +222,46 @@ export default (markup, overrides) => {
 
   requestAnimationFrame(() => renderFromHash((location.hash !== '#' && location.hash) || `#${defaults.sourceURL}`));
 
-  const mappings = {js: 'es', html: 'html', css: 'css', md: 'md', esm: 'esm', cjs: 'cjs'};
-
   const root = location.pathname.includes('/packages/@smotaal/tokenizer/')
     ? location.href.slice(0, location.href.indexOf('/packages/@smotaal/tokenizer/'))
     : location.href.replace(/^(?!.*\/markup\/packages\/@smotaal\/tokenizer\/).*|\/markup\/.*/, '/markup/') ||
       'https://smotaal.github.com/experimental';
 
   const scopes = {
-    ':': `${root}/markup/benchmarks/assets`,
-    '~': '../../',
-    lib: '../../lib',
-    markup: `${root}/markup`,
-    modules: `${root}/modules`,
-    unpkg: 'https://unpkg.com',
-    cdnjs: 'https://cdnjs.cloudflare.com/ajax/libs',
+    [':']: `${root}/markup/benchmarks/assets`,
+    ['~']: '../../',
+    ['lib']: '../../lib',
+    ['markup']: `${root}/markup`,
+    ['modules']: `${root}/modules`,
+    ['unpkg']: 'https://unpkg.com',
+    ['cdnjs']: 'https://cdnjs.cloudflare.com/ajax/libs',
   };
 
   const entrypoints = {
-    js: '../../lib/tokenizer.mjs',
-    css: './markup.css',
-    html: './index.html',
-    md: '../../README.md',
+    ['js']: '../../lib/tokenizer.mjs',
+    ['css']: './markup.css',
+    ['html']: './index.html',
+    ['md']: '../../README.md',
   };
+  const mappings = {js: 'es', html: 'html', css: 'css', md: 'md', esm: 'esm', cjs: 'cjs'};
 
   const examples = (({js, html, css, md, esm, cjs}, {unpkg, cdnjs}) => ({
-    [html]: {url: entrypoints.html, type: html},
-    [css]: {url: entrypoints.css, type: css},
-    [js]: {url: entrypoints.js, type: js},
-    [esm]: {url: entrypoints.js, type: esm},
-    [cjs]: {url: entrypoints.js, type: cjs},
-    [md]: {url: entrypoints.md, type: md},
-    gfm: `${root}/benchmarks/assets/gfm.md`,
-    'acorn-esm': {url: `${unpkg}/acorn?module`, type: esm},
-    'acorn-cjs': {url: `${unpkg}/acorn`, type: cjs},
-    'acorn-loose': `${cdnjs}/acorn/5.7.3/acorn_loose.es.js`,
-    esprima: `${cdnjs}/esprima/2.7.3/esprima.js`,
-    'babel-core': `${cdnjs}/babel-core/6.1.19/browser.js`,
-    'babel-core-min': `${cdnjs}/babel-core/6.1.19/browser.min.js`,
-    popper: `${cdnjs}/popper.js/1.14.4/esm/popper.js`,
-    xregexp: `${cdnjs}/xregexp/3.2.0/xregexp-all.js`,
-    'xregexp-min': `${cdnjs}/xregexp/3.2.0/xregexp-all.min.js`,
+    [html]: {url: entrypoints['html'], type: html},
+    [css]: {url: entrypoints['css'], type: css},
+    [js]: {url: entrypoints['js'], type: js},
+    [esm]: {url: entrypoints['js'], type: esm},
+    [cjs]: {url: entrypoints['js'], type: cjs},
+    [md]: {url: entrypoints['md'], type: md},
+    ['gfm']: `${root}/benchmarks/assets/gfm.md`,
+    ['acorn-esm']: {url: `${unpkg}/acorn?module`, type: esm},
+    ['acorn-cjs']: {url: `${unpkg}/acorn`, type: cjs},
+    ['acorn-loose']: `${cdnjs}/acorn/5.7.3/acorn_loose.es.js`,
+    ['esprima']: `${cdnjs}/esprima/2.7.3/esprima.js`,
+    ['babel-core']: `${cdnjs}/babel-core/6.1.19/browser.js`,
+    ['babel-core-min']: `${cdnjs}/babel-core/6.1.19/browser.min.js`,
+    ['popper']: `${cdnjs}/popper.js/1.14.4/esm/popper.js`,
+    ['xregexp']: `${cdnjs}/xregexp/3.2.0/xregexp-all.js`,
+    ['xregexp-min']: `${cdnjs}/xregexp/3.2.0/xregexp-all.min.js`,
   }))(mappings, scopes);
 
   const Specifier = RegExp(
@@ -273,14 +272,14 @@ export default (markup, overrides) => {
 
   sourceHeaderTemplate &&
     (sourceHeaderTemplate.selectors = {
-      'source-span': '#source',
-      'source-time': '#source + time',
-      'source-type-span': '#source-type',
-      'repeats-span': '#repeats',
-      'repeats-time': '#repeats + time',
-      'iterations-span': '#iterations',
-      'iterations-time': '#iterations + time',
-      'rerender-button': '#rerender[onclick]',
-      'contrast-button': '#contrast[onclick]',
+      ['source-span']: '#source',
+      ['source-time']: '#source + time',
+      ['source-type-span']: '#source-type',
+      ['repeats-span']: '#repeats',
+      ['repeats-time']: '#repeats + time',
+      ['iterations-span']: '#iterations',
+      ['iterations-time']: '#iterations + time',
+      ['rerender-button']: '#rerender[onclick]',
+      ['contrast-button']: '#contrast[onclick]',
     });
 };

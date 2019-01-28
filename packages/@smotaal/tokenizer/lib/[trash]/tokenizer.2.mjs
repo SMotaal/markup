@@ -31,6 +31,14 @@ export class Tokenizer {
         createGrouper,
         contextualizer,
       }));
+    // (state.grouping = {
+    //   groupers,
+    //   hints: new Set([syntax]),
+    //   goal: syntax,
+    //   hint: syntax,
+    //   groupings: [syntax],
+    //   context: syntax,
+    // });
 
     // Local matching
     let {match, index = 0} = state;
@@ -59,6 +67,8 @@ export class Tokenizer {
       // Current contextual hint (syntax or hint)
       const hint = grouping.hint;
 
+      // console.log({context, grouping, tokenizer: this});
+
       while (lastContext === (lastContext = context)) {
         let next;
 
@@ -66,14 +76,22 @@ export class Tokenizer {
 
         const lastIndex = state.index || 0;
 
+        // $$matcher.lastIndex === lastIndex || ($$matcher.lastIndex = lastIndex);
         $$matcher.lastIndex = lastIndex;
         match = state.match = $$matcher.exec(source);
         done = index === (index = state.index = $$matcher.lastIndex) || !match;
 
         if (done) return;
 
+        // if (!match[0] && (index = state.index--)) continue; //  && (index = state.index++)
+        // if (!match[0] && (state.index++)) continue; //  && (index = state.index++)
+
         // Current contextual match
         const {0: text, 1: whitespace, 2: sequence, index: offset} = match;
+
+        // if (match.length > 3 && match.slice(4).find(v => v)) {
+        //   console.log(match);
+        // }
 
         // Current quasi-contextual fragment
         const pre = source.slice(lastIndex, offset);
@@ -128,7 +146,7 @@ export class Tokenizer {
         next && !whitespace && forming && (last = next);
 
         if (after) {
-          let tokens, token, nextIndex;
+          let tokens, token, nextIndex; //  = after.end || after.index
 
           if (after.syntax) {
             const {syntax, offset, index} = after;
@@ -146,6 +164,8 @@ export class Tokenizer {
           }
 
           if (tokens) {
+            // console.log({token, tokens, nextIndex});
+            // console.log({index, nextIndex, 'state.index': state.index});
             for (const next of tokens) {
               previous && ((next.previous = previous).next = next);
               token && token(next);
@@ -178,6 +198,7 @@ export class Tokenizer {
     const mode = tokenizer.mode;
     const defaults = tokenizer.defaults;
     mode !== undefined || (mode = (defaults && defaults.mode) || undefined);
+    // (mode = (defaults && defaults.syntaxes && defaults.syntaxes.default) || syntaxes.default);
     if (!mode) throw ReferenceError(`Tokenizer.contextualizer invoked without a mode`);
 
     // TODO: Refactoring
@@ -266,32 +287,10 @@ export class Tokenizer {
       forming = true,
     } = context;
 
+    // const {segments} = patterns || false;
+
     const {maybeIdentifier, maybeKeyword, segments} = patterns || false;
     const wording = keywords || maybeIdentifier ? true : false;
-
-    const matchSegment =
-      segments &&
-      (segments[Symbol.match] ||
-        (!(Symbol.match in segments) &&
-          (segments[Symbol.match] = (segments => {
-            const sources = [];
-            const names = [];
-            for (const name of Object.getOwnPropertyNames(segments)) {
-              const segment = segments[name];
-              if (segment && segment.source && !/\\\d/.test(segment.source)) {
-                names.push(name);
-                sources.push(segment.source.replace(/\\?\((.)/g, (m, a) => (m[0] !== '\\' && a !== '?' && '(?:') || m));
-              }
-            }
-            const {length} = names;
-            if (!length) return false;
-            const matcher = new RegExp(`(${sources.join('|)|(')}|)`, 'u');
-            return text => {
-              // OR: for (const segment of names) if (segments[segment].test(text)) return segment;
-              const match = matcher.exec(text);
-              if (match[0]) for (let i = 1, n = length; n--; i++) if (match[i]) return names[i - 1];
-            };
-          })(segments))));
 
     const LineEndings = /$/gm;
     const punctuate = text =>
@@ -309,24 +308,49 @@ export class Tokenizer {
       false;
 
     while (!done) {
-      let token;
-
+      let token, punctuator;
       if (next && next.text) {
-        const {text, type, hint, previous, parent, last} = next;
+        const {
+          text, // Text for next production
+          type, // Type of next production
+          offset, // Index of next production
+          // breaks, // Linebreaks in next production
+          hint, // Hint of next production
+          previous, // Previous production
+          parent = (next.parent = (previous && previous.parent) || undefined), // Parent of next production
+          last, // Last significant production
+          source,
+        } = next;
 
         if (type === 'sequence') {
-          ((next.punctuator =
+          (next.punctuator =
             (previous && (aggregators[text] || (!(text in aggregators) && (aggregators[text] = aggregate(text))))) ||
             (punctuators[text] || (!(text in punctuators) && (punctuators[text] = punctuate(text)))) ||
-            undefined) &&
-            (next.type = 'punctuator')) ||
-            (matchSegment &&
-              (next.type = matchSegment(text)) &&
-              (next.hint = `${(hint && `${hint} `) || ''}${next.type}`)) ||
-            (next.type = 'sequence');
+            undefined) && (next.type = 'punctuator');
+
+          if (!next.punctuator) {
+            for (const segment in segments) {
+              if (segments[segment].test(next.text)) {
+                next.hint += ` ${segment}`;
+                next.type = segment;
+                break;
+              }
+            }
+            // console.log(next);
+          }
+
+          // if (text.startsWith('/') && next.punctuator !== 'comment' && source) {
+          //   const br1 = offset - 40; // source.lastIndexOf('\n', offset - 50);
+          //   const br2 = source.indexOf('\n', offset);
+          //   const line = source.slice(br1, br2);
+          //   const pre = line.slice(0, offset - br1).trimStart();
+          //   const post = line.slice(offset - br1 + text.length).trimEnd();
+          //   console.log('\n%c%s%c%s%c%s\n\n%o', 'color:gray', pre, 'color:blue', text, 'color:gray', post, {text, type: next.type});
+          // }
         } else if (type === 'whitespace') {
           next.breaks = text.match(LineEndings).length - 1;
         } else if (forming && wording) {
+          // type !== 'indent' &&
           const word = text.trim();
           word &&
             ((keywords &&
@@ -338,7 +362,7 @@ export class Tokenizer {
           next.type = 'text';
         }
 
-        previous && (previous.next = next) && (parent || (next.parent = previous.parent));
+        previous && (previous.next = next);
 
         token = next;
       }
@@ -348,6 +372,7 @@ export class Tokenizer {
   }
 
   static createGrouper({
+    /* grouper context */
     syntax,
     goal = syntax,
     quote,
@@ -355,6 +380,7 @@ export class Tokenizer {
     closure,
     span,
     grouping = comment || closure || span || undefined,
+
     punctuator,
     spans = (grouping && grouping.spans) || undefined,
     matcher = (grouping && grouping.matcher) || undefined,
@@ -366,6 +392,19 @@ export class Tokenizer {
     open = (grouping && grouping.open) || undefined,
     close = (grouping && grouping.close) || undefined,
   }) {
-    return {syntax, goal, punctuator, spans, matcher, quotes, punctuators, opener, closer, hinter, open, close};
+    return {
+      syntax,
+      goal,
+      punctuator,
+      spans,
+      matcher,
+      quotes,
+      punctuators,
+      opener,
+      closer,
+      hinter,
+      open,
+      close,
+    };
   }
 }

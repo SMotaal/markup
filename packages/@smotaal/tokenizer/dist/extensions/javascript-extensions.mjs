@@ -1,7 +1,7 @@
-import {javascript} from './javascript-mode.mjs';
-import {Symbols, sequence, raw, all} from '../helpers.mjs';
+import { Symbols, all, sequence } from './helpers.mjs';
+import { javascript } from './javascript-mode.mjs';
 
-export const mjs = Object.defineProperties(
+const mjs = Object.defineProperties(
   ({syntax} = mjs.defaults, {javascript: {quotes, closures, spans, matchers}}) => ({
     syntax,
     keywords: Symbols.from('import export default'),
@@ -16,7 +16,7 @@ export const mjs = Object.defineProperties(
   },
 );
 
-export const cjs = Object.defineProperties(
+const cjs = Object.defineProperties(
   ({syntax} = cjs.defaults, {javascript: {quotes, closures, spans, matchers}}) => ({
     syntax,
     keywords: Symbols.from('import module exports require'),
@@ -31,7 +31,7 @@ export const cjs = Object.defineProperties(
   },
 );
 
-export const esx = Object.defineProperties(
+const esx = Object.defineProperties(
   ({syntax} = esx.defaults, {javascript: {quotes, closures, spans, matchers}, mjs, cjs}) => ({
     syntax,
     keywords: Symbols.from(mjs.keywords, cjs.keywords),
@@ -68,3 +68,6 @@ Definitions: {
   javascript.CJS = sequence`${BLOCKLEVEL}|\bexports\b|\bmodule.exports\b|\brequire\b|\bimport(?=\(|\.)`;
   javascript.ESX = sequence`${BLOCKLEVEL}|\bexports\b|\bimport\b|\bmodule.exports\b|\brequire\b`;
 }
+
+export { mjs, cjs, esx };
+//# sourceMappingURL=javascript-extensions.mjs.map
