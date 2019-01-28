@@ -5,11 +5,12 @@
   "main": "index",
   "exports": {},
   "scripts": {
-    "serve": "http-server --cors"
+    "serve": "http-server --cors",
+    "bundle": "rollup -c rollup.config.js"
   },
   "devDependencies": {
-    "rollup": "*",
-    "http-server": "latest"
+    "http-server": "latest",
+    "rollup": "*"
   },
   "workspaces": {
     "packages": [
