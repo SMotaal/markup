@@ -1,4 +1,4 @@
-import parser from './extended.js';
+import parser from '../extended.js';
 import * as dom from '../extensions/dom.mjs';
 
 const versions = [parser];

@@ -1,3 +1,11 @@
 export * from './tokenizer.mjs';
-import * as extensions from './extensions/extensions.mjs';
-export {extensions};
+
+import {Parser} from './tokenizer.mjs';
+import {modes} from './extensions/extensions.mjs';
+
+const parser = new Parser();
+for (const id in modes) parser.register(modes[id]);
+
+export {modes};
+
+export default parser;

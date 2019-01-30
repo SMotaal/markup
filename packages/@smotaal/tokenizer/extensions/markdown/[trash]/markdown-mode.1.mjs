@@ -2,6 +2,7 @@ import {previousTextFrom, indenter, Closures, sequence, all, raw} from '../helpe
 
 export const markdown = Object.defineProperties(
   ({syntax} = defaults, {html}) => {
+    // const {CLOSURES, WHITESPACE, ESCAPES, ENTITIES, FENCES, RULES, BLOCKS, TYPOGRAPHS, TAGS, BRACKETS, INLINES, SPANS, INDICIES, DECIMAL, EXPONENTIAL, FRAGMENTS } = markdown;
     const EMBEDDED = true;
     const matcher = ((...matchers) => {
       let matcher = matchers[matchers.length - 1];
@@ -20,6 +21,7 @@ export const markdown = Object.defineProperties(
               markdown.BRACKETS,
               markdown.FENCES,
               markdown.SPANS,
+              // sequence`(?:${FENCES}|(?:${RULES})(?=\s*$)|(?:${BLOCKS})(?=\s+\S*))`
             )})`,
             markdown.INDICIES,
             markdown.DECIMAL,
@@ -43,12 +45,15 @@ export const markdown = Object.defineProperties(
       }|${markdown.ESCAPES}${'/gim'}`,
     );
 
+    // matcher.matchers && console.log('\n\n%s'.repeat(matcher.matchers.length), ...matcher.matchers);
+
     const mode = {
       syntax,
       comments: Closures.from('<!--…-->'),
       quotes: [],
       closures: Closures.from(html.closures, markdown.CLOSURES),
       operators: html.operators,
+      // patterns: {...html.patterns},
       matcher: matcher,
       spans: Closures.from('``…`` `…`'),
       matchers: {comment: /(\n)|(-->)/g},
@@ -59,15 +64,22 @@ export const markdown = Object.defineProperties(
       const fence = parent.text;
       const fencing = previousTextFrom(parent, '\n');
       const indenting = fencing.slice(fencing.indexOf('\n') + 1, -fence.length) || '';
+      // let end = source.indexOf(`\n${fencing}`, start);
       let end = source.indexOf(`\n${fencing}`, start);
       const INDENT = (indenting && indenter(indenting)) || /^/m;
+      // const CLOSER = new RegExp(raw`\n${INDENT.source.slice(1)}${fence}`, 'g');
+      // const CLOSER = new RegExp(raw`\n${indenting ? INDENT.source.slice(1) : ''}${fence}`, 'g');
       const CLOSER = new RegExp(raw`^${INDENT.source.slice(1) || ''}${fence}`, 'mg');
 
       CLOSER.lastIndex = start;
       let closerMatch = CLOSER.exec(source);
+      // console.log({INDENT, indenting, fence, start, closerMatch});
       if (closerMatch && closerMatch.index >= start) {
+        // end = closerMatch.index + (indenting ? 1 : 0);
         end = closerMatch.index;
       } else {
+        // const FENCE = new RegExp(raw`\n?[\>\|\s]*${fence}`, 'g');
+        // const FENCE = new RegExp(raw`\n[\>\|\s]*${fence}`, 'g');
         const FENCE = new RegExp(raw`^[\>\|\s]*${fence}`, 'mg');
         FENCE.lastIndex = start;
         const fenceMatch = FENCE.exec(source);
@@ -89,6 +101,7 @@ export const markdown = Object.defineProperties(
           offset += body.length;
         } else {
           [head, ...lines] = body.split(/\r?(\n)\r?/g);
+          // [head, ...lines] = body.split('\n');
           if (head) {
             tokens.push({text: head, type: 'comment', offset, parent}), (offset += head.length);
           }
@@ -113,16 +126,28 @@ export const markdown = Object.defineProperties(
               if (text) {
                 tokens.push({text, type: 'code', offset, parent}), (offset += text.length);
               }
+              // console.log(line, indent, INDENT);
             }
           }
+          // } else {
+          //   for (const line of lines) {
+
+          //   }
+          //   text = lines.join('');
+          //   tokens.push({text, type: 'code', offset, parent})
+          //   offset += text.length;
+          // }
         }
 
+        // console.log({fencing, body, start, end, offset, head, lines, tokens});
         if (tokens.length) {
           const last = tokens[tokens.length - 1];
           if (!last.text) tokens.pop();
+          // if (last.text === '\n') tokens.pop();
           return tokens;
         }
       }
+      // console.log({end, start, closerMatch});
     };
 
     {
@@ -131,6 +156,7 @@ export const markdown = Object.defineProperties(
         const FenceClosure = mode.closures.get(opener);
         if (FenceClosure) {
           FenceClosure.matcher = new RegExp(
+            // raw`/(\s*\n)|(${opener}(?=${opener}\s|${opener}$)|^(?:[\s>|]*\s)?\s*)|.*$`,
             raw`/(\s*\n)|(${opener}(?=\s|$)|^(?:[\s>|]*\s)?\s*)|.*$`,
             'gm',
           );
