@@ -165,15 +165,14 @@ async function* renderer(tokens, tokenRenderers = renderers) {
 async function render(tokens, fragment) {
   let logs, template, first, elements;
   try {
-    fragment || (fragment = createFragment$3());
+    fragment || (fragment = Fragment());
     logs = fragment.logs || (fragment.logs = []);
     elements = renderer(tokens);
     if ((first = await elements.next()) && 'value' in first) {
-      template = createTemplate();
+      template = Template();
       if (!native$1 && template && 'textContent' in fragment) {
         logs.push(`render method = 'text' in template`);
         const body = [first.value];
-        // const body = [first.value, ... elements];
         if (!first.done) for await (const element of elements) body.push(element);
         template.innerHTML = body.join('');
         fragment.appendChild(template.content);
@@ -197,27 +196,27 @@ async function render(tokens, fragment) {
 const supported = !!native;
 const native$1 = !HTML_MODE && supported;
 const implementation = native$1 ? native : pseudo;
-const {createElement: createElement$3, createText: createText$3, createFragment: createFragment$3} = implementation;
-const createTemplate = template =>
-  !supported || createTemplate.supported === false
+const {createElement: Element$2, createText: Text$2, createFragment: Fragment} = implementation;
+const Template = template =>
+  !supported || Template.supported === false
     ? false
-    : createTemplate.supported === true
+    : Template.supported === true
     ? document.createElement('template')
-    : (createTemplate.supported = !!(
+    : (Template.supported = !!(
         (template = document.createElement('template')) && 'HTMLTemplateElement' === (template.constructor || '').name
       )) && template;
 
 /// RENDERERS
 const factory = (tag, properties) => (content, token) => {
   if (!content) return;
-  typeof content !== 'string' || (content = createText$3(content));
-  const element = createElement$3(tag, properties, content);
+  typeof content !== 'string' || (content = Text$2(content));
+  const element = Element$2(tag, properties, content);
   element && token && (token.hint && (element.className += ` ${token.hint}`));
   return element;
 };
 
 Object.assign(renderers, {
-  whitespace: createText$3,
+  whitespace: Text$2,
   text: factory(SPAN, {className: CLASS}),
 
   variable: factory('var', {className: `${CLASS} variable`}),
@@ -239,5 +238,5 @@ Object.assign(renderers, {
   code: factory(SPAN, {className: `${CLASS}`}),
 });
 
-export { renderers, renderer, render, supported, native$1 as native, createElement$3 as createElement, createText$3 as createText, createFragment$3 as createFragment, createTemplate };
+export { renderers, renderer, render, supported, native$1 as native, Element$2 as Element, Text$2 as Text, Fragment, Template };
 //# sourceMappingURL=dom.mjs.map

@@ -1,4 +1,4 @@
-import { Symbols, Closures, matchers, raw } from './helpers.mjs';
+import { Symbols, Closures, raw } from './helpers.mjs';
 
 const html = Object.defineProperties(
   ({syntax} = html.defaults) => {
@@ -6,7 +6,6 @@ const html = Object.defineProperties(
       syntax,
       keywords: Symbols.from('DOCTYPE doctype'),
       comments: Closures.from('<!--…-->'),
-      // operators: Symbols.from('='),
       closures: Closures.from('<%…%> <!…> <…/> </…> <…>'),
       quotes: [],
       patterns: {
@@ -14,7 +13,7 @@ const html = Object.defineProperties(
         closeTag: /<\/\w[^<>{}]*?>/g,
         maybeIdentifier: /^(?:(?:[a-z][\-a-z]*)?[a-z]+\:)?(?:[a-z][\-a-z]*)?[a-z]+$/,
       },
-      matcher: matchers.xml,
+      matcher: /([\s\n]+)|("|'|=|&#x?[a-f0-9]+;|&[a-z]+;|\/?>|<%|%>|<!--|-->|<[\/\!]?(?=[a-z]+\:?[a-z\-]*[a-z]|[a-z]+))/gi,
       matchers: {
         quote: /(\n)|(\\(?:(?:\\\\)*\\|[^\\\s])|"|')/g,
         comment: /(\n)|(-->)/g,
@@ -36,13 +35,10 @@ const html = Object.defineProperties(
       const tag = first && first.text && TAG.test(first.text) && first.text.toUpperCase();
 
       if (tag && DOCTAGS.includes(tag)) {
-        // TODO: Uncomment once token buffering is implemented
-        // tag && (first.type = 'keyword');
-
         let {source, index} = state;
         const $$matcher = html.patterns.closeTag;
 
-        let match; //  = $$matcher.exec(source);
+        let match;
         $$matcher.lastIndex = index;
 
         // TODO: Check if `<script>`…`</SCRIPT>` is still valid!
@@ -54,7 +50,6 @@ const html = Object.defineProperties(
           const openTag = source.slice(parent.offset, index);
           const match = /\stype=.*?\b(.+?)\b/.exec(openTag);
           syntax = tag === 'SCRIPT' && (!match || !match[1] || /^module$|javascript/i.test(match[1])) ? 'es' : '';
-          // console.log({syntax, tag, match, openTag});
         }
 
         while ((match = $$matcher.exec(source))) {
@@ -71,7 +66,6 @@ const html = Object.defineProperties(
         }
       }
     };
-    // HTMLTagClosure.operators = Symbols.from('=');
     HTMLTagClosure.quotes = Symbols.from(`' "`);
     HTMLTagClosure.closer = /\/?>/;
 
