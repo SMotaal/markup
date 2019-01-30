@@ -1,12 +1,23 @@
 import { Parser } from '../tokenizer.mjs';
 import '../extensions/helpers.mjs';
-import '../extensions/css-mode.mjs';
-import '../extensions/html-mode.mjs';
-import '../extensions/markdown-mode.mjs';
-import '../extensions/javascript-mode.mjs';
-import '../extensions/javascript-extensions.mjs';
-import { modes } from '../extensions/extensions.mjs';
+import { css } from '../extensions/css-mode.mjs';
+import { html } from '../extensions/html-mode.mjs';
+import { markdown } from '../extensions/markdown-mode.mjs';
+import { javascript } from '../extensions/javascript-mode.mjs';
+import { mjs, cjs, esx } from '../extensions/javascript-extensions.mjs';
 import { render } from '../extensions/dom.mjs';
+
+
+
+var modes = /*#__PURE__*/Object.freeze({
+  css: css,
+  html: html,
+  markdown: markdown,
+  javascript: javascript,
+  mjs: mjs,
+  cjs: cjs,
+  esx: esx
+});
 
 const parser = new Parser();
 for (const id in modes) parser.register(modes[id]);
