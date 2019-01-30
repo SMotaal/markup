@@ -1,0 +1,4 @@
+﻿# * SEE: https://jekyllrb.com/docs/configuration/options/
+theme: 'jekyll-theme-cayman'
+
+exclude: ['.vscode', '[more]', 'trash', '[trash]', 'node_modules']
