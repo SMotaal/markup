@@ -3,7 +3,7 @@ export default (markup, overrides) => {
     version: 1,
     repeats: 1,
     iterations: 1,
-    sourceURL: 'sample.html',
+    sourceURL: '../samples/complex.html',
     sourceType: undefined,
     element: 'pre#source-code',
     headerTemplate: 'template#source-header',
