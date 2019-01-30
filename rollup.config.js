@@ -1,48 +1,34 @@
+import {existsSync, mkdirSync} from 'fs';
 const dirname = __dirname;
 const dist = `${dirname}/dist/`;
 const bundles = {
   ['markup']: {
     input: `${dirname}/lib/markup.js`,
-    output: {
-      exports: 'named',
-      // path: `${dirname}/dist`,
-    },
+    output: {exports: 'named'},
   },
-  // ['tokenizer/extended']: {
-  //   input: `${dirname}/packages/@smotaal/tokenizer/extended.js`,
-  //   output: {
-  //     path: `${dirname}/dist`,
-  //     exports: 'named',
-  //     name: 'tokenizer',
-  //   },
-  // },
   ['tokenizer:esm']: {
     input: {
       ['tokenizer']: `${dirname}/packages/@smotaal/tokenizer/tokenizer.mjs`,
-      ['extended']: `${dirname}/packages/@smotaal/tokenizer/extended.mjs`,
+      // ['extended']: `${dirname}/packages/@smotaal/tokenizer/extended.mjs`,
       ['browser/markup']: `${dirname}/packages/@smotaal/tokenizer/browser/markup.js`,
       ['extensions/helpers']: `${dirname}/packages/@smotaal/tokenizer/extensions/helpers.mjs`,
       ['extensions/dom']: `${dirname}/packages/@smotaal/tokenizer/extensions/dom.mjs`,
-      ['extensions/extensions']: `${dirname}/packages/@smotaal/tokenizer/extensions/extensions.mjs`,
+      // ['extensions/extensions']: `${dirname}/packages/@smotaal/tokenizer/extensions/extensions.mjs`,
       ['extensions/html-mode']: `${dirname}/packages/@smotaal/tokenizer/extensions/html/html-mode.mjs`,
       ['extensions/css-mode']: `${dirname}/packages/@smotaal/tokenizer/extensions/css/css-mode.mjs`,
       ['extensions/markdown-mode']: `${dirname}/packages/@smotaal/tokenizer/extensions/markdown/markdown-mode.mjs`,
       ['extensions/javascript-mode']: `${dirname}/packages/@smotaal/tokenizer/extensions/javascript/javascript-mode.mjs`,
       ['extensions/javascript-extensions']: `${dirname}/packages/@smotaal/tokenizer/extensions/javascript/extended-modes.mjs`,
     },
-    output: {
-      // path: `${dirname}/dist`,
-      exports: 'named',
-      name: 'tokenizer',
-    },
+    output: {exports: 'named', name: 'tokenizer'},
+  },
+  ['tokenizer:extended']: {
+    input: `${dirname}/packages/@smotaal/tokenizer/extended.mjs`,
+    output: {exports: 'named', name: 'tokenizer'},
   },
   ['tokenizer:browser:markup']: {
     input: `${dirname}/packages/@smotaal/tokenizer/browser/markup.js`,
-    output: {
-      path: `./browser`,
-      exports: 'named',
-      name: 'markup.tokenizer',
-    },
+    output: {path: `./browser`, exports: 'named', name: 'markup'},
   },
 };
 
@@ -66,12 +52,15 @@ const bundle = (
   const root = `${dist}${dir.replace(dist, '').replace(/^(\.?\/)?/, `${packageID}/`)}`;
 
   dir = `${root}/${pathname ? `${pathname}/` : ''}`;
+
+  existsSync(dir) || mkdirSync(dir);
+
   if (typeof input === 'string') {
     output.file = `${dir}${packageID}${buildID ? `.${buildID.replace(/:.*$/, '')}` : ''}${
       extension.startsWith('.') ? extension : format === 'es' ? '.mjs' : '.js'
     }`;
   } else {
-    options.experimentalCodeSplitting = true;
+    // options.experimentalCodeSplitting = true;
     output.dir = dir;
   }
 
@@ -103,6 +92,8 @@ const umd = (name, naming = '[name].js') => bundle(name, 'umd', naming);
 export default [
   mjs('markup'),
   umd('markup'),
+  mjs('tokenizer:extended'),
+  umd('tokenizer:extended'),
   mjs('tokenizer:esm'),
   mjs('tokenizer:browser:markup'),
   umd('tokenizer:browser:markup'),
