@@ -1242,7 +1242,7 @@ const javascript = Object.defineProperties(
       ...patterns,
       maybeIdentifier: identifier(entities.es.IdentifierStart, entities.es.IdentifierPart),
       segments: {
-        regexp: /^\/[^\n\/\*][^\n]+\//,
+        regexp: /^\/[^\n\/\*][^\n]*\//,
       },
     },
     matcher: sequence`([\s\n]+)|(${all(
@@ -1250,10 +1250,7 @@ const javascript = Object.defineProperties(
       javascript.COMMENTS,
       javascript.QUOTES,
       javascript.CLOSURES,
-      /,|;|\.\.\.|\.|\:|\?|=>/,
-      /!==|===|==|=/,
-      ...raw`\+ \- \* & \|`.split(' ').map(s => `${s}${s}|${s}=|${s}`),
-      ...raw`\/ ! % << >> >>> < > \^ ~`.split(' ').map(s => `${s}=|${s}`),
+      ...javascript.PUNCTUATORS,
     )})`,
     matchers: {
       "'": /(\n)|(')|(\\.)/g,
@@ -1274,7 +1271,7 @@ Definitions: {
   }
   javascript.REGEXPS = /\/(?=[^\*\/\n][^\n]*\/(?:[a-z]+\b)?(?:[ \t]+[^\n\s\(\[\{\w]|[\.\[;,]|[ \t]*[\)\]\}\;\,\n]|\n|$))(?:[^\\\/\n\t\[]+|\\\S|\[(?:\\\S|[^\\\n\t\]]+)+?\])+?\/[a-z]*/g;
 
-  javascript.COMMENTS = /\/\/|\/\*|\*\/|\/|^\#\!.*\n/g;
+  javascript.COMMENTS = /\/\/|\/\*|\*\/|^\#\!.*\n/g;
   javascript.COMMENTS['(closures)'] = '//…\n /*…*/';
 
   javascript.QUOTES = /`|"|'/g;
@@ -1291,11 +1288,19 @@ Definitions: {
       'arguments as async await break case catch class export const continue debugger default delete do else export extends finally for from function get if import in instanceof let new of return set static super switch this throw try typeof var void while with yield',
   };
 
-  javascript.ASSIGNERS = {['(symbols)']: '= += -= *= /= **= %= |= ^= &= <<= >>= >>>='};
+  javascript.PUNCTUATORS = [
+    /,|;|\.\.\.|\.|\:|\?|=>/,
+    /\+\+|\+=|\+|--|-=|-|\*\*=|\*\*|\*=|\*|\/=|\//,
+    /&&|&=|&|\|\||\|=|\||\%=|\%|\^=|\^|~=|~/,
+    /<<=|<<|<=|<|>>>=|>>>|>>=|>>|>=|>/,
+    /!==|!=|!|===|==|=/,
+  ];
 
-  javascript.COMBINATORS = {['(symbols)']: '>= <= == === != !== || && ! & | > < => % + - ** * / >> << >>> ? :'};
+  javascript.ASSIGNERS = {['(symbols)']: '= += -= *= /= **= %= &= |= <<= >>= >>>= ^= ~='};
+
+  javascript.COMBINATORS = {['(symbols)']: '=== == + - * / ** % & && | || ! !== > < >= <= => >> << >>> ^ ~'};
   javascript.NONBREAKERS = {['(symbols)']: '.'};
-  javascript.OPERATORS = {['(symbols)']: '++ -- !! ^ ~ ! ...'};
+  javascript.OPERATORS = {['(symbols)']: '++ -- ... ? :'};
   javascript.BREAKERS = {['(symbols)']: ', ;'};
 }
 
