@@ -15,7 +15,6 @@ export class Grouping {
    * @param {{syntax: string, groupers: Groupers, createGrouper: createGrouper}} options
    */
   constructor({syntax, groupers, createGrouper, contextualizer}) {
-    // console.log(this, {syntax, groupers, createGrouper, contextualizer});
     this.groupers = groupers;
     this.groupings = [];
     this.hints = new Set();
@@ -41,7 +40,6 @@ export class Grouping {
     grouper = closed;
     groupings.includes(grouper) || hints.delete(grouper.hinter);
 
-    // next &&
     (closed.punctuator === 'opener' && (next.punctuator = 'closer')) ||
       (closed.punctuator && (next.punctuator = closed.punctuator));
 
@@ -87,7 +85,6 @@ export class Grouping {
         });
     } else if (context.punctuator !== 'quote') {
       if (punctuator === 'quote') {
-        // const quote = quotes.get(text);
         opened =
           grouper ||
           this.create({
@@ -122,7 +119,6 @@ export class Grouping {
               goal: syntax,
               closure,
               matcher: closure.matcher || (matchers && matchers.closure) || undefined,
-              // operators: closure.operators || operators,
               hinter,
               punctuator,
             }));
@@ -130,7 +126,6 @@ export class Grouping {
     }
 
     if (opened) {
-      // after = opened.open && opened.open(next, state, opened);
       groupers[group] || (groupers[group] = grouper = opened);
       groupings.push(grouper), hints.add(hinter);
       this.goal = (grouper && grouper.goal) || syntax;

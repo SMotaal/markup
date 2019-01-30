@@ -22,7 +22,6 @@ export class Tokenizer {
 
     // Local grouping
     const groupers = mode.groupers || (mode.groupers = {});
-
     const grouping =
       state.grouping ||
       (state.grouping = new Grouping({
