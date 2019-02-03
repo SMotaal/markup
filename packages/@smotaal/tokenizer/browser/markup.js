@@ -1,5 +1,5 @@
 import parser from '../extended.js';
-import * as dom from '../extensions/dom.mjs';
+import * as dom from '../extensions/dom.js';
 
 const versions = [parser];
 let lastVersion;

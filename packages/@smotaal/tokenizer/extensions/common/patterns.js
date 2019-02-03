@@ -1,4 +1,4 @@
-import {raw} from './helpers.mjs';
+import {raw} from './helpers.js';
 
 export const patterns = {
   /** Basic latin Keyword like symbol (inteded to be extended) */

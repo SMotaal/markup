@@ -238,7 +238,7 @@ export default (markup, overrides) => {
   };
 
   const entrypoints = {
-    ['js']: '../../lib/tokenizer.mjs',
+    ['js']: '../../lib/tokenizer.js',
     ['css']: './markup.css',
     ['html']: './index.html',
     ['md']: '../../README.md',

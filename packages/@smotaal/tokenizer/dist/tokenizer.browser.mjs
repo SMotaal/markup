@@ -1,7 +1,7 @@
-/** @typedef {import('./tokenizer.mjs').Grouping} Grouping */
-/** @typedef {import('./tokenizer.mjs').Tokenizer} Tokenizer */
-/** @typedef {import('./tokenizer.mjs').Token} Token */
-/** @typedef {import('./tokenizer.mjs')['Tokenizer']} TokenizerClass */
+/** @typedef {import('./types').Grouping} Grouping */
+/** @typedef {import('./types').Tokenizer} Tokenizer */
+/** @typedef {import('./types').Token} Token */
+/** @typedef {import('./types')['Tokenizer']} TokenizerClass */
 /** @typedef {{[name: string]: Grouping}} Groupers */
 /** @typedef {(TokenizerClass)['createGrouper']} createGrouper */
 
@@ -1477,6 +1477,9 @@ var dom = /*#__PURE__*/Object.freeze({
   createText: createText$1,
   createFragment: createFragment$1
 });
+
+// TEST: Trace for ESM testing
+typeof process === 'object' && console.info('[ESM]: %o', import.meta.url);
 
 const native = document$2 && dom;
 

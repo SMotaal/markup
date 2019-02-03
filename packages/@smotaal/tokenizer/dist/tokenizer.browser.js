@@ -4,10 +4,10 @@
   (global = global || self, factory(global.markup = {}));
 }(this, function (exports) { 'use strict';
 
-  /** @typedef {import('./tokenizer.mjs').Grouping} Grouping */
-  /** @typedef {import('./tokenizer.mjs').Tokenizer} Tokenizer */
-  /** @typedef {import('./tokenizer.mjs').Token} Token */
-  /** @typedef {import('./tokenizer.mjs')['Tokenizer']} TokenizerClass */
+  /** @typedef {import('./types').Grouping} Grouping */
+  /** @typedef {import('./types').Tokenizer} Tokenizer */
+  /** @typedef {import('./types').Token} Token */
+  /** @typedef {import('./types')['Tokenizer']} TokenizerClass */
   /** @typedef {{[name: string]: Grouping}} Groupers */
   /** @typedef {(TokenizerClass)['createGrouper']} createGrouper */
 
@@ -1483,6 +1483,9 @@
     createText: createText$1,
     createFragment: createFragment$1
   });
+
+  // TEST: Trace for ESM testing
+  typeof process === 'object' && console.info('[ESM]: %o', (typeof document !== 'undefined' ? document.currentScript && document.currentScript.src || document.baseURI : new (typeof URL !== 'undefined' ? URL : require('ur'+'l').URL)('file:' + __filename).href));
 
   const native = document$2 && dom;
 

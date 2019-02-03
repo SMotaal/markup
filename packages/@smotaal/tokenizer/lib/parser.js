@@ -1,4 +1,4 @@
-import {Tokenizer} from './tokenizer.mjs';
+import {Tokenizer} from './tokenizer.js';
 
 export const TOKENIZERS = 'tokenizers';
 export const MAPPINGS = 'mappings';
