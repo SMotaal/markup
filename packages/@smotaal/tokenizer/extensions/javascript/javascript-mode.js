@@ -1,4 +1,4 @@
-import {Closures, Symbols, identifier, sequence, all, raw, patterns, entities} from '../helpers.mjs';
+import {Closures, Symbols, identifier, sequence, all, raw, patterns, entities} from '../helpers.js';
 
 export const javascript = Object.defineProperties(
   ({syntax} = defaults) => ({

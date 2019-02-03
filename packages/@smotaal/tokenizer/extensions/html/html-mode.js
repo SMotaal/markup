@@ -1,4 +1,4 @@
-import {Closures, Symbols, raw} from '../helpers.mjs';
+import {Closures, Symbols, raw} from '../helpers.js';
 
 export const html = Object.defineProperties(
   ({syntax} = html.defaults) => {

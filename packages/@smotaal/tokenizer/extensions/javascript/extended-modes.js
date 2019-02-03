@@ -1,5 +1,5 @@
-import {javascript} from './javascript-mode.mjs';
-import {Symbols, sequence, raw, all} from '../helpers.mjs';
+import {javascript} from './javascript-mode.js';
+import {Symbols, sequence, raw, all} from '../helpers.js';
 
 export const mjs = Object.defineProperties(
   ({syntax} = mjs.defaults, {javascript: {quotes, closures, spans, matchers}}) => ({

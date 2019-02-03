@@ -1,4 +1,4 @@
-import {SourceText} from '../extensions/lib/source-text.mjs';
+import {SourceText} from './source-text.js';
 
 (async () => {
   let sourceText, source, body;

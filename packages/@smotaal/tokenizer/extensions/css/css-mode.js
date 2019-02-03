@@ -1,4 +1,4 @@
-import {Symbols, Closures} from '../helpers.mjs';
+import {Symbols, Closures} from '../helpers.js';
 
 export const css = Object.defineProperties(
   ({syntax} = css.defaults) => ({

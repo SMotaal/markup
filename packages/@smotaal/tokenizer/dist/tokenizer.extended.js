@@ -4,10 +4,10 @@
   (global = global || self, factory(global.tokenizer = {}));
 }(this, function (exports) { 'use strict';
 
-  /** @typedef {import('./tokenizer.mjs').Grouping} Grouping */
-  /** @typedef {import('./tokenizer.mjs').Tokenizer} Tokenizer */
-  /** @typedef {import('./tokenizer.mjs').Token} Token */
-  /** @typedef {import('./tokenizer.mjs')['Tokenizer']} TokenizerClass */
+  /** @typedef {import('./types').Grouping} Grouping */
+  /** @typedef {import('./types').Tokenizer} Tokenizer */
+  /** @typedef {import('./types').Token} Token */
+  /** @typedef {import('./types')['Tokenizer']} TokenizerClass */
   /** @typedef {{[name: string]: Grouping}} Groupers */
   /** @typedef {(TokenizerClass)['createGrouper']} createGrouper */
 

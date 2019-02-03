@@ -2,7 +2,31 @@
 
 Nestable syntax tokenizer using Regular Expressions.
 
-> **Note**: This package uses `.mjs` extensions to work with `--experimental-modules` in Node.js
+<table><tr><td>
+
+**Supported Platforms**
+
+This package uses `.js` extensions for ECMAScript modules supported by all up-to-date versions of most modern browsers, specifically Chrome, Safari, Firefox. <span><details><summary>Testing in Node.js with <code>--experimental-modules</code> mode</summary>
+
+For supporting Node.js versions, you can use this package by opting to use the `--experimental-modules --loader @smotaal/tokenizer/node/loader.mjs` approach intended to only be used for experimental work.
+
+If you use your own custom loader, you can configure it to resolve `.js` files in this package for files that do not have a sibling `.mjs` file as `format: 'esm'` (dual formats should mostly be restricted to the `dist` folder in general).
+
+Please note that no efforts are intended to make this package operational with tooling commonly used to down-transpile code for runtimes that do not natively support ECMAScript modules. If you use this path and it works, it will likely not behave as intended leading to issues that I am not able to address.
+
+</details></span></td></tr><tr><td>
+
+**Important Changes**
+
+*v0.0.4*
+- Rename ECMAScript module sources to `.js` instead of `.mjs`.
+- Add minimal `node/loader.mjs` for experimental Node.js mode.
+
+*v0.0.3*
+- Refactor source files for optimal bundling with `rollup`.
+- Add `dist/` with multiple dist `umd` and `esm` bundles.
+
+</details></td></tr></table>
 
 **Why?**
 

@@ -1,4 +1,4 @@
-import {previousTextFrom, indenter, Closures, sequence, all, raw} from '../helpers.mjs';
+import {previousTextFrom, indenter, Closures, sequence, all, raw} from '../helpers.js';
 
 export const markdown = Object.defineProperties(
   ({syntax} = defaults, {html}) => {

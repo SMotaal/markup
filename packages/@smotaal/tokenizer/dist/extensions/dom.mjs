@@ -135,6 +135,9 @@ var dom = /*#__PURE__*/Object.freeze({
   createFragment: createFragment$1
 });
 
+// TEST: Trace for ESM testing
+typeof process === 'object' && console.info('[ESM]: %o', import.meta.url);
+
 const native = document$2 && dom;
 
 /// OPTIONS

@@ -1,4 +1,4 @@
-import {Grouping} from './grouping.mjs';
+import {Grouping} from './grouping.js';
 
 /** Tokenizer for a single mode (language) */
 export class Tokenizer {
