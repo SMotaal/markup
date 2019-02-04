@@ -1,4 +1,5 @@
 import * as dom from '../node_modules/pseudom/pseudom.js';
+import {each} from './resync.js';
 
 /// OPTIONS
 /** The tag name of the element to use for rendering a token. */
@@ -13,8 +14,8 @@ const HTML_MODE = true;
 
 export const renderers = {};
 
-export async function* renderer(tokens, tokenRenderers = renderers) {
-  for await (const token of tokens) {
+export function* renderer(tokens, tokenRenderers = renderers) {
+  for (const token of tokens) {
     const {type = 'text', text, punctuator, breaks} = token;
     const tokenRenderer =
       (punctuator && (tokenRenderers[punctuator] || tokenRenderers.operator)) ||
@@ -36,17 +37,17 @@ export async function render(tokens, fragment) {
       if (!native && template && 'textContent' in fragment) {
         logs.push(`render method = 'text' in template`);
         const body = [first.value];
-        if (!first.done) for await (const element of elements) body.push(element);
+        first.done || (await each(elements, element => body.push(element)));
         template.innerHTML = body.join('');
         fragment.appendChild(template.content);
       } else if ('push' in fragment) {
         logs.push(`render method = 'push' in fragment`);
         fragment.push(first.value);
-        if (!first.done) for await (const element of elements) fragment.push(element);
+        first.done || (await each(elements, element => fragment.push(element)));
       } else if ('append' in fragment) {
         logs.push(`render method = 'append' in fragment`);
         fragment.append(first.value);
-        if (!first.done) for await (const element of elements) fragment.append(element);
+        first.done || (await each(elements, element => fragment.append(element)));
       }
     }
     return fragment;

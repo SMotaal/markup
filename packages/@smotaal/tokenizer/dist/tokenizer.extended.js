@@ -693,7 +693,8 @@
     static split(...sources) {
       const Species = this || Symbols;
       const symbols = [];
-      for (const source of sources.flat()) {
+      // TODO: Replace with sources.flat() for non-legacy
+      for (const source of [].concat(...sources)) {
         source &&
           (typeof source === 'string'
             ? symbols.push(...source.split(/ +/))
@@ -777,7 +778,8 @@
       const Species = this || Closures;
       const Member = Species.Element || Closure;
       const closures = [];
-      for (const source of sources.flat()) {
+      // TODO: Replace with sources.flat() for non-legacy
+      for (const source of [].concat(...sources)) {
         if (!source) continue;
         switch (typeof source) {
           case 'object':
