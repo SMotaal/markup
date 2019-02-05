@@ -8,22 +8,43 @@ export default (markup, overrides) => {
     element: 'pre#source-code',
     headerTemplate: 'template#source-header',
     ...overrides,
+
+    fetch: (() =>
+      /** @type {RequestInit} */
+      ({
+        mode: 'cors',
+        referrer: 'no-referrer',
+        redirect: 'follow',
+        headers: {'Content-Type': 'text/plain'},
+        ...((overrides && overrides.fetch) || undefined),
+      }))(),
   };
+
   const Hash = /#((?:.*?:)?.*?)(?:(\!+)([a-z]+|[A-Z]+)?)?(?:\*(?!\*)(\d+))?(?:\*{2}(\d+))?$/;
   const options = Object.create(defaults);
   const sourceCodeElement = document.querySelector(options.element);
   const sourceHeaderTemplate = document.querySelector(options.headerTemplate);
 
+  const fetchSource = async (source, options) => (
+    (source.sourceText = ''),
+    (source.response = await fetch(source.redirect || source.url, options)),
+    (source.sourceText = await source.response.text()),
+    // TODO: Revert once odd behaviour of response.redirected is resolved
+    source.response.redirected && source.sourceText.startsWith('Found. Redirecting to')
+      ? ((source.redirect = `${new URL(source.sourceText.slice(source.sourceText.indexOf('/')), source.url)}`),
+        fetchSource(source, options))
+      : source
+  );
+
   const loadFromURL = async specifier => {
-    let fetched, response, result;
+    let returned;
     const url = `${new URL(specifier, location)}`;
     const source = {specifier, url};
     try {
-      source.response = await fetch(url, {referrerPolicy: 'no-referrer-when-downgrade'});
-      source.sourceText = await source.response.text();
-      return (result = source);
+      await fetchSource(source, defaults.fetch);
+      return (returned = source);
     } finally {
-      result || console.warn('Failed to load source from "%s" — %o', specifier, source);
+      returned || console.warn('Failed to load source from "%s" — %o', specifier, source);
     }
   };
 
@@ -233,8 +254,8 @@ export default (markup, overrides) => {
     ['lib']: '../../lib',
     ['markup']: `${root}/markup`,
     ['modules']: `${root}/modules`,
-    ['unpkg']: 'https://unpkg.com',
-    ['cdnjs']: 'https://cdnjs.cloudflare.com/ajax/libs',
+    ['unpkg']: '//unpkg.com',
+    ['cdnjs']: '//cdnjs.cloudflare.com/ajax/libs',
   };
 
   const entrypoints = {
