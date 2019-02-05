@@ -13,9 +13,9 @@ export default (markup, overrides) => {
       /** @type {RequestInit} */
       ({
         mode: 'cors',
-        referrer: 'no-referrer',
-        redirect: 'follow',
-        headers: {'Content-Type': 'text/plain'},
+        // referrer: 'no-referrer',
+        // redirect: 'follow',
+        // headers: {'Content-Type': 'text/plain'},
         ...((overrides && overrides.fetch) || undefined),
       }))(),
   };
