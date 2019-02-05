@@ -27,11 +27,11 @@ export default (markup, overrides) => {
 
   const fetchSource = async (source, options) => (
     (source.sourceText = ''),
-    (source.response = await fetch(source.redirect || source.url, options)),
+    (source.response = await fetch(source.url, options).catch(console.warn)),
     (source.sourceText = await source.response.text()),
     // TODO: Revert once odd behaviour of response.redirected is resolved
-    source.response.redirected && source.sourceText.startsWith('Found. Redirecting to')
-      ? ((source.redirect = `${new URL(source.sourceText.slice(source.sourceText.indexOf('/')), source.url)}`),
+    source.response.redirected && source.sourceText && source.sourceText.startsWith('Found. Redirecting to')
+      ? ((source.url = `${new URL(source.sourceText.slice(source.sourceText.indexOf('/')), source.url)}`),
         fetchSource(source, options))
       : source
   );
