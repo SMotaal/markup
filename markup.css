@@ -1,7 +1,6 @@
 @import url('https://cdn.jsdelivr.net/npm/@typopro/web-iosevka/TypoPRO-Iosevka.css');
 
 :root {
-
   /* Neutrals */
   --markup-neutral-light: #aaa;
   --markup-neutral: #999;
@@ -94,10 +93,17 @@
   --markup-whitespace: var(--markup-dark-whitespace, var(--markup-light-whitespace));
 }
 
-.markup:matches(.keyword, .breaker, .opener, .span, .assigner, .operator, .combinator, .comment)
-  + .markup.identifier {
+.markup.sequence {
+  --color: var(--markup-sequences, grey);
+}
+
+.markup.regexp {
+  font-variant-ligatures: none;
+}
+
+.markup.identifier {
   --color: var(--markup-identifiers, darkslategrey);
-  /* font-style: italic; */
+  font-style: italic;
 }
 
 .markup.variable {
@@ -106,16 +112,11 @@
 
 .markup.keyword {
   --color: var(--markup-keywords, chocolate);
-  /* font-weight: 500; */
 }
 
 .markup.punctuator {
   --color: var(--markup-punctuators, lightseagreen);
   /* font-weight: 500; */
-}
-
-.markup.sequence {
-  --color: var(--markup-sequences, grey);
 }
 
 .markup.operator {
