@@ -219,7 +219,7 @@
         const url = `${new URL(specifier, location)}`;
         const source = {specifier, url};
         try {
-          source.response = await fetch(url, {referrerPolicy: 'no-referrer-when-downgrade'});
+          source.response = await fetch(url);
           source.sourceText = await source.response.text();
           return (result = source);
         } finally {
