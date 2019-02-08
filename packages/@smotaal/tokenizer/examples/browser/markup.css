@@ -96,17 +96,11 @@
 .markup.sequence {
   --color: var(--markup-sequences, grey);
 }
-/*
-.markup.sequence.regexp {
-  --color: var(--markup-color, darkslategrey);
-  font-weight: bold;
-}
-*/
 
-/*
-.markup:matches(.keyword, .breaker, .opener, .span, .assigner, .operator, .combinator, .comment)
-  + .markup.identifier {
- */
+.markup.regexp {
+  font-variant-ligatures: none;
+}
+
 .markup.identifier {
   --color: var(--markup-identifiers, darkslategrey);
   font-style: italic;
@@ -118,7 +112,6 @@
 
 .markup.keyword {
   --color: var(--markup-keywords, chocolate);
-  /* font-weight: 500; */
 }
 
 .markup.punctuator {
