@@ -76,7 +76,7 @@ At the moment, you can read the on going drafts for:
 
 **Demo**
 
-You can see a [live demo](https://smotaal.github.io/experimental/markup/packages/@smotaal/tokenizer/examples/browser/) or serve it locally from [examples/browser/index.html](examples/browser/index.html).
+You can see a [live demo](https://smotaal.github.io/markup/packages/@smotaal/tokenizer/examples/browser/) or serve it locally from [examples/browser/index.html](examples/browser/index.html).
 
 You can set different options in the following order:
 
