@@ -37,11 +37,9 @@ export function ƒ() {}
 ```
 
 
-  > ```js
-  > // ECMAScript Syntax
-  > ```
-
-————————————————————————————————————————
+> ```js
+> // ECMAScript Syntax
+> ```
 
   > ```html
   > <!-- HTML Syntax -->

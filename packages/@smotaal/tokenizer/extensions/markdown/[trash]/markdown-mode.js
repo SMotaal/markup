@@ -1,7 +1,8 @@
-import { sequence, all, Closures, raw, previousTextFrom, indenter } from './helpers.mjs';
+import {previousTextFrom, indenter, Closures, sequence, all, raw} from '../helpers.js';
 
-const markdown = Object.defineProperties(
+export const markdown = Object.defineProperties(
   ({syntax} = defaults, {html}) => {
+    const EMBEDDED = true;
     const matcher = ((...matchers) => {
       let matcher = matchers[matchers.length - 1];
       try {
@@ -82,7 +83,11 @@ const markdown = Object.defineProperties(
         const body = source.slice(start, end) || '';
         const tokens = [];
         tokens.end = end;
-        {
+        if (!EMBEDDED) {
+          text = body;
+          tokens.push({text, type: 'code', offset, parent});
+          offset += body.length;
+        } else {
           [head, ...lines] = body.split(/\r?(\n)\r?/g);
           if (head) {
             tokens.push({text: head, type: 'comment', offset, parent}), (offset += head.length);
@@ -122,7 +127,7 @@ const markdown = Object.defineProperties(
 
     {
       const quotes = html.closures.get('<').quotes;
-      for (const opener of ['\`\`\`', '\~\~\~']) {
+      for (const opener of ['```', '~~~']) {
         const FenceClosure = mode.closures.get(opener);
         if (FenceClosure) {
           FenceClosure.matcher = new RegExp(
@@ -150,7 +155,7 @@ Definitions: {
   markdown.BLOCK = '```…``` ~~~…~~~';
   markdown.INLINE = '[…] (…) *…* **…** _…_ __…__ ~…~ ~~…~~';
   markdown.CLOSURES = `${markdown.BLOCK} ${markdown.INLINE}`;
-  markdown.WHITESPACE = /^\s+|\s+$|\n+/;
+  markdown.WHITESPACE = /^\s+|\s+$|\n/;
   markdown.ESCAPES = /\\./;
   markdown.ENTITIES = /&#x?[a-f0-9]+;|&[a-z]+;/;
   markdown.FENCES = /(?:\x60{3,}|\x7E{3,})(?=\b| |$)/;
@@ -166,6 +171,3 @@ Definitions: {
   markdown.EXPONENTIAL = /\d+[eE]\-?\d+|\d+\.\d+[eE]\-?\d+/;
   markdown.FRAGMENTS = /\b[^\n\s\[\]\(\)\<\>&`"]*[^\n\s\[\]\(\)\<\>&_`"]\b|[^\n\s\[\]\(\)\<\>&`"]+(?=__?\b)/;
 }
-
-export { markdown };
-//# sourceMappingURL=markdown-mode.mjs.map
