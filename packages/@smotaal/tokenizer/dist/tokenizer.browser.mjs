@@ -949,7 +949,7 @@ const html = Object.defineProperties(
       patterns: {
         maybeKeyword: /^[a-z](\w*)$/i,
         closeTag: /<\/\w[^<>{}]*?>/g,
-        maybeIdentifier: /^(?:(?:[a-z][\-a-z]*)?[a-z]+\:)?(?:[a-z][\-a-z]*)?[a-z]+$/,
+        // maybeIdentifier: /^(?:(?:[a-z][\-a-z]*)?[a-z]+\:)?(?:[a-z][\-a-z]*)?[a-z]+$/,
       },
       matcher: /([\s\n]+)|("|'|=|&#x?[a-f0-9]+;|&[a-z]+;|\/?>|<%|%>|<!--|-->|<[\/\!]?(?=[a-z]+\:?[a-z\-]*[a-z]|[a-z]+))/gi,
       matchers: {
@@ -1136,7 +1136,7 @@ const markdown = Object.defineProperties(
 
     {
       const quotes = html.closures.get('<').quotes;
-      for (const opener of ['```', '~~~']) {
+      for (const opener of ['\`\`\`', '\~\~\~']) {
         const FenceClosure = mode.closures.get(opener);
         if (FenceClosure) {
           FenceClosure.matcher = new RegExp(
@@ -1164,7 +1164,7 @@ Definitions: {
   markdown.BLOCK = '```…``` ~~~…~~~';
   markdown.INLINE = '[…] (…) *…* **…** _…_ __…__ ~…~ ~~…~~';
   markdown.CLOSURES = `${markdown.BLOCK} ${markdown.INLINE}`;
-  markdown.WHITESPACE = /^\s+|\s+$|\n/;
+  markdown.WHITESPACE = /^\s+|\s+$|\n+/;
   markdown.ESCAPES = /\\./;
   markdown.ENTITIES = /&#x?[a-f0-9]+;|&[a-z]+;/;
   markdown.FENCES = /(?:\x60{3,}|\x7E{3,})(?=\b| |$)/;
