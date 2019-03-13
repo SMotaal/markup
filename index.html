@@ -1,0 +1,50 @@
+﻿<!DOCTYPE html>
+<html checkerboard>
+  <head>
+    <title>Markout</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+		<link rel="stylesheet" href="/pholio/styles/fonts/iosevka/iosevka.css" />
+    <link rel="preload" as="style" href="/pholio/styles/typography.css" />
+    <link rel="preload" as="style" href="/pholio/styles/layouts/grids.css" />
+    <link rel="preload" as="style" href="/pholio/styles/common.css" />
+    <link rel="alternate" href="./README.md" type="text/markdown" />
+    <style>
+      @import '/pholio/styles/styles.css';
+
+      html {
+        --shade: #6699aaf6;
+      }
+
+      html,
+      body,
+      body > main {
+        display: grid;
+        box-sizing: border-box;
+        margin: 0;
+      }
+
+      body > main > script,
+      body > main > style {
+        display: none;
+      }
+
+      body > main > markout-content {
+        opacity: 1;
+        background-color: #fffffff6;
+        box-shadow: 0 1px 20px -10px #000;
+        box-sizing: initial;
+      }
+    </style>
+    <!-- <script type="module" src="/quench/dist/markout.standalone.js"></script> -->
+    <!-- <script type="module" src="/quench/lib/browser/markout.js"></script> -->
+    <script type="module" src="/markout/preview.js"></script>
+  </head>
+
+  <body>
+    <main>
+      <markout-content></markout-content>
+    </main>
+    <!-- <markout-content src="./README.md"></markout-content> -->
+  </body>
+</html>
