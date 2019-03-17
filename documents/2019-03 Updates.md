@@ -9,7 +9,7 @@ It's been a a little over 6 months since I started my markup experiments and a l
 
 All this work made it possible to separately start working on other stalled problems:
 
-- Created prototype first Markout renderer (in [Pholio](https://smotaal.io/pholio)).
+- Created a Markout renderer prototype (in [Pholio](https://smotaal.io/pholio)).
 - Visualized syntax debates related to ESM/CJS (in [@nodejs/modules](https://github.com/nodejs/modules)).
 - Replaced server-side rendering on GH pages (in [Quench](https://smotaal.io/quench)).
 
