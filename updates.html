@@ -1,0 +1,96 @@
+﻿<!DOCTYPE html>
+<html checkerboard>
+  <head>
+    <title>Markout</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <link rel="stylesheet" href="/pholio/styles/fonts/iosevka/iosevka.css" />
+    <link rel="stylesheet" href="/pholio/styles/styles.css" />
+    <style>
+      html {
+        --shade: #6699aaf6;
+      }
+
+      body > main > hr,
+      body > main > details > hr {
+        margin: 0.5rem 0;
+        border-color: transparent;
+      }
+
+      body > main {
+        grid-auto-rows: max-content;
+        grid-gap: 0.5rem;
+      }
+
+      body > main > markout-content,
+      body > main > details,
+      body > main > details > markout-content {
+        opacity: 1;
+        /* box-shadow: 0 1px 5px -2px #000; */
+      }
+
+      body > main > details {
+        opacity: 1;
+        display: inherit;
+        grid-auto-flow: inherit;
+        grid-auto-rows: inherit;
+        grid-gap: inherit;
+        padding: 0 1rem;
+      }
+
+      body > main > details > summary {
+        padding: 1rem;
+        margin: 0 -1rem;
+      }
+
+      body > main > details[open] {
+        padding-bottom: 1rem;
+      }
+
+      body > main > details[open] > summary {
+        margin-bottom: 1rem;
+      }
+
+      body > main > details > summary:focus {
+        outline-style: none;
+      }
+
+      body > main > details > summary > h1:first-child,
+      body > main > details > summary > h2:first-child,
+      body > main > details > summary > h3:first-child,
+      body > main > details > summary > h4:first-child,
+      body > main > details > summary > h5:first-child,
+      body > main > details > summary > h6:first-child {
+        display: inline-block;
+        vertical-align: middle;
+        padding: 0.25rem 0.5rem;
+        margin: 0;
+      }
+
+      body > main > details > markout-content {
+        font-size: 90%;
+        display: grid;
+      }
+
+      body > main > markout-content,
+      body > main > details > summary,
+      body > main > details > markout-content {
+        background-color: #fffffff6;
+      }
+    </style>
+    <script type="module" src="/markout/preview.js"></script>
+  </head>
+
+  <body>
+    <main>
+      <details open>
+        <summary><h1>2019</h1></summary>
+        <markout-content src="./documents/2019-03 Updates.md"></markout-content>
+      </details>
+      <details>
+        <summary><h1>2018</h1></summary>
+        <markout-content src="./documents/2018-12 Updates.md"></markout-content>
+      </details>
+    </main>
+  </body>
+</html>
