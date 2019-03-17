@@ -5,7 +5,8 @@ import { html } from '../extensions/html-mode.mjs';
 import { markdown } from '../extensions/markdown-mode.mjs';
 import { javascript } from '../extensions/javascript-mode.mjs';
 import { mjs, cjs, esx } from '../extensions/javascript-extensions.mjs';
-import { render } from '../extensions/dom.mjs';
+import { render as render$1 } from '../extensions/dom.mjs';
+export { encodeEntity, encodeEntities } from '../extensions/dom.mjs';
 
 
 
@@ -34,7 +35,7 @@ const tokenize = (source, options = {}) => {
   }
 };
 
-const render$1 = async (source, options) => render(tokenize(source, options), options && options.fragment);
+const render = async (source, options) => render$1(tokenize(source, options), options && options.fragment);
 
 const warmup = (source, options) => {
   const key = (options && JSON.stringify(options)) || '';
@@ -45,5 +46,5 @@ const warmup = (source, options) => {
   cache.add(source);
 };
 
-export { tokenize, render$1 as render, warmup };
+export { tokenize, render, warmup };
 //# sourceMappingURL=markup.mjs.map

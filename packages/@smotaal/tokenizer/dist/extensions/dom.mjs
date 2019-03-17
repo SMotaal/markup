@@ -380,5 +380,5 @@ Object.assign(renderers, {
   code: factory(SPAN, {className: `${CLASS}`}),
 });
 
-export { renderers, renderer, render, supported, native$1 as native, Element$2 as Element, Text$2 as Text, Fragment, Template };
+export { renderers, renderer, render, supported, native$1 as native, Element$2 as Element, Text$2 as Text, Fragment, Template, encodeEntity, encodeEntities };
 //# sourceMappingURL=dom.mjs.map

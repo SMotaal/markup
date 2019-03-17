@@ -1349,13 +1349,13 @@
   const parser = new Parser();
   for (const id in modes) parser.register(modes[id]);
 
-  const {assign, defineProperty: defineProperty$1} = Object;
+  const {assign, defineProperty} = Object;
 
   const document$1 = void null;
 
   class Node {
     get children() {
-      return defineProperty$1(this, 'children', {value: new Set()}).children;
+      return defineProperty(this, 'children', {value: new Set()}).children;
     }
     get childElementCount() {
       return (this.hasOwnProperty('children') && this.children.size) || 0;
@@ -1431,7 +1431,7 @@
       className: (properties && properties.className) || '',
       properties,
     });
-    children.length && defineProperty$1(element, 'children', {value: new Set(children)});
+    children.length && defineProperty(element, 'children', {value: new Set(children)});
     return element;
   };
 
@@ -1757,6 +1757,8 @@
   exports.tokenize = tokenize;
   exports.render = render$1;
   exports.warmup = warmup;
+  exports.encodeEntity = encodeEntity;
+  exports.encodeEntities = encodeEntities;
 
   Object.defineProperty(exports, '__esModule', { value: true });
 

@@ -1010,23 +1010,23 @@
   /// INTERFACE
   const definitions = {};
 
-  const install = (defaults$$1, newSyntaxes = defaults$$1.syntaxes || {}) => {
+  const install = (defaults, newSyntaxes = defaults.syntaxes || {}) => {
     Object.assign(newSyntaxes, syntaxes$1);
     Object.defineProperties(newSyntaxes, definitions);
-    defaults$$1.syntaxes === newSyntaxes || (defaults$$1.syntaxes = newSyntaxes);
+    defaults.syntaxes === newSyntaxes || (defaults.syntaxes = newSyntaxes);
   };
 
   const syntaxes$1 = {};
 
   /// DEFINITIONS
   Syntaxes: {
-    const {Closures: Closures$$1, Symbols, sequence: sequence$$1, all, raw: raw$$1} = helpers;
+    const {Closures, Symbols, sequence, all, raw} = helpers;
 
     CSS: {
       const css = (syntaxes$1.css = {
         ...(modes.css = {syntax: 'css'}),
-        comments: Closures$$1.from('/*…*/'),
-        closures: Closures$$1.from('{…} (…) […]'),
+        comments: Closures.from('/*…*/'),
+        closures: Closures.from('{…} (…) […]'),
         quotes: Symbols.from(`' "`),
         assigners: Symbols.from(`:`),
         combinators: Symbols.from('> :: + :'),
@@ -1045,8 +1045,8 @@
       const html = (syntaxes$1.html = {
         ...(modes.html = {syntax: 'html'}),
         keywords: Symbols.from('DOCTYPE doctype'),
-        comments: Closures$$1.from('<!--…-->'),
-        closures: Closures$$1.from('<%…%> <!…> <…/> </…> <…>'),
+        comments: Closures.from('<!--…-->'),
+        closures: Closures.from('<%…%> <!…> <…/> </…> <…>'),
         quotes: [],
         patterns: {
           ...patterns,
@@ -1084,7 +1084,7 @@
             $$matcher.lastIndex = index;
 
             // TODO: Check if `<script>`…`</SCRIPT>` is still valid!
-            const $$closer = new RegExp(raw$$1`^<\/(?:${first.text.toLowerCase()}|${tag})\b`);
+            const $$closer = new RegExp(raw`^<\/(?:${first.text.toLowerCase()}|${tag})\b`);
 
             let syntax = (tag === 'STYLE' && 'css') || '';
 
@@ -1128,9 +1128,9 @@
       const html = syntaxes$1.html;
       const md = (syntaxes$1.md = {
         ...(modes.markdown = modes.md = {syntax: 'md'}),
-        comments: Closures$$1.from('<!--…-->'),
+        comments: Closures.from('<!--…-->'),
         quotes: [],
-        closures: Closures$$1.from(html.closures, CLOSURES),
+        closures: Closures.from(html.closures, CLOSURES),
         patterns: {...html.patterns},
         matcher: /(^\s+|\n)|(&#x?[a-f0-9]+;|&[a-z]+;|(?:```+|\~\~\~+|--+|==+|(?:\#{1,6}|\-|\b\d+\.|\b[a-z]\.|\b[ivx]+\.)(?=\s+\S+))|"|'|=|\/>|<%|%>|<!--|-->|<[\/\!]?(?=[a-z]+\:?[a-z\-]*[a-z]|[a-z]+)|<|>|\(|\)|\[|\]|__?|([*~`])\3?\b|\b([*~`])\4?)|\b[^\n\s\[\]\(\)\<\>&]*[^\n\s\[\]\(\)\<\>&_]\b|[^\n\s\[\]\(\)\<\>&]+(?=__?\b)/gim,
         spans: undefined,
@@ -1155,7 +1155,7 @@
 
         const indenter = (indenting, tabs = 2) => {
           let source = indenting;
-          const indent = new RegExp(raw$$1`(?:\t|${' '.repeat(tabs)})`, 'g');
+          const indent = new RegExp(raw`(?:\t|${' '.repeat(tabs)})`, 'g');
           source = source.replace(/\\?(?=[\(\)\:\?\[\]])/g, '\\');
           source = source.replace(indent, indent.source);
           return new RegExp(`^${source}`, 'm');
@@ -1168,14 +1168,14 @@
             const indenting = fencing.slice(fencing.indexOf('\n') + 1, -fence.length) || '';
             let end = source.indexOf(`\n${fencing}`, start);
             const INDENT = indenter(indenting);
-            const CLOSER = new RegExp(raw$$1`\n${INDENT.source.slice(1)}${fence}`, 'g');
+            const CLOSER = new RegExp(raw`\n${INDENT.source.slice(1)}${fence}`, 'g');
 
             CLOSER.lastIndex = start;
             let closerMatch = CLOSER.exec(source);
             if (closerMatch && closerMatch.index >= start) {
               end = closerMatch.index + 1;
             } else {
-              const FENCE = new RegExp(raw$$1`\n?[\>\|\s]*${fence}`, 'g');
+              const FENCE = new RegExp(raw`\n?[\>\|\s]*${fence}`, 'g');
               FENCE.lastIndex = start;
               const fenceMatch = FENCE.exec(source);
               if (fenceMatch && fenceMatch.index >= start) {
@@ -1221,7 +1221,7 @@
             const FenceClosure = md.closures.get(opener);
             if (FenceClosure) {
               FenceClosure.matcher = new RegExp(
-                raw$$1`/(\s*\n)|(${opener}(?=${opener}\s|${opener}$)|^(?:[\s>|]*\s)?\s*)|.*$`,
+                raw`/(\s*\n)|(${opener}(?=${opener}\s|${opener}$)|^(?:[\s>|]*\s)?\s*)|.*$`,
                 'gm',
               );
               FenceClosure.quotes = quotes;
@@ -1240,10 +1240,10 @@
 
       const es = (syntaxes$1.es = {
         ...(modes.javascript = modes.es = modes.js = modes.ecmascript = {syntax: 'es'}),
-        comments: Closures$$1.from('//…\n /*…*/'),
+        comments: Closures.from('//…\n /*…*/'),
         quotes: Symbols.from(`' " \``),
-        closures: Closures$$1.from('{…} (…) […]'),
-        spans: {'`': Closures$$1.from('${…}')},
+        closures: Closures.from('{…} (…) […]'),
+        spans: {'`': Closures.from('${…}')},
         keywords: Symbols.from(
           // abstract enum interface package  namespace declare type module
           'arguments as async await break case catch class const continue debugger default delete do else export extends finally for from function get if import in instanceof let new of return set super switch this throw try typeof var void while with yield',
@@ -1256,16 +1256,16 @@
         operators: Symbols.from('++ -- !! ^ ~ ! ...'),
         breakers: Symbols.from(', ;'),
         patterns: {...patterns},
-        matcher: sequence$$1`([\s\n]+)|(${all(
+        matcher: sequence`([\s\n]+)|(${all(
         REGEXPS,
-        raw$$1`\/=`,
+        raw`\/=`,
         COMMENTS,
         QUOTES,
         CLOSURES,
         /,|;|\.\.\.|\.|\:|\?|=>/,
         /!==|===|==|=/,
-        ...raw$$1`\+ \- \* & \|`.split(' ').map(s => `${s}${s}|${s}=|${s}`),
-        ...raw$$1`! \*\* % << >> >>> < > \^ ~`.split(' ').map(s => `${s}=|${s}`),
+        ...raw`\+ \- \* & \|`.split(' ').map(s => `${s}${s}|${s}=|${s}`),
+        ...raw`! \*\* % << >> >>> < > \^ ~`.split(' ').map(s => `${s}=|${s}`),
       )})`,
         matchers: {
           quote: /(\n)|(\\(?:(?:\\\\)*\\|[^\\\s])?|`|"|'|\$\{)/g,
@@ -1284,38 +1284,38 @@
         const QUOTES = /`|"(?:[^\\"]+|\\.)*(?:"|$)|'(?:[^\\']+|\\.)*(?:'|$)/g;
         const COMMENTS = /\/\/.*(?:\n|$)|\/\*[^]*?(?:\*\/|$)|^\#\!.*\n/g; // [^] === (?:.*\n)
         const STATEMENTS = all(QUOTES, CLOSURES, REGEXPS, COMMENTS);
-        const BLOCKLEVEL = sequence$$1`([\s\n]+)|(${STATEMENTS})`;
-        const TOPLEVEL = sequence$$1`([\s\n]+)|(${STATEMENTS})`;
-        const CLOSURE = sequence$$1`(\n+)|(${STATEMENTS})`;
-        const ESM = sequence$$1`${TOPLEVEL}|\bexport\b|\bimport\b`;
-        const CJS = sequence$$1`${BLOCKLEVEL}|\bexports\b|\bmodule.exports\b|\brequire\b`;
-        const ESX = sequence$$1`${BLOCKLEVEL}|\bexports\b|\bimport\b|\bmodule.exports\b|\brequire\b`;
+        const BLOCKLEVEL = sequence`([\s\n]+)|(${STATEMENTS})`;
+        const TOPLEVEL = sequence`([\s\n]+)|(${STATEMENTS})`;
+        const CLOSURE = sequence`(\n+)|(${STATEMENTS})`;
+        const ESM = sequence`${TOPLEVEL}|\bexport\b|\bimport\b`;
+        const CJS = sequence`${BLOCKLEVEL}|\bexports\b|\bmodule.exports\b|\brequire\b`;
+        const ESX = sequence`${BLOCKLEVEL}|\bexports\b|\bimport\b|\bmodule.exports\b|\brequire\b`;
 
         const {quotes, closures, spans} = es;
         const syntax = {quotes, closures, spans};
-        const matchers$$1 = {};
-        ({quote: matchers$$1.quote} = es.matchers);
+        const matchers = {};
+        ({quote: matchers.quote} = es.matchers);
 
         const esm = (syntaxes$1.esm = {
           ...(modes.esm = {syntax: 'esm'}),
           keywords: Symbols.from('import export default'),
           ...syntax,
           matcher: ESM,
-          matchers: {...matchers$$1, closure: CLOSURE},
+          matchers: {...matchers, closure: CLOSURE},
         });
         const cjs = (syntaxes$1.cjs = {
           ...(modes.cjs = {syntax: 'cjs'}),
           keywords: Symbols.from('import module exports require'),
           ...syntax,
           matcher: CJS,
-          matchers: {...matchers$$1, closure: CJS},
+          matchers: {...matchers, closure: CJS},
         });
         const esx = (syntaxes$1.esx = {
           ...(modes.esx = {syntax: 'esx'}),
           keywords: Symbols.from(esm.keywords, cjs.keywords),
           ...syntax,
           matcher: ESX,
-          matchers: {...matchers$$1, closure: ESX},
+          matchers: {...matchers, closure: ESX},
         });
       }
     }
@@ -1331,12 +1331,12 @@
        * @type {(helpers: helpers, defaults: defaults) => mode}
        */
       const factory = extensions[mode];
-      const defaults$$1 = {syntax: mode, ...factory.defaults};
-      const {syntax, aliases} = defaults$$1;
+      const defaults = {syntax: mode, ...factory.defaults};
+      const {syntax, aliases} = defaults;
 
       definitions[syntax] = {
         get() {
-          return (this[syntax] = factory(helpers, defaults$$1));
+          return (this[syntax] = factory(helpers, defaults));
         },
         set(value) {
           Reflect.defineProperty(this, syntax, {value});
@@ -1355,7 +1355,7 @@
     }
   }
   /// Bootstrap
-  const ready$1 = (async () => {
+  const ready = (async () => {
     await entities.ready;
     syntaxes$1.es.patterns.maybeIdentifier = identifier(
       entities.es.IdentifierStart,
@@ -1544,13 +1544,13 @@
   const supported = !!native;
   const native$1 = !HTML_MODE && supported;
   const implementation = native$1 ? native : pseudo;
-  const {createElement: createElement$3, createText: createText$3, createFragment: createFragment$3} = implementation;
+  const {createElement: createElement$2, createText: createText$2, createFragment: createFragment$2} = implementation;
 
   /// IMPLEMENTATION
   const factory = (tag, properties) => (content, token) => {
     if (!content) return;
-    typeof content !== 'string' || (content = createText$3(content));
-    const element = createElement$3(tag, properties, content);
+    typeof content !== 'string' || (content = createText$2(content));
+    const element = createElement$2(tag, properties, content);
 
     element && token && (token.hint && (element.className += ` ${token.hint}`));
     // token.breaks && (element.breaks = token.breaks),
@@ -1564,7 +1564,7 @@
 
   Object.assign(renderers, {
     // whitespace: factory(SPAN, {className: `${CLASS} whitespace`}),
-    whitespace: createText$3,
+    whitespace: createText$2,
     text: factory(SPAN, {className: CLASS}),
 
     variable: factory('var', {className: `${CLASS} variable`}),
@@ -1592,12 +1592,12 @@
     install: install$1,
     supported: supported,
     native: native$1,
-    createElement: createElement$3,
-    createText: createText$3,
-    createFragment: createFragment$3
+    createElement: createElement$2,
+    createText: createText$2,
+    createFragment: createFragment$2
   });
 
-  const ready$2 = (async () => void (await ready$1))();
+  const ready$1 = (async () => void (await ready))();
 
   const versions = [parser];
 
@@ -1606,35 +1606,35 @@
   const initialize = () =>
     exports.initialized ||
     (exports.initialized = async () => {
-      const {createFragment, supported: supported$$1} = dom$1;
+      const {createFragment, supported} = dom$1;
 
       /**
        * Temporary template element for rendering
        * @type {HTMLTemplateElement?}
        */
       const template =
-        supported$$1 &&
+        supported &&
         (template =>
           'HTMLTemplateElement' === (template && template.constructor && template.constructor.name) && template)(
           document.createElement('template'),
         );
 
       /// API
-      const syntaxes$$1 = {};
-      const renderers$$1 = {};
-      const defaults$$1 = {...defaults};
+      const syntaxes = {};
+      const renderers = {};
+      const defaults$1 = {...defaults};
 
-      await ready$2;
+      await ready$1;
       /// Defaults
-      install(defaults$$1, syntaxes$$1);
-      install$1(defaults$$1, renderers$$1);
+      install(defaults$1, syntaxes);
+      install$1(defaults$1, renderers);
 
       let lastVersion;
       exports.tokenize = (source, options = {}) => {
         const version = options.version > 1 ? versions[options.version - 1] : versions[0];
         options.tokenize = (version || parser).tokenize;
         try {
-          return version.tokenize(source, {options}, defaults$$1);
+          return version.tokenize(source, {options}, defaults$1);
         } finally {
           !version || lastVersion === (lastVersion = version) || console.log({version});
         }
@@ -1643,7 +1643,7 @@
       exports.render = async (source, options) => {
         const fragment = options.fragment || createFragment();
 
-        const elements = render(source, options, defaults$$1);
+        const elements = render(source, options, defaults$1);
         let first = await elements.next();
 
         let logs = (fragment.logs = []);
@@ -1749,7 +1749,7 @@
     InitializeFirst: `Try calling Markup.initialize().then(…) first.`,
   };
 
-  exports.ready = ready$2;
+  exports.ready = ready$1;
   exports.versions = versions;
   exports.warmup = warmup;
   exports.markup = markup$1;
