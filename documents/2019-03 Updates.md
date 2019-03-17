@@ -1,4 +1,4 @@
-﻿# Markup March 2019 Update
+﻿# 2019-03 <q>Six Months into Markup</q>
 
 It's been a a little over 6 months since I started my markup experiments and a lot has taken place since.
 
@@ -19,11 +19,11 @@ So happy thoughts reading!
 
 ### Problem Solving Confidence
 
-I was introduced to the elegant beauty that is [quasiParserGenerator](https://github.com/erights/quasiParserGenerator) and while I observed it's beauty, it threw me hard as I failed to reconcile with feeling that my efforts so far have been "kids play" thinking outloud to myself:
+I was introduced to the elegant beauty that is [quasiParserGenerator](https://github.com/erights/quasiParserGenerator) and while I observed it's beauty, it threw me hard as I failed to reconcile with feeling that my efforts so far have been "kids play" (thinking outloud to myself as it were).
 
 <blockquote><details>
 
-<summary>So how to you work with that, how do you find motivation to overcome a thought like that?!</summary>
+<summary>But how does one find motivation to overcome a thought like that?!</summary>
 
 What do you do when faced with a similar challenge where you are deadlocked with what seems to be a very rational conclusion that your solution has lost any luster it had for being one of true merit that one day it will actually be useful for others to justify duplicating efforts already made in ways you could only ever aspire to one day?
 
@@ -42,13 +42,13 @@ As you wonder, you will empathize, and you will likely consider things beyond wh
 
 a. Unlike PEG, I am motivated by solving different problems. In fact, I am fairly certain that the premise of markup is that while it tokenizes into trees, those trees are not necessarily the ASTs you would expect from a lexer.
 
-b. One of motivation was that ASTs from lexers were redundancies if you are parsing to make few to no modifications then turn around and have the runtime do the same work again to run the code.
+b. A painpoint I set out to solve was avoiding unnecessary overhead of full ASTs if you are parsing to make few to no modifications just to turn around and have the actual runtime parser do the same, in a much more controllable way. Creating things that must be used right to avoid having them linger or leak is a design decision that is not too unreasonable to think of considering how badly our CPUs spin from popular plugins going through a bad day.
 
-c. Another motivation was that current solutions for ASTs are tightly coupled to the idea of what valid syntax can be, and take so much work to make them tolerant.
+c. Another motivation was that current solutions for ASTs are tightly coupled to the idea of what invalid syntax can be before it breaks badly, and this  takes so much additional work just to get them to make sense and be tolerant to mistakes, only to find that users make the ones we did not anticipate after all.
 
-d. Much like QuasiPEG, I wanted a solution that would easily extend beyond a single language, and deliver well when mixing them. Because this notion of using a good AST package for x and another for y, it is not merely the additional interfacing overhead, it is the slew of redundancies and incompatibilities whe integration today and new ones cropping out with little foresight down the road.
+d. Much like QuasiPEG, I wanted a solution that would easily extend beyond a single language, and deliver well on working with mixed texts not creating race conditions mid-frame. Because this notion of using a good AST package for x and another for y, it is not merely the additional interfacing overhead, it is the slew of redundancies and incompatibilities with integration today and new ones cropping out with little foresight down the road.
 
-e. If I take anything from what initially seemed unmotivating, it is that all those motives behind my work have been validated for merit, and that pulling it off is a credit worth claiming instead.
+By the now I am coming to the conclusion that if I were to take anything from what initially seemed a moment of doubt, it is that all those motives behind my work have been validated for merit, and that pulling it off is credit to further investment.
 
 ### Growing fond of RegExp
 
@@ -62,7 +62,7 @@ To try to relate to this notion, I just imagine if I was debugging a problem whe
 
 One way where debugging this problem could play out if we used RegExp's instead of api soup would be to conditionally break and check the offending string with something like `string.replace(/\$\{/g, '«${»')`.
 
-Now suppose it was a problem with the expression itself and not a hidden joiner that we failed to spot, the matching expression itself should be be right there in scope to examine or at least easy to identify because it will be the one with `|\$\{|` or similar based on your one-size stylistics and behaviour norms for patterns.
+Now suppose it was a problem with the expression itself and not a hidden joiner that we failed to spot, the matching expression itself should be be right there in scope to examine or at least easy to identify because it will be the one with `…|\$\{|…` or similar based on your one-size stylistics and behaviour norms for patterns.
 
 Regular expression patterns have an added perk in that can port a lot more easily (in my opinion) than imparative logic, worst case, you are porting the single feature of RegExp (which is rather complex) but not any and all ECMAScript features very likely including RegExp itself.
 
