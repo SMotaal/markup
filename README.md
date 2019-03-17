@@ -1,5 +1,7 @@
 # Markup (_Experimental_)
 
+[<kbd>GitHub</kbd>](https://github.com/SMotaal/markup) [<kbd>Updates</kbd>](./updates)
+
 Semi-contextual parsing experiments, which fall somewhere between the scope of regular expressions and the more much more advanced realms of source code parsing.
 
 **FYI**: Markup is undergoing refactoring to release [@SMotaal/tokenizer](./packages/@smotaal/tokenizer)
@@ -63,20 +65,17 @@ _Inspection Modes_ — `esm`, `cjs`, `esx`
 
 </figure>
 
-
 **Iterations**
 
 <figure>
 
-
 - [#markup](./markup.html#markup) — Render &times; 1 and Tokenize &times; 1
-- [#markup&#42;2](./markup.html#markup*2) — Render &times; 2 and Tokenize &times; 1
-- [#markup&#42;0](./markup.html#markup*0) — Render &times; 0 and Tokenize &times; 1
-- [#markup&#42;0&#42;&#42;100](./markup.html#markup*0**100) — Render &times; 0 and Tokenize &times; 100
-- [#markup&#42;2&#42;&#42;2](./markup.html#markup*2**2) — Render &times; 2 and Tokenize &times; 2
+- [#markup\*2](./markup.html#markup*2) — Render &times; 2 and Tokenize &times; 1
+- [#markup\*0](./markup.html#markup*0) — Render &times; 0 and Tokenize &times; 1
+- [#markup\*0\*\*100](./markup.html#markup*0**100) — Render &times; 0 and Tokenize &times; 100
+- [#markup\*2\*\*2](./markup.html#markup*2**2) — Render &times; 2 and Tokenize &times; 2
 
 </figure>
-
 
 **Presets**
 
