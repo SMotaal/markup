@@ -1,17 +1,18 @@
 ﻿# 2019-03 <q>Six Months into Markup</q> <span float-right>`draft`</span>
 
-It's been a a little over 6 months since I started my markup experiments and a lot has taken place since.
+It's been a a little over 6 months since I started my markup experiments and a lot has taken place since:
 
 - Leveraged generators and `RegExp` as planned to nest parsing across multiple syntaxes.
 - Created a simple way to define grammars (includes CSS, JS, HTML and limited Markdown).
-- Created grassroots highlighter that composes even without a DOM (using [pseudom](https://www.npmjs.com/package/pseudom)).
+- Created feather-weight library for composing without a DOM (in [pseudom](https://www.npmjs.com/package/pseudom))
 - Explored different patterns for extensibility using standard ECMAScript modules.
+- Brought it all together in a web-based syntax highlighter (in [markup](https://www.smotaal.io/markup/)).
 
 All this work made it possible to separately start working on other stalled problems:
 
-- Created a Markout renderer prototype (in [Pholio](https://smotaal.io/pholio)).
+- Created a Markout renderer prototype (in [Pholio](https://www.smotaal.io/pholio/)).
 - Visualized syntax debates related to ESM/CJS (in [@nodejs/modules](https://github.com/nodejs/modules)).
-- Replaced server-side rendering on GH pages (in [Quench](https://smotaal.io/quench)).
+- Replaced server-side rendering on GH pages (in [Quench](https://www.smotaal.io/quench/)).
 
 Along the way, my concepts have been challenged and often beyond my point breaking, and that always feels bad at first, but somehow grows on you and makes you grow as you work through it.
 
@@ -29,9 +30,9 @@ What do you do when faced with a similar challenge where you are deadlocked with
 
 Maybe you should simply ask the author of that code directly, not how they can fix your solution for you, but how they would have worked through in order to for them to have gotten that far ahead.
 
-Asking directly works on two levels, the answer may be deeply enlighting when the other person can easily relate to your frustrations, and more suprising to my discovery was that waiting for an answer sets you in a completely new paradigm in your own quest for an answer anyway. As you are waiting for the answer will force your mind needed to dwell on reasons why it takes time.
+Asking directly works on two levels, the answer may be deeply enlighting when the other person can easily relate to your frustrations, and more suprising to my discovery was that waiting for an answer sets you in a completely new paradigm in your own quest for an answer anyway. Waiting will force your mind needed to dwell on reasons why it takes time.
 
-You start by worrying about if this seen as merely your own lack of social decorum. And if so, then likely it means that the wrong person was on the other end of this question to begin with. Getting to that realization is not easy and can be tricky, and you may never really believe it enough to over come your own doubts, and that is understandable. But is it not at least more believable than say, silence is geek for "when I have time to figure out how to handle this confusing or awkward thing in my chat… I'll deal with it!"
+You start by worrying about if this seen as merely your own lack of social decorum. But if it so then maybe it just means that the wrong person was on the other end of this question. Getting to that realization is not easy and can be tricky, and you may never really believe it enough to over come your own doubts, and that is understandable. But is it not at least more believable than say, silence is geek for "when I have time to figure out how to handle this confusing or awkward thing in my chat… I'll deal with it!"
 
 So, simply asking alone shifts the calculus on working through unrelenting doubts. I venture that it does that because it repurposes mental processes often left excluded from introverted problem-solving because it normally deals with social interactions… etc.
 
@@ -68,7 +69,7 @@ Regular expression patterns have an added perk in that can port a lot more easil
 
 ### Future Thought(s)
 
-So will this work end here, obviously this is only the start.
+So will this work end here? Obviously this is only the start.
 
 In fact, one very interesting discovery in my work that has been lacking a proper venue to share is the fact while languages like ECMAScript that receive almost yearly upgrades that affect syntax often do so in very predictable patterns. Failing to be lean enough to recognize and align your design to benefit from those predictable patterns makes it likely that you will always struggle to catch up without paying dues.
 
