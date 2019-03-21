@@ -1542,8 +1542,8 @@
   };
 
   const supported = !!native;
-  const native$1 = !HTML_MODE && supported;
-  const implementation = native$1 ? native : pseudo;
+  const native$1 = !HTML_MODE;
+  const implementation = pseudo;
   const {createElement: createElement$2, createText: createText$2, createFragment: createFragment$2} = implementation;
 
   /// IMPLEMENTATION
@@ -1649,7 +1649,7 @@
         let logs = (fragment.logs = []);
 
         if (first && 'value' in first) {
-          if (!native$1 && template && 'textContent' in fragment) {
+          if (template && 'textContent' in fragment) {
             logs.push(`render method = 'text' in template`);
             const body = [first.value];
             if (!first.done) for await (const element of elements) body.push(element);
@@ -1749,11 +1749,11 @@
     InitializeFirst: `Try calling Markup.initialize().then(…) first.`,
   };
 
+  exports.default = markup$1;
+  exports.markup = markup$1;
   exports.ready = ready$1;
   exports.versions = versions;
   exports.warmup = warmup;
-  exports.markup = markup$1;
-  exports.default = markup$1;
 
   Object.defineProperty(exports, '__esModule', { value: true });
 

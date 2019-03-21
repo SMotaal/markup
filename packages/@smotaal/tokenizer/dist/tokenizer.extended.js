@@ -1349,13 +1349,13 @@
   const parser = new Parser();
   for (const id in modes) parser.register(modes[id]);
 
-  exports.modes = modes;
-  exports.default = parser;
-  exports.TOKENIZERS = TOKENIZERS;
   exports.MAPPINGS = MAPPINGS;
   exports.MODES = MODES;
   exports.Parser = Parser;
+  exports.TOKENIZERS = TOKENIZERS;
   exports.Tokenizer = Tokenizer;
+  exports.default = parser;
+  exports.modes = modes;
 
   Object.defineProperty(exports, '__esModule', { value: true });
 

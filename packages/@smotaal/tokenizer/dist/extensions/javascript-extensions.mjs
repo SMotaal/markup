@@ -69,5 +69,5 @@ Definitions: {
   javascript.ESX = sequence`${BLOCKLEVEL}|\bexports\b|\bimport\b|\bmodule.exports\b|\brequire\b`;
 }
 
-export { mjs, cjs, esx };
+export { cjs, esx, mjs };
 //# sourceMappingURL=javascript-extensions.mjs.map

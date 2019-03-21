@@ -1,12 +1,12 @@
 import { Parser } from '../tokenizer.mjs';
-import '../extensions/helpers.mjs';
+export { entities } from '../extensions/helpers.mjs';
 import { css } from '../extensions/css-mode.mjs';
 import { html } from '../extensions/html-mode.mjs';
 import { markdown } from '../extensions/markdown-mode.mjs';
 import { javascript } from '../extensions/javascript-mode.mjs';
 import { mjs, cjs, esx } from '../extensions/javascript-extensions.mjs';
 import { render as render$1 } from '../extensions/dom.mjs';
-export { encodeEntity, encodeEntities } from '../extensions/dom.mjs';
+export { encodeEntities, encodeEntity } from '../extensions/dom.mjs';
 
 
 
@@ -46,5 +46,5 @@ const warmup = (source, options) => {
   cache.add(source);
 };
 
-export { tokenize, render, warmup };
+export { render, tokenize, warmup };
 //# sourceMappingURL=markup.mjs.map

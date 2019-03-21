@@ -1344,5 +1344,5 @@ const parser = new Parser();
 for (const id in modes) parser.register(modes[id]);
 
 export default parser;
-export { modes, TOKENIZERS, MAPPINGS, MODES, Parser, Tokenizer };
+export { MAPPINGS, MODES, Parser, TOKENIZERS, Tokenizer, modes };
 //# sourceMappingURL=tokenizer.extended.mjs.map

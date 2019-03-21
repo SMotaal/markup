@@ -1748,5 +1748,5 @@ const warmup = (source, options) => {
   cache.add(source);
 };
 
-export { tokenize, render$1 as render, warmup, encodeEntity, encodeEntities };
+export { encodeEntities, encodeEntity, entities, render$1 as render, tokenize, warmup };
 //# sourceMappingURL=tokenizer.browser.mjs.map
