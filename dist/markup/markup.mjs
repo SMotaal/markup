@@ -1536,8 +1536,8 @@ const install$1 = (defaults, newRenderers = defaults.renderers || {}) => {
 };
 
 const supported = !!native;
-const native$1 = !HTML_MODE && supported;
-const implementation = native$1 ? native : pseudo;
+const native$1 = !HTML_MODE;
+const implementation = pseudo;
 const {createElement: createElement$2, createText: createText$2, createFragment: createFragment$2} = implementation;
 
 /// IMPLEMENTATION
@@ -1645,7 +1645,7 @@ const initialize = () =>
       let logs = (fragment.logs = []);
 
       if (first && 'value' in first) {
-        if (!native$1 && template && 'textContent' in fragment) {
+        if (template && 'textContent' in fragment) {
           logs.push(`render method = 'text' in template`);
           const body = [first.value];
           if (!first.done) for await (const element of elements) body.push(element);
@@ -1746,5 +1746,5 @@ const Messages = {
 };
 
 export default markup$1;
-export { initialized, ready$1 as ready, versions, render$1 as render, tokenize$1 as tokenize, warmup, markup$1 as markup };
+export { initialized, markup$1 as markup, ready$1 as ready, render$1 as render, tokenize$1 as tokenize, versions, warmup };
 //# sourceMappingURL=markup.mjs.map

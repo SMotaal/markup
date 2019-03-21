@@ -636,5 +636,5 @@ class Parser {
 
 // * @typedef { typeof helpers } Helpers
 
-export { TOKENIZERS, MAPPINGS, MODES, Parser, Tokenizer };
+export { MAPPINGS, MODES, Parser, TOKENIZERS, Tokenizer };
 //# sourceMappingURL=tokenizer.mjs.map

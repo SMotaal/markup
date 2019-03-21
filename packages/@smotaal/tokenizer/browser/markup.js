@@ -2,6 +2,7 @@ import parser from '../extended.js';
 import * as dom from '../extensions/dom.js';
 
 export {encodeEntity, encodeEntities} from '../extensions/dom.js';
+export {entities} from '../extensions/common/patterns.js';
 
 const versions = [parser];
 let lastVersion;

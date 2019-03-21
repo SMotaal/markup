@@ -1754,11 +1754,12 @@
     cache.add(source);
   };
 
-  exports.tokenize = tokenize;
-  exports.render = render$1;
-  exports.warmup = warmup;
-  exports.encodeEntity = encodeEntity;
   exports.encodeEntities = encodeEntities;
+  exports.encodeEntity = encodeEntity;
+  exports.entities = entities;
+  exports.render = render$1;
+  exports.tokenize = tokenize;
+  exports.warmup = warmup;
 
   Object.defineProperty(exports, '__esModule', { value: true });
 
