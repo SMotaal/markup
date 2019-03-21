@@ -4,6 +4,7 @@
   "version": "0.0.3",
   "description": "Documentless OM for markup",
   "license": "MIT",
+  "type": "module",
   "main": "index.mjs",
   "module": "pseudom.js",
   "exports": {

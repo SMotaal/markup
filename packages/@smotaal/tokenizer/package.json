@@ -5,13 +5,14 @@
   "version": "0.0.4",
   "description": "Nestable syntax tokenizer using Regular Expressions",
   "license": "MIT",
+  "mode": "esm",
+  "type": "module",
   "main": "dist/tokenizer.extended.mjs",
   "module": "dist/tokenizer.extended.mjs",
   "browser": "dist/tokenizer.browser.mjs",
   "publishConfig": {
     "access": "public"
   },
-  "mode": "esm",
   "exports": {
     "./": "./tokenizer.js",
     "./extended": "./extended.js",

@@ -6,12 +6,14 @@
   "author": "Saleh Abdel Motaal <saleh@grasppe.com>",
   "repository": "https://github.com/SMotaal/markup.git",
   "license": "MIT",
-	"type": "module",
+  "type": "module",
+  "main": "index.mjs",
   "exports": {},
-  "main": "index",
   "scripts": {
     "serve": "http-server --cors -s",
-    "bundle": "rollup -c rollup.config.js"
+    "prebundle": "[ -d packages/@smotaal/tokenizer/node_modules/pseudom ] || pushd packages/@smotaal/tokenizer/node_modules && ln -s ../../../pseudom",
+    "bundle": "rollup -c rollup.config.js",
+    "postinstall": "pushd packages/@smotaal/tokenizer/node_modules && ln -s ../../../pseudom"
   },
   "devDependencies": {
     "@types/node": "*",
