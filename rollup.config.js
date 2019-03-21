@@ -1,6 +1,7 @@
 import {existsSync, mkdirSync} from 'fs';
 const dirname = __dirname;
 const dist = `${dirname}/dist/`;
+
 const bundles = {
   ['markup']: {
     input: `${dirname}/lib/markup.js`,
