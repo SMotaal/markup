@@ -20,13 +20,13 @@
     "./extensions/": "./extensions/",
     "./modes/": "./modes/"
   },
-  "dependencies": {
+  "peerDependencies": {
     "pseudom": "*"
   },
-  "bundledDependencies": [
-    "pseudom"
-  ],
   "workspaces": {
+    "packages": [
+      "../../pseudom"
+    ],
     "nohoist": [
       "pseudom"
     ]
