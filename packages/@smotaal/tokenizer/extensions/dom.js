@@ -1,5 +1,5 @@
-import * as dom from '../node_modules/pseudom/pseudom.js';
-export {encodeEntity, encodeEntities} from '../node_modules/pseudom/pseudom.js';
+import * as dom from '../../../pseudom/pseudom.js';
+export {encodeEntity, encodeEntities} from '../../../pseudom/pseudom.js';
 import {each} from './resync.js';
 
 /// OPTIONS

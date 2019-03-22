@@ -11,9 +11,8 @@
   "exports": {},
   "scripts": {
     "serve": "http-server --cors -s",
-    "prebundle": "[ -d packages/@smotaal/tokenizer/node_modules/pseudom ] || pushd packages/@smotaal/tokenizer/node_modules && ln -s ../../../pseudom",
-    "bundle": "rollup -c rollup.config.js",
-    "postinstall": "pushd packages/@smotaal/tokenizer/node_modules && ln -s ../../../pseudom"
+    "-prebundle": "[ -e packages/@smotaal/tokenizer/node_modules/pseudom ] || pushd packages/@smotaal/tokenizer/node_modules && ln -s ../../../pseudom",
+    "bundle": "rollup -c rollup.config.js"
   },
   "devDependencies": {
     "@types/node": "*",
@@ -23,8 +22,12 @@
     "typescript": "*",
     "@smotaal/esm": "SMotaal/esm"
   },
+  "resolutions": {
+    "SMotaal/esm": "../esm"
+  },
   "workspaces": {
     "packages": [
+      "../esm",
       "packages/@smotaal/tokenizer",
       "packages/pseudom"
     ],
