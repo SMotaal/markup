@@ -1,8 +1,8 @@
-# Markup (_Experimental_) <span float-right>[<kbd>GitHub</kbd>](https://github.com/SMotaal/markup) [<kbd>Updates</kbd>](./updates)</span>
+# Markup (_Experimental_) <span float-right>[<kbd>GitHub</kbd>](https://github.com/SMotaal/markup) [<kbd>Updates</kbd>](./updates.html)</span>
 
 Semi-contextual parsing experiments, which fall somewhere between the scope of regular expressions and the more much more advanced realms of source code parsing.
 
-**FYI**: Markup is undergoing refactoring to release [@SMotaal/tokenizer](./packages/@smotaal/tokenizer)
+**FYI**: Markup is undergoing refactoring to release [@SMotaal/tokenizer](./packages/@smotaal/tokenizer/README)
 
 ## Scope
 

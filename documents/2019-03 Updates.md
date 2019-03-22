@@ -6,13 +6,13 @@ It's been a a little over 6 months since I started my markup experiments and a l
 - Created a simple way to define grammars (includes CSS, JS, HTML and limited Markdown).
 - Created feather-weight library for composing without a DOM (in [pseudom](https://www.npmjs.com/package/pseudom))
 - Explored different patterns for extensibility using standard ECMAScript modules.
-- Brought it all together in a web-based syntax highlighter (in [markup](https://www.smotaal.io/markup/)).
+- Brought it all together in a web-based syntax highlighter (in [markup](/markup/)).
 
 All this work made it possible to separately start working on other stalled problems:
 
-- Created a Markout renderer prototype (in [Pholio](https://www.smotaal.io/pholio/)).
+- Created a Markout renderer prototype (in [Pholio](/pholio/)).
 - Visualized syntax debates related to ESM/CJS (in [@nodejs/modules](https://github.com/nodejs/modules)).
-- Replaced server-side rendering on GH pages (in [Quench](https://www.smotaal.io/quench/)).
+- Replaced server-side rendering on GH pages (in [Quench](/quench/)).
 
 Along the way, my concepts have been challenged and often beyond my point breaking, and that always feels bad at first, but somehow grows on you and makes you grow as you work through it.
 
