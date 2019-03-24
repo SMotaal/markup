@@ -32,19 +32,20 @@ export class Tokenizer {
       }));
 
     // Local matching
-    let {match, index = 0} = state;
+    let {match, index = 0, flags} = state;
 
     // Local tokens
-    let previous, last, parent;
+    let previousToken, lastToken, parentToken;
     const top = {type: 'top', text: '', offset: index};
 
-    let lastContext = context;
+    // let lastContext = context;
+    state.context = context;
 
     state.source = source;
 
     const tokenize = state.tokenize || (text => [{text}]);
 
-    while (true) {
+    while (!done) {
       const {
         mode: {syntax, matchers, comments, spans, closures},
         punctuator: $$punctuator,
@@ -58,10 +59,10 @@ export class Tokenizer {
       // Current contextual hint (syntax or hint)
       const hint = grouping.hint;
 
-      while (lastContext === (lastContext = context)) {
+      while (state.context === (state.context = context)) {
         let next;
 
-        state.last = last;
+        // state.lastToken = lastToken;
 
         const lastIndex = state.index || 0;
 
@@ -69,7 +70,7 @@ export class Tokenizer {
         match = state.match = $$matcher.exec(source);
         done = index === (index = state.index = $$matcher.lastIndex) || !match;
 
-        if (done) return;
+        if (done) break;
 
         // Current contextual match
         const {0: text, 1: whitespace, 2: sequence, index: offset} = match;
@@ -81,17 +82,17 @@ export class Tokenizer {
             type: 'pre',
             text: pre,
             offset: lastIndex,
-            previous,
-            parent,
+            previous: previousToken,
+            parent: parentToken,
             hint,
-            last,
+            last: lastToken,
             source,
           })),
-          yield (previous = next));
+          yield (previousToken = next));
 
         // Current contextual fragment
         const type = (whitespace && 'whitespace') || (sequence && 'sequence') || 'text';
-        next = token({type, text, offset, previous, parent, hint, last, source});
+        next = token({type, text, offset, previous: previousToken, parent: parentToken, hint, last: lastToken, source});
 
         // Current contextual punctuator (from sequence)
         const closing =
@@ -105,9 +106,9 @@ export class Tokenizer {
           let closed, opened, grouper;
 
           if (closing) {
-            ({after, closed, parent = top, grouper} = grouping.close(next, state, context));
+            ({after, closed, parent: parentToken = top, grouper} = grouping.close(next, state, context));
           } else if ($$punctuator !== 'comment') {
-            ({grouper, opened, parent = top, punctuator} = grouping.open(next, context));
+            ({grouper, opened, parent: parentToken = top, punctuator} = grouping.open(next, context));
           }
 
           state.context = grouping.context = grouping.goal || syntax;
@@ -121,10 +122,10 @@ export class Tokenizer {
         }
 
         // Current contextual tail token (yield from sequence)
-        yield (previous = next);
+        yield (previousToken = next);
 
         // Next reference to last contextual sequence token
-        next && !whitespace && forming && (last = next);
+        next && !whitespace && forming && (lastToken = next);
 
         if (after) {
           let tokens, token, nextIndex;
@@ -146,15 +147,16 @@ export class Tokenizer {
 
           if (tokens) {
             for (const next of tokens) {
-              previous && ((next.previous = previous).next = next);
+              previousToken && ((next.previous = previousToken).next = next);
               token && token(next);
-              yield (previous = next);
+              yield (previousToken = next);
             }
             nextIndex > state.index && (state.index = nextIndex);
           }
         }
       }
     }
+    flags && flags.debug && console.log(state);
   }
 
   /**
@@ -171,7 +173,7 @@ export class Tokenizer {
    */
   static *contextualizer(tokenizer) {
     // Local contextualizer state
-    let grouper, done;
+    let grouper;
 
     // Tokenizer mode
     const mode = tokenizer.mode;
@@ -181,20 +183,19 @@ export class Tokenizer {
 
     // TODO: Refactoring
     const initialize = context => {
-      context.token ||
-        (context.token = (tokenizer => (tokenizer.next(), token => tokenizer.next(token).value))(
-          this.tokenizer(context),
-        ));
+      let {
+        tokenizer = (context.tokenizer = this.tokenizer(context)),
+        token = (context.token = (tokenizer => (tokenizer.next(), token => tokenizer.next(token).value))(tokenizer)),
+      } = context;
       return context;
     };
 
     if (!mode.context) {
       const {
-        syntax,
         matcher = (mode.matcher = (defaults && defaults.matcher) || undefined),
         quotes,
         punctuators = (mode.punctuators = {aggregators: {}}),
-        punctuators: {aggregators = ($punctuators.aggregators = {})},
+        punctuators: {aggregators = (punctuators.aggregators = {})},
         patterns: {
           maybeKeyword = (mode.patterns.maybeKeyword =
             (defaults && defaults.patterns && defaults.patterns.maybeKeyword) || undefined),
@@ -202,16 +203,7 @@ export class Tokenizer {
         spans: {['(spans)']: spans} = (mode.spans = {}),
       } = mode;
 
-      initialize(
-        (mode.context = {
-          mode,
-          punctuators,
-          aggregators,
-          matcher,
-          quotes,
-          spans,
-        }),
-      );
+      initialize((mode.context = {mode, punctuators, aggregators, matcher, quotes, spans}));
     }
 
     const {
@@ -225,15 +217,15 @@ export class Tokenizer {
     while (true) {
       if (grouper !== (grouper = yield (grouper && grouper.context) || mode.context) && grouper && !grouper.context) {
         const {
-          goal = $syntax,
+          goal = (grouper.syntax = $syntax),
           punctuator,
-          punctuators = $punctuators,
-          aggregators = $aggregators,
+          punctuators = (grouper.punctuators = $punctuators),
+          aggregators = (grouper.aggregate = $aggregators),
           closer,
           spans,
-          matcher = $matcher,
-          quotes = $quotes,
-          forming = goal === $syntax,
+          matcher = (grouper.matcher = $matcher),
+          quotes = (grouper.quotes = $quotes),
+          forming = (grouper.forming = goal === $syntax),
         } = grouper;
 
         initialize(
