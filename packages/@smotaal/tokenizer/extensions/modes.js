@@ -1,5 +1,5 @@
-export {css} from './css/css-mode.js';
-export {html} from './html/html-mode.js';
-export {markdown} from './markdown/markdown-mode.js';
-export {javascript} from './javascript/javascript-mode.js';
-export {mjs, cjs, esx} from './javascript/extended-modes.js';
+export {css} from '../../grammars/css/css-grammar.js';
+export {html} from '../../grammars/html/html-grammar.js';
+export {markdown} from '../../grammars/markdown/markdown-grammar.js';
+export {javascript} from '../../grammars/javascript/javascript-grammar.js';
+export {mjs, cjs, esx} from '../../grammars/javascript/javascript-extended-grammar.js';

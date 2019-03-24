@@ -27,6 +27,11 @@ Please note that no efforts are intended to make this package operational with t
 
 ## Important Changes
 
+*v0.0.5*
+- Refactor grammars into a separate package.
+- Remove dist/extensions/ bundles
+- Expose dom and grammar helpers directly dist/tokenizer.browser.js
+
 *v0.0.4*
 - Rename ECMAScript module sources to `.js` instead of `.mjs`.
 - Add minimal `node/loader.mjs` for experimental Node.js mode.

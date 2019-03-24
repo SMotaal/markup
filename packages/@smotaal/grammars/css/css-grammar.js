@@ -1,6 +1,6 @@
-import { Closures, Symbols } from './helpers.mjs';
+import {Symbols, Closures} from '../common/helpers.js';
 
-const css = Object.defineProperties(
+export const css = Object.defineProperties(
   ({syntax} = css.defaults) => ({
     syntax,
     comments: Closures.from('/*…*/'),
@@ -20,6 +20,3 @@ const css = Object.defineProperties(
     defaults: {value: {syntax: 'css'}},
   },
 );
-
-export { css };
-//# sourceMappingURL=css-mode.mjs.map

@@ -28,6 +28,7 @@
   "workspaces": {
     "packages": [
       "../esm",
+      "packages/@smotaal/grammars",
       "packages/@smotaal/tokenizer",
       "packages/pseudom"
     ],
