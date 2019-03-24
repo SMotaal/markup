@@ -1,7 +1,7 @@
 {
   "name": "pseudom",
   "displayName": "pseu·dom",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Documentless OM for markup",
   "license": "MIT",
   "type": "module",
