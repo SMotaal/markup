@@ -1,2 +1,2 @@
-export {patterns, entities} from './common/patterns.js';
-export * from './common/helpers.js';
+export {patterns, entities} from '../../grammars/common/patterns.js';
+export * from '../../grammars/common/helpers.js';

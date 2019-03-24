@@ -1,0 +1,12 @@
+{
+  "name": "@smotaal/grammars",
+  "displayName": "SMotaal's Markup Grammars",
+  "version": "0.0.0",
+  "description": "Regular expression markup grammars",
+  "license": "MIT",
+  "mode": "esm",
+  "type": "module",
+  "publishConfig": {
+    "access": "public"
+  }
+}

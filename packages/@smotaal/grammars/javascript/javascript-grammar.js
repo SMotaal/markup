@@ -1,4 +1,5 @@
-import {Closures, Symbols, identifier, sequence, all, raw, patterns, entities} from '../helpers.js';
+import {Closures, Symbols, identifier, sequence, all} from '../common/helpers.js';
+import {patterns, entities} from '../common/patterns.js';
 
 export const javascript = Object.defineProperties(
   ({syntax} = defaults) => ({

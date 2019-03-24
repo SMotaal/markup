@@ -1,9 +1,8 @@
 {
-  "private": true,
   "name": "@smotaal/tokenizer",
-  "displayName": "SMotaal's Tokenizer",
-  "version": "0.0.4",
-  "description": "Nestable syntax tokenizer using Regular Expressions",
+  "displayName": "SMotaal's Markup Tokenizer",
+  "version": "0.0.5",
+  "description": "Nestable markup tokenizer using Regular Expressions",
   "license": "MIT",
   "mode": "esm",
   "type": "module",
@@ -17,18 +16,10 @@
     "./": "./tokenizer.js",
     "./extended": "./extended.js",
     "./lib/": "./lib/",
-    "./extensions/": "./extensions/",
-    "./modes/": "./modes/"
+    "./extensions/": "./extensions/"
   },
-  "peerDependencies": {
+  "devDependencies": {
+    "@smotaal/grammars": "*",
     "pseudom": "*"
-  },
-  "workspaces": {
-    "packages": [
-      "../../pseudom"
-    ],
-    "nohoist": [
-      "pseudom"
-    ]
   }
 }

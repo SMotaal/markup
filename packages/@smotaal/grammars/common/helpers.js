@@ -7,28 +7,29 @@ export const raw = String.raw;
 
 export const RegExpFlags = /^\/((?:g(?=[^g]*$)|i(?=[^i]*$)|m(?=[^m]*$)|s(?=[^s]*$)|u(?=[^u]*$)|y(?=[^y]*$))+)$|/;
 
+class SequenceExpression extends RegExp {}
+
 /**
  * Create a sequence match expression from patterns.
  *
- * @param  {...Pattern} patterns
+ * @type  {{(strings: TemplateStringsArray, ... patterns: pattern[]): sequence, (...patterns: pattern[]): sequence}}
  */
 export const sequence = (...patterns) => (
   patterns.length > 1 &&
     (patterns.flags = RegExpFlags.exec(patterns[patterns.length - 1]).pop()) &&
     (patterns[patterns.length - 1] = ''),
-  new RegExp(Reflect.apply(raw, null, patterns.map(p => (p && p.source) || p || '')), patterns.flags || 'g')
+  new SequenceExpression(Reflect.apply(raw, null, patterns.map(p => (p && p.source) || p || '')), patterns.flags || 'g')
 );
+
+class IdentifierExpression extends RegExp {}
 
 /**
  * Create a maybeIdentifier test (ie [<first>][<other>]*) expression.
  *
- * @param  {Entity} first - Valid ^[<…>] entity
- * @param  {Entity} other - Valid [<…>]*$ entity
- * @param  {string} [flags] - RegExp flags (defaults to 'u')
- * @param  {unknown} [boundary]
+ * @type {{(first: pattern, other: pattern, flags?: string, boundary?: unknown): pattern.identifier}}
  */
 export const identifier = (first, other = first, flags = 'u', boundary = /yg/.test(flags) && '\\b') =>
-  new RegExp(`${boundary || '^'}[${first}][${other}]*${boundary || '$'}`, flags);
+  new IdentifierExpression(`${boundary || '^'}[${first}][${other}]*${boundary || '$'}`, flags);
 
 /**
  * Create a sequence pattern from patterns.
@@ -226,3 +227,7 @@ export const indenter = (indenting, tabs = 2) => {
   const [, lead, tail] = /^(\s*.*?)(\s*?)$/.exec(source);
   return new RegExp(`^${lead.replace(indent, space)}(?:${tail.replace(indent, `${space}?`)})?`, 'm');
 };
+
+/** @typedef {string | RegExp} pattern */
+/** @typedef {SequenceExpression} sequence */
+/** @typedef {IdentifierExpression} pattern.identifier */
