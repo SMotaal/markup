@@ -31,22 +31,22 @@ export async function render(tokens, fragment) {
   let logs, template, first, elements;
   try {
     fragment || (fragment = Fragment());
-    logs = fragment.logs || (fragment.logs = []);
+    logs = fragment.logs; // || (fragment.logs = []);
     elements = renderer(tokens);
     if ((first = await elements.next()) && 'value' in first) {
       template = Template();
       if (!native && template && 'textContent' in fragment) {
-        logs.push(`render method = 'text' in template`);
+        logs && logs.push(`render method = 'text' in template`);
         const body = [first.value];
         first.done || (await each(elements, element => body.push(element)));
         template.innerHTML = body.join('');
         fragment.appendChild(template.content);
       } else if ('push' in fragment) {
-        logs.push(`render method = 'push' in fragment`);
+        logs && logs.push(`render method = 'push' in fragment`);
         fragment.push(first.value);
         first.done || (await each(elements, element => fragment.push(element)));
       } else if ('append' in fragment) {
-        logs.push(`render method = 'append' in fragment`);
+        logs && logs.push(`render method = 'append' in fragment`);
         fragment.append(first.value);
         first.done || (await each(elements, element => fragment.append(element)));
       }

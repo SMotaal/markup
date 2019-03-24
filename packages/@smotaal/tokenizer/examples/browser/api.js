@@ -20,10 +20,11 @@ export default (markup, overrides) => {
       }))(),
   };
 
-  const Hash = /#((?:.*?:)?.*?)(?:(\!+)([a-z]+|[A-Z]+)?)?(?:\*(?!\*)(\d+))?(?:\*{2}(\d+))?$/;
+  const Hash = /#([?]?)((?:.*?:)?.*?)(?:(\!+)([a-z]+|[A-Z]+)?)?(?:\*(?!\*)(\d+))?(?:\*{2}(\d+))?$/;
   const options = Object.create(defaults);
   const sourceCodeElement = document.querySelector(options.element);
   const sourceHeaderTemplate = document.querySelector(options.headerTemplate);
+  const flags = new Set();
 
   const fetchSource = async (source, options) => (
     (source.sourceText = ''),
@@ -54,8 +55,8 @@ export default (markup, overrides) => {
 
   const renderMarkup = async (sourceText, markupOptions) => {
     const fragment = markupOptions.fragment || (markupOptions.fragment = document.createDocumentFragment());
-    await markup.render(sourceText, markupOptions);
-    if (fragment.logs) console.log(...fragment.logs);
+    await markup.render(sourceText, markupOptions, flags);
+    if (flags.has('debug') && fragment.logs) console.log(...fragment.logs);
     return fragment;
   };
 
@@ -91,7 +92,7 @@ export default (markup, overrides) => {
       header.status[name] === (header.status[name] = value);
       const element = header.elements[`${name}-span`];
       const text = `${value || ''}`;
-      element ? (element.innerText = text) : text && console.info('[%s] %o', name, value);
+      element ? (element.innerText = text) : text && flags.has('debug') && console.info('[%s] %o', name, value);
     };
 
     header.timing = (name, value) => {
@@ -101,7 +102,7 @@ export default (markup, overrides) => {
       const text = `${(value !== true && value >= 0 && value) || ''}`;
       element
         ? (element.setAttribute('value', text), (element.innerText = (value === true && '…') || text))
-        : console.info('[%s] %o — %o', name, status, value);
+        : flags.has('debug') && console.info('[%s] %o — %o', name, status, value);
     };
 
     header.stats = ({name, status, time}) => {
@@ -154,6 +155,7 @@ export default (markup, overrides) => {
       // console.log({'options.version': options.version, 'defaults.version': defaults.version});
       // sourceType in markup.mappings || (sourceType = 'markup');
       const markupOptions = {sourceType, version};
+      // const markupFlags = [... flags].join('');
       header.status('source', `${specifier}`);
 
       fragment = code;
@@ -161,7 +163,7 @@ export default (markup, overrides) => {
       const sourceID = `«${specifier.replace(/^.*\//, '…/')} [${sourceText.length}] ${sourceType}»`;
 
       const iterate = iterations => {
-        for (let n = iterations; n--; ) for (const t of markup.tokenize(sourceText, markupOptions));
+        for (let n = iterations; n--; ) for (const t of markup.tokenize(sourceText, markupOptions, flags));
       };
 
       const repeat = async repeats => {
@@ -169,9 +171,9 @@ export default (markup, overrides) => {
       };
 
       const timed = async (marker, ...args) => {
-        console.time((marker = `${sourceID} - ${marker}`));
-        await time(...args);
-        console.timeEnd(marker);
+        flags.has('debug')
+          ? (console.time((marker = `${sourceID} - ${marker}`)), await time(...args), console.timeEnd(marker))
+          : await time(...args);
       };
 
       render = async () => {
@@ -203,7 +205,7 @@ export default (markup, overrides) => {
       };
 
       await nextFrame();
-      await markup.warmup(sourceText, markupOptions);
+      await markup.warmup(sourceText, markupOptions, flags);
       await nextFrame(
         header.status(
           'source-type',
@@ -220,11 +222,14 @@ export default (markup, overrides) => {
 
   const renderFromHash = (hash = location.hash || '#') => {
     const match = Hash.exec(hash.trim());
-    const [, specifier, version, type, repeats = defaults.repeats, iterations = defaults.iterations] = match;
+    const [, debugging, specifier, version, type, repeats = defaults.repeats, iterations = defaults.iterations] = match;
+
+    // console.log({debugging, specifier, version, type, repeats, iterations, match});
 
     options.version = version ? version.length : 1;
     options.repeats = repeats >= 0 ? parseInt(repeats) : defaults.repeats;
     options.iterations = iterations >= 0 ? parseInt(iterations) : defaults.iterations;
+    debugging ? flags.add('debug') : flags.delete('debug');
 
     let [, example = '', scope = ''] = Specifier.exec(specifier || '');
     const source =
