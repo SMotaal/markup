@@ -2,18 +2,19 @@
 
 Documentless OM for markup.
 
-> **Note:** This package is intended for environments with native ECMAScript module support to directly `import 'pseudom'` or `import 'https://unpkg.com/pseudom/'` without the need for bundling.
->
-> _Node.js_ (Stable)
->
-> You must use `--experimental-modules` flag in Node.js which supports ESM modules for files ending with "<samp>.mjs</samp>" only.
->
-> _Node.js_ (12.0.0-pre "esm-enabled" builds only)
->
-> Where supported, you can trye the following:
->
-> - `import 'pseudom/esm'` to import from an ESM-scoped package
-> - `pseudo/pseudom.js` to import from the esm entrypoint
+<blockquote>
+
+**Note:** This package is intended for environments with native ECMAScript module support to directly `import 'pseudom'` or `import 'https://unpkg.com/pseudom/'` without the need for bundling.
+
+_Node.js_ (8.x until 11.x — _experimental only_)
+
+You must use `--experimental-modules` flag in Node.js which uses <samp>pseudom/index.mjs</samp> to load ESM modules from files ending with "<samp>.mjs</samp>" only.
+
+_Node.js_ (12.x forward — _experimental only_)
+
+You must use `--experimental-modules` flag in Node.js then `import 'pseudom'` which still uses <samp>pseudom/index.mjs</samp> or alternatively `import 'pseudo/pseudom.js'` to load identical ESM modules from files ending with "<samp>.js</samp>" instead — this is likely to change.
+
+</blockquote>
 
 **Why?**
 
