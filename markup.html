@@ -37,6 +37,9 @@
     <script type="module">
       import * as markup from './packages/@smotaal/tokenizer/browser/markup.js';
       import * as parser from './lib/markup-parser.js';
+      import * as modes from './lib/markup-modes.js';
+
+      modes.install(parser.defaults);
 
       markup.parsers.unshift(parser);
 
