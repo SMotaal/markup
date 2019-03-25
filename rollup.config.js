@@ -84,9 +84,9 @@ const cjs = (name, naming = 'legacy/[name].cjs') => bundle(name, 'cjs', naming);
 // build.modes = {esm, iife};
 
 export default [
-  esm('markup'),
-  umd('markup'),
-  cjs('markup'),
+  // esm('markup'),
+  // umd('markup'),
+  // cjs('markup'),
   // esm('tokenizer:extended'),
   // umd('tokenizer:extended'),
   // cjs('tokenizer:extended'),
