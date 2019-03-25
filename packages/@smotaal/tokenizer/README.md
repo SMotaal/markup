@@ -32,6 +32,7 @@ Please note that no efforts are intended to make this package operational with t
 - Cleanup extensions and related documentation
 - Rename source entries using `tokenizer‹.variant›*.js`
 - Cleanup implementation and examples
+- Introduce `experimental` tokenizer variants from `lib/experimental`
 
 *v0.0.5*
 - Refactor grammars into a separate package.
