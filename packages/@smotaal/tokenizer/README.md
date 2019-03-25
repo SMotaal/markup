@@ -30,6 +30,7 @@ Please note that no efforts are intended to make this package operational with t
 *v0.0.6*
 - Refactor `extensions/dom.js` to `export default new class {}`
 - Cleanup extensions and related documentation
+- Rename source entries using `tokenizer‹.variant›*.js`
 
 *v0.0.5*
 - Refactor grammars into a separate package.
@@ -48,28 +49,28 @@ Please note that no efforts are intended to make this package operational with t
 
 ## Getting Started
 
-<figcaption><b>Multi-Mode</b></figcaption>
+<figcaption><b>Single-Mode</b></figcaption>
 
 ```js
-import {Parser, extensions} from '@smotaal/tokenizer/extended.js';
+import {Parser} from '@smotaal/tokenizer/tokenizer.js';
+import {javascript} from '@smotaal/grammars/javascript/javascript-grammar.js';
+
+const parser = new Parser();
+export const {modes, mappings} = parser;
+parser.register(javascript);
+
+parser.tokenize('/* source */', {sourceType: 'javascript'});
+```
+
+<figcaption><b>Extended-Mode</b></figcaption>
+
+```js
+import {Parser, extensions} from '@smotaal/tokenizer/tokenizer.extended.js';
 const parser = new Parser();
 
 export const {modes, mappings} = parser;
 
 for (const id in extensions.modes) parser.register(extensions.modes[id]);
-
-parser.tokenize('/* source */', {sourceType: 'javascript'});
-```
-
-<figcaption><b>Single-Mode</b></figcaption>
-
-```js
-import {Parser} from '@smotaal/tokenizer/tokenizer.js';
-import {javascript} from '@smotaal/tokenizer/modes/javascript.js';
-
-const parser = new Parser();
-export const {modes, mappings} = parser;
-parser.register(javascript);
 
 parser.tokenize('/* source */', {sourceType: 'javascript'});
 ```

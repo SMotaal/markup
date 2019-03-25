@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import * as extended from '../node/extended.js';
+import * as extended from '../node/tokenizer.extended.js';
 import * as tokenizer from '../node/tokenizer.js';
 
 export {extended, tokenizer};

@@ -7,30 +7,12 @@ const bundles = {
     input: `${dirname}/lib/markup.js`,
     output: {exports: 'named'},
   },
-  // ['tokenizer:esm']: {
-  //   input: {
-  //     ['tokenizer']: `${dirname}/packages/@smotaal/tokenizer/tokenizer.js`,
-  //     // ['extended']: `${dirname}/packages/@smotaal/tokenizer/extended.js`,
-  //     ['browser/markup']: `${dirname}/packages/@smotaal/tokenizer/browser/markup.js`,
-  //     // ['extensions/helpers']: `${dirname}/packages/@smotaal/tokenizer/extensions/helpers.js`,
-  //     ['extensions/dom']: `${dirname}/packages/@smotaal/tokenizer/extensions/dom.js`,
-  //     // ['extensions/extensions']: `${dirname}/packages/@smotaal/tokenizer/extensions/extensions.js`,
-  //     ['extensions/html-mode']: `${dirname}/packages/@smotaal/grammars/html/html-grammar.js`,
-  //     ['extensions/css-mode']: `${dirname}/packages/@smotaal/grammars/css/css-grammar.js`,
-  //     ['extensions/markdown-mode']: `${dirname}/packages/@smotaal/grammars/markdown/markdown-grammar.js`,
-  //     ['extensions/javascript-mode']: `${dirname}/packages/@smotaal/grammars/javascript/javascript-grammar.js`,
-  //     ['extensions/javascript-extensions']: `${dirname}/packages/@smotaal/grammars/javascript/javascript-extended-grammar.js`,
-  //   },
-  //   manualChunks: {
-  //     ['extensions/helpers']: [
-  //       `${dirname}/packages/@smotaal/grammars/common/helpers.js`,
-  //       `${dirname}/packages/@smotaal/grammars/common/patterns.js`,
-  //     ],
-  //   },
-  //   output: {exports: 'named', name: 'tokenizer', chunkFileNames: '[name]'},
-  // },
   ['tokenizer:extended']: {
-    input: `${dirname}/packages/@smotaal/tokenizer/extended.js`,
+    input: `${dirname}/packages/@smotaal/tokenizer/tokenizer.extended.js`,
+    output: {exports: 'named', name: 'tokenizer'},
+  },
+  ['tokenizer:experimental:extended']: {
+    input: `${dirname}/packages/@smotaal/tokenizer/tokenizer.experimental.extended.js`,
     output: {exports: 'named', name: 'tokenizer'},
   },
   ['tokenizer:browser:markup']: {
@@ -91,41 +73,50 @@ const defaults = {
   output: {sourcemap: true},
 };
 
-const mjs = (name, naming = '[name].mjs') => bundle(`${name}:esm` in bundles ? `${name}:esm` : name, 'es', naming);
-const umd = (name, naming = '[name].js') => bundle(name, 'umd', naming);
+const esm = (name, naming = '[name].js') => bundle(`${name}:esm` in bundles ? `${name}:esm` : name, 'es', naming);
+const umd = (name, naming = 'legacy/[name].js') => bundle(name, 'umd', naming);
+const cjs = (name, naming = 'legacy/[name].cjs') => bundle(name, 'cjs', naming);
 // const build = (name, ...modes) => modes.map(mode => mode in build.modes && build.modes[mode](name)).filter(Boolean);
-// build.modes = {mjs, iife};
+// build.modes = {esm, iife};
 
 export default [
-  mjs('markup'),
+  esm('markup'),
   umd('markup'),
-  mjs('tokenizer:extended'),
-  umd('tokenizer:extended'),
-  // mjs('tokenizer:esm'),
-  mjs('tokenizer:browser:markup'),
+  cjs('markup'),
+  // esm('tokenizer:extended'),
+  // umd('tokenizer:extended'),
+  // cjs('tokenizer:extended'),
+  esm('tokenizer:experimental:extended'),
+  umd('tokenizer:experimental:extended'),
+  cjs('tokenizer:experimental:extended'),
+  esm('tokenizer:browser:markup'),
   umd('tokenizer:browser:markup'),
-  // iife('tokenizer:browser'),
-  // bundle('markup', 'iife', '[name].js'),
-  // bundle('tokenizer:browser', 'es', '[name].mjs'),
-  // bundle('tokenizer:browser', 'iife', '[name].js'),
   // bundle('tokenizer/extended', 'es', '[name].mjs'),
   // bundle('tokenizer/extended', 'iife', '[name].js'),
   // bundle('tokenizer-extended', 'es', '[name].mjs'),
-  // bundle('tokenizer-extended', 'iife', '[name].js'),
+  cjs('tokenizer:browser:markup'),
+  // esm('tokenizer:browser:markup:experimental'),
 ];
 
-// tokenizer: {
-//   input: `${dirname}/packages/@smotaal/tokenizer/tokenizer.js`,
-//   output: {
-//     exports: 'named',
-//     path: `${dirname}/dist`,
+// ['tokenizer:esm']: {
+//   input: {
+//     ['tokenizer']: `${dirname}/packages/@smotaal/tokenizer/tokenizer.js`,
+//     // ['extended']: `${dirname}/packages/@smotaal/tokenizer/extended.js`,
+//     ['browser/markup']: `${dirname}/packages/@smotaal/tokenizer/browser/markup.js`,
+//     // ['extensions/helpers']: `${dirname}/packages/@smotaal/tokenizer/extensions/helpers.js`,
+//     ['extensions/dom']: `${dirname}/packages/@smotaal/tokenizer/extensions/dom.js`,
+//     // ['extensions/extensions']: `${dirname}/packages/@smotaal/tokenizer/extensions/extensions.js`,
+//     ['extensions/html-mode']: `${dirname}/packages/@smotaal/grammars/html/html-grammar.js`,
+//     ['extensions/css-mode']: `${dirname}/packages/@smotaal/grammars/css/css-grammar.js`,
+//     ['extensions/markdown-mode']: `${dirname}/packages/@smotaal/grammars/markdown/markdown-grammar.js`,
+//     ['extensions/javascript-mode']: `${dirname}/packages/@smotaal/grammars/javascript/javascript-grammar.js`,
+//     ['extensions/javascript-extensions']: `${dirname}/packages/@smotaal/grammars/javascript/javascript-extended-grammar.js`,
 //   },
+//   manualChunks: {
+//     ['extensions/helpers']: [
+//       `${dirname}/packages/@smotaal/grammars/common/helpers.js`,
+//       `${dirname}/packages/@smotaal/grammars/common/patterns.js`,
+//     ],
+//   },
+//   output: {exports: 'named', name: 'tokenizer', chunkFileNames: '[name]'},
 // },
-
-// name.includes('/') &&
-// const [, pathname, basename, extension] = /^(.*?)([^\/]*?)(\..*)$/.exec(filename);
-
-// const dir = `${dir || path || `${dirname}/dist`;
-// const file = `${dir || path || `${dirname}/dist`}/${entry || name}${extension || '.js'}`;
-
-// const assetFileNames = output;
