@@ -93,12 +93,12 @@ export default [
   esm('tokenizer:experimental:extended'),
   umd('tokenizer:experimental:extended'),
   cjs('tokenizer:experimental:extended'),
-  esm('tokenizer:browser:markup'),
-  umd('tokenizer:browser:markup'),
-  cjs('tokenizer:browser:markup'),
-  // esm('tokenizer:browser:markup:experimental'),
-  // umd('tokenizer:browser:markup:experimental'),
-  // cjs('tokenizer:browser:markup:experimental'),
+  // esm('tokenizer:browser:markup'),
+  // umd('tokenizer:browser:markup'),
+  // cjs('tokenizer:browser:markup'),
+  esm('tokenizer:browser:markup:experimental'),
+  umd('tokenizer:browser:markup:experimental'),
+  cjs('tokenizer:browser:markup:experimental'),
   // esm('tokenizer:esm'),
 ];
 
