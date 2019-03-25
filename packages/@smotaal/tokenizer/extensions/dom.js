@@ -1,6 +1,6 @@
 import * as dom from '../../../pseudom/pseudom.js';
 export {encodeEntity, encodeEntities} from '../../../pseudom/pseudom.js';
-import {each} from './resync.js';
+import {each} from './helpers.js';
 
 /// OPTIONS
 /** The tag name of the element to use for rendering a token. */
