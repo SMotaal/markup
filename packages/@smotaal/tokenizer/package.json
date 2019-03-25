@@ -4,19 +4,13 @@
   "version": "0.0.5",
   "description": "Nestable markup tokenizer using Regular Expressions",
   "license": "MIT",
-  "mode": "esm",
   "type": "module",
-  "main": "dist/tokenizer.extended.mjs",
-  "module": "dist/tokenizer.extended.mjs",
-  "browser": "dist/tokenizer.browser.mjs",
+  "main": "dist/tokenizer.extended.js",
+  "module": "dist/tokenizer.extended.js",
+  "browser": "dist/tokenizer.browser.js",
+  "umd": "dist/legacy/tokenizer.extended.js",
   "publishConfig": {
     "access": "public"
-  },
-  "exports": {
-    "./": "./tokenizer.js",
-    "./extended": "./extended.js",
-    "./lib/": "./lib/",
-    "./extensions/": "./extensions/"
   },
   "devDependencies": {
     "@smotaal/grammars": "*",
