@@ -6,11 +6,5 @@
   "license": "MIT",
   "type": "module",
   "main": "index.mjs",
-  "module": "pseudom.js",
-  "exports": {
-    "./": "./pseudom.js",
-    "./lib/": "./lib/",
-    "./native": "./lib/native.js",
-    "./pseudo": "./lib/pseudo.js"
-  }
+  "module": "pseudom.js"
 }
