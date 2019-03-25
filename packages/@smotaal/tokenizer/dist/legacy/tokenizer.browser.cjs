@@ -1,3 +1,7 @@
+'use strict';
+
+Object.defineProperty(exports, '__esModule', { value: true });
+
 /** @typedef {import('./types').Grouping} Grouping */
 /** @typedef {import('./types').Tokenizer} Tokenizer */
 /** @typedef {import('./types').Token} Token */
@@ -287,16 +291,7 @@ class Tokenizer {
         }
       }
     }
-    flags && flags.debug && console.log(state);
-  }
-
-  /**
-   * Context generator using tokenizer.mode (or defaults.mode)
-   */
-  get contextualizer() {
-    const value = this.constructor.contextualizer(this);
-    Object.defineProperty(this, 'contextualizer', {value});
-    return value;
+    flags && flags.debug && console.info('[Tokenizer.tokenize‹state›]: %o', state);
   }
 
   /**
@@ -1335,8 +1330,877 @@ var modes = /*#__PURE__*/Object.freeze({
 });
 
 const parser = new Parser();
+parser.MODULE_URL = new (typeof URL !== 'undefined' ? URL : require('ur'+'l').URL)((process.browser ? '' : 'file:') + __filename, process.browser && document.baseURI).href;
 for (const id in modes) parser.register(modes[id]);
 
-export default parser;
-export { MAPPINGS, MODES, Parser, TOKENIZERS, Tokenizer, modes };
-//# sourceMappingURL=tokenizer.extended.mjs.map
+const {assign, defineProperty} = Object;
+
+const document$1 = void null;
+
+class Node {
+  get children() {
+    return defineProperty(this, 'children', {value: new Set()}).children;
+  }
+  get childElementCount() {
+    return (this.hasOwnProperty('children') && this.children.size) || 0;
+  }
+  get textContent() {
+    return (
+      (this.hasOwnProperty('children') && this.children.size && [...this.children].join('')) || ''
+    );
+  }
+  set textContent(text) {
+    this.hasOwnProperty('children') && this.children.size && this.children.clear();
+    text && this.children.add(new String(text));
+  }
+  appendChild(element) {
+    return element && this.children.add(element), element;
+  }
+  append(...elements) {
+    if (elements.length) for (const element of elements) element && this.children.add(element);
+  }
+  removeChild(element) {
+    element &&
+      this.hasOwnProperty('children') &&
+      this.children.size &&
+      this.children.delete(element);
+    return element;
+  }
+  remove(...elements) {
+    if (elements.length && this.hasOwnProperty('children') && this.children.size)
+      for (const element of elements) element && this.children.delete(element);
+  }
+}
+
+class Element extends Node {
+  get innerHTML() {
+    return this.textContent;
+  }
+  set innerHTML(text) {
+    this.textContent = text;
+  }
+  get outerHTML() {
+    const {className, tag, innerHTML} = this;
+    return `<${tag}${(className && ` class="${className}"`) || ''}>${innerHTML || ''}</${tag}>`;
+  }
+  toString() {
+    return this.outerHTML;
+  }
+  toJSON() {
+    return this.toString();
+  }
+}
+
+class DocumentFragment extends Node {
+  toString() {
+    return this.textContent;
+  }
+  toJSON() {
+    return (this.childElementCount && [...this.children]) || [];
+  }
+  [Symbol.iterator]() {
+    return ((this.childElementCount && this.children) || '')[Symbol.iterator]();
+  }
+}
+
+class Text extends String {
+  toString() {
+    return encodeEntities(super.toString());
+  }
+}
+
+const createElement = (tag, properties, ...children) => {
+  const element = assign(new Element(), {
+    tag,
+    className: (properties && properties.className) || '',
+    properties,
+  });
+  children.length && defineProperty(element, 'children', {value: new Set(children)});
+  return element;
+};
+
+const createText = (content = '') => new Text(content);
+const encodeEntity = entity => `&#${entity.charCodeAt(0)};`;
+const encodeEntities = string => string.replace(/[\u00A0-\u9999<>\&]/gim, encodeEntity);
+const createFragment = () => new DocumentFragment();
+
+var pseudo = /*#__PURE__*/Object.freeze({
+  document: document$1,
+  Node: Node,
+  Element: Element,
+  DocumentFragment: DocumentFragment,
+  Text: Text,
+  createElement: createElement,
+  createText: createText,
+  encodeEntity: encodeEntity,
+  encodeEntities: encodeEntities,
+  createFragment: createFragment
+});
+
+const {document: document$2, Element: Element$1, Node: Node$1, Text: Text$1, DocumentFragment: DocumentFragment$1} =
+  'object' === typeof self && (self || 0).window === self && self;
+
+const {createElement: createElement$1, createText: createText$1, createFragment: createFragment$1} = {
+  createElement: (tag, properties, ...children) => {
+    const element = document$2.createElement(tag);
+    properties && Object.assign(element, properties);
+    if (!children.length) return element;
+    if (element.append) {
+      while (children.length > 500) element.append(...children.splice(0, 500));
+      children.length && element.append(...children);
+    } else if (element.appendChild) {
+      for (const child of children) element.appendChild(child);
+    }
+    return element;
+  },
+
+  createText: (content = '') => document$2.createTextNode(content),
+
+  createFragment: () => document$2.createDocumentFragment(),
+};
+
+var dom = /*#__PURE__*/Object.freeze({
+  document: document$2,
+  Element: Element$1,
+  Node: Node$1,
+  Text: Text$1,
+  DocumentFragment: DocumentFragment$1,
+  createElement: createElement$1,
+  createText: createText$1,
+  createFragment: createFragment$1
+});
+
+// TEST: Trace for ESM testing
+typeof process === 'object' && console.info('[ESM]: %o', new (typeof URL !== 'undefined' ? URL : require('ur'+'l').URL)((process.browser ? '' : 'file:') + __filename, process.browser && document.baseURI).href);
+
+const native = document$2 && dom;
+
+/**
+ * @template T
+ * @typedef {Promise<T> | T} async
+ */
+
+/**
+ * @template T
+ * @typedef {{next(): async<IteratorResult<async<T>>>}} iterator
+ */
+
+/**
+ * @template T
+ * @typedef {iterator<T> | {[Symbol.iterator](): iterator<T>}  | {[Symbol.asyncIterator](): iterator<T>}} iterable
+ */
+
+/**
+ * @template T, U
+ * @param {iterable<T>} iterable
+ * @param {(value: T) => U} ƒ
+ */
+async function each(iterable, ƒ) {
+  const iterator =
+    (iterable && ('next' in iterable && typeof iterable.next === 'function' && iterable)) ||
+    ((Symbol.asyncIterator in iterable && iterable[Symbol.asyncIterator]()) ||
+      (Symbol.iterator in iterable && iterable[Symbol.iterator]()));
+  try {
+    if (iterator || typeof iterator.next === 'function') {
+      let result, done;
+      while (!done && (result = await iterator.next())) {
+        await ƒ(await result.value);
+        done = result.done;
+      }
+    }
+  } finally {
+    iterator &&
+      iterable !== iterator &&
+      'return' in iterator &&
+      typeof iterator.return === 'function' &&
+      iterator.return();
+  }
+}
+
+/// OPTIONS
+/** The tag name of the element to use for rendering a token. */
+const SPAN = 'span';
+
+/** The class name of the element to use for rendering a token. */
+const CLASS = 'markup';
+
+/// RUNTIME
+
+const supported = !!native;
+const implementation = pseudo;
+const {createElement: Element$2, createText: Text$2, createFragment: Fragment} = implementation;
+const Template = template =>
+  !supported || Template.supported === false
+    ? false
+    : Template.supported === true
+    ? document.createElement('template')
+    : (Template.supported = !!(
+        (template = document.createElement('template')) && 'HTMLTemplateElement' === (template.constructor || '').name
+      )) && template;
+
+/// INTERFACE
+
+var dom$1 = new class Renderer {
+  constructor() {
+    // TODO: Consider making Renderer a thing
+    const {factory} = new.target;
+
+    this.renderers = {
+      whitespace: Text$2,
+      text: factory(SPAN, {className: CLASS}),
+
+      variable: factory('var', {className: `${CLASS} variable`}),
+      keyword: factory(SPAN, {className: `${CLASS} keyword`}),
+      identifier: factory(SPAN, {className: `${CLASS} identifier`}),
+      operator: factory(SPAN, {className: `${CLASS} punctuator operator`}),
+      assigner: factory(SPAN, {className: `${CLASS} punctuator operator assigner`}),
+      combinator: factory(SPAN, {className: `${CLASS} punctuator operator combinator`}),
+      punctuation: factory(SPAN, {className: `${CLASS} punctuator punctuation`}),
+      quote: factory(SPAN, {className: `${CLASS} punctuator quote`}),
+      breaker: factory(SPAN, {className: `${CLASS} punctuator breaker`}),
+      opener: factory(SPAN, {className: `${CLASS} punctuator opener`}),
+      closer: factory(SPAN, {className: `${CLASS} punctuator closer`}),
+      span: factory(SPAN, {className: `${CLASS} punctuator span`}),
+      sequence: factory(SPAN, {className: `${CLASS} sequence`}),
+      literal: factory(SPAN, {className: `${CLASS} literal`}),
+      indent: factory(SPAN, {className: `${CLASS} sequence indent`}),
+      comment: factory(SPAN, {className: `${CLASS} comment`}),
+      code: factory(SPAN, {className: `${CLASS}`}),
+    };
+  }
+
+  async render(tokens, fragment) {
+    let logs, template, first, elements;
+    try {
+      fragment || (fragment = Fragment());
+      logs = fragment.logs; // || (fragment.logs = []);
+      elements = this.renderer(tokens);
+      if ((first = await elements.next()) && 'value' in first) {
+        template = Template();
+        if (template && 'textContent' in fragment) {
+          logs && logs.push(`render method = 'text' in template`);
+          const body = [first.value];
+          first.done || (await each(elements, element => body.push(element)));
+          template.innerHTML = body.join('');
+          fragment.appendChild(template.content);
+        } else if ('push' in fragment) {
+          logs && logs.push(`render method = 'push' in fragment`);
+          fragment.push(first.value);
+          first.done || (await each(elements, element => fragment.push(element)));
+        } else if ('append' in fragment) {
+          logs && logs.push(`render method = 'append' in fragment`);
+          fragment.append(first.value);
+          first.done || (await each(elements, element => fragment.append(element)));
+        }
+      }
+      return fragment;
+    } finally {
+      template && (template.innerHTML = '');
+      template = fragment = logs = elements = first = null;
+    }
+  }
+
+  *renderer(tokens) {
+    const {renderers} = this;
+    for (const token of tokens) {
+      const {type = 'text', text, punctuator, breaks} = token;
+      const renderer =
+        (punctuator && (renderers[punctuator] || renderers.operator)) ||
+        (type && renderers[type]) ||
+        (text && renderers.text);
+      const element = renderer && renderer(text, token);
+      element && (yield element);
+    }
+  }
+
+  static factory(tag, properties) {
+    return (content, token) => {
+      if (!content) return;
+      typeof content !== 'string' || (content = Text$2(content));
+      const element = Element$2(tag, properties, content);
+      element && token && (token.hint && (element.className += ` ${token.hint}`));
+      return element;
+    };
+  }
+}();
+
+const parsers = [parser];
+
+const UNSET = Symbol('');
+
+const State = Object.setPrototypeOf(
+  class State {
+    constructor(...properties) {
+      Object.assign(this, ...properties);
+    }
+  }.prototype,
+  null,
+).constructor;
+
+const tokenize = (source, options = {}, flags) => {
+  const state = new State({options, flags: {}});
+  const variant = !options.variant ? 1 : parseInt(options.variant);
+  const {[variant >= 1 && variant <= parsers.length ? variant - 1 : (options.variant = 0)]: parser} = parsers;
+  tokenize.lastVariant === (tokenize.lastVariant = variant) ||
+    variant <= parsers.length ||
+    console.warn(
+      '[tokenize‹parser›] Variant %O[%d] out of bounds — using default parser: %o',
+      parsers,
+      variant,
+      parser.MODULE_URL || {parser},
+    );
+  options.tokenize = parser.tokenize;
+  if (flags && (flags.length > 0 || flags.size > 0)) {
+    typeof flags === 'string' || (flags = [...flags].join(' '));
+    /\bwarmup\b/i.test(flags) && (state.flags.warmup = true);
+    /\bdebug\b/i.test(flags) && (state.flags.debug = true);
+  }
+
+  let returned = UNSET;
+  try {
+    tokenize.lastParser === (tokenize.lastParser = parser) ||
+      console.info('[tokenize‹parser›]: %o', parser.MODULE_URL || {parser});
+    return (returned = parser.tokenize(source, state));
+  } finally {
+    returned !== UNSET || !state.flags.debug || console.info('[tokenize‹state›]: %o', state);
+  }
+};
+
+const render = (source, options, flags) => {
+  const fragment = options && options.fragment;
+
+  const debugging = flags && /\bdebug\b/i.test(typeof flags === 'string' ? flags : [...flags].join(' '));
+
+  debugging && console.info('render: %o', {render, source, options, flags, fragment, debugging});
+
+  fragment && (fragment.logs = debugging ? [] : undefined);
+
+  return dom$1.render(tokenize(source, options, flags), fragment);
+};
+
+const warmup = (source, options, flags) => {
+  // Object.defineProperty(options, 'warmup', {value: true});
+  const key = (options && JSON.stringify(options)) || '';
+  let cache = (warmup.cache || (warmup.cache = new Map())).get(key);
+  cache || warmup.cache.set(key, (cache = new Set()));
+  if (!cache.has(source)) {
+    flags = `warmup ${(flags &&
+      (flags.length > 0 || flags.size > 0) &&
+      (typeof flags === 'string' || flags instanceof String ? flags : [...flags].join(' '))) ||
+      ''}`;
+    for (const item of tokenize(source, options, flags));
+  }
+  cache.add(source);
+};
+
+class Contextualizer {
+  constructor(tokenizer, initialize = context => context) {
+    // Local contextualizer state
+    let grouper;
+
+    // Tokenizer mode
+    const mode = tokenizer.mode;
+    const defaults = tokenizer.defaults;
+    mode !== undefined || (mode = (defaults && defaults.mode) || undefined);
+    if (!mode) throw ReferenceError(`Tokenizer.contextualizer invoked without a mode`);
+
+    // // TODO: Refactoring
+    // const initialize = context => {
+    //   let {
+    //     tokenizer = (context.tokenizer = this.tokenizer(context)),
+    //     token = (context.token = (tokenizer => (tokenizer.next(), token => tokenizer.next(token).value))(tokenizer)),
+    //   } = context;
+    //   return context;
+    // };
+
+    if (!mode.context) {
+      const {
+        matcher = (mode.matcher = (defaults && defaults.matcher) || undefined),
+        quotes,
+        punctuators = (mode.punctuators = {aggregators: {}}),
+        punctuators: {aggregators = (punctuators.aggregators = {})},
+        patterns: {
+          maybeKeyword = (mode.patterns.maybeKeyword =
+            (defaults && defaults.patterns && defaults.patterns.maybeKeyword) || undefined),
+        } = (mode.patterns = {maybeKeyword: null}),
+        spans: {['(spans)']: spans} = (mode.spans = {}),
+      } = mode;
+
+      initialize((mode.context = {mode, punctuators, aggregators, matcher, quotes, spans}));
+    }
+
+    const {
+      syntax: $syntax,
+      matcher: $matcher,
+      quotes: $quotes,
+      punctuators: $punctuators,
+      punctuators: {aggregators: $aggregators},
+    } = mode;
+
+    this.context = (next = mode.context) => {
+      if (grouper !== (grouper = next) && grouper && !grouper.context) {
+        const {
+          goal = (grouper.syntax = $syntax),
+          punctuator,
+          punctuators = (grouper.punctuators = $punctuators),
+          aggregators = (grouper.aggregate = $aggregators),
+          closer,
+          spans,
+          matcher = (grouper.matcher = $matcher),
+          quotes = (grouper.quotes = $quotes),
+          forming = (grouper.forming = goal === $syntax),
+        } = grouper;
+
+        initialize(
+          (grouper.context = {
+            mode,
+            punctuator,
+            punctuators,
+            aggregators,
+            closer,
+            spans,
+            matcher,
+            quotes,
+            forming,
+          }),
+        );
+      }
+
+      // console.log({tokenizer, grouper, next});
+
+      return grouper && grouper.context;
+    };
+  }
+}
+
+class TokenSynthesizer {
+  constructor(context) {
+    const {
+      mode: {syntax, keywords, assigners, operators, combinators, nonbreakers, comments, closures, breakers, patterns},
+      punctuators,
+      aggregators,
+      spans,
+      quotes,
+      forming = true,
+    } = context;
+
+    const {maybeIdentifier, maybeKeyword, segments} = patterns || false;
+    const wording = keywords || maybeIdentifier ? true : false;
+
+    const matchSegment =
+      segments &&
+      (segments[Symbol.match] ||
+        (!(Symbol.match in segments) &&
+          (segments[Symbol.match] = (segments => {
+            const sources = [];
+            const names = [];
+            for (const name of Object.getOwnPropertyNames(segments)) {
+              const segment = segments[name];
+              if (segment && segment.source && !/\\\d/.test(segment.source)) {
+                names.push(name);
+                sources.push(segment.source.replace(/\\?\((.)/g, (m, a) => (m[0] !== '\\' && a !== '?' && '(?:') || m));
+              }
+            }
+            const {length} = names;
+            if (!length) return false;
+            const matcher = new RegExp(`(${sources.join('|)|(')}|)`, 'u');
+            return text => {
+              // OR: for (const segment of names) if (segments[segment].test(text)) return segment;
+              const match = matcher.exec(text);
+              if (match[0]) for (let i = 1, n = length; n--; i++) if (match[i]) return names[i - 1];
+            };
+          })(segments))));
+
+    const punctuate = text =>
+      (nonbreakers && nonbreakers.includes(text) && 'nonbreaker') ||
+      (operators && operators.includes(text) && 'operator') ||
+      (comments && comments.includes(text) && 'comment') ||
+      (spans && spans.includes(text) && 'span') ||
+      (quotes && quotes.includes(text) && 'quote') ||
+      (closures && closures.includes(text) && 'closure') ||
+      (breakers && breakers.includes(text) && 'breaker') ||
+      false;
+    const aggregate = text =>
+      (assigners && assigners.includes(text) && 'assigner') ||
+      (combinators && combinators.includes(text) && 'combinator') ||
+      false;
+
+    const LineEndings = /$/gm;
+
+    this.token = next => {
+      if (next && next.text) {
+        const {text, type, hint, previous, parent, last} = next;
+
+        if (type === 'sequence') {
+          ((next.punctuator =
+            (previous && (aggregators[text] || (!(text in aggregators) && (aggregators[text] = aggregate(text))))) ||
+            (punctuators[text] || (!(text in punctuators) && (punctuators[text] = punctuate(text)))) ||
+            undefined) &&
+            (next.type = 'punctuator')) ||
+            (matchSegment &&
+              (next.type = matchSegment(text)) &&
+              (next.hint = `${(hint && `${hint} `) || ''}${next.type}`)) ||
+            (next.type = 'sequence');
+        } else if (type === 'whitespace') {
+          next.breaks = text.match(LineEndings).length - 1;
+        } else if (forming && wording) {
+          const word = text.trim();
+          word &&
+            ((keywords &&
+              keywords.includes(word) &&
+              (!last || last.punctuator !== 'nonbreaker' || (previous && previous.breaks > 0)) &&
+              (next.type = 'keyword')) ||
+              (maybeIdentifier && maybeIdentifier.test(word) && (next.type = 'identifier')));
+        } else {
+          next.type = 'text';
+        }
+
+        previous && (previous.next = next) && (parent || (next.parent = previous.parent));
+
+        return next;
+      }
+    };
+  }
+}
+
+/** Tokenizer for a single mode (language) */
+class Tokenizer$1 {
+  constructor(mode, defaults) {
+    this.mode = mode;
+    this.defaults = defaults || this.constructor.defaults || undefined;
+  }
+
+  /** Token generator from source using tokenizer.mode (or defaults.mode) */
+  *tokenize(source, state = {}) {
+    let done;
+
+    // TODO: Consider supporting Symbol.species
+    const Species = this.constructor;
+
+    // Local context
+    const contextualizer =
+      this.contextualizer ||
+      new Contextualizer(this, context => {
+        let {
+          // tokenizer = (context.tokenizer = Species.tokenizer(context)),
+          // token = (context.token = (tokenizer => (tokenizer.next(), token => tokenizer.next(token).value))(tokenizer)),
+          // token = (context.token = (synthesizer => token => synthesizer.token(token))(new TokenSynthesizer(context))),
+          token = (context.token = new TokenSynthesizer(context).token),
+        } = context;
+        return context;
+      });
+    let context = contextualizer.context();
+
+    const {mode, syntax, createGrouper = Species.createGrouper || Object} = context;
+
+    // Local grouping
+    const groupers = mode.groupers || (mode.groupers = {});
+    const grouping =
+      state.grouping ||
+      (state.grouping = new Grouping({
+        syntax: syntax || mode.syntax,
+        groupers,
+        createGrouper,
+        contextualizer,
+      }));
+
+    // Local matching
+    let {match, index = 0, flags} = state;
+
+    // Local tokens
+    let previousToken, lastToken, parentToken;
+    const top = {type: 'top', text: '', offset: index};
+
+    // let lastContext = context;
+    state.context = context;
+
+    state.source = source;
+
+    const tokenize = state.tokenize || (text => [{text}]);
+
+    while (!done) {
+      const {
+        mode: {syntax, matchers, comments, spans, closures},
+        punctuator: $$punctuator,
+        closer: $$closer,
+        spans: $$spans,
+        matcher: $$matcher,
+        token,
+        forming = true,
+      } = context;
+
+      // Current contextual hint (syntax or hint)
+      const hint = grouping.hint;
+
+      while (state.context === (state.context = context)) {
+        let next;
+
+        // state.lastToken = lastToken;
+
+        const lastIndex = state.index || 0;
+
+        $$matcher.lastIndex = lastIndex;
+        match = state.match = $$matcher.exec(source);
+        done = index === (index = state.index = $$matcher.lastIndex) || !match;
+
+        if (done) break;
+
+        // Current contextual match
+        const {0: text, 1: whitespace, 2: sequence, index: offset} = match;
+
+        // Current quasi-contextual fragment
+        const pre = source.slice(lastIndex, offset);
+        pre &&
+          ((next = token({
+            type: 'pre',
+            text: pre,
+            offset: lastIndex,
+            previous: previousToken,
+            parent: parentToken,
+            hint,
+            last: lastToken,
+            source,
+          })),
+          yield (previousToken = next));
+
+        // Current contextual fragment
+        const type = (whitespace && 'whitespace') || (sequence && 'sequence') || 'text';
+        next = token({type, text, offset, previous: previousToken, parent: parentToken, hint, last: lastToken, source});
+
+        // Current contextual punctuator (from sequence)
+        const closing =
+          $$closer &&
+          ($$closer.test ? $$closer.test(text) : $$closer === text || (whitespace && whitespace.includes($$closer)));
+
+        let after;
+        let punctuator = next.punctuator;
+
+        if (punctuator || closing) {
+          let closed, opened, grouper;
+
+          if (closing) {
+            ({after, closed, parent: parentToken = top, grouper} = grouping.close(next, state, context));
+          } else if ($$punctuator !== 'comment') {
+            ({grouper, opened, parent: parentToken = top, punctuator} = grouping.open(next, context));
+          }
+
+          state.context = grouping.context = grouping.goal || syntax;
+
+          if (opened || closed) {
+            next.type = 'punctuator';
+            // context = contextualizer.next((state.grouper = grouper || undefined)).value;
+            context = contextualizer.context((state.grouper = grouper || undefined));
+            grouping.hint = `${[...grouping.hints].join(' ')} ${grouping.context ? `in-${grouping.context}` : ''}`;
+            opened && (after = opened.open && opened.open(next, state, context));
+          }
+        }
+
+        // Current contextual tail token (yield from sequence)
+        yield (previousToken = next);
+
+        // Next reference to last contextual sequence token
+        next && !whitespace && forming && (lastToken = next);
+
+        if (after) {
+          let tokens, token, nextIndex;
+
+          if (after.syntax) {
+            const {syntax, offset, index} = after;
+            const body = index > offset && source.slice(offset, index - 1);
+            if (body) {
+              body.length > 0 &&
+                ((tokens = tokenize(body, {options: {sourceType: syntax}}, this.defaults)), (nextIndex = index));
+              const hint = `${syntax}-in-${mode.syntax}`;
+              token = token => ((token.hint = `${(token.hint && `${token.hint} `) || ''}${hint}`), token);
+            }
+          } else if (after.length) {
+            const hint = grouping.hint;
+            token = token => ((token.hint = `${hint} ${token.type || 'code'}`), context.token(token));
+            (tokens = after).end > state.index && (nextIndex = after.end);
+          }
+
+          if (tokens) {
+            for (const next of tokens) {
+              previousToken && ((next.previous = previousToken).next = next);
+              token && token(next);
+              yield (previousToken = next);
+            }
+            nextIndex > state.index && (state.index = nextIndex);
+          }
+        }
+      }
+    }
+    flags && flags.debug && console.info('[Tokenizer.tokenize‹state›]: %o', state);
+  }
+
+  static createGrouper({
+    syntax,
+    goal = syntax,
+    quote,
+    comment,
+    closure,
+    span,
+    grouping = comment || closure || span || undefined,
+    punctuator,
+    spans = (grouping && grouping.spans) || undefined,
+    matcher = (grouping && grouping.matcher) || undefined,
+    quotes = (grouping && grouping.quotes) || undefined,
+    punctuators = {aggregators: {}},
+    opener = quote || (grouping && grouping.opener) || undefined,
+    closer = quote || (grouping && grouping.closer) || undefined,
+    hinter,
+    open = (grouping && grouping.open) || undefined,
+    close = (grouping && grouping.close) || undefined,
+  }) {
+    return {syntax, goal, punctuator, spans, matcher, quotes, punctuators, opener, closer, hinter, open, close};
+  }
+}
+
+const TOKENIZERS$1 = 'tokenizers';
+const MAPPINGS$1 = 'mappings';
+const MODES$1 = 'modes';
+
+const none$1 = {
+  syntax: 'markup',
+  matcher: /([\s\n]+)|(\\(?:(?:\\\\)*\\|[^\\\s])?|\/\/+|\/\*+|\*+\/|\(|\)|\[|\]|,|;|\.\.\.|\.|\b:\/\/\b|::|:|\?|`|"|'|\$\{|\{|\}|=>|<\/|\/>|\++|\-+|\*+|&+|\|+|=+|!={0,3}|<{1,3}=?|>{1,2}=?)|[+\-*/&|^%<>~!]=?/g,
+};
+
+const define$1 = (instance, property, value, options) => {
+  if (!instance.hasOwnProperty(property))
+    return (
+      Object.defineProperty(instance, property, {
+        value,
+        writable: (options && options.writable === true) || false,
+        configurable: (options && options.configurable === true) || false,
+        enumerable: !options || options.enumerable === true,
+      }),
+      value
+    );
+};
+
+class Parser$1 {
+  /**
+   * @param source {string}
+   * @param state {{sourceType?: string}}
+   */
+  tokenize(source, state = {}) {
+    const {
+      options: {
+        sourceType,
+        mode = (state.options.mode = (sourceType && this.get(sourceType)) || none$1),
+      } = (state.options = {}),
+    } = state;
+    let tokenizer = mode && this[TOKENIZERS$1].get(mode);
+    if (!source || !mode) return [];
+    !tokenizer && this[TOKENIZERS$1].set(mode, (tokenizer = new Tokenizer$1(mode)));
+    state.parser = this;
+    state.tokenize = (this.hasOwnProperty('tokenize') && this.tokenize) || (this.tokenize = this.tokenize.bind(this));
+    return tokenizer.tokenize(source, state);
+  }
+
+  get [TOKENIZERS$1]() {
+    return define$1(this, TOKENIZERS$1, new WeakMap());
+  }
+  get [MAPPINGS$1]() {
+    return define$1(this, MAPPINGS$1, Object.create(null));
+  }
+
+  get [MODES$1]() {
+    return define$1(this, MODES$1, Object.create(null));
+  }
+
+  get(id = 'default') {
+    const {[MAPPINGS$1]: mappings, [MODES$1]: modes} = this;
+    if (id in modes) return modes[id];
+    let mapping = mappings[id];
+    !mapping || mapping.syntax === id || (mapping = mappings[mapping.syntax]);
+    if (mapping && mapping.factory) {
+      const {syntax, factory, options} = mapping;
+      if (options.requires && options.requires.length > 0) {
+        const list = [];
+        for (const id of options.requires) id in modes || this.get(id) || list.push(id);
+        if (list.length) {
+          list.length > 1 && list.push(list.splice(-2, 2).join(' and '));
+          throw Error(`Cannot initialize "${syntax}" which requires the list mode(s): ${list.join(', ')}`);
+        }
+      }
+      return (mapping.mode = modes[id] = factory(options, modes));
+    }
+  }
+
+  /**
+   * @param mode {ModeFactory | Mode}
+   * @param options {ModeOptions}
+   */
+  register(mode, options) {
+    const {[MAPPINGS$1]: mappings, [MODES$1]: modes} = this;
+
+    if (!mappings) return;
+
+    const factory = typeof mode === 'function' && mode;
+
+    const {syntax, aliases = (options.aliases = [])} = ({syntax: options.syntax = mode.syntax} = options = {
+      syntax: undefined,
+      ...factory.defaults,
+      ...options,
+    });
+
+    if (!syntax || typeof syntax !== 'string')
+      throw TypeError(`Cannot register "${syntax}" since it not valid string'`);
+
+    if (mappings[syntax]) {
+      if (factory ? factory === mappings[syntax].factory : mode === modes[syntax]) return;
+      else throw ReferenceError(`Cannot register "${syntax}" since it is already registered`);
+    }
+
+    if (aliases && aliases.length > 0) {
+      for (const alias of aliases) {
+        if (!alias || typeof alias !== 'string')
+          throw TypeError(`Cannot register "${syntax}" since it's alias "${alias}" not valid string'`);
+        else if (mappings[alias])
+          throw ReferenceError(`Cannot register "${syntax}" since it's alias "${alias}" is already registered`);
+      }
+    }
+
+    const mapping = factory ? {syntax, factory, options} : {syntax, mode, options};
+
+    const descriptor = {value: mapping, writable: false};
+    for (const id of [syntax, ...aliases]) {
+      Object.defineProperty(mappings, id, descriptor);
+    }
+  }
+
+  /**
+   * @param mode {string}
+   * @param requires {string[]}
+   */
+  requires(mode, requires) {
+    const missing = [];
+    for (const mode of requires) mode in this[MAPPINGS$1] || missing.push(`"${mode}"`);
+    if (!missing.length) return;
+    throw Error(`Cannot initialize "${mode}" which requires the missing mode(s): ${missing.join(', ')}`);
+  }
+}
+
+/**
+ * @typedef { Partial<{syntax: string, matcher: RegExp, [name:string]: Set | Map | {[name:string]: Set | Map | RegExp} }> } Mode
+ * @typedef { {[name: string]: Mode} } Modes
+ * @typedef { {[name: string]: {syntax: string} } } Mappings
+ * @typedef { {aliases?: string[], syntax: string} } ModeOptions
+ * @typedef { (options: ModeOptions, modes: Modes) => Mode } ModeFactory
+ */
+
+const parser$1 = new Parser$1();
+parser$1.MODULE_URL = new (typeof URL !== 'undefined' ? URL : require('ur'+'l').URL)((process.browser ? '' : 'file:') + __filename, process.browser && document.baseURI).href;
+for (const id in modes) parser$1.register(modes[id]);
+
+parsers.unshift(parser$1);
+
+exports.encodeEntities = encodeEntities;
+exports.encodeEntity = encodeEntity;
+exports.entities = entities;
+exports.parsers = parsers;
+exports.render = render;
+exports.tokenize = tokenize;
+exports.warmup = warmup;
+//# sourceMappingURL=tokenizer.browser.cjs.map
