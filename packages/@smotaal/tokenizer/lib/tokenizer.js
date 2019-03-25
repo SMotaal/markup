@@ -156,16 +156,7 @@ export class Tokenizer {
         }
       }
     }
-    flags && flags.debug && console.log(state);
-  }
-
-  /**
-   * Context generator using tokenizer.mode (or defaults.mode)
-   */
-  get contextualizer() {
-    const value = this.constructor.contextualizer(this);
-    Object.defineProperty(this, 'contextualizer', {value});
-    return value;
+    flags && flags.debug && console.info('[Tokenizer.tokenize‹state›]: %o', state);
   }
 
   /**
