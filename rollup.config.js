@@ -19,6 +19,10 @@ const bundles = {
     input: `${dirname}/packages/@smotaal/tokenizer/browser/markup.js`,
     output: {path: `./browser`, exports: 'named', name: 'markup'},
   },
+  ['tokenizer:browser:markup:experimental']: {
+    input: `${dirname}/packages/@smotaal/tokenizer/browser/markup.experimental.js`,
+    output: {path: `./browser`, exports: 'named', name: 'markup'},
+  },
 };
 
 // prettier-ignore //
@@ -91,11 +95,11 @@ export default [
   cjs('tokenizer:experimental:extended'),
   esm('tokenizer:browser:markup'),
   umd('tokenizer:browser:markup'),
-  // bundle('tokenizer/extended', 'es', '[name].mjs'),
-  // bundle('tokenizer/extended', 'iife', '[name].js'),
-  // bundle('tokenizer-extended', 'es', '[name].mjs'),
   cjs('tokenizer:browser:markup'),
   // esm('tokenizer:browser:markup:experimental'),
+  // umd('tokenizer:browser:markup:experimental'),
+  // cjs('tokenizer:browser:markup:experimental'),
+  // esm('tokenizer:esm'),
 ];
 
 // ['tokenizer:esm']: {

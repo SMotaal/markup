@@ -1,9 +1,88 @@
+const resolve = (() => {
+  const Tail = /\/?$/;
+
+  const local = specifier => `${new URL(specifier, import.meta.url)}`;
+
+  const scope = local('../../').replace(new URL('./', location), './');
+
+  // './packages/@smotaal/tokenizer/';
+
+  const root = `${
+    location.pathname.includes(scope.slice(1))
+      ? location.href.slice(0, location.href.indexOf(scope.slice(1)))
+      : // : location.href.replace(/^(?!.*\/markup\/packages\/@smotaal\/tokenizer\/).*|\/markup\/.*/, '/markup/') ||
+        `${new URL('./', location)}`
+    // 'https://smotaal.io/markup/'
+  }`.replace(Tail, '/');
+
+  // console.log({scope, root});
+
+  const scopes = {
+    ['~']: `${new URL(scope, root)}`,
+    // [':']: `${root}/benchmarks/assets`,
+    // ['lib']: '../../lib',
+    // ['markup']: `${root}/markup`,
+    // ['modules']: `${root}/modules`,
+    ['unpkg']: '//unpkg.com/',
+    ['cdnjs']: '//cdnjs.cloudflare.com/ajax/libs/',
+  };
+
+  const entrypoints = {
+    ['js']: `${scope}lib/tokenizer.js`,
+    ['css']: (link => (link && link.href) || local('./markup.css'))(
+      document.querySelector('link[rel*="stylesheet" i][src*="markup.css"], link[rel*="stylesheet" i]'),
+    ),
+    ['html']: location.href.replace(/[#?].*$/, ''),
+    ['md']: `${scope}README.md`,
+  };
+
+  const mappings = {js: 'es', html: 'html', css: 'css', md: 'md', esm: 'esm', cjs: 'cjs'};
+
+  const examples = (({js, html, css, md, esm, cjs}, {unpkg, cdnjs}) => ({
+    [html]: {url: entrypoints['html'], type: html},
+    [css]: {url: entrypoints['css'], type: css},
+    [js]: {url: entrypoints['js'], type: js},
+    [esm]: {url: entrypoints['js'], type: esm},
+    [cjs]: {url: entrypoints['js'], type: cjs},
+    [md]: {url: entrypoints['md'], type: md},
+    ['gfm']: `${root}benchmarks/assets/gfm.md`,
+    ['acorn-esm']: {url: `${unpkg}acorn?module`, type: esm},
+    ['acorn-cjs']: {url: `${unpkg}acorn`, type: cjs},
+    ['acorn-loose']: `${cdnjs}acorn/5.7.3/acorn_loose.es.js`,
+    ['esprima']: `${cdnjs}esprima/2.7.3/esprima.js`,
+    ['babel-core']: `${cdnjs}babel-core/6.1.19/browser.js`,
+    ['babel-core-min']: `${cdnjs}babel-core/6.1.19/browser.min.js`,
+    ['popper']: `${cdnjs}popper.js/1.14.4/esm/popper.js`,
+    ['xregexp']: `${cdnjs}xregexp/3.2.0/xregexp-all.js`,
+    ['xregexp-min']: `${cdnjs}xregexp/3.2.0/xregexp-all.min.js`,
+  }))(mappings, scopes);
+
+  const Specifier = RegExp(
+    /^(?:(examples)$|(scopes):?\/*|)/.source
+      .replace('(examples)', `(${Object.keys(examples).join('|')})`)
+      .replace('(scopes)', `(${Object.keys(scopes).join('|')})`),
+  );
+
+  return (specifier, type) => {
+    let [, example = '', scope = ''] = Specifier.exec(specifier || '');
+
+    const source =
+      (example && example in examples && ((scope = 'bare'), (example = examples[example]).url || example)) ||
+      (scope && scope in scopes && `${scopes[scope]}${specifier.slice(scope.length + 1)}`) ||
+      ((scope = 'default'), specifier || undefined);
+
+    type = type || (example && example.type) || undefined;
+
+    return {source, scope, type};
+  };
+})();
+
 export default (markup, overrides) => {
   const defaults = {
-    version: 1,
+    variant: 1,
     repeats: 1,
     iterations: 1,
-    sourceURL: '../samples/complex.html',
+    sourceURL: `${new URL('../samples/complex.html', import.meta.url)}`.replace(new URL('./', location), ''),
     sourceType: undefined,
     element: 'pre#source-code',
     headerTemplate: 'template#source-header',
@@ -20,7 +99,8 @@ export default (markup, overrides) => {
       }))(),
   };
 
-  const Hash = /#([?]?)((?:.*?:)?.*?)(?:(\!+)([a-z]+|[A-Z]+)?)?(?:\*(?!\*)(\d+))?(?:\*{2}(\d+))?$/;
+  // const Hash = /#([?]?)((?:.*?:)?.*?)(?:(\!+)([a-z]+|[A-Z]+)?)?(?:\*(?!\*)(\d+))?(?:\*{2}(\d+))?$/;
+  const Hash = /#(?:(\d+)[:]?(?=[?*!]|$)|)([?]?)((?:.*?:)?.*?)(?:\!([a-z]+|[A-Z]+)?)?(?:\*(?!\*)(\d+))?(?:\*{2}(\d+))?$/;
   const options = Object.create(defaults);
   const sourceCodeElement = document.querySelector(options.element);
   const sourceHeaderTemplate = document.querySelector(options.headerTemplate);
@@ -151,10 +231,10 @@ export default (markup, overrides) => {
         options.sourceType;
       // const {v2 = (options.v2 = /[A-Z]/.test(sourceType))} = options;
       sourceType = sourceType.toLowerCase();
-      const version = options.version > 0 ? options.version : defaults.version;
-      // console.log({'options.version': options.version, 'defaults.version': defaults.version});
+      const variant = options.variant > 0 ? options.variant : defaults.variant;
+      // console.log({'options.variant': options.variant, 'defaults.variant': defaults.variant});
       // sourceType in markup.mappings || (sourceType = 'markup');
-      const markupOptions = {sourceType, version};
+      const markupOptions = {sourceType, variant};
       // const markupFlags = [... flags].join('');
       header.status('source', `${specifier}`);
 
@@ -209,7 +289,7 @@ export default (markup, overrides) => {
       await nextFrame(
         header.status(
           'source-type',
-          `${(markupOptions.mode && markupOptions.mode.syntax) || sourceType}@${markupOptions.version}`,
+          `${(markupOptions.mode && markupOptions.mode.syntax) || sourceType}@${markupOptions.variant}`,
         ),
       );
       fragment = await render();
@@ -222,79 +302,23 @@ export default (markup, overrides) => {
 
   const renderFromHash = (hash = location.hash || '#') => {
     const match = Hash.exec(hash.trim());
-    const [, debugging, specifier, version, type, repeats = defaults.repeats, iterations = defaults.iterations] = match;
+    [, match.variant, match.debugging, match.specifier, match.type, match.repeats, match.iterations] = match;
 
-    // console.log({debugging, specifier, version, type, repeats, iterations, match});
+    options.variant = match.variant >= 0 && parseInt(match.variant);
+    options.repeats = match.repeats >= 0 ? parseInt(match.repeats) : defaults.repeats;
+    options.iterations = match.iterations >= 0 ? parseInt(match.iterations) : defaults.iterations;
+    match.debugging ? flags.add('debug') : flags.delete('debug');
 
-    options.version = version ? version.length : 1;
-    options.repeats = repeats >= 0 ? parseInt(repeats) : defaults.repeats;
-    options.iterations = iterations >= 0 ? parseInt(iterations) : defaults.iterations;
-    debugging ? flags.add('debug') : flags.delete('debug');
+    const {source = options.source || defaults.sourceURL, type, scope} = resolve(match.specifier, match.type);
 
-    let [, example = '', scope = ''] = Specifier.exec(specifier || '');
-    const source =
-      (example && ((example = examples[example]).url || example)) ||
-      (scope && `${scopes[scope]}\/${specifier.slice(scope.length + 1)}`) ||
-      specifier;
-    // console.log({match, example, scope, source}); //  Specifier
-    const sourceURL = (source && (options.source = source)) || options.source || (options.source = defaults.sourceURL);
-    const sourceType = type || example.type || undefined;
-    // console.log({sourceURL, sourceType},  {specifier, type, repeats, iterations}, {source});
+    // console.log({match, source, type, options});
 
-    renderFromURL(sourceURL, sourceType);
+    renderFromURL((options.source = source), type);
   };
 
   window.addEventListener('hashchange', () => renderFromHash());
 
   requestAnimationFrame(() => renderFromHash((location.hash !== '#' && location.hash) || `#${defaults.sourceURL}`));
-
-  const root = location.pathname.includes('/packages/@smotaal/tokenizer/')
-    ? location.href.slice(0, location.href.indexOf('/packages/@smotaal/tokenizer/'))
-    : location.href.replace(/^(?!.*\/markup\/packages\/@smotaal\/tokenizer\/).*|\/markup\/.*/, '/markup/') ||
-      'https://smotaal.github.com/experimental';
-
-  const scopes = {
-    [':']: `${root}/markup/benchmarks/assets`,
-    ['~']: '../../',
-    ['lib']: '../../lib',
-    ['markup']: `${root}/markup`,
-    ['modules']: `${root}/modules`,
-    ['unpkg']: '//unpkg.com',
-    ['cdnjs']: '//cdnjs.cloudflare.com/ajax/libs',
-  };
-
-  const entrypoints = {
-    ['js']: '../../lib/tokenizer.js',
-    ['css']: './markup.css',
-    ['html']: './index.html',
-    ['md']: '../../README.md',
-  };
-  const mappings = {js: 'es', html: 'html', css: 'css', md: 'md', esm: 'esm', cjs: 'cjs'};
-
-  const examples = (({js, html, css, md, esm, cjs}, {unpkg, cdnjs}) => ({
-    [html]: {url: entrypoints['html'], type: html},
-    [css]: {url: entrypoints['css'], type: css},
-    [js]: {url: entrypoints['js'], type: js},
-    [esm]: {url: entrypoints['js'], type: esm},
-    [cjs]: {url: entrypoints['js'], type: cjs},
-    [md]: {url: entrypoints['md'], type: md},
-    ['gfm']: `${root}/benchmarks/assets/gfm.md`,
-    ['acorn-esm']: {url: `${unpkg}/acorn?module`, type: esm},
-    ['acorn-cjs']: {url: `${unpkg}/acorn`, type: cjs},
-    ['acorn-loose']: `${cdnjs}/acorn/5.7.3/acorn_loose.es.js`,
-    ['esprima']: `${cdnjs}/esprima/2.7.3/esprima.js`,
-    ['babel-core']: `${cdnjs}/babel-core/6.1.19/browser.js`,
-    ['babel-core-min']: `${cdnjs}/babel-core/6.1.19/browser.min.js`,
-    ['popper']: `${cdnjs}/popper.js/1.14.4/esm/popper.js`,
-    ['xregexp']: `${cdnjs}/xregexp/3.2.0/xregexp-all.js`,
-    ['xregexp-min']: `${cdnjs}/xregexp/3.2.0/xregexp-all.min.js`,
-  }))(mappings, scopes);
-
-  const Specifier = RegExp(
-    /^(?:(examples)$|(scopes):?\/*|)/.source
-      .replace('(examples)', `(${Object.keys(examples).join('|')})`)
-      .replace('(scopes)', `(${Object.keys(scopes).join('|')})`),
-  );
 
   sourceHeaderTemplate &&
     (sourceHeaderTemplate.selectors = {
