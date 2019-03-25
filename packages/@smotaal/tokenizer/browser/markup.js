@@ -1,5 +1,6 @@
-import parser from '../extended.js';
-import * as dom from '../extensions/dom.js';
+import parser from '../tokenizer.extended.js';
+import dom from '../extensions/dom.js';
+// import * as dom from '../extensions/dom.js';
 
 export {encodeEntity, encodeEntities} from '../extensions/dom.js';
 export {entities} from '../../grammars/common/patterns.js';
