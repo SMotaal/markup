@@ -1,5 +1,4 @@
-﻿/// Loader
-/** Node.js ESM loader resolve hook */
+﻿/** Node.js --experimental-modules --loader for versions 8.9.x - 11.x */
 export const resolve = function resolver(specifier, referrer, resolve) {
   resolve.initialized ||
     (resolver.base || (resolver.base = `${new URL('../../', (resolver.url = import.meta.url))}`),
