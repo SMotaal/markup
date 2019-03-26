@@ -1,12 +1,62 @@
+const Tail = /[#?].*$|\/?$/;
+// const Head = /^(?:((?:[hH][tT][tT][pP][sS]?|[fF][iI][lL][eE]):[/]*|[/]{2,})|[.]{0,2}[/]|)/i;
+// const /[#?].*$/
+const base = `${new URL('./', document.baseURI.replace(Tail, '/'))}`;
+const RegExpEscape = /[\\^$*+?.()|[\]{}]/g; // replace(RegExpEscape, '\\$&')
+const Base = (base => {
+  const uncase = string => string.replace(/[a-z]/gi, c => `[${c.toLowerCase()}${c.toUpperCase()}]`);
+  const partial = (string, head = '', tail = '') => {
+    for (const part of string.replace(Tail, '').split('/')) {
+      // head += `${head ? '[/]' : ''}(?:${part}`;
+      head += `(?:${head ? '[/]' : ''}${part}`;
+      tail += `)?`;
+    }
+    return `${head}${tail}(?=[/]|$)`;
+    // return `${head}${tail}`;
+  };
+  const matcher = new RegExp(
+    base
+      .replace(RegExpEscape, '\\$&')
+      .replace(
+        /^(?=(http|file))(?:https?:\/*?(?=[^/])|file:\/{0,2}?(?=[a-z]:\/|\/))([^/]*?\/)([^#?]*\/|)([^#?\/]*)/i,
+        (m, scheme, scope, path, entry) => {
+          return `^((${uncase((scheme = scheme.toLowerCase()))}${scheme === 'http' ? '[sS]?' : ''}:|)([/]{0,2}${uncase(
+            scope,
+          )}|[/]{2}[^/]${scheme === 'file' ? '*' : '+'}[/])|[/]+?(?=[^/]|$))(${
+            // path ? `${path.replace(/[/]/g, '[/]')}?` : ''
+            path ? `(?:${partial(path)}|)` : ''
+          }|)(?=([^#?]*))`;
+        },
+      ),
+  );
+
+  // matcher.relative = to => {
+  //   const match = matcher.exec(to);
+  //   if (match) {
+  //     const [, prefix, parts, rest] = matcher.exec(to);
+  //     console.log({to, match, prefix, parts, rest});
+  //   }
+
+  //   return to;
+  // };
+
+  return matcher;
+})(base);
+
+// console.log({base, Base}, base.replace(Base, '.'));
+
+// Base.relative(base);
+// Base.relative('file:///');
+// Base.relative('//a/');
+// Base.relative('//a');
+// Base.relative('/a/');
+// Base.relative('/a');
+// Base.relative('///');
+
+const local = specifier => `${new URL(specifier, import.meta.url)}`;
+const scope = local('../../').replace(Base, '.');
+
 const resolve = (() => {
-  const Tail = /\/?$/;
-
-  const local = specifier => `${new URL(specifier, import.meta.url)}`;
-
-  const scope = local('../../').replace(new URL('./', location), './');
-
-  // './packages/@smotaal/tokenizer/';
-
   const root = `${
     location.pathname.includes(scope.slice(1))
       ? location.href.slice(0, location.href.indexOf(scope.slice(1)))
@@ -15,10 +65,8 @@ const resolve = (() => {
     // 'https://smotaal.io/markup/'
   }`.replace(Tail, '/');
 
-  // console.log({scope, root});
-
   const scopes = {
-    ['~']: `${new URL(scope, root)}`,
+    ['~']: `${new URL(scope, base)}`,
     // [':']: `${root}/benchmarks/assets`,
     // ['lib']: '../../lib',
     // ['markup']: `${root}/markup`,
@@ -32,7 +80,7 @@ const resolve = (() => {
     ['css']: (link => (link && link.href) || local('./markup.css'))(
       document.querySelector('link[rel*="stylesheet" i][src*="markup.css"], link[rel*="stylesheet" i]'),
     ),
-    ['html']: location.href.replace(/[#?].*$/, ''),
+    ['html']: location.href.replace(Tail, ''),
     ['md']: `${scope}README.md`,
   };
 
@@ -67,9 +115,9 @@ const resolve = (() => {
     let [, example = '', scope = ''] = Specifier.exec(specifier || '');
 
     const source =
-      (example && example in examples && ((scope = 'bare'), (example = examples[example]).url || example)) ||
-      (scope && scope in scopes && `${scopes[scope]}${specifier.slice(scope.length + 1)}`) ||
-      ((scope = 'default'), specifier || undefined);
+      `${(example && example in examples && ((scope = 'bare'), (example = examples[example]).url || example)) ||
+        (scope && scope in scopes && `${scopes[scope]}${specifier.slice(scope.length + 1)}`) ||
+        ((scope = 'default'), specifier || '')}`.replace(Base, './') || undefined;
 
     type = type || (example && example.type) || undefined;
 
@@ -100,7 +148,7 @@ export default (markup, overrides) => {
   };
 
   // const Hash = /#([?]?)((?:.*?:)?.*?)(?:(\!+)([a-z]+|[A-Z]+)?)?(?:\*(?!\*)(\d+))?(?:\*{2}(\d+))?$/;
-  const Hash = /#(?:(\d+)[:]?(?=[?*!]|$)|)([?]?)((?:.*?:)?.*?)(?:\!([a-z]+|[A-Z]+)?)?(?:\*(?!\*)(\d+))?(?:\*{2}(\d+))?$/;
+  const Hash = /#(?:(\d+)[:]?(?=\W|\b|$)|)([?]?)((?:.*?:)?.*?)(?:\!([a-z]+|[A-Z]+)?)?(?:\*(?!\*)(\d+))?(?:\*{2}(\d+))?$/;
   const options = Object.create(defaults);
   const sourceCodeElement = document.querySelector(options.element);
   const sourceHeaderTemplate = document.querySelector(options.headerTemplate);
@@ -221,7 +269,7 @@ export default (markup, overrides) => {
     (container.innerHTML = ''), container.append(header, code);
 
     try {
-      await nextFrame(header.status('source', `${specifier}`), header.timing('source', true));
+      await nextFrame(header.status('source', `${specifier}`.replace(Base, './')), header.timing('source', true));
       const {
         result: {sourceText, response},
       } = await time('source', () => loadFromURL(specifier));
@@ -232,11 +280,9 @@ export default (markup, overrides) => {
       // const {v2 = (options.v2 = /[A-Z]/.test(sourceType))} = options;
       sourceType = sourceType.toLowerCase();
       const variant = options.variant > 0 ? options.variant : defaults.variant;
-      // console.log({'options.variant': options.variant, 'defaults.variant': defaults.variant});
-      // sourceType in markup.mappings || (sourceType = 'markup');
       const markupOptions = {sourceType, variant};
       // const markupFlags = [... flags].join('');
-      header.status('source', `${specifier}`);
+      header.status('source', `${specifier}`.replace(Base, './'));
 
       fragment = code;
 
@@ -289,7 +335,9 @@ export default (markup, overrides) => {
       await nextFrame(
         header.status(
           'source-type',
-          `${(markupOptions.mode && markupOptions.mode.syntax) || sourceType}@${markupOptions.variant}`,
+          `${(markupOptions.mode && markupOptions.mode.syntax) || sourceType}${
+            markupOptions.variant > 1 ? `@${markupOptions.variant}` : ''
+          }`,
         ),
       );
       fragment = await render();
@@ -311,9 +359,9 @@ export default (markup, overrides) => {
 
     const {source = options.source || defaults.sourceURL, type, scope} = resolve(match.specifier, match.type);
 
-    // console.log({match, source, type, options});
-
-    renderFromURL((options.source = source), type);
+    renderFromURL((options.source = source), type).catch(error =>
+      console.warn('[renderFromHash]: %o\n\n%o', error, {match, source, type, options}),
+    );
   };
 
   window.addEventListener('hashchange', () => renderFromHash());
