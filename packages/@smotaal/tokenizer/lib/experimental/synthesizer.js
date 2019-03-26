@@ -30,7 +30,6 @@
             if (!length) return false;
             const matcher = new RegExp(`(${sources.join('|)|(')}|)`, 'u');
             return text => {
-              // OR: for (const segment of names) if (segments[segment].test(text)) return segment;
               const match = matcher.exec(text);
               if (match[0]) for (let i = 1, n = length; n--; i++) if (match[i]) return names[i - 1];
             };
