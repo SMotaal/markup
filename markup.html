@@ -41,7 +41,7 @@
 
       modes.install(parser.defaults);
 
-      markup.parsers.unshift(parser);
+      markup.parsers.push(parser);
 
       import api from './packages/@smotaal/tokenizer/examples/browser/api.js';
       api(markup);
