@@ -148,15 +148,6 @@
       mode !== undefined || (mode = (defaults && defaults.mode) || undefined);
       if (!mode) throw ReferenceError(`Tokenizer.contextualizer invoked without a mode`);
 
-      // // TODO: Refactoring
-      // const initialize = context => {
-      //   let {
-      //     tokenizer = (context.tokenizer = this.tokenizer(context)),
-      //     token = (context.token = (tokenizer => (tokenizer.next(), token => tokenizer.next(token).value))(tokenizer)),
-      //   } = context;
-      //   return context;
-      // };
-
       if (!mode.context) {
         const {
           matcher = (mode.matcher = (defaults && defaults.matcher) || undefined),
@@ -196,21 +187,9 @@
           } = grouper;
 
           initialize(
-            (grouper.context = {
-              mode,
-              punctuator,
-              punctuators,
-              aggregators,
-              closer,
-              spans,
-              matcher,
-              quotes,
-              forming,
-            }),
+            (grouper.context = {mode, punctuator, punctuators, aggregators, closer, spans, matcher, quotes, forming}),
           );
         }
-
-        // console.log({tokenizer, grouper, next});
 
         return grouper && grouper.context;
       };
@@ -249,7 +228,6 @@
               if (!length) return false;
               const matcher = new RegExp(`(${sources.join('|)|(')}|)`, 'u');
               return text => {
-                // OR: for (const segment of names) if (segments[segment].test(text)) return segment;
                 const match = matcher.exec(text);
                 if (match[0]) for (let i = 1, n = length; n--; i++) if (match[i]) return names[i - 1];
               };
@@ -318,19 +296,13 @@
     *tokenize(source, state = {}) {
       let done;
 
-      // TODO: Consider supporting Symbol.species
-      const Species = this.constructor;
+      const Species = this.constructor; // TODO: Consider Symbol.species
 
       // Local context
       const contextualizer =
         this.contextualizer ||
         new Contextualizer(this, context => {
-          let {
-            // tokenizer = (context.tokenizer = Species.tokenizer(context)),
-            // token = (context.token = (tokenizer => (tokenizer.next(), token => tokenizer.next(token).value))(tokenizer)),
-            // token = (context.token = (synthesizer => token => synthesizer.token(token))(new TokenSynthesizer(context))),
-            token = (context.token = new TokenSynthesizer(context).token),
-          } = context;
+          let {token = (context.token = new TokenSynthesizer(context).token)} = context;
           return context;
         });
       let context = contextualizer.context();
@@ -378,8 +350,6 @@
 
         while (state.context === (state.context = context)) {
           let next;
-
-          // state.lastToken = lastToken;
 
           const lastIndex = state.index || 0;
 
@@ -432,7 +402,6 @@
 
             if (opened || closed) {
               next.type = 'punctuator';
-              // context = contextualizer.next((state.grouper = grouper || undefined)).value;
               context = contextualizer.context((state.grouper = grouper || undefined));
               grouping.hint = `${[...grouping.hints].join(' ')} ${grouping.context ? `in-${grouping.context}` : ''}`;
               opened && (after = opened.open && opened.open(next, state, context));
