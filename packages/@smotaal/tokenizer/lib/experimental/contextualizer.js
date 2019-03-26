@@ -9,15 +9,6 @@
     mode !== undefined || (mode = (defaults && defaults.mode) || undefined);
     if (!mode) throw ReferenceError(`Tokenizer.contextualizer invoked without a mode`);
 
-    // // TODO: Refactoring
-    // const initialize = context => {
-    //   let {
-    //     tokenizer = (context.tokenizer = this.tokenizer(context)),
-    //     token = (context.token = (tokenizer => (tokenizer.next(), token => tokenizer.next(token).value))(tokenizer)),
-    //   } = context;
-    //   return context;
-    // };
-
     if (!mode.context) {
       const {
         matcher = (mode.matcher = (defaults && defaults.matcher) || undefined),
@@ -57,21 +48,9 @@
         } = grouper;
 
         initialize(
-          (grouper.context = {
-            mode,
-            punctuator,
-            punctuators,
-            aggregators,
-            closer,
-            spans,
-            matcher,
-            quotes,
-            forming,
-          }),
+          (grouper.context = {mode, punctuator, punctuators, aggregators, closer, spans, matcher, quotes, forming}),
         );
       }
-
-      // console.log({tokenizer, grouper, next});
 
       return grouper && grouper.context;
     };

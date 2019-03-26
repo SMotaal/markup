@@ -13,19 +13,13 @@ export class Tokenizer {
   *tokenize(source, state = {}) {
     let done;
 
-    // TODO: Consider supporting Symbol.species
-    const Species = this.constructor;
+    const Species = this.constructor; // TODO: Consider Symbol.species
 
     // Local context
     const contextualizer =
       this.contextualizer ||
       new Contextualizer(this, context => {
-        let {
-          // tokenizer = (context.tokenizer = Species.tokenizer(context)),
-          // token = (context.token = (tokenizer => (tokenizer.next(), token => tokenizer.next(token).value))(tokenizer)),
-          // token = (context.token = (synthesizer => token => synthesizer.token(token))(new TokenSynthesizer(context))),
-          token = (context.token = new TokenSynthesizer(context).token),
-        } = context;
+        let {token = (context.token = new TokenSynthesizer(context).token)} = context;
         return context;
       });
     let context = contextualizer.context();
@@ -73,8 +67,6 @@ export class Tokenizer {
 
       while (state.context === (state.context = context)) {
         let next;
-
-        // state.lastToken = lastToken;
 
         const lastIndex = state.index || 0;
 
@@ -127,7 +119,6 @@ export class Tokenizer {
 
           if (opened || closed) {
             next.type = 'punctuator';
-            // context = contextualizer.next((state.grouper = grouper || undefined)).value;
             context = contextualizer.context((state.grouper = grouper || undefined));
             grouping.hint = `${[...grouping.hints].join(' ')} ${grouping.context ? `in-${grouping.context}` : ''}`;
             opened && (after = opened.open && opened.open(next, state, context));
