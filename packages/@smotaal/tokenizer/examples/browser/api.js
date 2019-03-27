@@ -21,7 +21,7 @@ const Examples = (entrypoints, {['~']: local, unpkg, cdnjs}, {js, html, css, md,
 });
 
 const TailPart = /\/?[#?].*$|\/?$/;
-const HeadPart = /^.*?(?=(?:\/[\w\.-]+)+(?:[?#.]|$))\//;
+const HeadPart = /^(?:.*?\/(?:\/[^\/]+|libs|packages|node_modules|examples)(?=\/))?.*?(?=(?:\/[\w\.-]+)+(?:[?#.]|$))\//;
 
 const Resolver = (documentURI => {
   const Resolver = scope => {
@@ -240,7 +240,9 @@ export default (markup, overrides) => {
     };
 
     (container.innerHTML = ''), container.append(header, slot);
-    container.classList.contains('dark-mode') ? document.body.classList.add('dark-mode') : document.body.classList.add('remove-mode');
+    container.classList.contains('dark-mode')
+      ? document.body.classList.add('dark-mode')
+      : document.body.classList.add('remove-mode');
 
     try {
       let sourceName = specifier.replace(HeadPart, '').replace(TailPart, '');
