@@ -1,114 +1,84 @@
-const Tail = /[#?].*$|\/?$/;
-// const Head = /^(?:((?:[hH][tT][tT][pP][sS]?|[fF][iI][lL][eE]):[/]*|[/]{2,})|[.]{0,2}[/]|)/i;
-// const /[#?].*$/
-const base = `${new URL('./', document.baseURI.replace(Tail, '/'))}`;
-const RegExpEscape = /[\\^$*+?.()|[\]{}]/g; // replace(RegExpEscape, '\\$&')
-const Base = (base => {
-  const uncase = string => string.replace(/[a-z]/gi, c => `[${c.toLowerCase()}${c.toUpperCase()}]`);
-  const partial = (string, head = '', tail = '') => {
-    for (const part of string.replace(Tail, '').split('/')) {
-      // head += `${head ? '[/]' : ''}(?:${part}`;
-      head += `(?:${head ? '[/]' : ''}${part}`;
-      tail += `)?`;
-    }
-    return `${head}${tail}(?=[/]|$)`;
-    // return `${head}${tail}`;
+const Mappings = {js: 'es', html: 'html', css: 'css', md: 'md', esm: 'esm', cjs: 'cjs'};
+
+const Examples = (entrypoints, {['~']: local, unpkg, cdnjs}, {js, html, css, md, esm, cjs} = Mappings) => ({
+  [html]: {url: entrypoints['html'], type: html},
+  [css]: {url: entrypoints['css'], type: css},
+  [js]: {url: entrypoints['js'], type: js},
+  [esm]: {url: entrypoints['js'], type: esm},
+  [cjs]: {url: entrypoints['js'], type: cjs},
+  [md]: {url: entrypoints['md'], type: md},
+  ['json']: local('./examples/samples/sample.json'),
+  ['gfm']: local('./examples/samples/gfm.md'),
+  ['acorn-esm']: {url: unpkg('acorn?module'), type: esm},
+  ['acorn-cjs']: {url: unpkg('acorn'), type: cjs},
+  ['acorn-loose']: cdnjs('acorn/5.7.3/acorn_loose.es.js'),
+  ['esprima']: cdnjs('esprima/2.7.3/esprima.js'),
+  ['babel-core']: cdnjs('babel-core/6.1.19/browser.js'),
+  ['babel-core-min']: cdnjs('babel-core/6.1.19/browser.min.js'),
+  ['popper']: cdnjs('popper.js/1.14.4/esm/popper.js'),
+  ['xregexp']: cdnjs('xregexp/3.2.0/xregexp-all.js'),
+  ['xregexp-min']: cdnjs('xregexp/3.2.0/xregexp-all.min.js'),
+});
+
+const TailPart = /\/?[#?].*$|\/?$/;
+const HeadPart = /^.*?(?=(?:\/[\w\.-]+)+(?:[?#.]|$))\//;
+
+const Resolver = (documentURI => {
+  const Resolver = scope => {
+    const resolver = (specifier, referrer = resolver.scope) => {
+      let returned;
+      try {
+        return (returned = `${new URL(specifier, referrer || resolver.scope || Resolver.base)}`);
+      } finally {
+        returned === undefined && console.log({specifier, referrer, scope: resolver.scope, base: Resolver.base});
+      }
+    };
+    Object.defineProperty(resolver, 'scope', {
+      get: () => scope || Resolver.base,
+      set: url => void (scope = url || undefined),
+    });
+    resolver.scope = scope;
+    return resolver;
   };
-  const matcher = new RegExp(
-    base
-      .replace(RegExpEscape, '\\$&')
-      .replace(
-        /^(?=(http|file))(?:https?:\/*?(?=[^/])|file:\/{0,2}?(?=[a-z]:\/|\/))([^/]*?\/)([^#?]*\/|)([^#?\/]*)/i,
-        (m, scheme, scope, path, entry) => {
-          return `^((${uncase((scheme = scheme.toLowerCase()))}${scheme === 'http' ? '[sS]?' : ''}:|)([/]{0,2}${uncase(
-            scope,
-          )}|[/]{2}[^/]${scheme === 'file' ? '*' : '+'}[/])|[/]+?(?=[^/]|$))(${
-            // path ? `${path.replace(/[/]/g, '[/]')}?` : ''
-            path ? `(?:${partial(path)}|)` : ''
-          }|)(?=([^#?]*))`;
-        },
-      ),
-  );
 
-  // matcher.relative = to => {
-  //   const match = matcher.exec(to);
-  //   if (match) {
-  //     const [, prefix, parts, rest] = matcher.exec(to);
-  //     console.log({to, match, prefix, parts, rest});
-  //   }
+  Resolver.base = `${new URL('./', document.documentURI)}`;
+  // Resolver.BASE = new BaseExpression(Resolver.base);
 
-  //   return to;
-  // };
+  return Resolver;
+})(document.documentURI);
 
-  return matcher;
-})(base);
-
-// console.log({base, Base}, base.replace(Base, '.'));
-
-// Base.relative(base);
-// Base.relative('file:///');
-// Base.relative('//a/');
-// Base.relative('//a');
-// Base.relative('/a/');
-// Base.relative('/a');
-// Base.relative('///');
-
-const local = specifier => `${new URL(specifier, import.meta.url)}`;
-const scope = local('../../').replace(Base, '.');
+const absolute = Resolver();
+const relative = Resolver(absolute('./', import.meta.url));
 
 const resolve = (() => {
-  const root = `${
-    location.pathname.includes(scope.slice(1))
-      ? location.href.slice(0, location.href.indexOf(scope.slice(1)))
-      : // : location.href.replace(/^(?!.*\/markup\/packages\/@smotaal\/tokenizer\/).*|\/markup\/.*/, '/markup/') ||
-        `${new URL('./', location)}`
-    // 'https://smotaal.io/markup/'
-  }`.replace(Tail, '/');
+  const HTTP = 'https://';
 
   const scopes = {
-    ['~']: `${new URL(scope, base)}`,
-    // [':']: `${root}/benchmarks/assets`,
-    // ['lib']: '../../lib',
-    // ['markup']: `${root}/markup`,
-    // ['modules']: `${root}/modules`,
-    ['unpkg']: '//unpkg.com/',
-    ['cdnjs']: '//cdnjs.cloudflare.com/ajax/libs/',
+    ['~']: absolute('../../', import.meta.url),
+    ['unpkg']: absolute(`${HTTP}unpkg.com/`),
+    ['cdnjs']: absolute(`${HTTP}cdnjs.cloudflare.com/ajax/libs/`),
   };
+
+  const resolvers = {};
+  for (const scope in scopes) resolvers[scope] = Resolver(scopes[scope]);
+
+  const {['~']: local} = resolvers;
 
   const entrypoints = {
-    ['js']: `${scope}lib/tokenizer.js`,
-    ['css']: (link => (link && link.href) || local('./markup.css'))(
-      document.querySelector('link[rel*="stylesheet" i][src*="markup.css"], link[rel*="stylesheet" i]'),
-    ),
-    ['html']: location.href.replace(Tail, ''),
-    ['md']: `${scope}README.md`,
+    ['js']: local('./lib/tokenizer.js'),
+    ['css']: relative('./markup.css'),
+    ['html']: location.href.replace(TailPart, ''),
+    ['md']: local('./README.md'),
   };
 
-  const mappings = {js: 'es', html: 'html', css: 'css', md: 'md', esm: 'esm', cjs: 'cjs'};
+  const examples = Examples(entrypoints, resolvers);
 
-  const examples = (({js, html, css, md, esm, cjs}, {unpkg, cdnjs}) => ({
-    [html]: {url: entrypoints['html'], type: html},
-    [css]: {url: entrypoints['css'], type: css},
-    [js]: {url: entrypoints['js'], type: js},
-    [esm]: {url: entrypoints['js'], type: esm},
-    [cjs]: {url: entrypoints['js'], type: cjs},
-    [md]: {url: entrypoints['md'], type: md},
-    ['gfm']: `${root}benchmarks/assets/gfm.md`,
-    ['acorn-esm']: {url: `${unpkg}acorn?module`, type: esm},
-    ['acorn-cjs']: {url: `${unpkg}acorn`, type: cjs},
-    ['acorn-loose']: `${cdnjs}acorn/5.7.3/acorn_loose.es.js`,
-    ['esprima']: `${cdnjs}esprima/2.7.3/esprima.js`,
-    ['babel-core']: `${cdnjs}babel-core/6.1.19/browser.js`,
-    ['babel-core-min']: `${cdnjs}babel-core/6.1.19/browser.min.js`,
-    ['popper']: `${cdnjs}popper.js/1.14.4/esm/popper.js`,
-    ['xregexp']: `${cdnjs}xregexp/3.2.0/xregexp-all.js`,
-    ['xregexp-min']: `${cdnjs}xregexp/3.2.0/xregexp-all.min.js`,
-  }))(mappings, scopes);
+  console.log({examples, entrypoints, ...Resolver});
 
   const Specifier = RegExp(
     /^(?:(examples)$|(scopes):?\/*|)/.source
       .replace('(examples)', `(${Object.keys(examples).join('|')})`)
-      .replace('(scopes)', `(${Object.keys(scopes).join('|')})`),
+      .replace('(scopes)', `(${Object.keys(resolvers).join('|')})`),
   );
 
   return (specifier, type) => {
@@ -116,8 +86,9 @@ const resolve = (() => {
 
     const source =
       `${(example && example in examples && ((scope = 'bare'), (example = examples[example]).url || example)) ||
-        (scope && scope in scopes && `${scopes[scope]}${specifier.slice(scope.length + 1)}`) ||
-        ((scope = 'default'), specifier || '')}`.replace(Base, './') || undefined;
+        // (scope && scope in scopes && `${scopes[scope]}${specifier.slice(scope.length + 1)}`) ||
+        (scope && scope in resolvers && resolvers[scope](specifier.slice(scope.length))) ||
+        ((scope = 'default'), specifier || '')}` || undefined;
 
     type = type || (example && example.type) || undefined;
 
@@ -205,21 +176,23 @@ export default (markup, overrides) => {
       contrastButton &&
         ((contrastButton.onclick = () => {
           header.parentElement.classList.toggle('dark-mode')
-            ? (localStorage.lightMode = !(localStorage.darkMode = true))
-            : (localStorage.darkMode = !(localStorage.lightMode = true));
+            ? (document.body.classList.add('dark-mode'), (localStorage.lightMode = !(localStorage.darkMode = true)))
+            : (document.body.classList.remove('dark-mode'), (localStorage.darkMode = !(localStorage.lightMode = true)));
         }),
         (contrastButton.ondblClick = () => {
           delete localStorage.lightMode, delete localStorage.darkMode;
           const classList = header.parentElement.classList;
-          header.parentElement.classList.contains('prefers-dark-mode') &&
-            header.parentElement.classList.add('dark-mode');
+          header.parentElement.classList.contains('prefers-dark-mode')
+            ? (document.body.classList.add('dark-mode'), header.parentElement.classList.add('dark-mode'))
+            : document.body.classList.remove('dark-mode');
         }));
     }
 
-    header.status = (name, value) => {
+    header.status = (name, value, title) => {
       header.status[name] === (header.status[name] = value);
       const element = header.elements[`${name}-span`];
       const text = `${value || ''}`;
+      (title = `${title || ''}`.trim()) ? element.setAttribute('title', title) : element.removeAttribute('title');
       element ? (element.innerText = text) : text && flags.has('debug') && console.info('[%s] %o', name, value);
     };
 
@@ -254,7 +227,7 @@ export default (markup, overrides) => {
     const container = sourceCodeElement;
     const rerender = () => render();
     const header = renderHeader({rerender});
-    const code = document.createElement('slot');
+    const slot = document.createElement('slot');
     const {timing, status} = header;
     const time = async (name, executor, cycles = 1) => {
       let start, result, end, elapsed;
@@ -266,10 +239,12 @@ export default (markup, overrides) => {
       return {name, executor, start, result, end, elapsed};
     };
 
-    (container.innerHTML = ''), container.append(header, code);
+    (container.innerHTML = ''), container.append(header, slot);
+    container.classList.contains('dark-mode') ? document.body.classList.add('dark-mode') : document.body.classList.add('remove-mode');
 
     try {
-      await nextFrame(header.status('source', `${specifier}`.replace(Base, './')), header.timing('source', true));
+      let sourceName = specifier.replace(HeadPart, '').replace(TailPart, '');
+      await nextFrame(header.status('source', sourceName, `${specifier}`), header.timing('source', true));
       const {
         result: {sourceText, response},
       } = await time('source', () => loadFromURL(specifier));
@@ -282,18 +257,19 @@ export default (markup, overrides) => {
       const variant = options.variant > 0 ? options.variant : defaults.variant;
       const markupOptions = {sourceType, variant};
       // const markupFlags = [... flags].join('');
-      header.status('source', `${specifier}`.replace(Base, './'));
+      // sourceName = specifier.replace(HeadPart, '').replace(TailPart, '');
+      header.status('source', sourceName, `${specifier}`);
 
-      fragment = code;
+      fragment = slot;
 
-      const sourceID = `«${specifier.replace(/^.*\//, '…/')} [${sourceText.length}] ${sourceType}»`;
+      const sourceID = `«${sourceName} [${sourceText.length}] ${sourceType}»`;
 
       const iterate = iterations => {
         for (let n = iterations; n--; ) for (const t of markup.tokenize(sourceText, markupOptions, flags));
       };
 
       const repeat = async repeats => {
-        for (let n = repeats; n--; code.appendChild(await renderMarkup(sourceText, markupOptions)));
+        for (let n = repeats; n--; slot.appendChild(await renderMarkup(sourceText, markupOptions)));
       };
 
       const timed = async (marker, ...args) => {
@@ -303,7 +279,7 @@ export default (markup, overrides) => {
       };
 
       render = async () => {
-        await nextFrame((code.innerText = ''));
+        await nextFrame((slot.innerText = ''));
 
         header.stats({name: 'repeats', status: '', time: -1});
         header.stats({name: 'iterations', status: '', time: -1});
@@ -381,3 +357,50 @@ export default (markup, overrides) => {
       ['contrast-button']: '#contrast[onclick]',
     });
 };
+
+// const BaseExpression = (() => {
+//   const uncase = string => string.replace(/[a-z]/gi, c => `[${c.toLowerCase()}${c.toUpperCase()}]`);
+//   const partial = (string, head = '', tail = '') => {
+//     for (const part of string.replace(TailPart, '').split('/')) {
+//       head += `(?:${head ? '[/]' : ''}${part}`;
+//       tail += `)?`;
+//     }
+//     return `${head}${tail}(?=[/]|$)`;
+//   };
+//   const BaseParts = /^(?=(http|file))(?:https?:\/*?(?=[^/])|file:\/{0,2}?(?=[a-z]:\/|\/))([^/]*?\/)([^#?]*\/|)([^#?\/]*)/i;
+//   BaseParts.replacement = (m, scheme, scope, path, entry) => {
+//     return `^((${uncase((scheme = scheme.toLowerCase()))}${scheme === 'http' ? '[sS]?' : ''}:|)([/]{0,2}${uncase(
+//       scope,
+//     )}|[/]{2}[^/]${scheme === 'file' ? '*' : '+'}[/])|[/]+?(?=[^/]|$))(${
+//       path ? `(?:${partial(path)}|)` : ''
+//     }|)\/?(?=([^#?]*))`;
+//   };
+
+//   const RegExpEscapes = /[\\^$*+?.()|[\]{}]/g;
+//   RegExpEscapes.replacement = '\\$&';
+
+//   return class BaseExpression extends RegExp {
+//     constructor(source, flags = source.flags) {
+//       const base = `${new URL(source.base || source)}`.replace(TailPart, '/');
+//       super(base.replace(RegExpEscapes, RegExpEscapes.replacement).replace(BaseParts, BaseParts.replacement), flags);
+//       Object.defineProperty(this, 'base', {value: base, enumerable: true});
+//     }
+//   };
+// })();
+
+// const Head = /^(?:((?:[hH][tT][tT][pP][sS]?|[fF][iI][lL][eE]):[/]*|[/]{2,})|[.]{0,2}[/]|)/i;
+
+// base => new RegExp(
+//   base
+//     .replace(RegExpEscapes, '\\$&')
+//     .replace(
+//       /^(?=(http|file))(?:https?:\/*?(?=[^/])|file:\/{0,2}?(?=[a-z]:\/|\/))([^/]*?\/)([^#?]*\/|)([^#?\/]*)/i,
+//       (m, scheme, scope, path, entry) => {
+//         return `^((${uncase((scheme = scheme.toLowerCase()))}${
+//           scheme === 'http' ? '[sS]?' : ''
+//         }:|)([/]{0,2}${uncase(scope)}|[/]{2}[^/]${scheme === 'file' ? '*' : '+'}[/])|[/]+?(?=[^/]|$))(${
+//           path ? `(?:${partial(path)}|)` : ''
+//         }|)(?=([^#?]*))`;
+//       },
+//     ),
+// )
