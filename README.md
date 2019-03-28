@@ -15,7 +15,9 @@ Semi-contextual parsing experiments, which fall somewhere between the scope of r
 
 **What it does not try to do**
 
-- Operate on invalid code (or minified code for now).
+- Anything the runtime would do anyway, like:
+  - Parse malformed/unbalanced expressions.
+  - Code validation or error checking.
 
 ## _./markup.html_ — fetches, scans and renders source texts
 
