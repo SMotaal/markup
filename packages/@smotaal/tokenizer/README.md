@@ -27,23 +27,27 @@ Please note that no efforts are intended to make this package operational with t
 
 ## Important Changes
 
-*v0.0.6*
+_v0.0.6_
+
 - Refactor `extensions/dom.js` to `export default new class {}`
 - Cleanup extensions and related documentation
 - Rename source entries using `tokenizer‹.variant›*.js`
 - Cleanup implementation and examples
 - Introduce `experimental` tokenizer variants from `lib/experimental`
 
-*v0.0.5*
+_v0.0.5_
+
 - Refactor grammars into a separate package.
 - Remove `dist/extensions/` bundles
 - Expose dom and grammar helpers directly `dist/tokenizer.browser.js`
 
-*v0.0.4*
+_v0.0.4_
+
 - Rename ECMAScript module sources to `.js` instead of `.mjs`.
 - Add minimal `node/loader.mjs` for experimental Node.js mode.
 
-*v0.0.3*
+_v0.0.3_
+
 - Refactor source files for optimal bundling with `rollup`.
 - Add `dist/` with multiple dist `umd` and `esm` bundles.
 
@@ -79,8 +83,7 @@ parser.tokenize('/* source */', {sourceType: 'javascript'});
 
 ## Demo
 
-You can see a [live demo](https://smotaal.github.io/markup/packages/@smotaal/tokenizer/examples/browser/) or serve it locally from [examples/browser/index.html](./examples/browser/index.html).
-
+You can see a [live demo](https://www.smotaal.io/markup/markup.html) or serve it locally from [examples/browser/index.html](./examples/browser/index.html).
 
 <figure>
 
@@ -102,11 +105,11 @@ You can see a [live demo](https://smotaal.github.io/markup/packages/@smotaal/tok
 - `!html` HTML
 - `!md` Markdown
 
-<code><b>&#42;</b>repeat</code>
+<code><b>\*</b>repeat</code>
 
 - repeats the tokenized (and rendered) source text
 
-<code><b>&#42;&#42;</b>iterations</code>
+<code><b>\*\*</b>iterations</code>
 
 - repeats the tokenization of the source text
 
