@@ -1,6 +1,6 @@
 const Mappings = {js: 'es', html: 'html', css: 'css', md: 'md', esm: 'esm', cjs: 'cjs'};
 
-const Examples = (entrypoints, {['~']: local, unpkg, cdnjs}, {js, html, css, md, esm, cjs} = Mappings) => ({
+const Examples = (entrypoints, {['~/']: local, unpkg, cdnjs}, {js, html, css, md, esm, cjs} = Mappings) => ({
   [html]: {url: entrypoints['html'], type: html},
   [css]: {url: entrypoints['css'], type: css},
   [js]: {url: entrypoints['js'], type: js},
@@ -54,7 +54,7 @@ const resolve = (() => {
   const HTTP = 'https://';
 
   const scopes = {
-    ['~']: absolute('../../', import.meta.url),
+    ['~/']: absolute('../../', import.meta.url),
     ['unpkg']: absolute(`${HTTP}unpkg.com/`),
     ['cdnjs']: absolute(`${HTTP}cdnjs.cloudflare.com/ajax/libs/`),
   };
@@ -62,7 +62,7 @@ const resolve = (() => {
   const resolvers = {};
   for (const scope in scopes) resolvers[scope] = Resolver(scopes[scope]);
 
-  const {['~']: local} = resolvers;
+  const {['~/']: local} = resolvers;
 
   const entrypoints = {
     ['js']: local('./lib/tokenizer.js'),
