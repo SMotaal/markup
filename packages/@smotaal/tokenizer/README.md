@@ -89,27 +89,29 @@ You can see a [live demo](https://www.smotaal.io/markup/markup.html) or serve it
 
 <figcaption><i>Parameters</i></figcaption>
 
-<pre>#specifier!mode*repeat**iterations</pre>
+```url example
+examples/browser/#‹specifier›!‹mode›*‹repeat›**‹iterations›
+```
 
-<code><b>#</b>specifier</code>
+<b>`#`</b><tt>‹specifier›</tt>
 
 - `#` followed by a relative URL
 - `#https://` followed by an absolute URL
 - `#unpkg:` followed by package or module path
 - `#cdnjs:` followed by package or module path
 
-<code><b>!</b>mode</code>
+<b>`!`</b><tt>‹mode›</tt>
 
 - `!es` JavaScript
 - `!css` CSS
 - `!html` HTML
 - `!md` Markdown
 
-<code><b>\*</b>repeat</code>
+<b>`*`</b><tt>‹repeat›</tt>
 
 - repeats the tokenized (and rendered) source text
 
-<code><b>\*\*</b>iterations</code>
+<b>`**`</b><tt>‹iterations›</tt>
 
 - repeats the tokenization of the source text
 
