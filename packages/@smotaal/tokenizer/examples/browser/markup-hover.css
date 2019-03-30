@@ -16,9 +16,10 @@
 
   .markup:hover {
     background-color: var(--markup-constast, white);
-    box-shadow: 0 0 2.5px -0.5px var(--ring, currentColor);
+    box-shadow: 0 0 10px -7.5px var(--markup-neutral, #999), 0 0 5px -1.5px var(--ring, currentColor);
     cursor: text;
     position: relative;
+    z-index: 1;
     /* z-index: 0; */
   }
 
@@ -38,8 +39,9 @@
     color: var(--markup-shadow, white);
     text-shadow: 0 1px 1px var(--markup-color, #666);
 
-    box-shadow: inset 0 0 50px -15px var(--ring, currentColor);
-    filter: drop-shadow(0 0 1.5px var(--ring, currentColor));
+    /* box-shadow: 0 0 1.5px var(--ring, currentColor), inset 0 0 50px -15px var(--ring, currentColor); */
+    box-shadow: 0 0 10px -2.5px var(--ring, currentColor), inset 0 0 50px -15px var(--ring, currentColor);
+    /* filter: drop-shadow(0 0 1.5px var(--ring, currentColor)); */
 
     border-radius: 1ch;
     border-bottom: 1ch solid var(--ring, currentColor);
@@ -48,7 +50,7 @@
     left: calc(-6 * var(--padding, 2px));
     bottom: calc(100% + 0.5ch + -2 * var(--padding, 2px));
 
-    /* z-index: -1; */
+    z-index: 1;
   }
 
   .dark-mode .markup:hover::before {
