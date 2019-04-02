@@ -4,88 +4,78 @@
   (global = global || self, factory(global.tokenizer = {}));
 }(this, function (exports) { 'use strict';
 
-  /** Token generator context state */
-  class Contexts {
-    /** @param {Contextualizer} tokenizer */
-    constructor(contextualizer) {
-      const {syntax, [Definitions]: definitions = (contextualizer.mode[Definitions] = {})} = contextualizer.mode;
+  /** @typedef {import('./types').Grouping} Grouping */
+  /** @typedef {import('./types').Tokenizer} Tokenizer */
+  /** @typedef {import('./types').Token} Token */
+  /** @typedef {import('./types')['Tokenizer']} TokenizerClass */
+  /** @typedef {{[name: string]: Grouping}} Groupers */
+  /** @typedef {(TokenizerClass)['createGrouper']} createGrouper */
+
+  class Grouping {
+    /**
+     * @param {{syntax: string, groupers: Groupers, createGrouper: createGrouper}} options
+     */
+    constructor({syntax, groupers, createGrouper, contextualizer}) {
+      this.groupers = groupers;
+      this.groupings = [];
+      this.hints = new Set();
+      this.syntax = syntax;
+      this.goal = syntax;
+      this.hint = syntax;
       this.contextualizer = contextualizer;
-      const hints = (this.hints = new Hints());
-      hints.top = this.goal = this.syntax = syntax;
-      this.stack = [(this.root = contextualizer.prime())];
-      this.stack.hints = [(this.hint = hints.toString())];
-      this.definitions = definitions;
+      this.context = syntax;
+      this.create = createGrouper || Object;
     }
 
     /**
-     * @param {Token} nextToken
-     * @param {TokenizerState} state
-     * @param {TokenizerContext} context
+     * @param {Token} next
+     * @param {Token} parent
+     * @param state
+     * @param context
      */
-    close(nextToken, state, context) {
-      const childContext = context;
-      let after, parentToken;
-      const {stack, hints, syntax, contextualizer} = this;
+    close(next, state, context) {
+      let after, grouper, parent;
+      const {groupings, hints, syntax} = this;
 
-      const childIndex = stack.length - 1;
-      const childDefinitions = childIndex && stack[childIndex];
+      const closed = groupings.pop();
+      grouper = closed;
+      groupings.includes(grouper) || hints.delete(grouper.hinter);
 
-      if (childDefinitions) {
-        // TODO: childContext.closer !== childDefinitions.closer
+      (closed.punctuator === 'opener' && (next.punctuator = 'closer')) ||
+        (closed.punctuator && (next.punctuator = closed.punctuator));
 
-        stack.pop();
+      after = grouper.close && grouper.close(next, state, context);
 
-        const {hinter, punctuator} = childDefinitions;
+      const previousGrouper = (grouper = groupings[groupings.length - 1]);
 
-        // TODO: Handle mismatch contexts.close()
-        stack.includes(childDefinitions) || hints.delete(hinter);
+      this.goal = (previousGrouper && previousGrouper.goal) || syntax;
+      this.grouper = previousGrouper;
 
-        (punctuator === 'opener' && (nextToken.punctuator = 'closer')) ||
-          (punctuator && (nextToken.punctuator = punctuator));
+      parent = (next.parent && next.parent.parent) || undefined;
 
-        nextToken.type = 'punctuator';
-
-        after = childDefinitions.close && childDefinitions.close(nextToken, state, childContext);
-      }
-
-      const parentIndex = stack.length - 1;
-      const parentDefinitions = stack[parentIndex];
-      const parentHint = stack.hints[parentIndex];
-      context = contextualizer.prime(parentDefinitions);
-
-      this.goal = (parentDefinitions && parentDefinitions.goal) || syntax;
-      this.hint = parentHint || stack.hints[0];
-      parentToken = (nextToken.parent && nextToken.parent.parent) || undefined;
-
-      return {context, after, parentToken};
+      return {after, grouper, closed, parent};
     }
 
-    /**
-     * @param {Token} nextToken
-     * @param {TokenizerState} state
-     * @param {TokenizerContext} context
-     */
-    open(nextToken, state, context) {
-      const parentContext = context;
-      let childDefinitions, parentToken, after;
+    open(next, context) {
+      let opened, parent, grouper;
 
-      const {definitions, stack, hints, hint, syntax, contextualizer} = this;
-      let {punctuator, text} = nextToken;
+      const {groupers, groupings, hints, hint, syntax} = this;
+      let {punctuator, text} = next;
       const hinter = punctuator ? `${syntax}-${punctuator}` : hint;
-      const contextID = `${hinter},${text}`;
+      const group = `${hinter},${text}`;
 
-      const definedDefinitions = definitions[contextID];
+      grouper = groupers[group];
 
       const {
         mode: {matchers, comments, spans, closures},
-      } = parentContext;
+      } = context;
 
-      if (punctuator === 'span' && parentContext.spans) {
-        const span = parentContext.spans.get(text);
-        punctuator = nextToken.punctuator = 'span';
-        childDefinitions =
-          definedDefinitions ||
-          contextualizer.define({
+      if (context.spans && punctuator === 'span') {
+        const span = context.spans.get(text);
+        punctuator = next.punctuator = 'span';
+        opened =
+          grouper ||
+          this.create({
             syntax,
             goal: syntax,
             span,
@@ -94,11 +84,11 @@
             hinter,
             punctuator,
           });
-      } else if (parentContext.punctuator !== 'quote') {
+      } else if (context.punctuator !== 'quote') {
         if (punctuator === 'quote') {
-          childDefinitions =
-            definedDefinitions ||
-            contextualizer.define({
+          opened =
+            grouper ||
+            this.create({
               syntax,
               goal: punctuator,
               quote: text,
@@ -109,9 +99,9 @@
             });
         } else if (punctuator === 'comment') {
           const comment = comments.get(text);
-          childDefinitions =
-            definedDefinitions ||
-            contextualizer.define({
+          opened =
+            grouper ||
+            this.create({
               syntax,
               goal: punctuator,
               comment,
@@ -120,12 +110,12 @@
               punctuator,
             });
         } else if (punctuator === 'closure') {
-          const closure = (definedDefinitions && definedDefinitions.closure) || closures.get(text);
-          punctuator = nextToken.punctuator = 'opener';
+          const closure = (grouper && grouper.closure) || closures.get(text);
+          punctuator = next.punctuator = 'opener';
           closure &&
-            (childDefinitions =
-              definedDefinitions ||
-              contextualizer.define({
+            (opened =
+              grouper ||
+              this.create({
                 syntax,
                 goal: syntax,
                 closure,
@@ -136,135 +126,256 @@
         }
       }
 
-      if (childDefinitions) {
-        definitions[contextID] || (definitions[contextID] = childDefinitions);
-        const childIndex = stack.push(childDefinitions) - 1;
-        hints.add(hinter);
-        this.goal = (childDefinitions && childDefinitions.goal) || syntax;
-        this.hint = stack.hints[childIndex] = `${hints.toString()} in-${this.goal}`;
-        parentToken = nextToken;
-        context = contextualizer.prime(childDefinitions);
-        nextToken.type = 'punctuator';
-        after = childDefinitions.open && childDefinitions.open(nextToken, state, context);
+      if (opened) {
+        groupers[group] || (groupers[group] = grouper = opened);
+        groupings.push(grouper), hints.add(hinter);
+        this.goal = (grouper && grouper.goal) || syntax;
+        parent = next;
       }
 
-      return {context, after, parentToken};
+      return {grouper, opened, parent, punctuator};
     }
   }
 
-  const Definitions = Symbol('[definitions]');
+  /** Tokenizer for a single mode (language) */
+  class Tokenizer {
+    constructor(mode, defaults) {
+      this.mode = mode;
+      this.defaults = defaults || this.constructor.defaults || undefined;
+    }
 
-  const Hints = Object.freeze(
-    Object.defineProperties(
-      class Hints extends Set {
-        toString() {
-          return `${(this.root && ` ${this.root}`) || ''}${(this.top && ` ${this.top}`) || ''}${(this.size &&
-          ` ${this.join(' ')}`) ||
-          ''}`.trim();
+    /** Token generator from source using tokenizer.mode (or defaults.mode) */
+    *tokenize(source, state = {}) {
+      let done;
+
+      // TODO: Consider supporting Symbol.species
+      const Species = this.constructor;
+
+      // Local context
+      const contextualizer = this.contextualizer || (this.contextualizer = Species.contextualizer(this));
+      let context = contextualizer.next().value;
+
+      const {mode, syntax, createGrouper = Species.createGrouper || Object} = context;
+
+      // Local grouping
+      const groupers = mode.groupers || (mode.groupers = {});
+      const grouping =
+        state.grouping ||
+        (state.grouping = new Grouping({
+          syntax: syntax || mode.syntax,
+          groupers,
+          createGrouper,
+          contextualizer,
+        }));
+
+      // Local matching
+      let {match, index = 0, flags} = state;
+
+      // Local tokens
+      let previousToken, lastToken, parentToken;
+      const top = {type: 'top', text: '', offset: index};
+
+      // let lastContext = context;
+      state.context = context;
+
+      state.source = source;
+
+      const tokenize = state.tokenize || (text => [{text}]);
+
+      while (!done) {
+        const {
+          mode: {syntax, matchers, comments, spans, closures},
+          punctuator: $$punctuator,
+          closer: $$closer,
+          spans: $$spans,
+          matcher: $$matcher,
+          token,
+          forming = true,
+        } = context;
+
+        // Current contextual hint (syntax or hint)
+        const hint = grouping.hint;
+
+        while (state.context === (state.context = context)) {
+          let next;
+
+          // state.lastToken = lastToken;
+
+          const lastIndex = state.index || 0;
+
+          $$matcher.lastIndex = lastIndex;
+          match = state.match = $$matcher.exec(source);
+          done = index === (index = state.index = $$matcher.lastIndex) || !match;
+
+          if (done) break;
+
+          // Current contextual match
+          const {0: text, 1: whitespace, 2: sequence, index: offset} = match;
+
+          // Current quasi-contextual fragment
+          const pre = source.slice(lastIndex, offset);
+          pre &&
+            ((next = token({
+              type: 'pre',
+              text: pre,
+              offset: lastIndex,
+              previous: previousToken,
+              parent: parentToken,
+              hint,
+              last: lastToken,
+              source,
+            })),
+            yield (previousToken = next));
+
+          // Current contextual fragment
+          const type = (whitespace && 'whitespace') || (sequence && 'sequence') || 'text';
+          next = token({type, text, offset, previous: previousToken, parent: parentToken, hint, last: lastToken, source});
+
+          // Current contextual punctuator (from sequence)
+          const closing =
+            $$closer &&
+            ($$closer.test ? $$closer.test(text) : $$closer === text || (whitespace && whitespace.includes($$closer)));
+
+          let after;
+          let punctuator = next.punctuator;
+
+          if (punctuator || closing) {
+            let closed, opened, grouper;
+
+            if (closing) {
+              ({after, closed, parent: parentToken = top, grouper} = grouping.close(next, state, context));
+            } else if ($$punctuator !== 'comment') {
+              ({grouper, opened, parent: parentToken = top, punctuator} = grouping.open(next, context));
+            }
+
+            state.context = grouping.context = grouping.goal || syntax;
+
+            if (opened || closed) {
+              next.type = 'punctuator';
+              context = contextualizer.next((state.grouper = grouper || undefined)).value;
+              grouping.hint = `${[...grouping.hints].join(' ')} ${grouping.context ? `in-${grouping.context}` : ''}`;
+              opened && (after = opened.open && opened.open(next, state, context));
+            }
+          }
+
+          // Current contextual tail token (yield from sequence)
+          yield (previousToken = next);
+
+          // Next reference to last contextual sequence token
+          next && !whitespace && forming && (lastToken = next);
+
+          if (after) {
+            let tokens, token, nextIndex;
+
+            if (after.syntax) {
+              const {syntax, offset, index} = after;
+              const body = index > offset && source.slice(offset, index - 1);
+              if (body) {
+                body.length > 0 &&
+                  ((tokens = tokenize(body, {options: {sourceType: syntax}}, this.defaults)), (nextIndex = index));
+                const hint = `${syntax}-in-${mode.syntax}`;
+                token = token => ((token.hint = `${(token.hint && `${token.hint} `) || ''}${hint}`), token);
+              }
+            } else if (after.length) {
+              const hint = grouping.hint;
+              token = token => ((token.hint = `${hint} ${token.type || 'code'}`), context.token(token));
+              (tokens = after).end > state.index && (nextIndex = after.end);
+            }
+
+            if (tokens) {
+              for (const next of tokens) {
+                previousToken && ((next.previous = previousToken).next = next);
+                token && token(next);
+                yield (previousToken = next);
+              }
+              nextIndex > state.index && (state.index = nextIndex);
+            }
+          }
         }
-      }.prototype,
-      {join: Object.getOwnPropertyDescriptor(Array.prototype, 'join')},
-    ),
-  ).constructor;
+      }
+      flags && flags.debug && console.info('[Tokenizer.tokenize‹state›]: %o', state);
+    }
 
-  /** @typedef {import('./types').Contextualizer} Contextualizer */
-  /** @typedef {import('./types').Token} Token */
-  /** @typedef {import('./types').Tokenizer} Tokenizer */
-  /** @typedef {import('./types').TokenizerState} TokenizerState */
-  /** @typedef {import('./types').TokenizerContext} TokenizerContext */
-
-  class Contextualizer {
-    constructor(tokenizer) {
+    /**
+     * Tokenizer context generator
+     */
+    static *contextualizer(tokenizer) {
       // Local contextualizer state
-      let definitions, context;
+      let grouper;
 
       // Tokenizer mode
-      const {defaults = {}, mode = defaults.mode, initializeContext} = tokenizer;
+      const mode = tokenizer.mode;
+      const defaults = tokenizer.defaults;
+      mode !== undefined || (mode = (defaults && defaults.mode) || undefined);
+      if (!mode) throw ReferenceError(`Tokenizer.contextualizer invoked without a mode`);
 
-      if (!mode) {
-        throw ReferenceError(`Tokenizer.contextualizer invoked without a mode`);
-      } else if (!(context = mappings.get((definitions = mode)))) {
+      // TODO: Refactoring
+      const initialize = context => {
+        let {
+          tokenizer = (context.tokenizer = this.tokenizer(context)),
+          token = (context.token = (tokenizer => (tokenizer.next(), token => tokenizer.next(token).value))(tokenizer)),
+        } = context;
+        return context;
+      };
+
+      if (!mode.context) {
         const {
-          syntax,
           matcher = (mode.matcher = (defaults && defaults.matcher) || undefined),
           quotes,
           punctuators = (mode.punctuators = {aggregators: {}}),
           punctuators: {aggregators = (punctuators.aggregators = {})},
-          patterns = (mode.patterns = {maybeKeyword: null}),
           patterns: {
-            maybeKeyword = (patterns.maybeKeyword =
+            maybeKeyword = (mode.patterns.maybeKeyword =
               (defaults && defaults.patterns && defaults.patterns.maybeKeyword) || undefined),
-          },
+          } = (mode.patterns = {maybeKeyword: null}),
           spans: {['(spans)']: spans} = (mode.spans = {}),
         } = mode;
 
-        context = {syntax, goal: syntax, mode, punctuators, aggregators, matcher, quotes, spans};
-
-        initializeContext && Reflect.apply(initializeContext, tokenizer, [context]);
-
-        mappings.set(mode, context);
+        initialize((mode.context = {mode, punctuators, aggregators, matcher, quotes, spans}));
       }
 
-      const root = context;
+      const {
+        syntax: $syntax,
+        matcher: $matcher,
+        quotes: $quotes,
+        punctuators: $punctuators,
+        punctuators: {aggregators: $aggregators},
+      } = mode;
 
-      const prime = next => {
-        if (definitions !== next && next && !(context = mappings.get((definitions = next)))) {
+      while (true) {
+        if (grouper !== (grouper = yield (grouper && grouper.context) || mode.context) && grouper && !grouper.context) {
           const {
-            syntax = (definitions.syntax = mode.syntax),
-            goal = (definitions.goal = syntax),
+            goal = (grouper.syntax = $syntax),
             punctuator,
-            punctuators = (definitions.punctuators = mode.punctuators),
-            aggregators = (definitions.aggregate = punctuators && punctuators.aggregators),
+            punctuators = (grouper.punctuators = $punctuators),
+            aggregators = (grouper.aggregate = $aggregators),
             closer,
             spans,
-            matcher = (definitions.matcher = mode.matcher),
-            quotes = (definitions.quotes = mode.quotes),
-            forming = (definitions.forming = goal === mode.syntax),
-          } = definitions;
+            matcher = (grouper.matcher = $matcher),
+            quotes = (grouper.quotes = $quotes),
+            forming = (grouper.forming = goal === $syntax),
+          } = grouper;
 
-          context = {mode, syntax, goal, punctuator, punctuators, aggregators, closer, spans, matcher, quotes, forming};
-
-          initializeContext && Reflect.apply(initializeContext, tokenizer, [context]);
-
-          mappings.set(definitions, context);
+          initialize(
+            (grouper.context = {
+              mode,
+              punctuator,
+              punctuators,
+              aggregators,
+              closer,
+              spans,
+              matcher,
+              quotes,
+              forming,
+            }),
+          );
         }
-
-        return context || ((definitions = mode), (context = root));
-      };
-
-      Object.defineProperties(this, {
-        mode: {value: mode, writable: false},
-        prime: {value: prime, writable: false},
-      });
+      }
     }
 
-    define({
-      syntax,
-      goal = syntax,
-      quote,
-      comment,
-      closure,
-      span,
-      grouping = comment || closure || span || undefined,
-      punctuator,
-      spans = (grouping && grouping.spans) || undefined,
-      matcher = (grouping && grouping.matcher) || undefined,
-      quotes = (grouping && grouping.quotes) || undefined,
-      punctuators = {aggregators: {}},
-      opener = quote || (grouping && grouping.opener) || undefined,
-      closer = quote || (grouping && grouping.closer) || undefined,
-      hinter,
-      open = (grouping && grouping.open) || undefined,
-      close = (grouping && grouping.close) || undefined,
-    }) {
-      return {syntax, goal, punctuator, spans, matcher, quotes, punctuators, opener, closer, hinter, open, close};
-    }
-  }
+    static *tokenizer(context) {
+      let done, next;
 
-  const mappings = new WeakMap();
-
-  class TokenSynthesizer {
-    constructor(context) {
       const {
         mode: {syntax, keywords, assigners, operators, combinators, nonbreakers, comments, closures, breakers, patterns},
         punctuators,
@@ -295,34 +406,30 @@
               if (!length) return false;
               const matcher = new RegExp(`(${sources.join('|)|(')}|)`, 'u');
               return text => {
+                // OR: for (const segment of names) if (segments[segment].test(text)) return segment;
                 const match = matcher.exec(text);
                 if (match[0]) for (let i = 1, n = length; n--; i++) if (match[i]) return names[i - 1];
               };
             })(segments))));
 
+      const LineEndings = /$/gm;
       const punctuate = text =>
+        (nonbreakers && nonbreakers.includes(text) && 'nonbreaker') ||
         (operators && operators.includes(text) && 'operator') ||
+        (comments && comments.includes(text) && 'comment') ||
+        (spans && spans.includes(text) && 'span') ||
+        (quotes && quotes.includes(text) && 'quote') ||
         (closures && closures.includes(text) && 'closure') ||
         (breakers && breakers.includes(text) && 'breaker') ||
-        (nonbreakers && nonbreakers.includes(text) && 'nonbreaker') ||
-        (comments && comments.includes(text) && 'comment') ||
-        (quotes && quotes.includes(text) && 'quote') ||
-        (spans && spans.includes(text) && 'span') ||
-        // TODO: Undo if breaking
-        // (nonbreakers && nonbreakers.includes(text) && 'nonbreaker') ||
-        // (operators && operators.includes(text) && 'operator') ||
-        // (comments && comments.includes(text) && 'comment') ||
-        // (spans && spans.includes(text) && 'span') ||
-        // (quotes && quotes.includes(text) && 'quote') ||
-        // (closures && closures.includes(text) && 'closure') ||
-        // (breakers && breakers.includes(text) && 'breaker') ||
         false;
       const aggregate = text =>
         (assigners && assigners.includes(text) && 'assigner') ||
         (combinators && combinators.includes(text) && 'combinator') ||
         false;
 
-      this.create = next => {
+      while (!done) {
+        let token;
+
         if (next && next.text) {
           const {text, type, hint, previous, parent, last} = next;
 
@@ -340,154 +447,45 @@
             next.breaks = text.match(LineEndings).length - 1;
           } else if (forming && wording) {
             const word = text.trim();
-            // TODO: Undo if breaking
             word &&
-              (((!maybeKeyword || maybeKeyword.test(word)) &&
-                (keywords && keywords.includes(word)) &&
+              ((keywords &&
+                keywords.includes(word) &&
                 (!last || last.punctuator !== 'nonbreaker' || (previous && previous.breaks > 0)) &&
                 (next.type = 'keyword')) ||
                 (maybeIdentifier && maybeIdentifier.test(word) && (next.type = 'identifier')));
-            // word &&
-            //   ((keywords &&
-            //     keywords.includes(word) &&
-            //     (!last || last.punctuator !== 'nonbreaker' || (previous && previous.breaks > 0)) &&
-            //     (next.type = 'keyword')) ||
-            //     (maybeIdentifier && maybeIdentifier.test(word) && (next.type = 'identifier')));
           } else {
             next.type = 'text';
           }
 
           previous && (previous.next = next) && (parent || (next.parent = previous.parent));
 
-          return next;
+          token = next;
         }
-      };
-    }
-  }
 
-  const LineEndings = /$/gm;
-
-  /** Tokenizer for a single mode (language) */
-  class Tokenizer {
-    constructor(mode, defaults) {
-      this.mode = mode;
-      this.defaults = defaults || this.constructor.defaults || undefined;
-    }
-
-    initializeContext(context) {
-      context.createToken || (context.createToken = new TokenSynthesizer(context).create);
-      return context;
-    }
-
-    /** Token generator from source using tokenizer.mode (or defaults.mode) */
-    *tokenize(source, state = {}) {
-      let done, context;
-      let previousToken, lastToken, parentToken;
-      let {match, index = 0, flags} = state;
-      const contextualizer = this.contextualizer || (this.contextualizer = new Contextualizer(this));
-      const contexts = (state.contexts = new Contexts(contextualizer));
-      const {tokenize = (state.tokenize = text => [{text}])} = state;
-      const rootContext = (context = state.lastContext = contexts.root);
-      const top = {type: 'top', text: '', offset: index};
-
-      done = !(state.source = source);
-
-      while (!done) {
-        const {closer, matcher, createToken, forming = true} = context;
-
-        // Current contextual hint (syntax or hint)
-        const hint = contexts.hint;
-
-        while (state.lastContext === (state.lastContext = context)) {
-          let nextToken;
-
-          const lastIndex = state.index || 0;
-
-          matcher.lastIndex = lastIndex;
-          match = state.match = matcher.exec(source);
-          done = index === (index = state.index = matcher.lastIndex) || !match;
-
-          if (done) break;
-
-          // Current contextual match
-          const {0: text, 1: whitespace, 2: sequence, index: offset} = match;
-
-          // Current quasi-contextual fragment
-          const pre = source.slice(lastIndex, offset);
-          pre &&
-            ((nextToken = createToken({
-              type: 'pre',
-              text: pre,
-              offset: lastIndex,
-              previous: previousToken,
-              parent: parentToken,
-              hint,
-              last: lastToken,
-            })),
-            yield (previousToken = nextToken));
-
-          // Current contextual fragment
-          const type = (whitespace && 'whitespace') || (sequence && 'sequence') || 'text';
-          nextToken = createToken({
-            type,
-            text,
-            offset,
-            previous: previousToken,
-            parent: parentToken,
-            hint,
-            last: lastToken,
-          });
-
-          let after;
-
-          // Current contextual punctuator (from sequence)
-          const closing =
-            closer && (closer.test ? closer.test(text) : closer === text || (whitespace && whitespace.includes(closer)));
-
-          // Update context
-          (closing && ({context, after, parentToken = top} = contexts.close(nextToken, state, context))) ||
-            (nextToken.punctuator &&
-              context.punctuator !== 'comment' &&
-              ({context, after, parentToken = top} = contexts.open(nextToken, state, context)));
-
-          // Current contextual tail token (yield from sequence)
-          yield (previousToken = nextToken);
-
-          // Next reference to last contextual sequence token
-          nextToken && !whitespace && forming && (lastToken = nextToken);
-
-          if (after) {
-            let tokens, createToken, nextIndex;
-            let hintTokenType, hintPrefix, hintSuffix;
-
-            if (after.syntax) {
-              const {syntax, offset, index} = after;
-              const body = index > offset && source.slice(offset, index - 1);
-              if (body && body.length > 0) {
-                (tokens = tokenize(body, {options: {sourceType: syntax}}, this.defaults)), (nextIndex = index);
-                hintSuffix = `${syntax}-in-${rootContext.syntax}`;
-                createToken = token => ((token.hint = `${(token.hint && `${token.hint} `) || ''}${hintSuffix}`), token);
-              }
-            } else if (after.length) {
-              hintTokenType = 'code';
-              hintPrefix = contexts.hint ? `${contexts.hint} ` : '';
-              createToken = token =>
-                context.createToken(((token.hint = `${hintPrefix}${token.type || hintTokenType}`), token));
-              (tokens = after).end > state.index && (nextIndex = after.end);
-            }
-
-            if (tokens) {
-              for (const next of tokens) {
-                previousToken && ((next.previous = previousToken).next = next);
-                createToken && createToken(next);
-                yield (previousToken = next);
-              }
-              nextIndex > state.index && (state.index = nextIndex);
-            }
-          }
-        }
+        next = yield token;
       }
-      flags && flags.debug && console.info('[Tokenizer.tokenize‹state›]: %o', state);
+    }
+
+    static createGrouper({
+      syntax,
+      goal = syntax,
+      quote,
+      comment,
+      closure,
+      span,
+      grouping = comment || closure || span || undefined,
+      punctuator,
+      spans = (grouping && grouping.spans) || undefined,
+      matcher = (grouping && grouping.matcher) || undefined,
+      quotes = (grouping && grouping.quotes) || undefined,
+      punctuators = {aggregators: {}},
+      opener = quote || (grouping && grouping.opener) || undefined,
+      closer = quote || (grouping && grouping.closer) || undefined,
+      hinter,
+      open = (grouping && grouping.open) || undefined,
+      close = (grouping && grouping.close) || undefined,
+    }) {
+      return {syntax, goal, punctuator, spans, matcher, quotes, punctuators, opener, closer, hinter, open, close};
     }
   }
 
@@ -624,6 +622,8 @@
    * @typedef { {aliases?: string[], syntax: string} } ModeOptions
    * @typedef { (options: ModeOptions, modes: Modes) => Mode } ModeFactory
    */
+
+  // * @typedef { typeof helpers } Helpers
 
   /// Helpers
   const InspectSymbol = Symbol.for('nodejs.util.inspect.custom');
@@ -1190,8 +1190,7 @@
         maybeIdentifier: identifier(entities.es.IdentifierStart, entities.es.IdentifierPart),
         maybeKeyword: /^[a-z][a-zA-Z]+$/,
         segments: {
-          regexp: /^\/(?![\n*+/?])[^\n]*[^\\\n]\//,
-          // regexp: /^\/[^\n\/\*][^\n]*\//,
+          regexp: /^\/(?![\n*+/?])[^\n]*[^\\\n]\//, // /^\/[^\n\/\*][^\n]*\//,
         },
       },
       matcher: sequence`([\s\n]+)|(${all(
@@ -1218,8 +1217,6 @@
     Defaults: {
       javascript.DEFAULTS = {syntax: 'javascript', aliases: ['javascript', 'es', 'js', 'ecmascript']};
     }
-
-    // TODO: Fix bug affecting pholio
     javascript.REGEXPS = /\/(?:\\[^\n]|[^\n*+/?])(?=[^\n]*\/(?:[a-z]+\b)?(?:[ \t]+[^\n\s(\[{\w]|[.\[;,]|[ \t]*[)\]};,\n]|\n|$))(?:[^\\/\n\t\[]+|\\[^\n]|\[(?:\\[^\n]|[^\\\n\t\]]+)+?\])*?\/[a-z]*/g;
 
     javascript.COMMENTS = /\/\/|\/\*|\*\/|^\#\!.*\n/g;
@@ -1356,7 +1353,8 @@
     esx: esx
   });
 
-  const parser = Object.assign(new Parser(), {MODULE_URL: (typeof document !== 'undefined' ? document.currentScript && document.currentScript.src || document.baseURI : new (typeof URL !== 'undefined' ? URL : require('ur'+'l').URL)('file:' + __filename).href)});
+  const parser = new Parser();
+  parser.MODULE_URL = (typeof document !== 'undefined' ? document.currentScript && document.currentScript.src || document.baseURI : new (typeof URL !== 'undefined' ? URL : require('ur'+'l').URL)('file:' + __filename).href);
   for (const id in modes) parser.register(modes[id]);
 
   exports.MAPPINGS = MAPPINGS;
@@ -1370,4 +1368,4 @@
   Object.defineProperty(exports, '__esModule', { value: true });
 
 }));
-//# sourceMappingURL=tokenizer.experimental.js.map
+//# sourceMappingURL=tokenizer.extended.js.map
