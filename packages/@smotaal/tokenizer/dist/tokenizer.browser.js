@@ -684,8 +684,10 @@ class Contexts {
       syntax: this.goal,
       syntax: (this.hints = new Hints()).top,
       [Definitions]: this.definitions = (this.contextualizer.mode[Definitions] = {}),
-    } = (this.contextualizer =
-      tokenizer.contextualizer || (tokenizer.contextualizer = new Contextualizer(tokenizer))).mode);
+    } =
+      // TODO: figure out how to restore this:
+      // tokenizer.contextualizer || (tokenizer.contextualizer = new Contextualizer(tokenizer))
+      (this.contextualizer = new Contextualizer(tokenizer)).mode);
     (this.stack = [(this.root = this.contextualizer.prime())]).hints = [(this.hint = this.hints.toString())];
   }
 
