@@ -68,7 +68,7 @@ const resolve = (() => {
   const {['~']: local} = resolvers;
 
   const entrypoints = {
-    ['js']: local('./lib/tokenizer.js'),
+    ['js']: local('./dist/tokenizer.experimental.js'),
     ['css']: relative('./markup.css'),
     ['html']: location.href.replace(TailPart, ''),
     ['md']: local('./README.md'),
@@ -125,7 +125,6 @@ export default (markup, overrides) => {
   // const Hash = /#([?]?)((?:.*?:)?.*?)(?:(\!+)([a-z]+|[A-Z]+)?)?(?:\*(?!\*)(\d+))?(?:\*{2}(\d+))?$/;
   // const Hash = /#(?:(\d+)(?::(?=\W|\b|$)|(?=\W)|$)|)([?]?)((?:.*?:)?.*?)(?:\!([a-z]+|[A-Z]+)?)?(?:\*(?!\*)(\d+))?(?:\*{2}(\d+))?$/;
   const Hash = /#(?:(\d+)(?:(?=\?)|:|(?=\W)|$)|)([?]?)((?:.*?:)?.*?)(?:\!([a-z]+|[A-Z]+)?)?(?:\*(?!\*)(\d+))?(?:\*{2}(\d+))?$/;
-  // const Hash = /#(?:(\d+\b)|)(?::?([?]?)|:)((?:.*?:)?.*?)(?:\!([a-z]+|[A-Z]+)?)?(?:\*(?!\*)(\d+))?(?:\*{2}(\d+))?$/;
 
   const options = Object.create(defaults);
   const sourceCodeElement = document.querySelector(options.element);
@@ -232,9 +231,24 @@ export default (markup, overrides) => {
     const {repeats = 1, iterations = 1, now = Date.now} = options;
 
     const container = sourceCodeElement;
-    const rerender = () => render();
+    const rerender = () => {
+      const {width, height} = content.getBoundingClientRect();
+      const previousStyle = {};
+      ({width: previousStyle.width, height: previousStyle.height} = content.style),
+        ({width: content.style.width, height: content.style.height} = {
+          width: width > 0 ? `${width}px` : '0',
+          height: height > 0 ? `${height}px` : '0',
+        });
+      try {
+        render();
+      } finally {
+        ({width: content.style.width, height: content.style.height} = previousStyle);
+      }
+    };
     const header = renderHeader({rerender});
-    const slot = document.createElement('slot');
+    const content = document.createElement('div');
+    const slot = content.appendChild(document.createElement('slot'));
+    content.className = slot.className = 'markup-wrapper';
     const {timing, status} = header;
     const time = async (name, executor, cycles = 1) => {
       let start, result, end, elapsed;
@@ -246,7 +260,7 @@ export default (markup, overrides) => {
       return {name, executor, start, result, end, elapsed};
     };
 
-    (container.innerHTML = ''), container.append(header, slot);
+    (container.innerHTML = ''), container.append(header, content);
     container.classList.contains('dark-mode')
       ? document.body.classList.add('dark-mode')
       : document.body.classList.add('remove-mode');
@@ -278,7 +292,10 @@ export default (markup, overrides) => {
       };
 
       const repeat = async repeats => {
-        for (let n = repeats; n--; slot.appendChild(await renderMarkup(sourceText, markupOptions)));
+        const contents = [];
+        for (let n = repeats; n--; contents.push(await renderMarkup(sourceText, markupOptions)));
+        slot.innerText = '';
+        slot.append(...contents);
       };
 
       const timed = async (marker, ...args) => {
@@ -288,7 +305,8 @@ export default (markup, overrides) => {
       };
 
       render = async () => {
-        await nextFrame((slot.innerText = ''));
+        await nextFrame(content.classList.add('rendering'));
+        await nextFrame();
 
         header.stats({name: 'repeats', status: '', time: -1});
         header.stats({name: 'iterations', status: '', time: -1});
@@ -308,6 +326,8 @@ export default (markup, overrides) => {
         if (repeats > 0) {
           // await timeDelay(100);
           await nextFrame(header.stats({name: 'repeats', status: `⁎${repeats}`, time: true}));
+          content.classList.remove('rendering');
+          await nextFrame();
           await timed(`${repeats} repeats`, 'repeats', async ƒ => void (await repeat(repeats)), repeats);
           await nextFrame(header.status('repeats', `⁎${repeats}`));
         }
