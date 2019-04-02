@@ -36,20 +36,18 @@
           })(segments))));
 
     const punctuate = text =>
-      (nonbreakers && nonbreakers.includes(text) && 'nonbreaker') ||
       (operators && operators.includes(text) && 'operator') ||
-      (comments && comments.includes(text) && 'comment') ||
-      (spans && spans.includes(text) && 'span') ||
-      (quotes && quotes.includes(text) && 'quote') ||
       (closures && closures.includes(text) && 'closure') ||
       (breakers && breakers.includes(text) && 'breaker') ||
+      (nonbreakers && nonbreakers.includes(text) && 'nonbreaker') ||
+      (comments && comments.includes(text) && 'comment') ||
+      (quotes && quotes.includes(text) && 'quote') ||
+      (spans && spans.includes(text) && 'span') ||
       false;
     const aggregate = text =>
       (assigners && assigners.includes(text) && 'assigner') ||
       (combinators && combinators.includes(text) && 'combinator') ||
       false;
-
-    const LineEndings = /$/gm;
 
     this.create = next => {
       if (next && next.text) {
@@ -70,8 +68,8 @@
         } else if (forming && wording) {
           const word = text.trim();
           word &&
-            ((keywords &&
-              keywords.includes(word) &&
+            (((!maybeKeyword || maybeKeyword.test(word)) &&
+              (keywords && keywords.includes(word)) &&
               (!last || last.punctuator !== 'nonbreaker' || (previous && previous.breaks > 0)) &&
               (next.type = 'keyword')) ||
               (maybeIdentifier && maybeIdentifier.test(word) && (next.type = 'identifier')));
@@ -79,10 +77,14 @@
           next.type = 'text';
         }
 
-        previous && (previous.next = next) && (parent || (next.parent = previous.parent));
+        previous && (parent || (next.parent = previous.parent)) && (previous.next = next);
 
         return next;
       }
     };
   }
 }
+
+Object.freeze(Object.freeze(TokenSynthesizer.prototype).constructor);
+
+const LineEndings = /$/gm;
