@@ -1,11 +1,6 @@
-﻿/**
- *
- */
-export const TokenizerAPI = Object.setPrototypeOf(
+﻿export const TokenizerAPI = Object.setPrototypeOf(
   class TokenizerAPI {
-    /**
-     * @param {Partial<{parsers: Parser[]}>} [options]
-     */
+    /** @param {Partial<{parsers: Parser[]}>} [options] */
     constructor() {
       const [
         {

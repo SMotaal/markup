@@ -9,11 +9,9 @@ export default ({parsers, render, tokenize, warmup} = new TokenizerAPI({
   parsers: [parser],
   render: (source, options, flags) => {
     const fragment = options && options.fragment;
-
     const debugging = flags && /\bdebug\b/i.test(typeof flags === 'string' ? flags : [...flags].join(' '));
 
     debugging && console.info('render: %o', {render, source, options, flags, fragment, debugging});
-
     fragment && (fragment.logs = debugging ? [] : undefined);
 
     return dom.render(tokenize(source, options, flags), fragment);
