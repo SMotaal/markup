@@ -18,7 +18,10 @@ export const javascript = Object.defineProperties(
       ...patterns,
       maybeIdentifier: identifier(entities.es.IdentifierStart, entities.es.IdentifierPart),
       segments: {
-        regexp: /^\/[^\n\/\*][^\n]*\//,
+        // regexp: /^\/[^\n\/\*][^\n]*\//,
+        regexp: /^\/[^+*\n/?][^\n]*\//,
+        // regexp: /^\/[^+*\n/?]/,
+        // regexp: {test: ({0: a, 1: b, length} = '') => length > 2 && a === '/' && b !== '*' && b === '/'},
       },
     },
     matcher: sequence`([\s\n]+)|(${all(

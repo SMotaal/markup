@@ -51,7 +51,7 @@
 
     const LineEndings = /$/gm;
 
-    this.token = next => {
+    this.create = next => {
       if (next && next.text) {
         const {text, type, hint, previous, parent, last} = next;
 
