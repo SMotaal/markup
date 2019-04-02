@@ -17,11 +17,9 @@ export const javascript = Object.defineProperties(
     patterns: {
       ...patterns,
       maybeIdentifier: identifier(entities.es.IdentifierStart, entities.es.IdentifierPart),
+      maybeKeyword: /^[a-z][a-zA-Z]+$/,
       segments: {
-        // regexp: /^\/[^\n\/\*][^\n]*\//,
-        regexp: /^\/[^+*\n/?][^\n]*\//,
-        // regexp: /^\/[^+*\n/?]/,
-        // regexp: {test: ({0: a, 1: b, length} = '') => length > 2 && a === '/' && b !== '*' && b === '/'},
+        regexp: /^\/(?![\n*+/?])[^\n]*[^\\\n]\//, // /^\/[^\n\/\*][^\n]*\//,
       },
     },
     matcher: sequence`([\s\n]+)|(${all(
@@ -36,7 +34,7 @@ export const javascript = Object.defineProperties(
       '"': /(\n)|(")|(\\.)/g,
       '`': /(\n)|(`|\$\{)|(\\.)/g,
       quote: /(\n)|(`|"|'|\$\{)|(\\.)/g,
-      comment: /(\n)|(\*\/|\b(?:[a-z]+\:\/\/|\w[\w\+\.]*\w@[a-z]+)\S+|@[a-z]+)/gi,
+      comment: /(\n)|(\*\/|\b(?:[a-z]+\:\/\/|\w[\w+.]*\w@[a-z]+)\S+|@[a-z]+)/gi,
     },
   }),
   {
@@ -48,7 +46,7 @@ Definitions: {
   Defaults: {
     javascript.DEFAULTS = {syntax: 'javascript', aliases: ['javascript', 'es', 'js', 'ecmascript']};
   }
-  javascript.REGEXPS = /\/(?=[^\*\/\n][^\n]*\/(?:[a-z]+\b)?(?:[ \t]+[^\n\s\(\[\{\w]|[\.\[;,]|[ \t]*[\)\]\}\;\,\n]|\n|$))(?:[^\\\/\n\t\[]+|\\\S|\[(?:\\\S|[^\\\n\t\]]+)+?\])+?\/[a-z]*/g;
+  javascript.REGEXPS = /\/(?:\\[^\n]|[^\n*+/?])(?=[^\n]*\/(?:[a-z]+\b)?(?:[ \t]+[^\n\s(\[{\w]|[.\[;,]|[ \t]*[)\]};,\n]|\n|$))(?:[^\\/\n\t\[]+|\\[^\n]|\[(?:\\[^\n]|[^\\\n\t\]]+)+?\])*?\/[a-z]*/g;
 
   javascript.COMMENTS = /\/\/|\/\*|\*\/|^\#\!.*\n/g;
   javascript.COMMENTS['(closures)'] = '//…\n /*…*/';
@@ -63,8 +61,8 @@ Definitions: {
 
   javascript.KEYWORDS = {
     ['(symbols)']:
-      // abstract enum interface package namespace declare type module
-      'arguments as async await break case catch class export const continue debugger default delete do else export extends finally for from function get if import in instanceof let new of return set static super switch this throw try typeof var void while with yield',
+      // 'abstract enum interface package namespace declare type module public protected ' +
+      'arguments as async await break case catch class export const continue private debugger default delete do else export extends finally for from function get if import in instanceof let new of return set static super switch this throw try typeof var void while with yield',
   };
 
   javascript.PUNCTUATORS = [
