@@ -112,7 +112,7 @@
   --shadow: var(--light, transparent);
   --outset-shadow: 0 0.875px 0;
   --inset-shadow: 0 -0.875px 0;
-  --outset-border: 0.5px groove var(--border);
+  --outset-border: 0.5px ridge var(--border);
 
   display: grid;
   grid-auto-flow: column dense;
@@ -268,7 +268,21 @@ i[icon] {
     background: linear-gradient(to right, var(--fill), var(--fill)), var(--clear);
     color: var(--text);
     text-shadow: var(--outset-shadow, 0 0 0) var(--shadow);
+    /* backdrop-filter: blur(20px); */
     opacity: 0.9;
+    z-index: 2;
+  }
+
+  .markup-container > :not(slot).markup-wrapper {
+    /* transition: filter 0.5s ease-out, opacity 0.5s ease-out; */
+    /* text-shadow: 0 -1px 0 var(--markup-contrast, #000); */
+    transition: 0.15s ease-out;
+  }
+
+  .markup-container > :not(slot).markup-wrapper.rendering {
+    opacity: 0.85;
+    filter: blur(10px) contrast(0.5) saturate(1.5);
+    transition: 0.25s ease-in;
   }
 }
 
