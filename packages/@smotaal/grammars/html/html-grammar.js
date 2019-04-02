@@ -59,7 +59,7 @@ export const html = Object.defineProperties(
             } else {
               const offset = index;
               const text = source.slice(offset, match.index - 1);
-              state.index = match.index;
+              // state.index = match.index;
               return [{text, offset, previous: next, parent}];
             }
           }

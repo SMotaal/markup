@@ -1,6 +1,6 @@
 const Mappings = {js: 'es', html: 'html', css: 'css', md: 'md', esm: 'esm', cjs: 'cjs'};
 
-const Examples = (entrypoints, {['~/']: local, unpkg, cdnjs}, {js, html, css, md, esm, cjs} = Mappings) => ({
+const Examples = (entrypoints, {['~']: local, unpkg, cdnjs}, {js, html, css, md, esm, cjs} = Mappings) => ({
   [html]: {url: entrypoints['html'], type: html},
   [css]: {url: entrypoints['css'], type: css},
   [js]: {url: entrypoints['js'], type: js},
@@ -9,6 +9,7 @@ const Examples = (entrypoints, {['~/']: local, unpkg, cdnjs}, {js, html, css, md
   [md]: {url: entrypoints['md'], type: md},
   ['json']: local('./examples/samples/sample.json'),
   ['gfm']: local('./examples/samples/gfm.md'),
+  ['babel']: unpkg('@babel/standalone'),
   ['acorn-esm']: {url: unpkg('acorn?module'), type: esm},
   ['acorn-cjs']: {url: unpkg('acorn'), type: cjs},
   ['acorn-loose']: cdnjs('acorn/5.7.3/acorn_loose.es.js'),
@@ -28,7 +29,7 @@ const Resolver = (documentURI => {
     const resolver = (specifier, referrer = resolver.scope) => {
       let returned;
       try {
-        return (returned = `${new URL(specifier, referrer || resolver.scope || Resolver.base)}`);
+        return (returned = `${new URL(specifier.replace(/^:/, ''), referrer || resolver.scope || Resolver.base)}`);
       } finally {
         returned === undefined && console.log({specifier, referrer, scope: resolver.scope, base: Resolver.base});
       }
@@ -54,15 +55,17 @@ const resolve = (() => {
   const HTTP = 'https://';
 
   const scopes = {
-    ['~/']: absolute('../../', import.meta.url),
+    ['~']: absolute('../../', import.meta.url),
     ['unpkg']: absolute(`${HTTP}unpkg.com/`),
     ['cdnjs']: absolute(`${HTTP}cdnjs.cloudflare.com/ajax/libs/`),
   };
 
   const resolvers = {};
-  for (const scope in scopes) resolvers[scope] = Resolver(scopes[scope]);
+  for (const scope in scopes) {
+    resolvers[scope] = Resolver(scopes[scope]);
+  }
 
-  const {['~/']: local} = resolvers;
+  const {['~']: local} = resolvers;
 
   const entrypoints = {
     ['js']: local('./lib/tokenizer.js'),
@@ -76,7 +79,8 @@ const resolve = (() => {
   console.log({examples, entrypoints, ...Resolver});
 
   const Specifier = RegExp(
-    /^(?:(examples)$|(scopes):?\/*|)/.source
+    // /^(?:(examples)$|(scopes):?\/*|)/.source
+    /^(?:(examples)$|(scopes)(?::\/*|\/+)|)/.source
       .replace('(examples)', `(${Object.keys(examples).join('|')})`)
       .replace('(scopes)', `(${Object.keys(resolvers).join('|')})`),
   );
@@ -119,7 +123,10 @@ export default (markup, overrides) => {
   };
 
   // const Hash = /#([?]?)((?:.*?:)?.*?)(?:(\!+)([a-z]+|[A-Z]+)?)?(?:\*(?!\*)(\d+))?(?:\*{2}(\d+))?$/;
-  const Hash = /#(?:(\d+)[:]?(?=\W|\b|$)|)([?]?)((?:.*?:)?.*?)(?:\!([a-z]+|[A-Z]+)?)?(?:\*(?!\*)(\d+))?(?:\*{2}(\d+))?$/;
+  // const Hash = /#(?:(\d+)(?::(?=\W|\b|$)|(?=\W)|$)|)([?]?)((?:.*?:)?.*?)(?:\!([a-z]+|[A-Z]+)?)?(?:\*(?!\*)(\d+))?(?:\*{2}(\d+))?$/;
+  const Hash = /#(?:(\d+)(?:(?=\?)|:|(?=\W)|$)|)([?]?)((?:.*?:)?.*?)(?:\!([a-z]+|[A-Z]+)?)?(?:\*(?!\*)(\d+))?(?:\*{2}(\d+))?$/;
+  // const Hash = /#(?:(\d+\b)|)(?::?([?]?)|:)((?:.*?:)?.*?)(?:\!([a-z]+|[A-Z]+)?)?(?:\*(?!\*)(\d+))?(?:\*{2}(\d+))?$/;
+
   const options = Object.create(defaults);
   const sourceCodeElement = document.querySelector(options.element);
   const sourceHeaderTemplate = document.querySelector(options.headerTemplate);

@@ -29,14 +29,20 @@
       <script src="./packages/@smotaal/tokenizer/examples/browser/ui.js"></script>
     </pre>
     <script type="module">
+      // Stable Parser
       import * as markup from './packages/@smotaal/tokenizer/browser/markup.js';
-      import * as parser from './lib/markup-parser.js';
-      import * as modes from './lib/markup-modes.js';
 
-      modes.install(parser.defaults);
+      // Experimental Parser
+      import experimentalParser from './packages/@smotaal/tokenizer/tokenizer.experimental.extended.js';
+      markup.parsers.push(experimentalParser);
 
-      markup.parsers.push(parser);
+      // Baseline Parser
+      import * as baselineParser from './lib/markup-parser.js';
+      import * as baselineModes from './lib/markup-modes.js';
+      baselineModes.install(baselineParser.defaults);
+      markup.parsers.push(baselineParser);
 
+      // Actual Demo
       import demo from './packages/@smotaal/tokenizer/examples/browser/demo.js';
       demo(markup);
     </script>

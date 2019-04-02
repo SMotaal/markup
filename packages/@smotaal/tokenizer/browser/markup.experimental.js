@@ -1,6 +1,6 @@
-// export * from './markup.js';
+export * from './helpers.js';
 import parser from '../tokenizer.experimental.extended.js';
-import {TokenizerAPI} from '../tokenizer.api.js';
+import {TokenizerAPI} from '../lib/api.js';
 
 import dom from '../extensions/dom.js';
 
