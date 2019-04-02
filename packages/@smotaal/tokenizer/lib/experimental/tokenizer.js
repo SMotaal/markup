@@ -1,5 +1,4 @@
 ﻿import {Contexts} from './contexts.js';
-import {Contextualizer} from './contextualizer.js';
 import {TokenSynthesizer} from './synthesizer.js';
 
 /** Tokenizer for a single mode (language) */
@@ -19,8 +18,7 @@ export class Tokenizer {
     let done, context;
     let previousToken, lastToken, parentToken;
     let {match, index = 0, flags} = state;
-    const contextualizer = this.contextualizer || (this.contextualizer = new Contextualizer(this));
-    const contexts = (state.contexts = new Contexts(contextualizer));
+    const contexts = (state.contexts = new Contexts(this));
     const {tokenize = (state.tokenize = text => [{text}])} = state;
     const rootContext = (context = state.lastContext = contexts.root);
     const top = {type: 'top', text: '', offset: index};
@@ -36,7 +34,7 @@ export class Tokenizer {
       while (state.lastContext === (state.lastContext = context)) {
         let nextToken;
 
-        const lastIndex = state.index || 0;
+        const lastIndex = (state.index > -1 && state.index) || 0;
 
         matcher.lastIndex = lastIndex;
         match = state.match = matcher.exec(source);
@@ -125,3 +123,5 @@ export class Tokenizer {
     flags && flags.debug && console.info('[Tokenizer.tokenize‹state›]: %o', state);
   }
 }
+
+Object.freeze(Object.freeze(Tokenizer.prototype).constructor);

@@ -1446,7 +1446,7 @@ Definitions: {
   markdown.FENCES = /(?:\x60{3,}|\x7E{3,})(?=\b| |$)/;
   markdown.RULES = /(?:[\-]{2,}|[=]{2,})(?=\s*$)/;
   markdown.BLOCKS = /(?:\#{1,6}|\-|\b\d+\.|\b[a-z]\.|\b[ivx]+\.)(?=\s+\S)/;
-  markdown.TYPOGRAPHS = /\B[–—](?=\ )|"|'|=/;
+  markdown.TYPOGRAPHS = /\B[\–](?=\ )|"|'|=/;
   markdown.TAGS = /\/>|<%|%>|<!--|-->|<[\/\!]?(?=[a-z]+\:?[a-z\-]*[a-z]|[a-z]+)/;
   markdown.BRACKETS = /<|>|\(|\)|\[|\]/;
   markdown.INLINES = /\b([*~_])(?:\3\b(?=[^\n]*[^\n\s\\]\3\3)|\b(?=[^\n]*[^\n\s\\]\3))|(?:\b|\b\B|\B)([*~_])\4?/;
@@ -1476,7 +1476,6 @@ const javascript = Object.defineProperties(
       maybeKeyword: /^[a-z][a-zA-Z]+$/,
       segments: {
         regexp: /^\/(?![\n*+/?])[^\n]*[^\\\n]\//,
-        // regexp: /^\/[^\n\/\*][^\n]*\//,
       },
     },
     matcher: sequence`([\s\n]+)|(${all(
@@ -1504,8 +1503,7 @@ Definitions: {
     javascript.DEFAULTS = {syntax: 'javascript', aliases: ['javascript', 'es', 'js', 'ecmascript']};
   }
 
-  // TODO: Fix bug affecting pholio
-  javascript.REGEXPS = /\/(?:\\[^\n]|[^\n*+/?])(?=[^\n]*\/(?:[a-z]+\b)?(?:[ \t]+[^\n\s(\[{\w]|[.\[;,]|[ \t]*[)\]};,\n]|\n|$))(?:[^\\/\n\t\[]+|\\[^\n]|\[(?:\\[^\n]|[^\\\n\t\]]+)+?\])*?\/[a-z]*/g;
+  javascript.REGEXPS = /\/(?=[^*/\n][^\n]*\/(?:[a-z]+\b|)(?:[ \t]+[^\n\s\(\[\{\w]|[.\[;,]|[ \t]*[)\]};,\n]|\n|$))(?:[^\\\/\n\t\[]+|\\[^\n]|\[(?:\\[^\n]|[^\\\n\t\]]+)*?\][+*]?\??)*\/(?:[a-z]+\b|)/g;
 
   javascript.COMMENTS = /\/\/|\/\*|\*\/|^\#\!.*\n/g;
   javascript.COMMENTS['(closures)'] = '//…\n /*…*/';
