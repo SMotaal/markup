@@ -1,8 +1,5 @@
 ﻿import {Contexts} from './contexts.js';
-import {Contextualizer} from './contextualizer.js';
 import {TokenSynthesizer} from './synthesizer.js';
-
-/** @typedef {import('./token').Token} Token */
 
 /** Tokenizer for a single mode (language) */
 export class Tokenizer {
@@ -18,16 +15,13 @@ export class Tokenizer {
 
   /** Token generator from source using tokenizer.mode (or defaults.mode) */
   *tokenize(source, state = {}) {
-    let done, context;
-    let previousToken, lastToken, parentToken;
+    let done = !(state.source = source);
+    let context, previousToken, lastToken, parentToken;
     let {match, index = 0, flags} = state;
-    const contextualizer = this.contextualizer || (this.contextualizer = new Contextualizer(this));
-    const contexts = (state.contexts = new Contexts(contextualizer));
+    const contexts = (state.contexts = new Contexts(this));
     const {tokenize = (state.tokenize = text => [{text}])} = state;
     const rootContext = (context = state.lastContext = contexts.root);
     const top = {type: 'top', text: '', offset: index};
-
-    done = !(state.source = source);
 
     while (!done) {
       const {closer, matcher, createToken, forming = true} = context;
@@ -37,7 +31,6 @@ export class Tokenizer {
 
       while (state.lastContext === (state.lastContext = context)) {
         let nextToken;
-
         const lastIndex = state.index || 0;
 
         matcher.lastIndex = lastIndex;
@@ -52,7 +45,7 @@ export class Tokenizer {
         // Current quasi-contextual fragment
         const pre = source.slice(lastIndex, offset);
         pre &&
-          ((nextToken = createToken({
+          ((parentToken = (nextToken = createToken({
             type: 'pre',
             text: pre,
             offset: lastIndex,
@@ -60,13 +53,13 @@ export class Tokenizer {
             parent: parentToken,
             hint,
             last: lastToken,
-            source,
-          })),
+          })).parent),
           yield (previousToken = nextToken));
 
         // Current contextual fragment
         const type = (whitespace && 'whitespace') || (sequence && 'sequence') || 'text';
-        nextToken = createToken({
+
+        parentToken = (nextToken = createToken({
           type,
           text,
           offset,
@@ -74,8 +67,7 @@ export class Tokenizer {
           parent: parentToken,
           hint,
           last: lastToken,
-          source,
-        });
+        })).parent;
 
         let after;
 
@@ -87,7 +79,7 @@ export class Tokenizer {
         (closing && ({context, after, parentToken = top} = contexts.close(nextToken, state, context))) ||
           (nextToken.punctuator &&
             context.punctuator !== 'comment' &&
-            ({context, after, parentToken = top} = contexts.open(nextToken, state, context)));
+            ({context, after, parentToken} = contexts.open(nextToken, state, context)));
 
         // Current contextual tail token (yield from sequence)
         yield (previousToken = nextToken);
@@ -102,7 +94,6 @@ export class Tokenizer {
           if (after.syntax) {
             const {syntax, offset, index} = after;
             const body = index > offset && source.slice(offset, index - 1);
-            // if (body) { //   body.length > 0 &&
             if (body && body.length > 0) {
               (tokens = tokenize(body, {options: {sourceType: syntax}}, this.defaults)), (nextIndex = index);
               hintSuffix = `${syntax}-in-${rootContext.syntax}`;
@@ -127,6 +118,11 @@ export class Tokenizer {
         }
       }
     }
+
     flags && flags.debug && console.info('[Tokenizer.tokenize‹state›]: %o', state);
   }
 }
+
+Object.freeze(Object.freeze(Tokenizer.prototype).constructor);
+
+/** @typedef {import('./token').Token} Token */

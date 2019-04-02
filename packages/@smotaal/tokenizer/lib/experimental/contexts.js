@@ -1,35 +1,25 @@
-﻿const join = Function.call.bind(Array.prototype.join);
+﻿import {Contextualizer} from './contextualizer.js';
 
-/** @typedef {import('./tokenizer').Tokenizer} Tokenizer */
-/** @typedef {import('./contextualizer').Contextualizer} Contextualizer */
-/** @typedef {import('./types').Token} Token */
-/** @typedef {Contexts} Grouper */
-/** @typedef {{[name: string]: Contexts}} States */
-
-class Hints extends Set {
-  toString() {
-    return `${(this.root && ` ${this.root}`) || ''}${(this.top && ` ${this.top}`) || ''}${(this.size &&
-      ` ${join(this, ' ')}`) ||
-      ''}`.trim();
-  }
-}
-
+/** Contextual state of a token generator */
 export class Contexts {
-  constructor(contextualizer) {
+  /** @param {Tokenizer} tokenizer */
+  constructor(tokenizer) {
+    /** @type {Contextualizer}  */
+    const contextualizer = tokenizer.contextualizer || (tokenizer.contextualizer = new Contextualizer(tokenizer));
     const {syntax, [Definitions]: definitions = (contextualizer.mode[Definitions] = {})} = contextualizer.mode;
     this.contextualizer = contextualizer;
     const hints = (this.hints = new Hints());
     hints.top = this.goal = this.syntax = syntax;
+    this.goal = this.syntax = syntax;
     this.stack = [(this.root = contextualizer.prime())];
     this.stack.hints = [(this.hint = `${hints.toString()}`)];
     this.definitions = definitions;
-    // console.log(this, {syntax, definitions, hints});
   }
 
   /**
    * @param {Token} nextToken
-   * @param {Token} parent
-   * @param context
+   * @param {TokenizerState} state
+   * @param {TokenizerContext} context
    */
   close(nextToken, state, context) {
     const childContext = context;
@@ -39,61 +29,49 @@ export class Contexts {
     const childIndex = stack.length - 1;
     const childDefinitions = childIndex && stack[childIndex];
 
-    // if (childDefinitions && childContext.closer !== childDefinitions.closer) debugger;
-
-    if (childDefinitions) {
-      stack.pop();
-
-      const {hinter, punctuator} = childDefinitions;
-
-      // console.log({hinter, punctuator, close});
-
-      // TODO: Handle mismatch contexts.close()
-      stack.includes(childDefinitions) || hints.delete(hinter);
-
-      (punctuator === 'opener' && (nextToken.punctuator = 'closer')) ||
-        (punctuator && (nextToken.punctuator = punctuator));
-
-      nextToken.type = 'punctuator';
-
-      after = childDefinitions.close && childDefinitions.close(nextToken, state, childContext);
-    }
+    childDefinitions &&
+      // TODO: childContext.closer !== childDefinitions.closer
+      (stack.pop(),
+      stack.includes(childDefinitions) || hints.delete(childDefinitions.hinter),
+      (childDefinitions.punctuator === 'opener' && (nextToken.punctuator = 'closer')) ||
+        (childDefinitions.punctuator && (nextToken.punctuator = childDefinitions.punctuator)),
+      (nextToken.type = 'punctuator'),
+      (after = childDefinitions.close && childDefinitions.close(nextToken, state, childContext)),
+      (parentToken = (nextToken.parent && nextToken.parent.parent) || undefined));
 
     const parentIndex = stack.length - 1;
     const parentDefinitions = stack[parentIndex];
     const parentHint = stack.hints[parentIndex];
+
     context = contextualizer.prime(parentDefinitions);
-
-    // console.log({childContext, childIndex, childDefinitions}, {parentContext: context, parentIndex, parentDefinitions});
-
     this.goal = (parentDefinitions && parentDefinitions.goal) || syntax;
-    // this.grouper = parentContext;
     this.hint = parentHint || stack.hints[0];
-    parentToken = (nextToken.parent && nextToken.parent.parent) || undefined;
 
-    return {context, after, parentToken}; // closed,
+    return {context, after, parentToken};
   }
 
+  /**
+   * @param {Token} nextToken
+   * @param {TokenizerState} state
+   * @param {TokenizerContext} context
+   */
   open(nextToken, state, context) {
     const parentContext = context;
     let childDefinitions, parentToken, after;
 
     const {definitions, stack, hints, hint, syntax, contextualizer} = this;
-    let {punctuator, text} = nextToken;
+    const {punctuator, text} = nextToken;
     const hinter = punctuator ? `${syntax}-${punctuator}` : hint;
     const contextID = `${hinter},${text}`;
-
-    const definedDefinitions = definitions[contextID];
-
-    const {
-      mode: {matchers, comments, spans, closures},
-    } = parentContext;
+    const existingDefinitions = definitions[contextID];
+    const {matchers, comments, spans, closures} = parentContext.mode;
 
     if (punctuator === 'span' && parentContext.spans) {
       const span = parentContext.spans.get(text);
-      punctuator = nextToken.punctuator = 'span';
+
+      const punctuator = (nextToken.punctuator = 'span');
       childDefinitions =
-        definedDefinitions ||
+        existingDefinitions ||
         contextualizer.define({
           syntax,
           goal: syntax,
@@ -104,61 +82,83 @@ export class Contexts {
           punctuator,
         });
     } else if (parentContext.punctuator !== 'quote') {
-      if (punctuator === 'quote') {
-        childDefinitions =
-          definedDefinitions ||
-          contextualizer.define({
-            syntax,
-            goal: punctuator,
-            quote: text,
-            matcher: (matchers && matchers.quote) || undefined,
-            spans: (spans && spans[text]) || undefined,
-            hinter,
-            punctuator,
-          });
-      } else if (punctuator === 'comment') {
-        const comment = comments.get(text);
-        childDefinitions =
-          definedDefinitions ||
-          contextualizer.define({
-            syntax,
-            goal: punctuator,
-            comment,
-            matcher: comment.matcher || (matchers && matchers.comment) || undefined,
-            hinter,
-            punctuator,
-          });
-      } else if (punctuator === 'closure') {
-        const closure = (definedDefinitions && definedDefinitions.closure) || closures.get(text);
-        punctuator = nextToken.punctuator = 'opener';
-        closure &&
-          (childDefinitions =
-            definedDefinitions ||
+      let comment, closure;
+      switch (punctuator) {
+        case 'quote':
+          childDefinitions =
+            existingDefinitions ||
             contextualizer.define({
               syntax,
-              goal: syntax,
-              closure,
-              matcher: closure.matcher || (matchers && matchers.closure) || undefined,
+              goal: punctuator,
+              quote: text,
+              matcher: (matchers && matchers.quote) || undefined,
+              spans: (spans && spans[text]) || undefined,
               hinter,
               punctuator,
-            }));
+            });
+          break;
+        case 'comment':
+          comment = comments.get(text);
+          childDefinitions =
+            existingDefinitions ||
+            contextualizer.define({
+              syntax,
+              goal: punctuator,
+              comment,
+              matcher: comment.matcher || (matchers && matchers.comment) || undefined,
+              hinter,
+              punctuator,
+            });
+          break;
+        case 'closure':
+          (closure = (existingDefinitions && existingDefinitions.closure) || closures.get(text)) &&
+            (childDefinitions =
+              existingDefinitions ||
+              contextualizer.define({
+                syntax,
+                goal: syntax,
+                closure,
+                matcher: closure.matcher || (matchers && matchers.closure) || undefined,
+                hinter,
+                punctuator: (nextToken.punctuator = 'opener'),
+              }));
+          break;
       }
     }
 
-    if (childDefinitions) {
-      definitions[contextID] || (definitions[contextID] = childDefinitions);
-      const childIndex = stack.push(childDefinitions);
-      hints.add(hinter);
-      this.goal = (childDefinitions && childDefinitions.goal) || syntax;
-      this.hint = stack.hints[childIndex] = `${hints.toString()} in-${this.goal}`;
-      parentToken = nextToken;
-      context = contextualizer.prime(childDefinitions);
-      nextToken.type = 'punctuator';
-      after = childDefinitions.open && childDefinitions.open(nextToken, state, context);
-    }
+    childDefinitions &&
+      (definitions[contextID] || (definitions[contextID] = childDefinitions),
+      (nextToken.type = 'punctuator'),
+      (parentToken = nextToken),
+      (context = contextualizer.prime(childDefinitions)),
+      (this.hint = stack.hints[stack.push(childDefinitions) - 1] = `${hints.add(hinter)} in-${(this.goal =
+        (childDefinitions && childDefinitions.goal) || syntax)}`),
+      (after = childDefinitions.open && childDefinitions.open(nextToken, state, context)));
 
     return {context, after, parentToken};
   }
 }
 
+Object.freeze(Object.freeze(Contexts.prototype).constructor);
+
+/** Serializable Word Set */
 const Definitions = Symbol('[definitions]');
+
+/** Serializable Word Set */
+const Hints = class Hints extends Set {
+  toString() {
+    return `${this.root || ''} ${this.top || 'markup'} ${(this.size && ` ${this.join(' ')}`) || ''}`.trim();
+  }
+}
+
+Object.freeze(
+  Object.defineProperties(Object.freeze(Hints).prototype, {
+    join: Object.getOwnPropertyDescriptor(Array.prototype, 'join'),
+  }),
+);
+
+/** @typedef {import('./types').Contextualizer} Contextualizer */
+/** @typedef {import('./types').Token} Token */
+/** @typedef {import('./types').Tokenizer} Tokenizer */
+/** @typedef {import('./types').TokenizerState} TokenizerState */
+/** @typedef {import('./types').TokenizerContext} TokenizerContext */

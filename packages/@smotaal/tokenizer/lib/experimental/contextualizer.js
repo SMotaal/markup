@@ -1,7 +1,6 @@
 ﻿const mappings = new WeakMap();
 
 export class Contextualizer {
-  // constructor(tokenizer, initialize = context => context) {
   constructor(tokenizer) {
     // Local contextualizer state
     let definitions, context;
@@ -11,7 +10,6 @@ export class Contextualizer {
 
     if (!mode) {
       throw ReferenceError(`Tokenizer.contextualizer invoked without a mode`);
-      // } else if (!mode[Context]) {
     } else if (!(context = mappings.get((definitions = mode)))) {
       const {
         syntax,
@@ -31,15 +29,12 @@ export class Contextualizer {
 
       initializeContext && Reflect.apply(initializeContext, tokenizer, [context]);
 
-      // initializeContext && initializeContext(context);
-
       mappings.set(mode, context);
     }
 
     const root = context;
 
     const prime = next => {
-      // if (definitions !== (definitions = next) && definitions && !definitions[Context]) {
       if (definitions !== next && next && !(context = mappings.get((definitions = next)))) {
         const {
           syntax = (definitions.syntax = mode.syntax),
@@ -61,15 +56,12 @@ export class Contextualizer {
         mappings.set(definitions, context);
       }
 
-      // return definitions && definitions[Context];
       return context || ((definitions = mode), (context = root));
     };
 
     Object.defineProperties(this, {
       mode: {value: mode, writable: false},
       prime: {value: prime, writable: false},
-      // definitions: {value: this.definitions, writable: false},
-      // context: {value: this.context, writable: false},
     });
   }
 
@@ -80,21 +72,20 @@ export class Contextualizer {
     comment,
     closure,
     span,
-    grouping = comment || closure || span || undefined,
+    context = comment || closure || span || undefined,
     punctuator,
-    spans = (grouping && grouping.spans) || undefined,
-    matcher = (grouping && grouping.matcher) || undefined,
-    quotes = (grouping && grouping.quotes) || undefined,
+    spans = (context && context.spans) || undefined,
+    matcher = (context && context.matcher) || undefined,
+    quotes = (context && context.quotes) || undefined,
     punctuators = {aggregators: {}},
-    opener = quote || (grouping && grouping.opener) || undefined,
-    closer = quote || (grouping && grouping.closer) || undefined,
+    opener = quote || (context && context.opener) || undefined,
+    closer = quote || (context && context.closer) || undefined,
     hinter,
-    open = (grouping && grouping.open) || undefined,
-    close = (grouping && grouping.close) || undefined,
+    open = (context && context.open) || undefined,
+    close = (context && context.close) || undefined,
   }) {
     return {syntax, goal, punctuator, spans, matcher, quotes, punctuators, opener, closer, hinter, open, close};
   }
 }
 
-// const Context = Symbol('[context]');
-// const Definitions = Symbol('[definitions]');
+Object.freeze(Object.freeze(Contextualizer.prototype).constructor);
