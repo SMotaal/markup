@@ -1,7 +1,7 @@
 ﻿export class TokenSynthesizer {
   constructor(context) {
     const {
-      mode: {syntax, keywords, assigners, operators, combinators, nonbreakers, comments, closures, breakers, patterns},
+      mode: {keywords, assigners, operators, combinators, nonbreakers, comments, closures, breakers, patterns},
       punctuators,
       aggregators,
       spans,
@@ -43,14 +43,6 @@
       (comments && comments.includes(text) && 'comment') ||
       (quotes && quotes.includes(text) && 'quote') ||
       (spans && spans.includes(text) && 'span') ||
-      // TODO: Undo if breaking
-      // (nonbreakers && nonbreakers.includes(text) && 'nonbreaker') ||
-      // (operators && operators.includes(text) && 'operator') ||
-      // (comments && comments.includes(text) && 'comment') ||
-      // (spans && spans.includes(text) && 'span') ||
-      // (quotes && quotes.includes(text) && 'quote') ||
-      // (closures && closures.includes(text) && 'closure') ||
-      // (breakers && breakers.includes(text) && 'breaker') ||
       false;
     const aggregate = text =>
       (assigners && assigners.includes(text) && 'assigner') ||
@@ -82,12 +74,6 @@
               (!last || last.punctuator !== 'nonbreaker' || (previous && previous.breaks > 0)) &&
               (next.type = 'keyword')) ||
               (maybeIdentifier && maybeIdentifier.test(word) && (next.type = 'identifier')));
-          // word &&
-          //   ((keywords &&
-          //     keywords.includes(word) &&
-          //     (!last || last.punctuator !== 'nonbreaker' || (previous && previous.breaks > 0)) &&
-          //     (next.type = 'keyword')) ||
-          //     (maybeIdentifier && maybeIdentifier.test(word) && (next.type = 'identifier')));
         } else {
           next.type = 'text';
         }
@@ -99,5 +85,7 @@
     };
   }
 }
+
+Object.freeze(Object.freeze(TokenSynthesizer.prototype).constructor);
 
 const LineEndings = /$/gm;

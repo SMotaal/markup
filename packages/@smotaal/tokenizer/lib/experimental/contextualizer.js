@@ -1,4 +1,5 @@
-﻿export class Contextualizer {
+﻿/** Shared context state handler for token generator instances  */
+export class Contextualizer {
   constructor(tokenizer) {
     // Local contextualizer state
     let definitions, context;
@@ -6,9 +7,24 @@
     // Tokenizer mode
     const {defaults = {}, mode = defaults.mode, initializeContext} = tokenizer;
 
-    if (!mode) {
-      throw ReferenceError(`Tokenizer.contextualizer invoked without a mode`);
-    } else if (!(context = mappings.get((definitions = mode)))) {
+    if (!mode) throw Error(`Contextualizer constructed without a mode`);
+
+    const prime = next => (
+      definitions !== next &&
+        next &&
+        ((context = mappings.get((definitions = next))) ||
+          ((context = this.contextualize(definitions)),
+          initializeContext && Reflect.apply(initializeContext, tokenizer, [context]))),
+      context || ((definitions = mode), (context = root))
+    );
+
+    Object.defineProperties(this, {
+      mode: {value: mode, writable: false},
+      prime: {value: prime, writable: false},
+    });
+
+    // Eagerly contextualize "root" definitions on first use
+    if (!(context = mappings.get((definitions = mode)))) {
       const {
         syntax,
         matcher = (mode.matcher = (defaults && defaults.matcher) || undefined),
@@ -31,39 +47,31 @@
     }
 
     const root = context;
-
-    const prime = next => {
-      if (definitions !== next && next && !(context = mappings.get((definitions = next)))) {
-        const {
-          syntax = (definitions.syntax = mode.syntax),
-          goal = (definitions.goal = syntax),
-          punctuator,
-          punctuators = (definitions.punctuators = mode.punctuators),
-          aggregators = (definitions.aggregate = punctuators && punctuators.aggregators),
-          closer,
-          spans,
-          matcher = (definitions.matcher = mode.matcher),
-          quotes = (definitions.quotes = mode.quotes),
-          forming = (definitions.forming = goal === mode.syntax),
-        } = definitions;
-
-        context = {mode, syntax, goal, punctuator, punctuators, aggregators, closer, spans, matcher, quotes, forming};
-
-        initializeContext && Reflect.apply(initializeContext, tokenizer, [context]);
-
-        mappings.set(definitions, context);
-      }
-
-      return context || ((definitions = mode), (context = root));
-    };
-
-    Object.defineProperties(this, {
-      mode: {value: mode, writable: false},
-      prime: {value: prime, writable: false},
-    });
   }
 
-  define({
+  contextualize(definitions) {
+    const mode = this.mode;
+    const {
+      syntax = (definitions.syntax = mode.syntax),
+      goal = (definitions.goal = syntax),
+      punctuator,
+      punctuators = (definitions.punctuators = mode.punctuators),
+      aggregators = (definitions.aggregate = punctuators && punctuators.aggregators),
+      closer,
+      spans,
+      matcher = (definitions.matcher = mode.matcher),
+      quotes = (definitions.quotes = mode.quotes),
+      forming = (definitions.forming = goal === mode.syntax),
+    } = definitions;
+
+    const context = {mode, syntax, goal, punctuator, punctuators, aggregators, closer, spans, matcher, quotes, forming};
+
+    mappings.set(definitions, context);
+    return context;
+  }
+
+  /** @deprecate Historical convenience sometimes used cautiously */
+  normalize({
     syntax,
     goal = syntax,
     quote,
@@ -85,5 +93,7 @@
     return {syntax, goal, punctuator, spans, matcher, quotes, punctuators, opener, closer, hinter, open, close};
   }
 }
+
+Object.freeze(Object.freeze(Contextualizer.prototype).constructor);
 
 const mappings = new WeakMap();

@@ -158,7 +158,7 @@ Definitions: {
   markdown.FENCES = /(?:\x60{3,}|\x7E{3,})(?=\b| |$)/;
   markdown.RULES = /(?:[\-]{2,}|[=]{2,})(?=\s*$)/;
   markdown.BLOCKS = /(?:\#{1,6}|\-|\b\d+\.|\b[a-z]\.|\b[ivx]+\.)(?=\s+\S)/;
-  markdown.TYPOGRAPHS = /\B[–—](?=\ )|"|'|=/;
+  markdown.TYPOGRAPHS = /\B[\–](?=\ )|"|'|=/;
   markdown.TAGS = /\/>|<%|%>|<!--|-->|<[\/\!]?(?=[a-z]+\:?[a-z\-]*[a-z]|[a-z]+)/;
   markdown.BRACKETS = /<|>|\(|\)|\[|\]/;
   markdown.INLINES = /\b([*~_])(?:\3\b(?=[^\n]*[^\n\s\\]\3\3)|\b(?=[^\n]*[^\n\s\\]\3))|(?:\b|\b\B|\B)([*~_])\4?/;

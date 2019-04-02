@@ -20,7 +20,6 @@ export const javascript = Object.defineProperties(
       maybeKeyword: /^[a-z][a-zA-Z]+$/,
       segments: {
         regexp: /^\/(?![\n*+/?])[^\n]*[^\\\n]\//,
-        // regexp: /^\/[^\n\/\*][^\n]*\//,
       },
     },
     matcher: sequence`([\s\n]+)|(${all(
@@ -48,8 +47,7 @@ Definitions: {
     javascript.DEFAULTS = {syntax: 'javascript', aliases: ['javascript', 'es', 'js', 'ecmascript']};
   }
 
-  // TODO: Fix bug affecting pholio
-  javascript.REGEXPS = /\/(?:\\[^\n]|[^\n*+/?])(?=[^\n]*\/(?:[a-z]+\b)?(?:[ \t]+[^\n\s(\[{\w]|[.\[;,]|[ \t]*[)\]};,\n]|\n|$))(?:[^\\/\n\t\[]+|\\[^\n]|\[(?:\\[^\n]|[^\\\n\t\]]+)+?\])*?\/[a-z]*/g;
+  javascript.REGEXPS = /\/(?=[^*/\n][^\n]*\/(?:[a-z]+\b|)(?:[ \t]+[^\n\s\(\[\{\w]|[.\[;,]|[ \t]*[)\]};,\n]|\n|$))(?:[^\\\/\n\t\[]+|\\[^\n]|\[(?:\\[^\n]|[^\\\n\t\]]+)*?\][+*]?\??)*\/(?:[a-z]+\b|)/g;
 
   javascript.COMMENTS = /\/\/|\/\*|\*\/|^\#\!.*\n/g;
   javascript.COMMENTS['(closures)'] = '//…\n /*…*/';

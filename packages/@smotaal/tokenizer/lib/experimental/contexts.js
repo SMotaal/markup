@@ -1,14 +1,17 @@
-﻿/** Token generator context state */
+﻿import {Contextualizer} from './contextualizer.js';
+
+/** Private context state handler for token generator instances */
 export class Contexts {
-  /** @param {Contextualizer} tokenizer */
-  constructor(contextualizer) {
-    const {syntax, [Definitions]: definitions = (contextualizer.mode[Definitions] = {})} = contextualizer.mode;
-    this.contextualizer = contextualizer;
-    const hints = (this.hints = new Hints());
-    hints.top = this.goal = this.syntax = syntax;
-    this.stack = [(this.root = contextualizer.prime())];
-    this.stack.hints = [(this.hint = hints.toString())];
-    this.definitions = definitions;
+  /** @param {Tokenizer} tokenizer */
+  constructor(tokenizer) {
+    ({
+      syntax: this.syntax,
+      syntax: this.goal,
+      syntax: (this.hints = new Hints()).top,
+      [Definitions]: this.definitions = (this.contextualizer.mode[Definitions] = {}),
+    } = (this.contextualizer =
+      tokenizer.contextualizer || (tokenizer.contextualizer = new Contextualizer(tokenizer))).mode);
+    (this.stack = [(this.root = this.contextualizer.prime())]).hints = [(this.hint = this.hints.toString())];
   }
 
   /**
@@ -79,7 +82,7 @@ export class Contexts {
       punctuator = nextToken.punctuator = 'span';
       childDefinitions =
         definedDefinitions ||
-        contextualizer.define({
+        contextualizer.normalize({
           syntax,
           goal: syntax,
           span,
@@ -92,7 +95,7 @@ export class Contexts {
       if (punctuator === 'quote') {
         childDefinitions =
           definedDefinitions ||
-          contextualizer.define({
+          contextualizer.normalize({
             syntax,
             goal: punctuator,
             quote: text,
@@ -105,7 +108,7 @@ export class Contexts {
         const comment = comments.get(text);
         childDefinitions =
           definedDefinitions ||
-          contextualizer.define({
+          contextualizer.normalize({
             syntax,
             goal: punctuator,
             comment,
@@ -119,7 +122,7 @@ export class Contexts {
         closure &&
           (childDefinitions =
             definedDefinitions ||
-            contextualizer.define({
+            contextualizer.normalize({
               syntax,
               goal: syntax,
               closure,
@@ -131,7 +134,7 @@ export class Contexts {
     }
 
     if (childDefinitions) {
-      definitions[contextID] || (definitions[contextID] = childDefinitions);
+      (contextID && definitions[contextID]) || (definitions[contextID] = childDefinitions);
       const childIndex = stack.push(childDefinitions) - 1;
       hints.add(hinter);
       this.goal = (childDefinitions && childDefinitions.goal) || syntax;
@@ -145,6 +148,8 @@ export class Contexts {
     return {context, after, parentToken};
   }
 }
+
+Object.freeze(Object.freeze(Contexts.prototype).constructor);
 
 const Definitions = Symbol('[definitions]');
 
