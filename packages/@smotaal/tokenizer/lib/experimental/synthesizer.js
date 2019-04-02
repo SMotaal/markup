@@ -43,6 +43,14 @@
       (comments && comments.includes(text) && 'comment') ||
       (quotes && quotes.includes(text) && 'quote') ||
       (spans && spans.includes(text) && 'span') ||
+      // TODO: Undo if breaking
+      // (nonbreakers && nonbreakers.includes(text) && 'nonbreaker') ||
+      // (operators && operators.includes(text) && 'operator') ||
+      // (comments && comments.includes(text) && 'comment') ||
+      // (spans && spans.includes(text) && 'span') ||
+      // (quotes && quotes.includes(text) && 'quote') ||
+      // (closures && closures.includes(text) && 'closure') ||
+      // (breakers && breakers.includes(text) && 'breaker') ||
       false;
     const aggregate = text =>
       (assigners && assigners.includes(text) && 'assigner') ||
@@ -67,24 +75,29 @@
           next.breaks = text.match(LineEndings).length - 1;
         } else if (forming && wording) {
           const word = text.trim();
+          // TODO: Undo if breaking
           word &&
             (((!maybeKeyword || maybeKeyword.test(word)) &&
               (keywords && keywords.includes(word)) &&
               (!last || last.punctuator !== 'nonbreaker' || (previous && previous.breaks > 0)) &&
               (next.type = 'keyword')) ||
               (maybeIdentifier && maybeIdentifier.test(word) && (next.type = 'identifier')));
+          // word &&
+          //   ((keywords &&
+          //     keywords.includes(word) &&
+          //     (!last || last.punctuator !== 'nonbreaker' || (previous && previous.breaks > 0)) &&
+          //     (next.type = 'keyword')) ||
+          //     (maybeIdentifier && maybeIdentifier.test(word) && (next.type = 'identifier')));
         } else {
           next.type = 'text';
         }
 
-        previous && (parent || (next.parent = previous.parent)) && (previous.next = next);
+        previous && (previous.next = next) && (parent || (next.parent = previous.parent));
 
         return next;
       }
     };
   }
 }
-
-Object.freeze(Object.freeze(TokenSynthesizer.prototype).constructor);
 
 const LineEndings = /$/gm;

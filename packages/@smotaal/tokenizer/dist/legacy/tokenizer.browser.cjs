@@ -579,38 +579,23 @@ var dom$1 = new class Renderer {
   }
 }();
 
-const join = Function.call.bind(Array.prototype.join);
-
-/** @typedef {import('./tokenizer').Tokenizer} Tokenizer */
-/** @typedef {import('./contextualizer').Contextualizer} Contextualizer */
-/** @typedef {import('./types').Token} Token */
-/** @typedef {Contexts} Grouper */
-/** @typedef {{[name: string]: Contexts}} States */
-
-class Hints extends Set {
-  toString() {
-    return `${(this.root && ` ${this.root}`) || ''}${(this.top && ` ${this.top}`) || ''}${(this.size &&
-      ` ${join(this, ' ')}`) ||
-      ''}`.trim();
-  }
-}
-
+/** Token generator context state */
 class Contexts {
+  /** @param {Contextualizer} tokenizer */
   constructor(contextualizer) {
     const {syntax, [Definitions]: definitions = (contextualizer.mode[Definitions] = {})} = contextualizer.mode;
     this.contextualizer = contextualizer;
     const hints = (this.hints = new Hints());
     hints.top = this.goal = this.syntax = syntax;
     this.stack = [(this.root = contextualizer.prime())];
-    this.stack.hints = [(this.hint = `${hints.toString()}`)];
+    this.stack.hints = [(this.hint = hints.toString())];
     this.definitions = definitions;
-    // console.log(this, {syntax, definitions, hints});
   }
 
   /**
    * @param {Token} nextToken
-   * @param {Token} parent
-   * @param context
+   * @param {TokenizerState} state
+   * @param {TokenizerContext} context
    */
   close(nextToken, state, context) {
     const childContext = context;
@@ -620,14 +605,12 @@ class Contexts {
     const childIndex = stack.length - 1;
     const childDefinitions = childIndex && stack[childIndex];
 
-    // if (childDefinitions && childContext.closer !== childDefinitions.closer) debugger;
-
     if (childDefinitions) {
+      // TODO: childContext.closer !== childDefinitions.closer
+
       stack.pop();
 
       const {hinter, punctuator} = childDefinitions;
-
-      // console.log({hinter, punctuator, close});
 
       // TODO: Handle mismatch contexts.close()
       stack.includes(childDefinitions) || hints.delete(hinter);
@@ -645,16 +628,18 @@ class Contexts {
     const parentHint = stack.hints[parentIndex];
     context = contextualizer.prime(parentDefinitions);
 
-    // console.log({childContext, childIndex, childDefinitions}, {parentContext: context, parentIndex, parentDefinitions});
-
     this.goal = (parentDefinitions && parentDefinitions.goal) || syntax;
-    // this.grouper = parentContext;
     this.hint = parentHint || stack.hints[0];
     parentToken = (nextToken.parent && nextToken.parent.parent) || undefined;
 
-    return {context, after, parentToken}; // closed,
+    return {context, after, parentToken};
   }
 
+  /**
+   * @param {Token} nextToken
+   * @param {TokenizerState} state
+   * @param {TokenizerContext} context
+   */
   open(nextToken, state, context) {
     const parentContext = context;
     let childDefinitions, parentToken, after;
@@ -728,7 +713,7 @@ class Contexts {
 
     if (childDefinitions) {
       definitions[contextID] || (definitions[contextID] = childDefinitions);
-      const childIndex = stack.push(childDefinitions);
+      const childIndex = stack.push(childDefinitions) - 1;
       hints.add(hinter);
       this.goal = (childDefinitions && childDefinitions.goal) || syntax;
       this.hint = stack.hints[childIndex] = `${hints.toString()} in-${this.goal}`;
@@ -744,10 +729,26 @@ class Contexts {
 
 const Definitions = Symbol('[definitions]');
 
-const mappings = new WeakMap();
+const Hints = Object.freeze(
+  Object.defineProperties(
+    class Hints extends Set {
+      toString() {
+        return `${(this.root && ` ${this.root}`) || ''}${(this.top && ` ${this.top}`) || ''}${(this.size &&
+          ` ${this.join(' ')}`) ||
+          ''}`.trim();
+      }
+    }.prototype,
+    {join: Object.getOwnPropertyDescriptor(Array.prototype, 'join')},
+  ),
+).constructor;
+
+/** @typedef {import('./types').Contextualizer} Contextualizer */
+/** @typedef {import('./types').Token} Token */
+/** @typedef {import('./types').Tokenizer} Tokenizer */
+/** @typedef {import('./types').TokenizerState} TokenizerState */
+/** @typedef {import('./types').TokenizerContext} TokenizerContext */
 
 class Contextualizer {
-  // constructor(tokenizer, initialize = context => context) {
   constructor(tokenizer) {
     // Local contextualizer state
     let definitions, context;
@@ -757,7 +758,6 @@ class Contextualizer {
 
     if (!mode) {
       throw ReferenceError(`Tokenizer.contextualizer invoked without a mode`);
-      // } else if (!mode[Context]) {
     } else if (!(context = mappings.get((definitions = mode)))) {
       const {
         syntax,
@@ -777,15 +777,12 @@ class Contextualizer {
 
       initializeContext && Reflect.apply(initializeContext, tokenizer, [context]);
 
-      // initializeContext && initializeContext(context);
-
       mappings.set(mode, context);
     }
 
     const root = context;
 
     const prime = next => {
-      // if (definitions !== (definitions = next) && definitions && !definitions[Context]) {
       if (definitions !== next && next && !(context = mappings.get((definitions = next)))) {
         const {
           syntax = (definitions.syntax = mode.syntax),
@@ -807,15 +804,12 @@ class Contextualizer {
         mappings.set(definitions, context);
       }
 
-      // return definitions && definitions[Context];
       return context || ((definitions = mode), (context = root));
     };
 
     Object.defineProperties(this, {
       mode: {value: mode, writable: false},
       prime: {value: prime, writable: false},
-      // definitions: {value: this.definitions, writable: false},
-      // context: {value: this.context, writable: false},
     });
   }
 
@@ -842,8 +836,7 @@ class Contextualizer {
   }
 }
 
-// const Context = Symbol('[context]');
-// const Definitions = Symbol('[definitions]');
+const mappings = new WeakMap();
 
 class TokenSynthesizer {
   constructor(context) {
@@ -883,20 +876,26 @@ class TokenSynthesizer {
           })(segments))));
 
     const punctuate = text =>
-      (nonbreakers && nonbreakers.includes(text) && 'nonbreaker') ||
       (operators && operators.includes(text) && 'operator') ||
-      (comments && comments.includes(text) && 'comment') ||
-      (spans && spans.includes(text) && 'span') ||
-      (quotes && quotes.includes(text) && 'quote') ||
       (closures && closures.includes(text) && 'closure') ||
       (breakers && breakers.includes(text) && 'breaker') ||
+      (nonbreakers && nonbreakers.includes(text) && 'nonbreaker') ||
+      (comments && comments.includes(text) && 'comment') ||
+      (quotes && quotes.includes(text) && 'quote') ||
+      (spans && spans.includes(text) && 'span') ||
+      // TODO: Undo if breaking
+      // (nonbreakers && nonbreakers.includes(text) && 'nonbreaker') ||
+      // (operators && operators.includes(text) && 'operator') ||
+      // (comments && comments.includes(text) && 'comment') ||
+      // (spans && spans.includes(text) && 'span') ||
+      // (quotes && quotes.includes(text) && 'quote') ||
+      // (closures && closures.includes(text) && 'closure') ||
+      // (breakers && breakers.includes(text) && 'breaker') ||
       false;
     const aggregate = text =>
       (assigners && assigners.includes(text) && 'assigner') ||
       (combinators && combinators.includes(text) && 'combinator') ||
       false;
-
-    const LineEndings = /$/gm;
 
     this.create = next => {
       if (next && next.text) {
@@ -916,12 +915,19 @@ class TokenSynthesizer {
           next.breaks = text.match(LineEndings).length - 1;
         } else if (forming && wording) {
           const word = text.trim();
+          // TODO: Undo if breaking
           word &&
-            ((keywords &&
-              keywords.includes(word) &&
+            (((!maybeKeyword || maybeKeyword.test(word)) &&
+              (keywords && keywords.includes(word)) &&
               (!last || last.punctuator !== 'nonbreaker' || (previous && previous.breaks > 0)) &&
               (next.type = 'keyword')) ||
               (maybeIdentifier && maybeIdentifier.test(word) && (next.type = 'identifier')));
+          // word &&
+          //   ((keywords &&
+          //     keywords.includes(word) &&
+          //     (!last || last.punctuator !== 'nonbreaker' || (previous && previous.breaks > 0)) &&
+          //     (next.type = 'keyword')) ||
+          //     (maybeIdentifier && maybeIdentifier.test(word) && (next.type = 'identifier')));
         } else {
           next.type = 'text';
         }
@@ -934,7 +940,7 @@ class TokenSynthesizer {
   }
 }
 
-/** @typedef {import('./token').Token} Token */
+const LineEndings = /$/gm;
 
 /** Tokenizer for a single mode (language) */
 class Tokenizer {
@@ -992,7 +998,6 @@ class Tokenizer {
             parent: parentToken,
             hint,
             last: lastToken,
-            source,
           })),
           yield (previousToken = nextToken));
 
@@ -1006,7 +1011,6 @@ class Tokenizer {
           parent: parentToken,
           hint,
           last: lastToken,
-          source,
         });
 
         let after;
@@ -1034,7 +1038,6 @@ class Tokenizer {
           if (after.syntax) {
             const {syntax, offset, index} = after;
             const body = index > offset && source.slice(offset, index - 1);
-            // if (body) { //   body.length > 0 &&
             if (body && body.length > 0) {
               (tokens = tokenize(body, {options: {sourceType: syntax}}, this.defaults)), (nextIndex = index);
               hintSuffix = `${syntax}-in-${rootContext.syntax}`;
@@ -1277,7 +1280,7 @@ const html = Object.defineProperties(
             } else {
               const offset = index;
               const text = source.slice(offset, match.index - 1);
-              // state.index = match.index;
+              state.index = match.index;
               return [{text, offset, previous: next, parent}];
             }
           }
@@ -1474,11 +1477,10 @@ const javascript = Object.defineProperties(
     patterns: {
       ...patterns,
       maybeIdentifier: identifier(entities.es.IdentifierStart, entities.es.IdentifierPart),
+      maybeKeyword: /^[a-z][a-zA-Z]+$/,
       segments: {
+        regexp: /^\/(?![\n*+/?])[^\n]*[^\\\n]\//,
         // regexp: /^\/[^\n\/\*][^\n]*\//,
-        regexp: /^\/[^+*\n/?][^\n]*\//,
-        // regexp: /^\/[^+*\n/?]/,
-        // regexp: {test: ({0: a, 1: b, length} = '') => length > 2 && a === '/' && b !== '*' && b === '/'},
       },
     },
     matcher: sequence`([\s\n]+)|(${all(
@@ -1493,7 +1495,7 @@ const javascript = Object.defineProperties(
       '"': /(\n)|(")|(\\.)/g,
       '`': /(\n)|(`|\$\{)|(\\.)/g,
       quote: /(\n)|(`|"|'|\$\{)|(\\.)/g,
-      comment: /(\n)|(\*\/|\b(?:[a-z]+\:\/\/|\w[\w\+\.]*\w@[a-z]+)\S+|@[a-z]+)/gi,
+      comment: /(\n)|(\*\/|\b(?:[a-z]+\:\/\/|\w[\w+.]*\w@[a-z]+)\S+|@[a-z]+)/gi,
     },
   }),
   {
@@ -1505,7 +1507,9 @@ Definitions: {
   Defaults: {
     javascript.DEFAULTS = {syntax: 'javascript', aliases: ['javascript', 'es', 'js', 'ecmascript']};
   }
-  javascript.REGEXPS = /\/(?=[^\*\/\n][^\n]*\/(?:[a-z]+\b)?(?:[ \t]+[^\n\s\(\[\{\w]|[\.\[;,]|[ \t]*[\)\]\}\;\,\n]|\n|$))(?:[^\\\/\n\t\[]+|\\\S|\[(?:\\\S|[^\\\n\t\]]+)+?\])+?\/[a-z]*/g;
+
+  // TODO: Fix bug affecting pholio
+  javascript.REGEXPS = /\/(?:\\[^\n]|[^\n*+/?])(?=[^\n]*\/(?:[a-z]+\b)?(?:[ \t]+[^\n\s(\[{\w]|[.\[;,]|[ \t]*[)\]};,\n]|\n|$))(?:[^\\/\n\t\[]+|\\[^\n]|\[(?:\\[^\n]|[^\\\n\t\]]+)+?\])*?\/[a-z]*/g;
 
   javascript.COMMENTS = /\/\/|\/\*|\*\/|^\#\!.*\n/g;
   javascript.COMMENTS['(closures)'] = '//…\n /*…*/';
@@ -1520,8 +1524,8 @@ Definitions: {
 
   javascript.KEYWORDS = {
     ['(symbols)']:
-      // abstract enum interface package namespace declare type module
-      'arguments as async await break case catch class export const continue debugger default delete do else export extends finally for from function get if import in instanceof let new of return set static super switch this throw try typeof var void while with yield',
+      // 'abstract enum interface package namespace declare type module public protected ' +
+      'arguments as async await break case catch class export const continue private debugger default delete do else export extends finally for from function get if import in instanceof let new of return set static super switch this throw try typeof var void while with yield',
   };
 
   javascript.PUNCTUATORS = [
@@ -1538,6 +1542,26 @@ Definitions: {
   javascript.NONBREAKERS = {['(symbols)']: '.'};
   javascript.OPERATORS = {['(symbols)']: '++ -- ... ? :'};
   javascript.BREAKERS = {['(symbols)']: ', ;'};
+}
+
+const typescript = Object.defineProperties(
+  ({syntax} = typescript.defaults, {javascript}) => ({
+    ...javascript,
+    keywords: Symbols.from(typescript.KEYWORDS),
+  }),
+  {
+    defaults: {get: () => ({...typescript.DEFAULTS})},
+  },
+);
+
+Definitions: {
+  Defaults: {
+    typescript.DEFAULTS = {syntax: 'typescript', aliases: ['ts'], requires: [javascript.defaults.syntax]};
+  }
+  typescript.KEYWORDS = {
+    ['(symbols)']:
+      'abstract enum interface package namespace declare type module arguments private public protected as async await break case catch class export const continue debugger default delete do else export extends finally for from function get if import in instanceof let new of return set static super switch this throw try typeof var void while with yield',
+  };
 }
 
 const mjs = Object.defineProperties(
@@ -1615,23 +1639,18 @@ var modes = /*#__PURE__*/Object.freeze({
   html: html,
   markdown: markdown,
   javascript: javascript,
+  typescript: typescript,
   mjs: mjs,
   cjs: cjs,
   esx: esx
 });
 
-const parser = new Parser();
-parser.MODULE_URL = new (typeof URL !== 'undefined' ? URL : require('ur'+'l').URL)((process.browser ? '' : 'file:') + __filename, process.browser && document.baseURI).href;
+const parser = Object.assign(new Parser(), {MODULE_URL: new (typeof URL !== 'undefined' ? URL : require('ur'+'l').URL)((process.browser ? '' : 'file:') + __filename, process.browser && document.baseURI).href});
 for (const id in modes) parser.register(modes[id]);
 
-/**
- *
- */
 const TokenizerAPI = Object.setPrototypeOf(
   class TokenizerAPI {
-    /**
-     * @param {Partial<{parsers: Parser[]}>} [options]
-     */
+    /** @param {Partial<{parsers: Parser[]}>} [options] */
     constructor() {
       const [
         {
@@ -1713,11 +1732,9 @@ var markup_experimental = ({parsers: exports.parsers, render: exports.render, to
   parsers: [parser],
   render: (source, options, flags) => {
     const fragment = options && options.fragment;
-
     const debugging = flags && /\bdebug\b/i.test(typeof flags === 'string' ? flags : [...flags].join(' '));
 
     debugging && console.info('render: %o', {render: exports.render, source, options, flags, fragment, debugging});
-
     fragment && (fragment.logs = debugging ? [] : undefined);
 
     return dom$1.render(exports.tokenize(source, options, flags), fragment);

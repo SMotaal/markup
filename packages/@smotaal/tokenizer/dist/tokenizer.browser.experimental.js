@@ -1741,4 +1741,4 @@ var markup_experimental = ({parsers, render, tokenize, warmup} = new TokenizerAP
 
 export default markup_experimental;
 export { encodeEntities, encodeEntity, entities, parsers, render, tokenize, warmup };
-//# sourceMappingURL=tokenizer.browser.js.map
+//# sourceMappingURL=tokenizer.browser.experimental.js.map

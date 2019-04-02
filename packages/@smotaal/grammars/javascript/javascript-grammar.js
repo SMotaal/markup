@@ -19,7 +19,8 @@ export const javascript = Object.defineProperties(
       maybeIdentifier: identifier(entities.es.IdentifierStart, entities.es.IdentifierPart),
       maybeKeyword: /^[a-z][a-zA-Z]+$/,
       segments: {
-        regexp: /^\/(?![\n*+/?])[^\n]*[^\\\n]\//, // /^\/[^\n\/\*][^\n]*\//,
+        regexp: /^\/(?![\n*+/?])[^\n]*[^\\\n]\//,
+        // regexp: /^\/[^\n\/\*][^\n]*\//,
       },
     },
     matcher: sequence`([\s\n]+)|(${all(
@@ -46,6 +47,8 @@ Definitions: {
   Defaults: {
     javascript.DEFAULTS = {syntax: 'javascript', aliases: ['javascript', 'es', 'js', 'ecmascript']};
   }
+
+  // TODO: Fix bug affecting pholio
   javascript.REGEXPS = /\/(?:\\[^\n]|[^\n*+/?])(?=[^\n]*\/(?:[a-z]+\b)?(?:[ \t]+[^\n\s(\[{\w]|[.\[;,]|[ \t]*[)\]};,\n]|\n|$))(?:[^\\/\n\t\[]+|\\[^\n]|\[(?:\\[^\n]|[^\\\n\t\]]+)+?\])*?\/[a-z]*/g;
 
   javascript.COMMENTS = /\/\/|\/\*|\*\/|^\#\!.*\n/g;

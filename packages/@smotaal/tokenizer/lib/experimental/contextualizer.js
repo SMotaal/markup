@@ -1,6 +1,4 @@
-﻿const mappings = new WeakMap();
-
-export class Contextualizer {
+﻿export class Contextualizer {
   constructor(tokenizer) {
     // Local contextualizer state
     let definitions, context;
@@ -72,20 +70,20 @@ export class Contextualizer {
     comment,
     closure,
     span,
-    context = comment || closure || span || undefined,
+    grouping = comment || closure || span || undefined,
     punctuator,
-    spans = (context && context.spans) || undefined,
-    matcher = (context && context.matcher) || undefined,
-    quotes = (context && context.quotes) || undefined,
+    spans = (grouping && grouping.spans) || undefined,
+    matcher = (grouping && grouping.matcher) || undefined,
+    quotes = (grouping && grouping.quotes) || undefined,
     punctuators = {aggregators: {}},
-    opener = quote || (context && context.opener) || undefined,
-    closer = quote || (context && context.closer) || undefined,
+    opener = quote || (grouping && grouping.opener) || undefined,
+    closer = quote || (grouping && grouping.closer) || undefined,
     hinter,
-    open = (context && context.open) || undefined,
-    close = (context && context.close) || undefined,
+    open = (grouping && grouping.open) || undefined,
+    close = (grouping && grouping.close) || undefined,
   }) {
     return {syntax, goal, punctuator, spans, matcher, quotes, punctuators, opener, closer, hinter, open, close};
   }
 }
 
-Object.freeze(Object.freeze(Contextualizer.prototype).constructor);
+const mappings = new WeakMap();

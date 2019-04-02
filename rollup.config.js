@@ -2,12 +2,15 @@ import {existsSync, mkdirSync} from 'fs';
 const dirname = __dirname;
 const dist = `${dirname}/dist/`;
 
+// const variant = 'stable';
+const variant = 'experimental';
+
 const bundles = {
   ['markup']: {
     input: `${dirname}/lib/markup.js`,
     output: {exports: 'named'},
   },
-  ['tokenizer:extended']: {
+  ['tokenizer:stable:extended']: {
     input: `${dirname}/packages/@smotaal/tokenizer/tokenizer.extended.js`,
     output: {exports: 'named', name: 'tokenizer'},
   },
@@ -15,13 +18,13 @@ const bundles = {
     input: `${dirname}/packages/@smotaal/tokenizer/tokenizer.experimental.extended.js`,
     output: {exports: 'named', name: 'tokenizer'},
   },
-  ['tokenizer:browser:markup']: {
+  ['tokenizer:browser:markup:stable']: {
     input: `${dirname}/packages/@smotaal/tokenizer/browser/markup.js`,
-    output: {path: `./browser`, exports: 'named', name: 'markup'},
+    output: {exports: 'named', name: 'markup'},
   },
   ['tokenizer:browser:markup:experimental']: {
     input: `${dirname}/packages/@smotaal/tokenizer/browser/markup.experimental.js`,
-    output: {path: `./browser`, exports: 'named', name: 'markup'},
+    output: {exports: 'named', name: 'markup'},
   },
 };
 
@@ -84,22 +87,14 @@ const cjs = (name, naming = 'legacy/[name].cjs') => bundle(name, 'cjs', naming);
 // build.modes = {esm, iife};
 
 export default [
-  // esm('markup'),
-  // umd('markup'),
-  // cjs('markup'),
-  // esm('tokenizer:extended'),
-  // umd('tokenizer:extended'),
-  // cjs('tokenizer:extended'),
-  esm('tokenizer:experimental:extended'),
-  umd('tokenizer:experimental:extended'),
-  cjs('tokenizer:experimental:extended'),
-  // esm('tokenizer:browser:markup'),
-  // umd('tokenizer:browser:markup'),
-  // cjs('tokenizer:browser:markup'),
-  esm('tokenizer:browser:markup:experimental'),
-  umd('tokenizer:browser:markup:experimental'),
-  cjs('tokenizer:browser:markup:experimental'),
-  // esm('tokenizer:esm'),
+  esm(`tokenizer:${variant}:extended`),
+  umd(`tokenizer:${variant}:extended`),
+  cjs(`tokenizer:${variant}:extended`),
+  esm(`tokenizer:browser:markup:${variant}`),
+  umd(`tokenizer:browser:markup:${variant}`),
+  cjs(`tokenizer:browser:markup:${variant}`),
+  esm('tokenizer:browser:markup:stable', '[name].stable.js'),
+  esm('tokenizer:browser:markup:experimental', '[name].experimental.js'),
 ];
 
 // ['tokenizer:esm']: {
