@@ -14,8 +14,8 @@ export class Contextualizer {
         next &&
         ((context = mappings.get((definitions = next))) ||
           ((context = this.contextualize(definitions)),
-          initializeContext && Reflect.apply(initializeContext, tokenizer, [context]))),
-      context || ((definitions = mode), (context = root))
+          initializeContext && apply(initializeContext, tokenizer, [context]))),
+      (next != null && context) || ((definitions = mode), (context = root))
     );
 
     Object.defineProperties(this, {
@@ -26,6 +26,7 @@ export class Contextualizer {
     // Eagerly contextualize "root" definitions on first use
     if (!(context = mappings.get((definitions = mode)))) {
       const {
+        // Parent goal
         syntax,
         matcher = (mode.matcher = (defaults && defaults.matcher) || undefined),
         quotes,
@@ -41,7 +42,7 @@ export class Contextualizer {
 
       context = {syntax, goal: syntax, mode, punctuators, aggregators, matcher, quotes, spans};
 
-      initializeContext && Reflect.apply(initializeContext, tokenizer, [context]);
+      initializeContext && apply(initializeContext, tokenizer, [context]);
 
       mappings.set(mode, context);
     }
@@ -51,13 +52,24 @@ export class Contextualizer {
 
   contextualize(definitions) {
     const mode = this.mode;
+
     const {
+      // Parent goal
       syntax = (definitions.syntax = mode.syntax),
+
+      // Lexical goal
       goal = (definitions.goal = syntax),
+
+      // Assumes shared parent and unrelated production lexicons
+      punctuators = (definitions.punctuators = goal === syntax ? mode.punctuators : {}),
+      aggregators = (definitions.aggregate =
+        (punctuators && punctuators.aggregators) || (punctuators.aggregators = {})),
+
+      // Contextual identity
       punctuator,
-      punctuators = (definitions.punctuators = mode.punctuators),
-      aggregators = (definitions.aggregate = punctuators && punctuators.aggregators),
       closer,
+
+      // Contextual grammar
       spans,
       matcher = (definitions.matcher = mode.matcher),
       quotes = (definitions.quotes = mode.quotes),
@@ -97,3 +109,4 @@ export class Contextualizer {
 Object.freeze(Object.freeze(Contextualizer.prototype).constructor);
 
 const mappings = new WeakMap();
+const {apply} = Reflect;

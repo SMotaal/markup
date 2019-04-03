@@ -9,11 +9,10 @@ export class Contexts {
       syntax: this.goal,
       syntax: (this.hints = new Hints()).top,
       [Definitions]: this.definitions = (this.contextualizer.mode[Definitions] = {}),
-    } =
-      // TODO: figure out how to restore this:
-      // tokenizer.contextualizer || (tokenizer.contextualizer = new Contextualizer(tokenizer))
-      (this.contextualizer = new Contextualizer(tokenizer)).mode);
-    (this.stack = [(this.root = this.contextualizer.prime())]).hints = [(this.hint = this.hints.toString())];
+    } = (this.contextualizer =
+      // TODO: Undo if concurrent parsing shows side-effects
+      tokenizer.contextualizer || (tokenizer.contextualizer = new Contextualizer(tokenizer))).mode);
+    (this.stack = [(this.root = this.contextualizer.prime(null))]).hints = [(this.hint = this.hints.toString())];
   }
 
   /**
@@ -29,31 +28,27 @@ export class Contexts {
     const childIndex = stack.length - 1;
     const childDefinitions = childIndex && stack[childIndex];
 
+    // TODO: Handle childContext.closer !== childDefinitions.closer
     if (childDefinitions) {
-      // TODO: childContext.closer !== childDefinitions.closer
-
-      stack.pop();
-
       const {hinter, punctuator} = childDefinitions;
-
-      // TODO: Handle mismatch contexts.close()
+      stack.pop();
       stack.includes(childDefinitions) || hints.delete(hinter);
-
       (punctuator === 'opener' && (nextToken.punctuator = 'closer')) ||
         (punctuator && (nextToken.punctuator = punctuator));
-
       nextToken.type = 'punctuator';
-
       after = childDefinitions.close && childDefinitions.close(nextToken, state, childContext);
     }
 
     const parentIndex = stack.length - 1;
     const parentDefinitions = stack[parentIndex];
     const parentHint = stack.hints[parentIndex];
-    context = contextualizer.prime(parentDefinitions);
 
-    this.goal = (parentDefinitions && parentDefinitions.goal) || syntax;
-    this.hint = parentHint || stack.hints[0];
+    // TODO: Verify coherent goal, context, and hints
+    (parentDefinitions &&
+      (this.hint = parentHint) &&
+      (context = contextualizer.prime(parentDefinitions)) &&
+      (this.goal = context.goal || syntax)) ||
+      ((this.goal = (context = contextualizer.prime(null)).goal || syntax) && (this.hint = stack.hints[0] || syntax));
     parentToken = (nextToken.parent && nextToken.parent.parent) || undefined;
 
     return {context, after, parentToken};
@@ -65,16 +60,13 @@ export class Contexts {
    * @param {TokenizerContext} context
    */
   open(nextToken, state, context) {
-    const parentContext = context;
     let childDefinitions, parentToken, after;
-
-    const {definitions, stack, hints, hint, syntax, contextualizer} = this;
     let {punctuator, text} = nextToken;
+    const parentContext = context;
+    const {definitions, stack, hints, hint, syntax, contextualizer} = this;
     const hinter = punctuator ? `${syntax}-${punctuator}` : hint;
     const contextID = `${hinter},${text}`;
-
     const definedDefinitions = definitions[contextID];
-
     const {
       mode: {matchers, comments, spans, closures},
     } = parentContext;
