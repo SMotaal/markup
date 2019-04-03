@@ -16,7 +16,8 @@ Definitions: {
     typescript.DEFAULTS = {syntax: 'typescript', aliases: ['ts'], requires: [javascript.defaults.syntax]};
   }
   typescript.KEYWORDS = {
-    ['(symbols)']:
-      'abstract enum interface package namespace declare type module arguments private public protected as async await break case catch class export const continue debugger default delete do else export extends finally for from function get if import in instanceof let new of return set static super switch this throw try typeof var void while with yield',
+    ['(symbols)']: `abstract enum interface namespace declare type module private public protected ${
+      javascript.KEYWORDS['(symbols)']
+    }`,
   };
 }
