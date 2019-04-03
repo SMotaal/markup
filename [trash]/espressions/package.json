@@ -1,6 +1,0 @@
-{
-  "name": "espressions",
-  "displayName": "es·pressions",
-  "version": "0.0.0",
-  "description": "Runtime-optimized markup parsing tool for ECMAScript source texts"
-}
