@@ -3,6 +3,7 @@ export {Contextualizer} from './contextualizer';
 export {TokenSynthesizer} from './synthesizer';
 export {Contexts} from './contexts';
 
+// SEE: smotaal.io/#/markup/packages/@smotaal/grammars/
 export interface TokenizableSet<T = SymbolDefinition | ClosureDefinition> {
   get(token: string): T;
   includes(token: string): boolean;

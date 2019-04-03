@@ -20,8 +20,8 @@
           next &&
           ((context = mappings.get((definitions = next))) ||
             ((context = this.contextualize(definitions)),
-            initializeContext && Reflect.apply(initializeContext, tokenizer, [context]))),
-        context || ((definitions = mode), (context = root))
+            initializeContext && apply(initializeContext, tokenizer, [context]))),
+        (next != null && context) || ((definitions = mode), (context = root))
       );
 
       Object.defineProperties(this, {
@@ -32,6 +32,7 @@
       // Eagerly contextualize "root" definitions on first use
       if (!(context = mappings.get((definitions = mode)))) {
         const {
+          // Parent goal
           syntax,
           matcher = (mode.matcher = (defaults && defaults.matcher) || undefined),
           quotes,
@@ -47,7 +48,7 @@
 
         context = {syntax, goal: syntax, mode, punctuators, aggregators, matcher, quotes, spans};
 
-        initializeContext && Reflect.apply(initializeContext, tokenizer, [context]);
+        initializeContext && apply(initializeContext, tokenizer, [context]);
 
         mappings.set(mode, context);
       }
@@ -57,13 +58,24 @@
 
     contextualize(definitions) {
       const mode = this.mode;
+
       const {
+        // Parent goal
         syntax = (definitions.syntax = mode.syntax),
+
+        // Lexical goal
         goal = (definitions.goal = syntax),
+
+        // Assumes shared parent and unrelated production lexicons
+        punctuators = (definitions.punctuators = goal === syntax ? mode.punctuators : {}),
+        aggregators = (definitions.aggregate =
+          (punctuators && punctuators.aggregators) || (punctuators.aggregators = {})),
+
+        // Contextual identity
         punctuator,
-        punctuators = (definitions.punctuators = mode.punctuators),
-        aggregators = (definitions.aggregate = punctuators && punctuators.aggregators),
         closer,
+
+        // Contextual grammar
         spans,
         matcher = (definitions.matcher = mode.matcher),
         quotes = (definitions.quotes = mode.quotes),
@@ -103,6 +115,7 @@
   Object.freeze(Object.freeze(Contextualizer.prototype).constructor);
 
   const mappings = new WeakMap();
+  const {apply} = Reflect;
 
   /** Private context state handler for token generator instances */
   class Contexts {
@@ -113,11 +126,10 @@
         syntax: this.goal,
         syntax: (this.hints = new Hints()).top,
         [Definitions]: this.definitions = (this.contextualizer.mode[Definitions] = {}),
-      } =
-        // TODO: figure out how to restore this:
-        // tokenizer.contextualizer || (tokenizer.contextualizer = new Contextualizer(tokenizer))
-        (this.contextualizer = new Contextualizer(tokenizer)).mode);
-      (this.stack = [(this.root = this.contextualizer.prime())]).hints = [(this.hint = this.hints.toString())];
+      } = (this.contextualizer =
+        // TODO: Undo if concurrent parsing shows side-effects
+        tokenizer.contextualizer || (tokenizer.contextualizer = new Contextualizer(tokenizer))).mode);
+      (this.stack = [(this.root = this.contextualizer.prime(null))]).hints = [(this.hint = this.hints.toString())];
     }
 
     /**
@@ -133,31 +145,27 @@
       const childIndex = stack.length - 1;
       const childDefinitions = childIndex && stack[childIndex];
 
+      // TODO: Handle childContext.closer !== childDefinitions.closer
       if (childDefinitions) {
-        // TODO: childContext.closer !== childDefinitions.closer
-
-        stack.pop();
-
         const {hinter, punctuator} = childDefinitions;
-
-        // TODO: Handle mismatch contexts.close()
+        stack.pop();
         stack.includes(childDefinitions) || hints.delete(hinter);
-
         (punctuator === 'opener' && (nextToken.punctuator = 'closer')) ||
           (punctuator && (nextToken.punctuator = punctuator));
-
         nextToken.type = 'punctuator';
-
         after = childDefinitions.close && childDefinitions.close(nextToken, state, childContext);
       }
 
       const parentIndex = stack.length - 1;
       const parentDefinitions = stack[parentIndex];
       const parentHint = stack.hints[parentIndex];
-      context = contextualizer.prime(parentDefinitions);
 
-      this.goal = (parentDefinitions && parentDefinitions.goal) || syntax;
-      this.hint = parentHint || stack.hints[0];
+      // TODO: Verify coherent goal, context, and hints
+      (parentDefinitions &&
+        (this.hint = parentHint) &&
+        (context = contextualizer.prime(parentDefinitions)) &&
+        (this.goal = context.goal || syntax)) ||
+        ((this.goal = (context = contextualizer.prime(null)).goal || syntax) && (this.hint = stack.hints[0] || syntax));
       parentToken = (nextToken.parent && nextToken.parent.parent) || undefined;
 
       return {context, after, parentToken};
@@ -169,16 +177,13 @@
      * @param {TokenizerContext} context
      */
     open(nextToken, state, context) {
-      const parentContext = context;
       let childDefinitions, parentToken, after;
-
-      const {definitions, stack, hints, hint, syntax, contextualizer} = this;
       let {punctuator, text} = nextToken;
+      const parentContext = context;
+      const {definitions, stack, hints, hint, syntax, contextualizer} = this;
       const hinter = punctuator ? `${syntax}-${punctuator}` : hint;
       const contextID = `${hinter},${text}`;
-
       const definedDefinitions = definitions[contextID];
-
       const {
         mode: {matchers, comments, spans, closures},
       } = parentContext;
@@ -281,94 +286,101 @@
   class TokenSynthesizer {
     constructor(context) {
       const {
-        mode: {keywords, assigners, operators, combinators, nonbreakers, comments, closures, breakers, patterns},
+        mode: {
+          keywords,
+          patterns: {
+            maybeIdentifier,
+            maybeKeyword,
+            segments: {
+              [SEGMENT]: matchSegment = context.mode.patterns.segments &&
+                (context.mode.patterns.segments[SEGMENT] = createSegmenter(context.mode.patterns.segments)),
+            } = (context.mode.patterns.segments = false),
+          } = (context.mode.patterns = false),
+        },
         punctuators,
         aggregators,
-        spans,
-        quotes,
-        forming = true,
+        forming = (context.forming = true),
+        wording = (context.wording = keywords || maybeIdentifier ? true : false),
+        [PUNCTUATOR]: matchPunctuator = (context[PUNCTUATOR] = createPunctuator(context)),
+        [AGGREGATOR]: matchAggregator = (context[AGGREGATOR] = createAggregator(context)),
       } = context;
 
-      const {maybeIdentifier, maybeKeyword, segments} = patterns || false;
-      const wording = keywords || maybeIdentifier ? true : false;
-
-      const matchSegment =
-        segments &&
-        (segments[Symbol.match] ||
-          (!(Symbol.match in segments) &&
-            (segments[Symbol.match] = (segments => {
-              const sources = [];
-              const names = [];
-              for (const name of Object.getOwnPropertyNames(segments)) {
-                const segment = segments[name];
-                if (segment && segment.source && !/\\\d/.test(segment.source)) {
-                  names.push(name);
-                  sources.push(segment.source.replace(/\\?\((.)/g, (m, a) => (m[0] !== '\\' && a !== '?' && '(?:') || m));
-                }
-              }
-              const {length} = names;
-              if (!length) return false;
-              const matcher = new RegExp(`(${sources.join('|)|(')}|)`, 'u');
-              return text => {
-                const match = matcher.exec(text);
-                if (match[0]) for (let i = 1, n = length; n--; i++) if (match[i]) return names[i - 1];
-              };
-            })(segments))));
-
-      const punctuate = text =>
-        (operators && operators.includes(text) && 'operator') ||
-        (closures && closures.includes(text) && 'closure') ||
-        (breakers && breakers.includes(text) && 'breaker') ||
-        (nonbreakers && nonbreakers.includes(text) && 'nonbreaker') ||
-        (comments && comments.includes(text) && 'comment') ||
-        (quotes && quotes.includes(text) && 'quote') ||
-        (spans && spans.includes(text) && 'span') ||
-        false;
-      const aggregate = text =>
-        (assigners && assigners.includes(text) && 'assigner') ||
-        (combinators && combinators.includes(text) && 'combinator') ||
-        false;
-
       this.create = next => {
-        if (next && next.text) {
-          const {text, type, hint, previous, parent, last} = next;
-
-          if (type === 'sequence') {
-            ((next.punctuator =
-              (previous && (aggregators[text] || (!(text in aggregators) && (aggregators[text] = aggregate(text))))) ||
-              (punctuators[text] || (!(text in punctuators) && (punctuators[text] = punctuate(text)))) ||
+        const {text, type, hint, previous, parent, last} = next;
+        type === 'sequence'
+          ? ((next.punctuator =
+              (previous &&
+                (aggregators[text] || (!(text in aggregators) && (aggregators[text] = matchAggregator(text))))) ||
+              (punctuators[text] || (!(text in punctuators) && (punctuators[text] = matchPunctuator(text)))) ||
               undefined) &&
               (next.type = 'punctuator')) ||
-              (matchSegment &&
-                (next.type = matchSegment(text)) &&
-                (next.hint = `${(hint && `${hint} `) || ''}${next.type}`)) ||
-              (next.type = 'sequence');
-          } else if (type === 'whitespace') {
-            next.breaks = text.match(LineEndings).length - 1;
-          } else if (forming && wording) {
-            const word = text.trim();
-            // TODO: Undo if breaking
-            word &&
-              (((!maybeKeyword || maybeKeyword.test(word)) &&
-                (keywords && keywords.includes(word)) &&
-                (!last || last.punctuator !== 'nonbreaker' || (previous && previous.breaks > 0)) &&
-                (next.type = 'keyword')) ||
-                (maybeIdentifier && maybeIdentifier.test(word) && (next.type = 'identifier')));
-          } else {
-            next.type = 'text';
-          }
+            (matchSegment &&
+              (next.type = matchSegment(text)) &&
+              (next.hint = `${(hint && `${hint} `) || ''}${next.type}`)) ||
+            (next.type = 'sequence')
+          : type === 'whitespace'
+          ? (next.breaks = text.match(LineEndings).length - 1)
+          : forming && wording
+          ? text &&
+            (((!maybeKeyword || maybeKeyword.test(text)) &&
+              (keywords && keywords.includes(text)) &&
+              (!last || last.punctuator !== 'nonbreaker' || (previous && previous.breaks > 0)) &&
+              (next.type = 'keyword')) ||
+              (maybeIdentifier && maybeIdentifier.test(text) && (next.type = 'identifier')))
+          : (next.type = 'text');
 
-          previous && (previous.next = next) && (parent || (next.parent = previous.parent));
+        previous && (previous.next = next) && (parent || (next.parent = previous.parent));
 
-          return next;
-        }
+        return next;
       };
     }
   }
 
   Object.freeze(Object.freeze(TokenSynthesizer.prototype).constructor);
 
+  const PUNCTUATOR = Symbol('[punctuator]');
+  const AGGREGATOR = Symbol('[aggregator]');
+  const SEGMENT = Symbol('[segment]');
+
   const LineEndings = /$/gm;
+
+  const createSegmenter = segments => {
+    const sources = [];
+    const names = [];
+    for (const name of Object.getOwnPropertyNames(segments)) {
+      const segment = segments[name];
+      if (segment && segment.source && !/\\\d/.test(segment.source)) {
+        names.push(name);
+        sources.push(segment.source.replace(/\\?\((.)/g, (m, a) => (m[0] !== '\\' && a !== '?' && '(?:') || m));
+      }
+    }
+    const length = names.length;
+    if (!length) return false;
+    const matcher = new RegExp(`(${sources.join('|)|(')}|)`, 'u');
+    return text => {
+      const match = matcher.exec(text);
+      if (match[0]) for (let i = 1, n = length; n--; i++) if (match[i]) return names[i - 1];
+    };
+  };
+
+  const createPunctuator = ({mode: {operators, nonbreakers, comments, closures, breakers}, quotes, spans}) => {
+    return text =>
+      (operators && operators.includes(text) && 'operator') ||
+      (closures && closures.includes(text) && 'closure') ||
+      (breakers && breakers.includes(text) && 'breaker') ||
+      (nonbreakers && nonbreakers.includes(text) && 'nonbreaker') ||
+      (comments && comments.includes(text) && 'comment') ||
+      (quotes && quotes.includes(text) && 'quote') ||
+      (spans && spans.includes(text) && 'span') ||
+      false;
+  };
+
+  const createAggregator = ({mode: {assigners, combinators}}) => {
+    return text =>
+      (assigners && assigners.includes(text) && 'assigner') ||
+      (combinators && combinators.includes(text) && 'combinator') ||
+      false;
+  };
 
   /** Tokenizer for a single mode (language) */
   class Tokenizer {
