@@ -1,5 +1,5 @@
 @import './markup.css';
-@import './markup-hover.css';
+@import './markup-debug.css';
 
 :host {
   --markup-neutral-light: var(--markup-neutral-light, #aaa);

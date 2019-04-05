@@ -90,7 +90,7 @@ You can see a [live demo](https://www.smotaal.io/markup/markup.html) or serve it
 <figcaption><i>Parameters</i></figcaption>
 
 ```url example
-examples/browser/#‹specifier›!‹mode›*‹repeat›**‹iterations›
+examples/browser/#‹specifier›!‹mode›*‹iterations›**‹repeats›
 ```
 
 <b>`#`</b><tt>‹specifier›</tt>
@@ -107,12 +107,13 @@ examples/browser/#‹specifier›!‹mode›*‹repeat›**‹iterations›
 - `!html` HTML
 - `!md` Markdown
 
-<b>`*`</b><tt>‹repeat›</tt>
+<b>`*`</b><tt>‹iterations›</tt>
+
+- repeats the tokenization of the source text
+
+<b>`**`</b><tt>‹repeat›</tt>
 
 - repeats the tokenized (and rendered) source text
 
-<b>`**`</b><tt>‹iterations›</tt>
-
-- repeats the tokenization of the source text
 
 </figure>

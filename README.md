@@ -19,48 +19,48 @@ Semi-contextual parsing experiments, which fall somewhere between the scope of r
   - Parse malformed/unbalanced expressions.
   - Code validation or error checking.
 
-## _./markup.html_ — fetches, scans and renders source texts
-
-### Parameters
-
-**Notation**
+## Demo
 
 ```
-markup.html#‹specifier›!‹mode›*‹repeat›**‹iterations›
+markup.html#‹specifier›!‹mode›*‹iterations›**‹repeats›
 ```
 
-**Note**: The order of the parameters is manadatory, but all parameters are optional.
+<blockquote>
+
+**Notes**
+
+The order of the parameters is manadatory, but all parameters are optional.
 
 1. Resource specifier can either be one of the hard-wired presets, a valid url or a bare specifier with `unpkg:` or `cdnjs:` prefixes
-2. You can force the parsing mode by adding `!‹mode›`
-3. You can force repetitive rendering by adding `*‹repeat›`
-4. You can also iterate just through the tokenizing logic to time that without the additional cost of rendering.
 
-**Specifiers**
+2. You can force the parsing mode by adding `!es`, `!html`, `!css`, or `!md`
 
-[unpkg.com/acorn]: ./markup.html#https://unpkg.com/acorn 'Preview markup from https://unpkg.com/acorn'
-[~/lib/tokenizer.js]: ./markup.html#~/lib/tokenizer.js 'Preview markup from ./packages/@smotaal/tokenizer/lib/tokeinzer.js'
+   <blockquote>
+
+   Forcing other modes can be useful if content-type detection fails
+
+   </blockquote>
+
+3. You can repeat the tokenization process by adding `*‹iterations›`
+
+4. You can repeat the input passed to the parser by adding `**‹repeats›`
+
+   <blockquote>
+
+   Adding `**0` can be useful to disable rendering for very long sources.
+
+   </blockquote>
+
+</blockquote>
+
+#### Examples
 
 <figure>
 
-- [`#https://unpkg.com/acorn`][unpkg.com/acorn]
-- [`#~/lib/tokenizer.js`][~/lib/tokenizer.js]
+_Specifiers & Modes_
 
-</figure>
-
-**Modes**
-
-<figure>
-
-_Syntax Modes_ — `html`, `css`, and `js` (aka `es` or `javascript`)
-
-> **FYI**: Using other modes can be useful if content-type detection fails
-
-- [`#markup.html!html`](./markup.html#markup.html!html)
-- [`#markup.css!css`](./markup.html#markup.css!css)
-- [`#lib.markup.js!js`](./markup.html#lib/markup.js!js)
-
----
+- [`#unpkg:acorn`](./markup.html#unpkg:acorn)
+- [`#~/lib/tokenizer.js`](./markup.html#~/lib/tokenizer.js)
 
 _Useful Presets_ — hard-wired convenience samples
 
@@ -69,24 +69,12 @@ _Useful Presets_ — hard-wired convenience samples
 - [`#css`](./markup.html#css)
 - [`#md`](./markup.html#md)
 
----
-
-_Special Mode & Presets_ — research related samples
-
-- [`#acorn-esm`](./markup.html#acorn-esm) — EMCAScript® module features
-- [`#acorn-cjs`](./markup.html#acorn-cjs) — CommonJS module features
-- [`#acorn-cjs!esx`](./markup.html#acorn-cjs!esx) — EMCAScript® and CommonJS module features
-
-</figure>
-
-**Repeats & Iterations**
-
-<figure>
+_Repeats & Iterations_
 
 - [`#`](./markup.html#) — Render &times; 1 and Tokenize &times; 1
-- [`#*2`](./markup.html#*2) — Render &times; 2 and Tokenize &times; 1
-- [`#*0`](./markup.html#*0) — Render &times; 0 and Tokenize &times; 1
-- [`#*0**100`](./markup.html#*0**100) — Render &times; 0 and Tokenize &times; 100
+- [`#**2`](./markup.html#**2) — Render &times; 2 and Tokenize &times; 1
+- [`#**0`](./markup.html#**0) — Render &times; 0 and Tokenize &times; 1
+- [`#*100**0`](./markup.html#*100*0) — Render &times; 0 and Tokenize &times; 100
 - [`#*2**2`](./markup.html#*2**2) — Render &times; 2 and Tokenize &times; 2
 
 </figure>

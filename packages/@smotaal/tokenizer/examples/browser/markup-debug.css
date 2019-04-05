@@ -1,19 +1,52 @@
 @media screen {
-  .markup.comment:hover,
-  .markup.in-comment:hover,
-  .markup.whitespace:hover {
-    --ring: var(--markup-whitespaces, var(--markup-neutral, #999));
-  }
-
   .markup {
-    --hover: var(--color, var(--markup-neutral, #999));
-    --ring: var(--hover, var(--markup-neutral, #999));
+    --debug: var(--color, var(--markup-neutral, #999));
+    --ring: var(--debug, var(--markup-neutral, #999));
     --padding: 1.5px;
     margin: calc(-1 * var(--padding, 2px)) calc(-2 * var(--padding, 2px));
     border-radius: 1ch;
     border: calc(2 * var(--padding, 2px)) solid transparent;
   }
 
+  .markup.comment,
+  .markup.in-comment,
+  .markup.whitespace {
+    --ring: var(--markup-whitespaces, var(--markup-neutral, #999));
+  }
+
+  .markup::before {
+    display: none;
+    position: absolute;
+    pointer-events: none;
+    content: attr(class);
+    line-height: initial;
+    /* font-weight: initial; font-style: initial; */
+    font: initial;
+    font-size: small;
+    font-family: inherit;
+    white-space: pre;
+    background-color: #000a;
+    color: var(--markup-shadow, white);
+    text-shadow: 0 1px 1px var(--markup-color, #666);
+    box-shadow: 0 0 10px -2.5px var(--ring, currentColor), inset 0 0 50px -15px var(--ring, currentColor);
+    border-radius: 1ch;
+    border-bottom: 1ch solid var(--ring, currentColor);
+    padding: calc(3 * var(--padding, 2px)) calc(6 * var(--padding, 2px));
+    left: calc(-6 * var(--padding, 2px));
+    bottom: calc(100% + 0.5ch + -2 * var(--padding, 2px));
+    z-index: 1;
+  }
+
+  .dark-mode .markup::before {
+    background-color: #fffa;
+  }
+
+  /* .markup:active::before, */
+  .markup:hover::before {
+    display: block;
+  }
+
+  /* .markup:active, */
   .markup:hover {
     background-color: var(--markup-constast, white);
     box-shadow: 0 0 10px -7.5px var(--markup-neutral, #999), 0 0 5px -1.5px var(--ring, currentColor);
@@ -21,39 +54,5 @@
     position: relative;
     z-index: 1;
     /* z-index: 0; */
-  }
-
-  .markup:hover::before {
-    display: block;
-    position: absolute;
-    pointer-events: none;
-
-    content: attr(class);
-    font-size: small;
-    font-family: inherit;
-    line-height: initial;
-    font-weight: initial;
-    white-space: pre;
-
-    background-color: #000a;
-    color: var(--markup-shadow, white);
-    text-shadow: 0 1px 1px var(--markup-color, #666);
-
-    /* box-shadow: 0 0 1.5px var(--ring, currentColor), inset 0 0 50px -15px var(--ring, currentColor); */
-    box-shadow: 0 0 10px -2.5px var(--ring, currentColor), inset 0 0 50px -15px var(--ring, currentColor);
-    /* filter: drop-shadow(0 0 1.5px var(--ring, currentColor)); */
-
-    border-radius: 1ch;
-    border-bottom: 1ch solid var(--ring, currentColor);
-
-    padding: calc(3 * var(--padding, 2px)) calc(6 * var(--padding, 2px));
-    left: calc(-6 * var(--padding, 2px));
-    bottom: calc(100% + 0.5ch + -2 * var(--padding, 2px));
-
-    z-index: 1;
-  }
-
-  .dark-mode .markup:hover::before {
-    background-color: #fffa;
   }
 }
