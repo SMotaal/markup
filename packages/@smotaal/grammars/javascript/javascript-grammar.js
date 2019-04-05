@@ -76,7 +76,7 @@ Definitions: {
 
   javascript.ASSIGNERS = {['(symbols)']: '= += -= *= /= **= %= &= |= <<= >>= >>>= ^= ~='};
 
-  javascript.COMBINATORS = {['(symbols)']: '=== == + - * / ** % & && | || ! !== > < >= <= => >> << >>> ^ ~'};
+  javascript.COMBINATORS = {['(symbols)']: '=== == + - * / ** % & && | || ! !== != > < >= <= => >> << >>> ^ ~'};
   javascript.NONBREAKERS = {['(symbols)']: '.'};
   javascript.OPERATORS = {['(symbols)']: '++ -- ... ? :'};
   javascript.BREAKERS = {['(symbols)']: ', ;'};
