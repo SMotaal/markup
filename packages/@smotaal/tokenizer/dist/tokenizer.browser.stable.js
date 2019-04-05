@@ -1505,8 +1505,8 @@ Definitions: {
 
   javascript.REGEXPS = /\/(?=[^*/\n][^\n]*\/(?:[a-z]+\b|)(?:[ \t]+[^\n\s\(\[\{\w]|[.\[;,]|[ \t]*[)\]};,\n]|\n|$))(?:[^\\\/\n\t\[]+|\\[^\n]|\[(?:\\[^\n]|[^\\\n\t\]]+)*?\][+*]?\??)*\/(?:[a-z]+\b|)/g;
 
-  javascript.COMMENTS = /\/\/|\/\*|\*\/|^\#\!.*\n/g;
-  javascript.COMMENTS['(closures)'] = '//…\n /*…*/';
+  javascript.COMMENTS = /\/\/|\/\*|\*\/|^\#\!.*\n|<!--/g;
+  javascript.COMMENTS['(closures)'] = '//…\n /*…*/ <!--…\n';
 
   javascript.QUOTES = /`|"|'/g;
   javascript.QUOTES['(symbols)'] = `' " \``;
@@ -1532,7 +1532,7 @@ Definitions: {
 
   javascript.ASSIGNERS = {['(symbols)']: '= += -= *= /= **= %= &= |= <<= >>= >>>= ^= ~='};
 
-  javascript.COMBINATORS = {['(symbols)']: '=== == + - * / ** % & && | || ! !== > < >= <= => >> << >>> ^ ~'};
+  javascript.COMBINATORS = {['(symbols)']: '=== == + - * / ** % & && | || ! !== != > < >= <= => >> << >>> ^ ~'};
   javascript.NONBREAKERS = {['(symbols)']: '.'};
   javascript.OPERATORS = {['(symbols)']: '++ -- ... ? :'};
   javascript.BREAKERS = {['(symbols)']: ', ;'};
@@ -1553,8 +1553,9 @@ Definitions: {
     typescript.DEFAULTS = {syntax: 'typescript', aliases: ['ts'], requires: [javascript.defaults.syntax]};
   }
   typescript.KEYWORDS = {
-    ['(symbols)']:
-      'abstract enum interface package namespace declare type module arguments private public protected as async await break case catch class export const continue debugger default delete do else export extends finally for from function get if import in instanceof let new of return set static super switch this throw try typeof var void while with yield',
+    ['(symbols)']: `abstract enum interface namespace declare type module private public protected ${
+      javascript.KEYWORDS['(symbols)']
+    }`,
   };
 }
 
@@ -1616,7 +1617,7 @@ Definitions: {
 
   // TODO: Undo $ matching once fixed
   const QUOTES = (javascript.extended.QUOTES = /`|"(?:[^\\"]+|\\.)*(?:"|$)|'(?:[^\\']+|\\.)*(?:'|$)/g);
-  const COMMENTS = (javascript.extended.COMMENTS = /\/\/.*(?:\n|$)|\/\*[^]*?(?:\*\/|$)|^\#\!.*\n/g);
+  const COMMENTS = (javascript.extended.COMMENTS = /\/\/.*(?:\n|$)|\/\*[^]*?(?:\*\/|$)|^\#\!.*\n|<!--/g);
   const STATEMENTS = (javascript.extended.STATEMENTS = all(QUOTES, CLOSURES, REGEXPS, COMMENTS));
   const BLOCKLEVEL = (javascript.extended.BLOCKLEVEL = sequence`([\s\n]+)|(${STATEMENTS})`);
   const TOPLEVEL = (javascript.extended.TOPLEVEL = sequence`([\s\n]+)|(${STATEMENTS})`);
