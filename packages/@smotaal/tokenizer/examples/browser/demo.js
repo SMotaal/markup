@@ -328,8 +328,6 @@ export default (markup, overrides) => {
 
   window.addEventListener('hashchange', () => renderFromHash());
 
-  requestAnimationFrame(() => renderFromHash((location.hash !== '#' && location.hash) || `#${defaults.sourceURL}`));
-
   sourceHeaderTemplate &&
     (sourceHeaderTemplate.selectors = {
       ['source-span']: '#source',
@@ -342,4 +340,6 @@ export default (markup, overrides) => {
       ['rerender-button']: '#rerender[onclick]',
       ['contrast-button']: '#contrast[onclick]',
     });
+
+  requestAnimationFrame(renderFromHash);
 };
