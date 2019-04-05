@@ -34,7 +34,8 @@
             (next.hint = `${(hint && `${hint} `) || ''}${next.type}`)) ||
           (next.type = 'sequence')
         : type === 'whitespace'
-        ? (next.breaks = text.match(LineEndings).length - 1)
+        ? // ? (next.breaks = text.match(LineEndings).length - 1)
+          (next.breaks = countLineBreaks(text))
         : forming && wording
         ? text &&
           (((!maybeKeyword || maybeKeyword.test(text)) &&
@@ -57,7 +58,12 @@ const PUNCTUATOR = Symbol('[punctuator]');
 const AGGREGATOR = Symbol('[aggregator]');
 const SEGMENT = Symbol('[segment]');
 
-const LineEndings = /$/gm;
+/** @param {string} text */
+const countLineBreaks = text => {
+  let breaks = 0;
+  for (let index = -1; (index = text.indexOf('\n', index + 1)) > -1; breaks++);
+  return breaks;
+};
 
 const createSegmenter = segments => {
   const sources = [];
