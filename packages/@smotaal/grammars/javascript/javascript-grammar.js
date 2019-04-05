@@ -49,8 +49,8 @@ Definitions: {
 
   javascript.REGEXPS = /\/(?=[^*/\n][^\n]*\/(?:[a-z]+\b|)(?:[ \t]+[^\n\s\(\[\{\w]|[.\[;,]|[ \t]*[)\]};,\n]|\n|$))(?:[^\\\/\n\t\[]+|\\[^\n]|\[(?:\\[^\n]|[^\\\n\t\]]+)*?\][+*]?\??)*\/(?:[a-z]+\b|)/g;
 
-  javascript.COMMENTS = /\/\/|\/\*|\*\/|^\#\!.*\n/g;
-  javascript.COMMENTS['(closures)'] = '//…\n /*…*/';
+  javascript.COMMENTS = /\/\/|\/\*|\*\/|^\#\!.*\n|<!--/g;
+  javascript.COMMENTS['(closures)'] = '//…\n /*…*/ <!--…\n';
 
   javascript.QUOTES = /`|"|'/g;
   javascript.QUOTES['(symbols)'] = `' " \``;
