@@ -1,132 +1,66 @@
-const Mappings = {js: 'es', html: 'html', css: 'css', md: 'md', esm: 'esm', cjs: 'cjs'};
+import {Resolvers, Hash, resolve, rewrite, frame, timeout} from './helpers.js';
 
-const Examples = (entrypoints, {['~']: local, unpkg, cdnjs}, {js, html, css, md, esm, cjs} = Mappings) => ({
-  [html]: {url: entrypoints['html'], type: html},
-  [css]: {url: entrypoints['css'], type: css},
-  [js]: {url: entrypoints['js'], type: js},
-  [esm]: {url: entrypoints['js'], type: esm},
-  [cjs]: {url: entrypoints['js'], type: cjs},
-  [md]: {url: entrypoints['md'], type: md},
-  ['json']: local('./examples/samples/sample.json'),
-  ['gfm']: local('./examples/samples/gfm.md'),
-  ['babel']: unpkg('@babel/standalone'),
-  ['acorn-esm']: {url: unpkg('acorn?module'), type: esm},
-  ['acorn-cjs']: {url: unpkg('acorn'), type: cjs},
-  ['acorn-loose']: cdnjs('acorn/5.7.3/acorn_loose.es.js'),
-  ['esprima']: cdnjs('esprima/2.7.3/esprima.js'),
-  ['babel-core']: cdnjs('babel-core/6.1.19/browser.js'),
-  ['babel-core-min']: cdnjs('babel-core/6.1.19/browser.min.js'),
-  ['popper']: cdnjs('popper.js/1.14.4/esm/popper.js'),
-  ['xregexp']: cdnjs('xregexp/3.2.0/xregexp-all.js'),
-  ['xregexp-min']: cdnjs('xregexp/3.2.0/xregexp-all.min.js'),
+const Examples = ({
+  ['es']: ES = local('./dist/tokenizer.experimental.js'),
+  ['html']: HTML = rewrite.tail(location.href),
+  ['css']: CSS = resolve('./markup.css', import.meta.url),
+  ['md']: MD = local('./README.md'),
+} = {}) => ({
+  ['html']: {url: HTML, mode: 'html'},
+  ['es']: {url: ES, mode: 'es'},
+  ['css']: {url: CSS, mode: 'css'},
+  ['esm']: {url: ES, mode: 'esm'},
+  ['cjs']: {url: ES, mode: 'cjs'},
+  ['md']: {url: MD, mode: 'md'},
+  ['json']: {url: local('./examples/samples/sample.json')},
+  ['gfm']: {url: local('./examples/samples/gfm.md')},
+  ['babel']: {url: unpkg('@babel/standalone')},
+  ['acorn-esm']: {url: unpkg('acorn?module'), mode: 'esm'},
+  ['acorn-cjs']: {url: unpkg('acorn'), mode: 'cjs'},
+  ['acorn-loose']: {url: cdnjs('acorn/5.7.3/acorn_loose.es.js')},
+  ['esprima']: {url: cdnjs('esprima/2.7.3/esprima.js')},
+  ['babel-core']: {url: cdnjs('babel-core/6.1.19/browser.js')},
+  ['babel-core-min']: {url: cdnjs('babel-core/6.1.19/browser.min.js')},
+  ['popper']: {url: cdnjs('popper.js/1.14.4/esm/popper.js')},
+  ['xregexp']: {url: cdnjs('xregexp/3.2.0/xregexp-all.js')},
+  ['xregexp-min']: {url: cdnjs('xregexp/3.2.0/xregexp-all.min.js')},
 });
 
-const TailPart = /\/?[#?].*$|\/?$/;
-const HeadPart = /^(?:.*?\/(?:\/[^\/]+|libs|packages|node_modules|examples)(?=\/))?.*?(?=(?:\/[\w\.-]+)+(?:[?#.]|$))\//;
+const resolvers = Resolvers({
+  ['~']: resolve('../../', import.meta.url),
+  ['unpkg']: resolve(`https://unpkg.com/`),
+  ['cdnjs']: resolve(`https://cdnjs.cloudflare.com/ajax/libs/`),
+});
+const {['~']: local, unpkg, cdnjs} = resolvers;
 
-const Resolver = (documentURI => {
-  const Resolver = scope => {
-    const resolver = (specifier, referrer = resolver.scope) => {
-      let returned;
-      try {
-        return (returned = `${new URL(specifier.replace(/^:/, ''), referrer || resolver.scope || Resolver.base)}`);
-      } finally {
-        returned === undefined && console.log({specifier, referrer, scope: resolver.scope, base: Resolver.base});
-      }
-    };
-    Object.defineProperty(resolver, 'scope', {
-      get: () => scope || Resolver.base,
-      set: url => void (scope = url || undefined),
-    });
-    resolver.scope = scope;
-    return resolver;
-  };
-
-  Resolver.base = `${new URL('./', document.documentURI)}`;
-  // Resolver.BASE = new BaseExpression(Resolver.base);
-
-  return Resolver;
-})(document.documentURI);
-
-const absolute = Resolver();
-const relative = Resolver(absolute('./', import.meta.url));
-
-const resolve = (() => {
-  const HTTP = 'https://';
-
-  const scopes = {
-    ['~']: absolute('../../', import.meta.url),
-    ['unpkg']: absolute(`${HTTP}unpkg.com/`),
-    ['cdnjs']: absolute(`${HTTP}cdnjs.cloudflare.com/ajax/libs/`),
-  };
-
-  const resolvers = {};
-  for (const scope in scopes) {
-    resolvers[scope] = Resolver(scopes[scope]);
-  }
-
-  const {['~']: local} = resolvers;
-
-  const entrypoints = {
-    ['js']: local('./dist/tokenizer.experimental.js'),
-    ['css']: relative('./markup.css'),
-    ['html']: location.href.replace(TailPart, ''),
-    ['md']: local('./README.md'),
-  };
-
-  const examples = Examples(entrypoints, resolvers);
-
-  console.log({examples, entrypoints, ...Resolver});
-
-  const Specifier = RegExp(
-    // /^(?:(examples)$|(scopes):?\/*|)/.source
-    /^(?:(examples)$|(scopes)(?::\/*|\/+)|)/.source
-      .replace('(examples)', `(${Object.keys(examples).join('|')})`)
-      .replace('(scopes)', `(${Object.keys(resolvers).join('|')})`),
-  );
-
-  return (specifier, type) => {
-    let [, example = '', scope = ''] = Specifier.exec(specifier || '');
-
-    const source =
-      `${(example && example in examples && ((scope = 'bare'), (example = examples[example]).url || example)) ||
-        // (scope && scope in scopes && `${scopes[scope]}${specifier.slice(scope.length + 1)}`) ||
-        (scope && scope in resolvers && resolvers[scope](specifier.slice(scope.length))) ||
-        ((scope = 'default'), specifier || '')}` || undefined;
-
-    type = type || (example && example.type) || undefined;
-
-    return {source, scope, type};
-  };
-})();
+const defaults = {
+  variant: 1,
+  repeats: 1,
+  iterations: 1,
+  sourceURL: resolve('../samples/complex.html', import.meta.url),
+  sourceType: undefined,
+  element: 'pre#source-code',
+  headerTemplate: 'template#source-header',
+  fetch: {
+    mode: 'cors',
+    // referrer: 'no-referrer',
+    redirect: 'follow',
+    headers: {'Content-Type': 'text/plain'},
+  },
+};
 
 export default (markup, overrides) => {
-  const defaults = {
-    variant: 1,
-    repeats: 1,
-    iterations: 1,
-    sourceURL: `${new URL('../samples/complex.html', import.meta.url)}`.replace(new URL('./', location), ''),
-    sourceType: undefined,
-    element: 'pre#source-code',
-    headerTemplate: 'template#source-header',
-    ...overrides,
-
-    fetch: (() =>
-      /** @type {RequestInit} */
-      ({
-        mode: 'cors',
-        // referrer: 'no-referrer',
-        // redirect: 'follow',
-        // headers: {'Content-Type': 'text/plain'},
-        ...((overrides && overrides.fetch) || undefined),
-      }))(),
+  const {examples = Examples(), ...options} = {
+    ...(defaults || undefined),
+    ...(overrides || undefined),
+    fetch: {
+      ...((defaults && defaults.fetch) || undefined),
+      ...((overrides && overrides.fetch) || undefined),
+    },
   };
 
-  // const Hash = /#([?]?)((?:.*?:)?.*?)(?:(\!+)([a-z]+|[A-Z]+)?)?(?:\*(?!\*)(\d+))?(?:\*{2}(\d+))?$/;
-  // const Hash = /#(?:(\d+)(?::(?=\W|\b|$)|(?=\W)|$)|)([?]?)((?:.*?:)?.*?)(?:\!([a-z]+|[A-Z]+)?)?(?:\*(?!\*)(\d+))?(?:\*{2}(\d+))?$/;
-  const Hash = /#(?:(\d+)(?:(?=\?)|:|(?=\W)|$)|)([?]?)((?:.*?:)?.*?)(?:\!([a-z]+|[A-Z]+)?)?(?:\*(?!\*)(\d+))?(?:\*{2}(\d+))?$/;
+  options.defaults = {...options};
 
-  const options = Object.create(defaults);
   const sourceCodeElement = document.querySelector(options.element);
   const sourceHeaderTemplate = document.querySelector(options.headerTemplate);
   const flags = new Set();
@@ -135,28 +69,28 @@ export default (markup, overrides) => {
     (source.sourceText = ''),
     (source.response = await fetch(source.url, options).catch(console.warn)),
     (source.sourceText = await source.response.text()),
-    // TODO: Revert once odd behaviour of response.redirected is resolved
+    // TODO: Revert if response.redirected is not honoured (again)
+    fetchSource.followRedirect(source, options)
+    // source
+  );
+
+  fetchSource.followRedirect = (source, options) =>
     source.response.redirected && source.sourceText && source.sourceText.startsWith('Found. Redirecting to')
       ? ((source.url = `${new URL(source.sourceText.slice(source.sourceText.indexOf('/')), source.url)}`),
         fetchSource(source, options))
-      : source
-  );
+      : source;
 
   const loadFromURL = async specifier => {
     let returned;
     const url = `${new URL(specifier, location)}`;
     const source = {specifier, url};
     try {
-      await fetchSource(source, defaults.fetch);
+      await fetchSource(source, options.fetch);
       return (returned = source);
     } finally {
       returned || console.warn('Failed to load source from "%s" — %o', specifier, source);
     }
   };
-
-  const nextFrame = () => new Promise(ƒ => requestAnimationFrame(ƒ));
-
-  const timeDelay = delay => new Promise(ƒ => setTimeout(ƒ, delay));
 
   const renderMarkup = async (sourceText, markupOptions) => {
     const fragment = markupOptions.fragment || (markupOptions.fragment = document.createDocumentFragment());
@@ -260,14 +194,20 @@ export default (markup, overrides) => {
       return {name, executor, start, result, end, elapsed};
     };
 
-    (container.innerHTML = ''), container.append(header, content);
+    slot.addEventListener('click', event => {
+      event.target.focus();
+      console.log(document.activeElement, event);
+    });
+
+    container.innerHTML = '';
+    container.append(header, content);
     container.classList.contains('dark-mode')
       ? document.body.classList.add('dark-mode')
       : document.body.classList.add('remove-mode');
 
     try {
-      let sourceName = specifier.replace(HeadPart, '').replace(TailPart, '');
-      await nextFrame(header.status('source', sourceName, `${specifier}`), header.timing('source', true));
+      let sourceName = rewrite(specifier);
+      await frame(header.status('source', sourceName, `${specifier}`), header.timing('source', true));
       const {
         result: {sourceText, response},
       } = await time('source', () => loadFromURL(specifier));
@@ -280,7 +220,6 @@ export default (markup, overrides) => {
       const variant = options.variant > 0 ? options.variant : defaults.variant;
       const markupOptions = {sourceType, variant};
       // const markupFlags = [... flags].join('');
-      // sourceName = specifier.replace(HeadPart, '').replace(TailPart, '');
       header.status('source', sourceName, `${specifier}`);
 
       fragment = slot;
@@ -288,12 +227,14 @@ export default (markup, overrides) => {
       const sourceID = `«${sourceName} [${sourceText.length}] ${sourceType}»`;
 
       const iterate = iterations => {
-        for (let n = iterations; n--; ) for (const t of markup.tokenize(sourceText, markupOptions, flags));
+        // console.log(Array.from(markup.tokenize(sourceText, markupOptions, flags)));
+        for (; iterations--; ) Array.from(markup.tokenize(sourceText, markupOptions, flags));
+        // for (const t of markup.tokenize(sourceText, markupOptions, flags));
       };
 
       const repeat = async repeats => {
         const contents = [];
-        for (let n = repeats; n--; contents.push(await renderMarkup(sourceText, markupOptions)));
+        for (; repeats--; contents.push(await renderMarkup(sourceText, markupOptions)));
         slot.innerText = '';
         slot.append(...contents);
       };
@@ -305,39 +246,39 @@ export default (markup, overrides) => {
       };
 
       render = async () => {
-        await nextFrame(content.classList.add('rendering'));
-        await nextFrame();
+        await frame(content.classList.add('rendering'));
+        await frame();
 
         header.stats({name: 'repeats', status: '', time: -1});
         header.stats({name: 'iterations', status: '', time: -1});
 
         if (iterations > 0) {
-          await nextFrame(header.stats({name: 'iterations', status: `⁑${iterations}`, time: true}));
-          await timeDelay(100);
+          await frame(header.stats({name: 'iterations', status: `⁎${iterations}`, time: true}));
+          await timeout(100);
           await timed(
             `${iterations} iterations`,
             'iterations',
             async ƒ => void (await iterate(iterations)),
             iterations,
           );
-          await nextFrame(header.status('iterations', `⁑${iterations}`));
+          await frame(header.status('iterations', `⁎${iterations}`));
         }
 
         if (repeats > 0) {
           // await timeDelay(100);
-          await nextFrame(header.stats({name: 'repeats', status: `⁎${repeats}`, time: true}));
+          await frame(header.stats({name: 'repeats', status: `⁑${repeats}`, time: true}));
           content.classList.remove('rendering');
-          await nextFrame();
+          await frame();
           await timed(`${repeats} repeats`, 'repeats', async ƒ => void (await repeat(repeats)), repeats);
-          await nextFrame(header.status('repeats', `⁎${repeats}`));
+          await frame(header.status('repeats', `⁑${repeats}`));
         }
 
         return fragment;
       };
 
-      await nextFrame();
+      await frame();
       await markup.warmup(sourceText, markupOptions, flags);
-      await nextFrame(
+      await frame(
         header.status(
           'source-type',
           `${(markupOptions.mode && markupOptions.mode.syntax) || sourceType}${
@@ -353,19 +294,35 @@ export default (markup, overrides) => {
     }
   };
 
+  const Specifier = RegExp(
+    /^(?:(examples)$|(scopes)(?:[:]|[/](?=[^/]|$)))?/.source
+      .replace('(examples)', `(${Object.keys(examples).join('|')})`)
+      .replace('(scopes)', `(${Object.keys(resolvers).join('|')})`),
+  );
+
   const renderFromHash = (hash = location.hash || '#') => {
-    const match = Hash.exec(hash.trim());
-    [, match.variant, match.debugging, match.specifier, match.type, match.repeats, match.iterations] = match;
+    let specifier, mode, example, scope, source, prefix, parsed;
+    parsed = {specifier, mode} = Hash.parse(hash);
 
-    options.variant = match.variant >= 0 && parseInt(match.variant);
-    options.repeats = match.repeats >= 0 ? parseInt(match.repeats) : defaults.repeats;
-    options.iterations = match.iterations >= 0 ? parseInt(match.iterations) : defaults.iterations;
-    match.debugging ? flags.add('debug') : flags.delete('debug');
+    (specifier &&
+      (([prefix, example, scope] = Specifier.exec(parsed.specifier || '')),
+      example
+        ? (source = (example = examples[example]) && example.url) && (mode || ({mode = mode} = example))
+        : scope in resolvers
+        ? (source = resolvers[scope]((specifier = specifier.slice(prefix.length))))
+        : (source = specifier))) ||
+      ({sourceURL: source, sourceType: mode = mode} = options.defaults);
 
-    const {source = options.source || defaults.sourceURL, type, scope} = resolve(match.specifier, match.type);
+    ({
+      iterations: options.iterations = options.defaults.iterations,
+      repeats: options.repeats = options.defaults.repeats,
+      variant: options.variant = options.defaults.variant,
+    } = parsed).debugging
+      ? flags.add('debug')
+      : flags.delete('debug');
 
-    renderFromURL((options.source = source), type).catch(error =>
-      console.warn('[renderFromHash]: %o\n\n%o', error, {match, source, type, options}),
+    renderFromURL(source, mode).catch(error =>
+      console.warn('[renderFromHash]: %o\n\n%o', error, {parsed, source, mode, options}),
     );
   };
 
@@ -386,50 +343,3 @@ export default (markup, overrides) => {
       ['contrast-button']: '#contrast[onclick]',
     });
 };
-
-// const BaseExpression = (() => {
-//   const uncase = string => string.replace(/[a-z]/gi, c => `[${c.toLowerCase()}${c.toUpperCase()}]`);
-//   const partial = (string, head = '', tail = '') => {
-//     for (const part of string.replace(TailPart, '').split('/')) {
-//       head += `(?:${head ? '[/]' : ''}${part}`;
-//       tail += `)?`;
-//     }
-//     return `${head}${tail}(?=[/]|$)`;
-//   };
-//   const BaseParts = /^(?=(http|file))(?:https?:\/*?(?=[^/])|file:\/{0,2}?(?=[a-z]:\/|\/))([^/]*?\/)([^#?]*\/|)([^#?\/]*)/i;
-//   BaseParts.replacement = (m, scheme, scope, path, entry) => {
-//     return `^((${uncase((scheme = scheme.toLowerCase()))}${scheme === 'http' ? '[sS]?' : ''}:|)([/]{0,2}${uncase(
-//       scope,
-//     )}|[/]{2}[^/]${scheme === 'file' ? '*' : '+'}[/])|[/]+?(?=[^/]|$))(${
-//       path ? `(?:${partial(path)}|)` : ''
-//     }|)\/?(?=([^#?]*))`;
-//   };
-
-//   const RegExpEscapes = /[\\^$*+?.()|[\]{}]/g;
-//   RegExpEscapes.replacement = '\\$&';
-
-//   return class BaseExpression extends RegExp {
-//     constructor(source, flags = source.flags) {
-//       const base = `${new URL(source.base || source)}`.replace(TailPart, '/');
-//       super(base.replace(RegExpEscapes, RegExpEscapes.replacement).replace(BaseParts, BaseParts.replacement), flags);
-//       Object.defineProperty(this, 'base', {value: base, enumerable: true});
-//     }
-//   };
-// })();
-
-// const Head = /^(?:((?:[hH][tT][tT][pP][sS]?|[fF][iI][lL][eE]):[/]*|[/]{2,})|[.]{0,2}[/]|)/i;
-
-// base => new RegExp(
-//   base
-//     .replace(RegExpEscapes, '\\$&')
-//     .replace(
-//       /^(?=(http|file))(?:https?:\/*?(?=[^/])|file:\/{0,2}?(?=[a-z]:\/|\/))([^/]*?\/)([^#?]*\/|)([^#?\/]*)/i,
-//       (m, scheme, scope, path, entry) => {
-//         return `^((${uncase((scheme = scheme.toLowerCase()))}${
-//           scheme === 'http' ? '[sS]?' : ''
-//         }:|)([/]{0,2}${uncase(scope)}|[/]{2}[^/]${scheme === 'file' ? '*' : '+'}[/])|[/]+?(?=[^/]|$))(${
-//           path ? `(?:${partial(path)}|)` : ''
-//         }|)(?=([^#?]*))`;
-//       },
-//     ),
-// )
