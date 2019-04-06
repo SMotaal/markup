@@ -1,37 +1,62 @@
 ﻿export const Tail = /\/?[#?].*$|\/?$/;
 export const Head = /^(?:.*?\/(?:\/[^\/]+|libs|packages|node_modules|examples)(?=\/))?.*?(?=(?:\/[\w\.-]+)+(?:[?#.]|$))\//;
 
-export const escape = source => /[\\^$*+?.()|[\]{}]/g[Symbol.replace](source, '\\$&');
+export const escape = RegExp.escape || (source => /[\\^$*+?.()|[\]{}]/g[Symbol.replace](source, '\\$&'));
+
+export const sequence = (...args) =>
+  Reflect.apply(String.raw, null, args.map((v = '') => v)).replace(/^\s+|\n\s*|\s+$/g, '');
+// .replace(/^\s+|\s+\/\/\s+.*$\n?|\n\s*|\s+$/gm, '');
 
 export const Hash = (() => {
-  const HASH = '#';
-  const MODE = '!';
-  const ITERATIONS = '*';
-  const REPEATS = '**';
-  const VARIANT = '@';
-  const DEBUGGING = '!!';
-  const Hash = new RegExp(
-    String.raw`^${escape(HASH)}((?:https?:\/\/|[a-z]+:|[~]\/|[.]{0,2}\/|)[^#!*@]*)(?:
-      (?:${escape(MODE)}([a-zA-Z]+)?)?
-      (?:${escape(ITERATIONS)}(\d+)?)?
-      (?:${escape(REPEATS)}(\d+))?
-      .*?(?:${escape(VARIANT)}(\d+))?
-      .*?(?:(${escape(DEBUGGING)}))?
-    )$|`.replace(/^\s+|\n\s*|\s+$/g, ''),
-    'i',
+  const symbols = {HASH: '#', MODE: '!', ITERATIONS: '*', REPEATS: '**', VARIANT: '@', DEBUGGING: '!!'};
+
+  const scope = ':' || '<scope>';
+  const entry = ':' || '<entry>';
+  const parameters = ':' || '<parameters>';
+
+  const Hash = ((HASH, MODE, ITERATIONS, REPEATS, VARIANT, DEBUGGING) =>
+    new RegExp(
+      sequence`
+        ^(?:${HASH}
+          (
+            (?${scope}https?:\/\/|[a-z]+:|[~]\/|[.]{0,2}\/|)
+            (?${entry}(?:[^!*@]*(?:@[a-z])?[^\/]+\/)?[^!*@]*)
+          )
+          (?${parameters}
+            (?=.*${MODE}([a-zA-Z]+)|)
+            (?=.*${ITERATIONS}(\d+)|)
+            (?=.*${REPEATS}(\d+)|)
+            (?=.*${VARIANT}(\d+)|)
+            (?=.*(${DEBUGGING})|)
+            (?:${MODE}\2|${ITERATIONS}\3|${REPEATS}\4|${VARIANT}\5|\6)*
+          |)
+        |)(.*?)$`,
+      'i',
+    ))(
+    ...[symbols.HASH, symbols.MODE, symbols.ITERATIONS, symbols.REPEATS, symbols.VARIANT, symbols.DEBUGGING].map(
+      escape,
+    ),
   );
+
   const parse = string => {
-    let {0: hash, 1: specifier, 2: mode, 3: iterations, 4: repeats, 5: variant, 6: debugging} = Hash.exec(string);
-    iterations = iterations >= 0 ? parseInt(iterations) : undefined;
-    repeats = repeats >= 0 ? parseInt(repeats) : undefined;
-    variant = variant >= 0 ? parseInt(variant) : undefined;
-    debugging = debugging ? true : undefined;
-    return {hash, specifier, mode, iterations, repeats, variant, debugging};
+    let parsed, matched;
+    try {
+      matched = Hash.exec(string);
+
+      let {0: hash, 1: specifier, 2: mode, 3: iterations, 4: repeats, 5: variant, 6: debugging, 7: invalid} = matched;
+
+      iterations = iterations >= 0 ? parseInt(iterations) : undefined;
+      repeats = repeats >= 0 ? parseInt(repeats) : undefined;
+      variant = variant >= 0 ? parseInt(variant) : undefined;
+      debugging = debugging ? true : undefined;
+
+      return (parsed = {hash, specifier, mode, iterations, repeats, variant, debugging, invalid});
+    } finally {
+      console.log('Hash ‹%o — %o›', string, parsed);
+    }
   };
-  return Object.defineProperties(
-    Hash,
-    Object.getOwnPropertyDescriptors(Object.freeze({HASH, MODE, ITERATIONS, REPEATS, VARIANT, DEBUGGING, parse})),
-  );
+
+  return Object.defineProperties(Hash, Object.getOwnPropertyDescriptors(Object.freeze({...symbols, parse})));
 })();
 
 export const baseURL = `${new URL(

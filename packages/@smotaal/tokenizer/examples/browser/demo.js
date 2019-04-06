@@ -264,6 +264,9 @@ export default (markup, overrides) => {
           await frame(header.status('iterations', `⁎${iterations}`));
         }
 
+        // TODO: Why this seems to make Firefox rerender faster?
+        if (navigator.mozGetUserMedia) slot.innerText = '';
+
         if (repeats > 0) {
           // await timeDelay(100);
           await frame(header.stats({name: 'repeats', status: `⁑${repeats}`, time: true}));
@@ -341,5 +344,5 @@ export default (markup, overrides) => {
       ['contrast-button']: '#contrast[onclick]',
     });
 
-  requestAnimationFrame(renderFromHash);
+  requestAnimationFrame(() => renderFromHash());
 };
