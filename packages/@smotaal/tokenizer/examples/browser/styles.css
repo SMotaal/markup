@@ -1,3 +1,4 @@
+@import '/pholio/styles/fonts/iosevka/iosevka.css';
 @import './markup.css';
 @import './markup-debug.css';
 
@@ -17,85 +18,16 @@
   --markup-background: var(--markup-background, var(--markup-neutral-fade));
 }
 
-@media screen {
-  html {
-    /* max-width: 100vw; */
-    /* height: 100vh; */
-
-    /* min-width: 100vw; */
-    min-height: 100vh;
-
-    /* box-sizing: border-box; */
-    -webkit-text-size-adjust: 100%;
-  }
-
-  body {
-    /* height: inherit; */
-    /* width: inherit; */
-    min-height: inherit;
-    min-width: inherit;
-    max-height: inherit;
-    max-width: inherit;
-
-    display: flex;
-    flex-flow: column nowrap;
-    margin: 0;
-    padding: 0;
-
-    overflow-x: hidden;
-    overflow-y: scroll;
-    /* touch-action: pan-y; */
-    /* user-zoom: fixed; */
-    /* touch-action: pan-y; */
-    /* user-zoom: fixed; */
-    /* zoom: 1; */
-  }
-
-  @supports (padding: env(safe-area-inset-top)) {
-    body {
-      padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
-    }
-  }
-  @supports (touch-action: pan-y) {
-    body {
-      touch-action: pan-y;
-    }
-  }
-}
 
 .markup-container {
-  /* box-sizing: border-box; */
-  /* min-height: 100%; */
-
-  padding: 1ch;
-  margin: 0;
   flex: 1;
-
   background-color: var(--markup-background, transparent);
   color: var(--markup-color, currentColor);
-  /* text-shadow: 0 0.875px 0 var(--markup-shadow, #FFF); */
-
   line-height: 1.5em;
+  tab-size: 4;
   font-family: 'Iosevka Web', monospace;
   font-variant-ligatures: contextual;
-  /* text-rendering: optimizeSpeed; */
-
   white-space: pre-wrap;
-
-  transition: background 0.75s ease-in-out;
-  will-change: transition;
-
-  /* touch-action: none; */
-}
-
-.markup-container.dark-mode > header {
-  --shadow: var(--dark, transparent);
-}
-
-.markup-container slot:not(:empty)::before {
-  display: block;
-  height: 1em;
-  content: '';
 }
 
 .markup-container > header {
@@ -105,7 +37,6 @@
   --medium: var(--markup-neutral, #999);
   --dim: var(--markup-neutral-fade, #9993);
   --dark: var(--markup-dark, #333f46);
-
   --border: var(--bright);
   --fill: var(--dim);
   --text: var(--medium);
@@ -113,32 +44,17 @@
   --outset-shadow: 0 0.875px 0;
   --inset-shadow: 0 -0.875px 0;
   --outset-border: 0.5px ridge var(--border);
-
   display: grid;
   grid-auto-flow: column dense;
   overflow-x: hidden;
-
-  /* TODO:  Fix sticky in Safari: http://cssdeck.com/labs/bu0nx69w */
-  position: -webkit-sticky;
-  position: sticky;
-  top: 1ch;
-
   grid-gap: 1ch;
   padding: 0.25ch 1ch;
-
   margin-bottom: 1ch;
   white-space: normal;
-
-  user-select: none;
-  -moz-user-select: none;
-  -webkit-user-select: none;
-
   font-family: system-ui -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans',
     'Helvetica Neue', sans-serif;
   font-weight: 200;
   line-height: initial;
-
-  z-index: 1;
 }
 
 .markup-container > header div {
@@ -146,8 +62,6 @@
   grid-gap: 0.25ch;
   grid-auto-flow: column dense;
 
-  /* word-break: keep-all; */
-  /* line-break: normal; */
   overflow-x: hidden;
   text-overflow: ellipsis;
   align-content: center;
@@ -173,12 +87,17 @@
 
 .markup-container > header div > [title] {
   white-space: pre;
+  --symbol: '';
 }
 .markup-container > header div > [title] > [id] {
   font-weight: 300;
   user-select: text;
   -moz-user-select: text;
   -webkit-user-select: text;
+}
+
+.markup-container > header div > [title] > [id]::before {
+  content: var(--symbol, '');
 }
 
 .markup-container > header #source-type {
@@ -200,12 +119,10 @@
   display: none;
 }
 
-/* :not(empty) :not(empty) */
 .markup-container > header [value]:not([value=''])[unit]:not([unit=''])::after {
   content: ' ' attr(unit);
   font-size: 50%;
   font-weight: lighter;
-  text-rendering: optimizeLegibility;
 }
 
 .markup-container > header a[onclick] {
@@ -256,30 +173,68 @@ i[icon] {
   transform: translateY(-100%);
 }
 
-@media screen {
+@media only screen {
+  html {
+    /* max-width: 100vw; */
+    /* height: 100vh; */
+    /* min-width: 100vw; */
+    min-height: 100vh;
+    /* box-sizing: border-box; */
+    -webkit-text-size-adjust: 100%;
+  }
+
   body {
-    background-color: #999;
+    min-height: inherit;
+    min-width: inherit;
+    max-height: inherit;
+    max-width: inherit;
+    display: flex;
+    flex-flow: column nowrap;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+    overflow-y: scroll;
     background-color: var(--markup-background, #999);
     font-size: 1rem;
+    touch-action: pan-y;
   }
+
+  .markup-container {
+    padding: 1ch;
+    margin: 0;
+    transition: background 0.75s ease-in-out;
+    /* will-change: transition; */
+  }
+
   .markup-container > header {
     border-radius: 1ch;
     border: var(--outset-border, none);
     background: linear-gradient(to right, var(--fill), var(--fill)), var(--clear);
     color: var(--text);
     text-shadow: var(--outset-shadow, 0 0 0) var(--shadow);
-    /* backdrop-filter: blur(20px); */
     opacity: 0.9;
     z-index: 2;
+    /* backdrop-filter: blur(20px); */
+
+    /* TODO:  Fix sticky in Safari: http://cssdeck.com/labs/bu0nx69w */
+    position: -webkit-sticky;
+    position: sticky;
+    top: 1ch;
+
+    user-select: none;
+    -moz-user-select: none;
+    -webkit-user-select: none;
   }
 
-  .markup-container > :not(slot).markup-wrapper {
-    /* transition: filter 0.5s ease-out, opacity 0.5s ease-out; */
-    /* text-shadow: 0 -1px 0 var(--markup-contrast, #000); */
+  .markup-container.dark-mode > header {
+    --shadow: var(--dark, transparent);
+  }
+
+  .markup-container > .markup-content {
     transition: 0.15s ease-out;
   }
 
-  .markup-container > :not(slot).markup-wrapper.rendering {
+  .markup-container > .markup-content.rendering {
     opacity: 0.85;
     filter: blur(10px) contrast(0.5) saturate(1.5);
     transition: 0.25s ease-in;
@@ -287,12 +242,23 @@ i[icon] {
 }
 
 @media print {
-  .markup-container > header {
-    /* display: contents; */
-    /* position: relative; */
-    grid-auto-flow: row dense;
+  :root {
+    --markup-color: black;
+    --markup-neutral-dark: dimgrey;
+    --markup-neutral: grey;
+    --markup-neutral-light: darkgrey;
+    --markup-neutral-fade: lightgrey;
+  }
 
-    border: 0 double black;
+  .markup-container {
+    background: transparent;
+    font-size: 10pt;
+    color-adjust: economy;
+  }
+
+  .markup-container > header {
+    grid-auto-flow: row dense;
+    border: 0 double currentColor;
     padding-bottom: 1ch;
     border-bottom-width: 4px;
     position: initial;
@@ -300,51 +266,10 @@ i[icon] {
   .markup-container > header #controls {
     display: none;
   }
+}
 
-  .markup-container > header::after {
-    display: block;
-    position: absolute;
-    outline: 1px solid red;
+@supports (padding: env(safe-area-inset-top)) {
+  body {
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
   }
-
-  :root {
-    --markup-color: black;
-    --markup-neutral-light: #aaa;
-    --markup-neutral-light: #777;
-    --markup-neutral-dark: #333;
-  }
-
-  .markup-container {
-    background: transparent;
-    padding: 0;
-    margin: 0;
-    font-size: 10pt;
-    /* position: absolute; */
-    /* top: 0; */
-    /* left: 0; */
-    /* max-width: 100vw; */
-  }
-
-  html,
-  body,
-  .markup-container {
-    width: 100%;
-    height: 100%;
-    overflow: initial;
-    position: initial;
-  }
-
-  /*
-  .markup.comment + .markup.in-comment {
-    overflow: hidden;
-    white-space: pre-line;
-    display: inline-block;
-    max-height: 1.5em;
-    max-width: 50%;
-    max-width: -webkit-fill-available;
-    max-width: fill-available;
-    text-overflow: ellipsis;
-    outline: 1px solid red;
-  }
-   */
 }
