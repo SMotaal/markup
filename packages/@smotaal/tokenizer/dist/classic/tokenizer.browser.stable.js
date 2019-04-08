@@ -471,18 +471,6 @@ var markup = (function (exports) {
     }
   }
 
-  /// OPTIONS
-  /** The tag name of the element to use for rendering a token. */
-  const SPAN = 'span';
-
-  /** The tag name of the element to use for grouping tokens in a single line. */
-  const LINE = 'span';
-
-  /** The class name of the element to use for rendering a token. */
-  const CLASS = 'markup';
-
-  /// RUNTIME
-
   const supported = !!native;
   const implementation = pseudo;
   const {createElement: Element$2, createText: Text$2, createFragment: Fragment} = implementation;
@@ -495,12 +483,31 @@ var markup = (function (exports) {
           (template = document.createElement('template')) && 'HTMLTemplateElement' === (template.constructor || '').name
         )) && template;
 
-  /// INTERFACE
+  /// IMPLEMENTATION
 
-  var dom$1 = new class Renderer {
-    constructor() {
+  class MarkupRenderer {
+    constructor(options) {
       // TODO: Consider making Renderer a thing
-      const {factory} = new.target;
+      const {factory, defaults} = new.target;
+
+      const {SPAN = 'span', LINE = 'span', CLASS = 'markup', LINE_INDENTS = true, LINE_REINDENTS = true} = {
+        ...defaults,
+        ...options,
+      };
+
+      this.LINE_INDENTS =
+        LINE_INDENTS != null
+          ? !!LINE_INDENTS
+          : !defaults || defaults.LINE_INDENTS == null
+          ? true
+          : !!defaults.LINE_INDENTS;
+
+      this.LINE_REINDENTS =
+        LINE_REINDENTS != null
+          ? !!LINE_REINDENTS
+          : !defaults || defaults.LINE_REINDENTS == null
+          ? true
+          : !!defaults.LINE_REINDENTS;
 
       this.renderers = {
         line: factory(LINE, {className: `${CLASS} ${CLASS}-line`}),
@@ -561,8 +568,9 @@ var markup = (function (exports) {
     }
 
     *renderer(tokens) {
-      const {renderers} = this;
+      const {renderers, LINE_INDENTS, LINE_REINDENTS} = this;
       let line, indent;
+      let tabSpan;
       for (const token of tokens) {
         let {type = 'text', text, punctuator, breaks, hint} = token;
         let renderer =
@@ -574,13 +582,20 @@ var markup = (function (exports) {
           // Create new line
           ((line = renderers.line()),
           // Concatenate stripped and leading whitesp into a separate "indent" tokenace
-          ([indent = '', text = ''] = `${indent || ''}${text}`.split(/(\S.*?)$/, 2)) &&
+          LINE_INDENTS &&
+            (([indent = '', text = ''] = `${indent || ''}${text}`.split(/(\S.*?)$/, 2)) &&
               indent &&
-              (indent && (indent = (line.append(renderers.indent(indent)), ''))));
+              (LINE_REINDENTS &&
+                (tabSpan ||
+                  (([tabSpan] = /^(?: {4}| {2}|)/.exec(indent)) &&
+                    tabSpan &&
+                    (tabSpan = new RegExp(`${tabSpan}`, 'g')))) &&
+                (indent = indent.replace(tabSpan, '\t')),
+              indent && (indent = (line.append(renderers.indent(indent)), '')))));
 
         text &&
           // Strip trailing whitespace
-          (breaks && ([text, indent = ''] = text.split(/([ \t]*$)/, 2)),
+          (LINE_INDENTS && breaks && ([text, indent = ''] = text.split(/([ \t]*$)/, 2)),
           text && line.appendChild(renderer(text, hint)));
 
         // TODO: Normalize multiple line breaks
@@ -597,7 +612,24 @@ var markup = (function (exports) {
         return element;
       };
     }
-  }();
+  }
+
+  MarkupRenderer.defaults = Object.freeze({
+    /** Tag name of the element to use for rendering a token. */
+    SPAN: 'span',
+    /** Tag name of the element to use for grouping tokens in a single line. */
+    LINE: 'span',
+    /** The class name of the element to use for rendering a token. */
+    CLASS: 'markup',
+    /** Concatenates leading whitespace into a separate "indent" token */
+    LINE_INDENTS: true,
+    /** Replaces uniform leading spaces with tabs based on first indent size */
+    LINE_REINDENTS: true,
+  });
+
+  /// INTERFACE
+
+  var dom$1 = new MarkupRenderer();
 
   /** @typedef {import('./types').Grouping} Grouping */
   /** @typedef {import('./types').Tokenizer} Tokenizer */
