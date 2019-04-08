@@ -2,26 +2,10 @@ import * as dom from '../../../pseudom/pseudom.js';
 export {encodeEntity, encodeEntities} from '../../../pseudom/pseudom.js';
 import {each} from './helpers.js';
 
-/// OPTIONS
-/** The tag name of the element to use for rendering a token. */
-const SPAN = 'span';
-
-/** The tag name of the element to use for grouping tokens in a single line. */
-const LINE = 'span';
-
-/** The class name of the element to use for rendering a token. */
-const CLASS = 'markup';
+/// RUNTIME
 
 /** Uses lightweight proxy objects that can be serialized into HTML text */
 const HTML_MODE = true;
-
-/** Concatenates leading whitespace into a separate "indent" token */
-const LINE_INDENTS = true;
-
-/** Replaces uniform leading spaces with tabs based on the first indent size */
-const LINE_REINDENTS = false;
-
-/// RUNTIME
 
 const supported = !!dom.native;
 const native = !HTML_MODE && supported;
@@ -36,12 +20,31 @@ const Template = template =>
         (template = document.createElement('template')) && 'HTMLTemplateElement' === (template.constructor || '').name
       )) && template;
 
-/// INTERFACE
+/// IMPLEMENTATION
 
-export default new class Renderer {
-  constructor() {
+class MarkupRenderer {
+  constructor(options) {
     // TODO: Consider making Renderer a thing
-    const {factory} = new.target;
+    const {factory, defaults} = new.target;
+
+    const {SPAN = 'span', LINE = 'span', CLASS = 'markup', LINE_INDENTS = true, LINE_REINDENTS = true} = {
+      ...defaults,
+      ...options,
+    };
+
+    this.LINE_INDENTS =
+      LINE_INDENTS != null
+        ? !!LINE_INDENTS
+        : !defaults || defaults.LINE_INDENTS == null
+        ? true
+        : !!defaults.LINE_INDENTS;
+
+    this.LINE_REINDENTS =
+      LINE_REINDENTS != null
+        ? !!LINE_REINDENTS
+        : !defaults || defaults.LINE_REINDENTS == null
+        ? true
+        : !!defaults.LINE_REINDENTS;
 
     this.renderers = {
       line: factory(LINE, {className: `${CLASS} ${CLASS}-line`}),
@@ -102,7 +105,7 @@ export default new class Renderer {
   }
 
   *renderer(tokens) {
-    const {renderers} = this;
+    const {renderers, LINE_INDENTS, LINE_REINDENTS} = this;
     let line, indent;
     let tabSpan;
     for (const token of tokens) {
@@ -146,4 +149,21 @@ export default new class Renderer {
       return element;
     };
   }
-}();
+}
+
+MarkupRenderer.defaults = Object.freeze({
+  /** Tag name of the element to use for rendering a token. */
+  SPAN: 'span',
+  /** Tag name of the element to use for grouping tokens in a single line. */
+  LINE: 'span',
+  /** The class name of the element to use for rendering a token. */
+  CLASS: 'markup',
+  /** Concatenates leading whitespace into a separate "indent" token */
+  LINE_INDENTS: true,
+  /** Replaces uniform leading spaces with tabs based on first indent size */
+  LINE_REINDENTS: true,
+});
+
+/// INTERFACE
+
+export default new MarkupRenderer();
