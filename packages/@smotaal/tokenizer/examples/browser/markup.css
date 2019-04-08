@@ -1,5 +1,3 @@
-@import url('/pholio/styles/fonts/iosevka/iosevka.css');
-
 :host {
   --markup-neutral-light: var(--markup-neutral-light, #aaa);
   --markup-neutral: var(--markup-neutral, #999);
@@ -114,6 +112,65 @@
 .markup {
   color: var(--color, var(--markup-color, var(--markup-light-text, currentColor)));
   font-variant-ligatures: common-ligatures discretionary-ligatures contextual historical-ligatures;
+}
+
+.markup-line-numbers pre,
+pre.markup-line-numbers,
+pre.markup[line-numbers],
+pre > .markup-line-numbers {
+  padding-inline-start: 3em;
+  /* counter-reset: line attr(line-numbers); */
+  /* counter-reset: line attr(line-numbers); */
+}
+
+.markup-line:first-of-type {
+  counter-reset: line;
+}
+
+.markup-line {
+  break-before: auto;
+  break-inside: avoid;
+}
+
+.markup-line-numbers .markup-line::before,
+pre.markup[line-numbers] .markup-line::before {
+  float: left;
+  width: 3em;
+  padding: 0;
+  margin-inline-start: -3.5em;
+  content: '';
+  counter-increment: line;
+  text-indent: 0;
+  text-align: end;
+  font-variant: small-caps;
+  font-size: 75%;
+  font-style: normal;
+  font-weight: 100;
+  height: calc(100% / 0.75);
+  vertical-align: middle;
+  white-space: pre;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+}
+
+.markup-line-numbers .markup-line:not(:empty)::before,
+pre.markup[line-numbers] .markup-line:not(:empty)::before {
+  content: counter(line) ' ';
+  border: 0 solid currentColor;
+  border-inline-end-width: 0.5px;
+}
+
+@media only print {
+  .markup-line-numbers .markup-line::before {
+    color: black;
+  }
+}
+
+@media only screen {
+  .markup-line-numbers .markup-line:not(:hover)::before {
+    opacity: 0.5;
+  }
 }
 
 .markup.sequence {

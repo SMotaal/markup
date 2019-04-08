@@ -6,11 +6,20 @@ import {each} from './helpers.js';
 /** The tag name of the element to use for rendering a token. */
 const SPAN = 'span';
 
+/** The tag name of the element to use for grouping tokens in a single line. */
+const LINE = 'span';
+
 /** The class name of the element to use for rendering a token. */
 const CLASS = 'markup';
 
 /** Uses lightweight proxy objects that can be serialized into HTML text */
 const HTML_MODE = true;
+
+/** Concatenates leading whitespace into a separate "indent" token */
+const LINE_INDENTS = true;
+
+/** Replaces uniform leading spaces with tabs based on the first indent size */
+const LINE_REINDENTS = false;
 
 /// RUNTIME
 
@@ -35,6 +44,9 @@ export default new class Renderer {
     const {factory} = new.target;
 
     this.renderers = {
+      line: factory(LINE, {className: `${CLASS} ${CLASS}-line`}),
+      indent: factory(LINE, {className: `${CLASS} whitespace ${CLASS}-indent`}),
+
       whitespace: Text,
       text: factory(SPAN, {className: CLASS}),
 
@@ -52,7 +64,7 @@ export default new class Renderer {
       span: factory(SPAN, {className: `${CLASS} punctuator span`}),
       sequence: factory(SPAN, {className: `${CLASS} sequence`}),
       literal: factory(SPAN, {className: `${CLASS} literal`}),
-      indent: factory(SPAN, {className: `${CLASS} sequence indent`}),
+      // indent: factory(SPAN, {className: `${CLASS} sequence indent`}),
       comment: factory(SPAN, {className: `${CLASS} comment`}),
       code: factory(SPAN, {className: `${CLASS}`}),
     };
@@ -91,23 +103,46 @@ export default new class Renderer {
 
   *renderer(tokens) {
     const {renderers} = this;
+    let line, indent;
+    let tabSpan;
     for (const token of tokens) {
-      const {type = 'text', text, punctuator, breaks} = token;
-      const renderer =
+      let {type = 'text', text, punctuator, breaks, hint} = token;
+      let renderer =
         (punctuator && (renderers[punctuator] || renderers.operator)) ||
         (type && renderers[type]) ||
         (text && renderers.text);
-      const element = renderer && renderer(text, token);
-      element && (yield element);
+
+      line ||
+        // Create new line
+        ((line = renderers.line()),
+        // Concatenate stripped and leading whitesp into a separate "indent" tokenace
+        LINE_INDENTS &&
+          (([indent = '', text = ''] = `${indent || ''}${text}`.split(/(\S.*?)$/, 2)) &&
+            indent &&
+            (LINE_REINDENTS &&
+              (tabSpan ||
+                (([tabSpan] = /^(?: {4}| {2}|)/.exec(indent)) &&
+                  tabSpan &&
+                  (tabSpan = new RegExp(`${tabSpan}`, 'g')))) &&
+              (indent = indent.replace(tabSpan, '\t')),
+            indent && (indent = (line.append(renderers.indent(indent)), '')))));
+
+      text &&
+        // Strip trailing whitespace
+        (LINE_INDENTS && breaks && ([text, indent = ''] = text.split(/([ \t]*$)/, 2)),
+        text && line.appendChild(renderer(text, hint)));
+
+      // TODO: Normalize multiple line breaks
+      breaks && (yield line, --breaks && (yield* Array(breaks).fill(renderers.line())), (line = null));
     }
+    line && (yield line);
   }
 
   static factory(tag, properties) {
-    return (content, token) => {
-      if (!content) return;
-      typeof content !== 'string' || (content = Text(content));
+    return (content, hint) => {
+      typeof content === 'string' && (content = Text(content));
       const element = Element(tag, properties, content);
-      element && token && (token.hint && (element.className += ` ${token.hint}`));
+      element && typeof hint === 'string' && (element.className += ` ${hint}`);
       return element;
     };
   }

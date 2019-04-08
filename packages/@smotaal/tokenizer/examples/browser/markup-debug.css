@@ -14,7 +14,7 @@
     --ring: var(--markup-whitespaces, var(--markup-neutral, #999));
   }
 
-  .markup::before {
+  .markup-line .markup::before {
     display: none;
     position: absolute;
     pointer-events: none;
@@ -37,17 +37,17 @@
     z-index: 1;
   }
 
-  .dark-mode .markup::before {
+  .dark-mode .markup-line .markup::before {
     background-color: #fffa;
   }
 
   /* .markup:active::before, */
-  .markup:hover::before {
+  .markup-line .markup:hover::before {
     display: block;
   }
 
   /* .markup:active, */
-  .markup:hover {
+  .markup-line .markup:hover {
     background-color: var(--markup-constast, white);
     box-shadow: 0 0 10px -7.5px var(--markup-neutral, #999), 0 0 5px -1.5px var(--ring, currentColor);
     cursor: text;

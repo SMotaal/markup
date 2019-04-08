@@ -472,6 +472,9 @@ async function each(iterable, ƒ) {
 /** The tag name of the element to use for rendering a token. */
 const SPAN = 'span';
 
+/** The tag name of the element to use for grouping tokens in a single line. */
+const LINE = 'span';
+
 /** The class name of the element to use for rendering a token. */
 const CLASS = 'markup';
 
@@ -497,6 +500,9 @@ var dom$1 = new class Renderer {
     const {factory} = new.target;
 
     this.renderers = {
+      line: factory(LINE, {className: `${CLASS} ${CLASS}-line`}),
+      indent: factory(LINE, {className: `${CLASS} whitespace ${CLASS}-indent`}),
+
       whitespace: Text$2,
       text: factory(SPAN, {className: CLASS}),
 
@@ -514,7 +520,7 @@ var dom$1 = new class Renderer {
       span: factory(SPAN, {className: `${CLASS} punctuator span`}),
       sequence: factory(SPAN, {className: `${CLASS} sequence`}),
       literal: factory(SPAN, {className: `${CLASS} literal`}),
-      indent: factory(SPAN, {className: `${CLASS} sequence indent`}),
+      // indent: factory(SPAN, {className: `${CLASS} sequence indent`}),
       comment: factory(SPAN, {className: `${CLASS} comment`}),
       code: factory(SPAN, {className: `${CLASS}`}),
     };
@@ -553,23 +559,38 @@ var dom$1 = new class Renderer {
 
   *renderer(tokens) {
     const {renderers} = this;
+    let line, indent;
     for (const token of tokens) {
-      const {type = 'text', text, punctuator, breaks} = token;
-      const renderer =
+      let {type = 'text', text, punctuator, breaks, hint} = token;
+      let renderer =
         (punctuator && (renderers[punctuator] || renderers.operator)) ||
         (type && renderers[type]) ||
         (text && renderers.text);
-      const element = renderer && renderer(text, token);
-      element && (yield element);
+
+      line ||
+        // Create new line
+        ((line = renderers.line()),
+        // Concatenate stripped and leading whitesp into a separate "indent" tokenace
+        ([indent = '', text = ''] = `${indent || ''}${text}`.split(/(\S.*?)$/, 2)) &&
+            indent &&
+            (indent && (indent = (line.append(renderers.indent(indent)), ''))));
+
+      text &&
+        // Strip trailing whitespace
+        (breaks && ([text, indent = ''] = text.split(/([ \t]*$)/, 2)),
+        text && line.appendChild(renderer(text, hint)));
+
+      // TODO: Normalize multiple line breaks
+      breaks && (yield line, --breaks && (yield* Array(breaks).fill(renderers.line())), (line = null));
     }
+    line && (yield line);
   }
 
   static factory(tag, properties) {
-    return (content, token) => {
-      if (!content) return;
-      typeof content !== 'string' || (content = Text$2(content));
+    return (content, hint) => {
+      typeof content === 'string' && (content = Text$2(content));
       const element = Element$2(tag, properties, content);
-      element && token && (token.hint && (element.className += ` ${token.hint}`));
+      element && typeof hint === 'string' && (element.className += ` ${hint}`);
       return element;
     };
   }

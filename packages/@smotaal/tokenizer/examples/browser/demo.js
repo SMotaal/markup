@@ -33,6 +33,9 @@ const resolvers = Resolvers({
 });
 const {['~']: local, unpkg, cdnjs} = resolvers;
 
+const glyphs = {'@': '@', '#': '#', '*': '⁎', '**': '⁑', '!': '!', '!!': '!!'};
+const glyph = symbol => glyphs[symbol] || symbol || '';
+
 const defaults = {
   variant: 1,
   repeats: 1,
@@ -104,6 +107,7 @@ export default (markup, overrides) => {
     const header = document.createElement('header');
     header.append(template.content.cloneNode(true));
 
+    /** @type {{[K in selector]: HTMLElement}} */
     header.elements = {};
 
     if (selectors)
@@ -128,12 +132,28 @@ export default (markup, overrides) => {
         }));
     }
 
+    {
+      const {
+        'repeats-span': repeatsSpan,
+        'iterations-span': iterationsSpan,
+        'source-span': sourceSpan,
+        'mode-span': modeSpan,
+        'variant-span': variantSpan,
+      } = header.elements;
+      sourceSpan && sourceSpan.style.setProperty('--symbol', `"${glyph(Hash.HASH)}"`);
+      // modeSpan && modeSpan.style.setProperty('--symbol', `"${glyph(Hash.MODE)}"`);
+      variantSpan && variantSpan.style.setProperty('--symbol', `"${glyph(Hash.VARIANT)}"`);
+      repeatsSpan && repeatsSpan.style.setProperty('--symbol', `"${glyph(Hash.REPEATS)}"`);
+      iterationsSpan && iterationsSpan.style.setProperty('--symbol', `"${glyph(Hash.ITERATIONS)}"`);
+    }
+
     header.status = (name, value, title) => {
       header.status[name] === (header.status[name] = value);
       const element = header.elements[`${name}-span`];
       const text = `${value || ''}`;
       (title = `${title || ''}`.trim()) ? element.setAttribute('title', title) : element.removeAttribute('title');
       element ? (element.innerText = text) : text && flags.has('debug') && console.info('[%s] %o', name, value);
+      document.documentElement.style.setProperty(`--${name}`, text);
     };
 
     header.timing = (name, value) => {
@@ -165,6 +185,7 @@ export default (markup, overrides) => {
     const {repeats = 1, iterations = 1, now = Date.now} = options;
 
     const container = sourceCodeElement;
+
     const rerender = () => {
       const {width, height} = content.getBoundingClientRect();
       const previousStyle = {};
@@ -181,8 +202,9 @@ export default (markup, overrides) => {
     };
     const header = renderHeader({rerender});
     const content = document.createElement('div');
-    const slot = content.appendChild(document.createElement('slot'));
-    content.className = slot.className = 'markup-wrapper';
+    content.className = 'markup-content markup-line-numbers';
+    const slot = content.appendChild(document.createElement('span'));
+    slot.className = 'markup-wrapper';
     const {timing, status} = header;
     const time = async (name, executor, cycles = 1) => {
       let start, result, end, elapsed;
@@ -253,7 +275,7 @@ export default (markup, overrides) => {
         header.stats({name: 'iterations', status: '', time: -1});
 
         if (iterations > 0) {
-          await frame(header.stats({name: 'iterations', status: `⁎${iterations}`, time: true}));
+          await frame(header.stats({name: 'iterations', status: `${iterations}`, time: true}));
           await timeout(100);
           await timed(
             `${iterations} iterations`,
@@ -261,7 +283,7 @@ export default (markup, overrides) => {
             async ƒ => void (await iterate(iterations)),
             iterations,
           );
-          await frame(header.status('iterations', `⁎${iterations}`));
+          await frame(header.status('iterations', `${iterations}`));
         }
 
         // TODO: Why this seems to make Firefox rerender faster?
@@ -269,11 +291,11 @@ export default (markup, overrides) => {
 
         if (repeats > 0) {
           // await timeDelay(100);
-          await frame(header.stats({name: 'repeats', status: `⁑${repeats}`, time: true}));
+          await frame(header.stats({name: 'repeats', status: `${repeats}`, time: true}));
           content.classList.remove('rendering');
           await frame();
           await timed(`${repeats} repeats`, 'repeats', async ƒ => void (await repeat(repeats)), repeats);
-          await frame(header.status('repeats', `⁑${repeats}`));
+          await frame(header.status('repeats', `${repeats}`));
         }
 
         return fragment;
@@ -282,12 +304,8 @@ export default (markup, overrides) => {
       await frame();
       await markup.warmup(sourceText, markupOptions, flags);
       await frame(
-        header.status(
-          'source-type',
-          `${(markupOptions.mode && markupOptions.mode.syntax) || sourceType}${
-            markupOptions.variant > 1 ? `@${markupOptions.variant}` : ''
-          }`,
-        ),
+        header.status('variant', `${(markupOptions.variant > 1 && markupOptions.variant) || ''}`),
+        header.status('mode', (markupOptions.mode && markupOptions.mode.syntax) || sourceType),
       );
       fragment = await render();
 
@@ -331,18 +349,22 @@ export default (markup, overrides) => {
 
   window.addEventListener('hashchange', () => renderFromHash());
 
-  sourceHeaderTemplate &&
-    (sourceHeaderTemplate.selectors = {
-      ['source-span']: '#source',
-      ['source-time']: '#source + time',
-      ['source-type-span']: '#source-type',
-      ['repeats-span']: '#repeats',
-      ['repeats-time']: '#repeats + time',
-      ['iterations-span']: '#iterations',
-      ['iterations-time']: '#iterations + time',
-      ['rerender-button']: '#rerender[onclick]',
-      ['contrast-button']: '#contrast[onclick]',
-    });
+  const selectors = {
+    ['source-span']: '#source',
+    ['source-time']: '#source + time',
+    ['mode-span']: '#mode',
+    ['variant-span']: '#variant',
+    ['repeats-span']: '#repeats',
+    ['repeats-time']: '#repeats + time',
+    ['iterations-span']: '#iterations',
+    ['iterations-time']: '#iterations + time',
+    ['rerender-button']: '#rerender[onclick]',
+    ['contrast-button']: '#contrast[onclick]',
+  };
+
+  /** @typedef {keyof typeof selectors} selector */
+
+  sourceHeaderTemplate && (sourceHeaderTemplate.selectors = selectors);
 
   requestAnimationFrame(() => renderFromHash());
 };
