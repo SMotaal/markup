@@ -493,7 +493,7 @@
       // TODO: Consider making Renderer a thing
       const {factory, defaults} = new.target;
 
-      const {SPAN = 'span', LINE = 'span', CLASS = 'markup', LINE_INDENTS = true, LINE_REINDENTS = true} = {
+      const {SPAN = 'span', LINE = 'span', CLASS = 'markup', LINE_INDENTS, LINE_REINDENTS} = {
         ...defaults,
         ...options,
       };
@@ -502,14 +502,14 @@
         LINE_INDENTS != null
           ? !!LINE_INDENTS
           : !defaults || defaults.LINE_INDENTS == null
-          ? true
+          ? false
           : !!defaults.LINE_INDENTS;
 
       this.LINE_REINDENTS =
         LINE_REINDENTS != null
           ? !!LINE_REINDENTS
           : !defaults || defaults.LINE_REINDENTS == null
-          ? true
+          ? false
           : !!defaults.LINE_REINDENTS;
 
       this.renderers = {
@@ -574,6 +574,7 @@
       const {renderers, LINE_INDENTS, LINE_REINDENTS} = this;
       let line, indent;
       let tabSpan;
+      const blank = renderers.line();
       for (const token of tokens) {
         let {type = 'text', text, punctuator, breaks, hint} = token;
         let renderer =
@@ -586,8 +587,9 @@
           ((line = renderers.line()),
           // Concatenate stripped and leading whitesp into a separate "indent" tokenace
           LINE_INDENTS &&
-            (([indent = '', text = ''] = `${indent || ''}${text}`.split(/(\S.*?)$/, 2)) &&
-              indent &&
+            // ((indent = `${indent || ''}${text.slice(0, text.indexOf((trim = text.trimLeft())))}`), (text = trim)),
+            (([, indent = '', text = ''] = /^([ \t]*)([^]*)$/.exec(`${indent || ''}${text}`)),
+            indent &&
               (LINE_REINDENTS &&
                 (tabSpan ||
                   (([tabSpan] = /^(?: {4}| {2}|)/.exec(indent)) &&
@@ -602,7 +604,7 @@
           text && line.appendChild(renderer(text, hint)));
 
         // TODO: Normalize multiple line breaks
-        breaks && (yield line, --breaks && (yield* Array(breaks).fill(renderers.line())), (line = null));
+        breaks && (yield line, --breaks && (yield* Array(breaks).fill(blank)), (line = null));
       }
       line && (yield line);
     }
@@ -625,9 +627,9 @@
     /** The class name of the element to use for rendering a token. */
     CLASS: 'markup',
     /** Concatenates leading whitespace into a separate "indent" token */
-    LINE_INDENTS: true,
+    LINE_INDENTS: false,
     /** Replaces uniform leading spaces with tabs based on first indent size */
-    LINE_REINDENTS: true,
+    LINE_REINDENTS: false,
   });
 
   /// INTERFACE
