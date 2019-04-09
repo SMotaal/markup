@@ -2,6 +2,7 @@
   --markup-neutral-light: var(--markup-neutral-light, #aaa);
   --markup-neutral: var(--markup-neutral, #999);
   --markup-neutral-fade: var(--markup-neutral-fade, #9993);
+  --markup-neutral-dim: var(--markup-neutral, #9999);
   --markup-neutral-dark: var(--markup-neutral-dark, #666);
 
   --markup-light-text: var(--markup-light-text, #666);
@@ -119,8 +120,6 @@ pre.markup-line-numbers,
 pre.markup[line-numbers],
 pre > .markup-line-numbers {
   padding-inline-start: 3em;
-  /* counter-reset: line attr(line-numbers); */
-  /* counter-reset: line attr(line-numbers); */
 }
 
 .markup-line:first-of-type {
@@ -135,41 +134,45 @@ pre > .markup-line-numbers {
 .markup-line-numbers .markup-line::before,
 pre.markup[line-numbers] .markup-line::before {
   float: left;
-  width: 3em;
+  width: 2.5em;
   padding: 0;
   margin-inline-start: -3.5em;
   content: '';
   counter-increment: line;
+  color: var(--markup-neutral-dim, #9999);
   text-indent: 0;
   text-align: end;
   font-variant: small-caps;
   font-size: 75%;
   font-style: normal;
-  font-weight: 100;
+  font-weight: 200;
   height: calc(100% / 0.75);
   vertical-align: middle;
   white-space: pre;
   user-select: none;
   -webkit-user-select: none;
   -moz-user-select: none;
+  content: counter(line) ' ';
+  border: 0 solid #9999;
+  border-inline-end-width: 0.5px;
+  pointer-events: none;
 }
 
-.markup-line-numbers .markup-line:not(:empty)::before,
+.markup-line-numbers .markup-line:empty::before,
+pre.markup[line-numbers] .markup-line:empty::before {
+  visibility: hidden;
+}
+
+/* .markup-line-numbers .markup-line:not(:empty)::before,
 pre.markup[line-numbers] .markup-line:not(:empty)::before {
   content: counter(line) ' ';
-  border: 0 solid currentColor;
+  border: 0 solid #9999;
   border-inline-end-width: 0.5px;
-}
+} */
 
 @media only print {
   .markup-line-numbers .markup-line::before {
     color: black;
-  }
-}
-
-@media only screen {
-  .markup-line-numbers .markup-line:not(:hover)::before {
-    opacity: 0.5;
   }
 }
 
