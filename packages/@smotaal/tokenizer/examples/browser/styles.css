@@ -6,6 +6,7 @@
   --markup-neutral-light: var(--markup-neutral-light, #aaa);
   --markup-neutral: var(--markup-neutral, #999);
   --markup-neutral-fade: var(--markup-neutral-fade, #9993);
+  --markup-neutral-dim: var(--markup-neutral, #9999);
   --markup-neutral-dark: var(--markup-neutral-dark, #666);
 
   --markup-light-text: var(--markup-light-text, #666);
@@ -18,7 +19,6 @@
   --markup-background: var(--markup-background, var(--markup-neutral-fade));
 }
 
-
 .markup-container {
   flex: 1;
   background-color: var(--markup-background, transparent);
@@ -28,6 +28,8 @@
   font-family: 'Iosevka Web', monospace;
   font-variant-ligatures: contextual;
   white-space: pre-wrap;
+  transition: background 0.75s ease-in-out;
+  will-change: auto;
 }
 
 .markup-container > header {
@@ -37,13 +39,13 @@
   --medium: var(--markup-neutral, #999);
   --dim: var(--markup-neutral-fade, #9993);
   --dark: var(--markup-dark, #333f46);
-  --border: var(--bright);
+  --border: transparent;
   --fill: var(--dim);
   --text: var(--medium);
   --shadow: var(--light, transparent);
   --outset-shadow: 0 0.875px 0;
   --inset-shadow: 0 -0.875px 0;
-  --outset-border: 0.5px ridge var(--border);
+  --outset-border: 0.5px solid var(--border);
   display: grid;
   grid-auto-flow: column dense;
   overflow-x: hidden;
@@ -179,7 +181,7 @@ i[icon] {
     /* height: 100vh; */
     /* min-width: 100vw; */
     min-height: 100vh;
-    /* box-sizing: border-box; */
+    box-sizing: border-box;
     -webkit-text-size-adjust: 100%;
   }
 
@@ -202,8 +204,6 @@ i[icon] {
   .markup-container {
     padding: 1ch;
     margin: 0;
-    transition: background 0.75s ease-in-out;
-    /* will-change: transition; */
   }
 
   .markup-container > header {
@@ -213,8 +213,6 @@ i[icon] {
     color: var(--text);
     text-shadow: var(--outset-shadow, 0 0 0) var(--shadow);
     opacity: 0.9;
-    z-index: 2;
-    /* backdrop-filter: blur(20px); */
 
     /* TODO:  Fix sticky in Safari: http://cssdeck.com/labs/bu0nx69w */
     position: -webkit-sticky;
@@ -224,20 +222,34 @@ i[icon] {
     user-select: none;
     -moz-user-select: none;
     -webkit-user-select: none;
+    /* will-change: transform; */
+    /* transform: translateZ(0); */
+    z-index: 1;
+    /* margin-bottom: 1.25em; */
   }
 
   .markup-container.dark-mode > header {
     --shadow: var(--dark, transparent);
   }
 
-  .markup-container > .markup-content {
-    transition: 0.15s ease-out;
+  .markup-container .markup-content {
+    /* will-change: filter, contents; */
+    transition: filter 0.15s ease-out;
   }
 
-  .markup-container > .markup-content.rendering {
-    opacity: 0.85;
+  .markup-container .markup-content.rendering,
+  .markup-container.rendering .markup-content,
+  .markup-container .rendering .markup-content {
+    pointer-events: none;
+    /* opacity: 0.85; */
     filter: blur(10px) contrast(0.5) saturate(1.5);
-    transition: 0.25s ease-in;
+    transition: filter 0.25s ease-in;
+  }
+
+  .markup-container .markup-content.rendering *,
+  .markup-container.rendering .markup-content *,
+  .markup-container .rendering .markup-content * {
+    pointer-events: none;
   }
 }
 
