@@ -1369,7 +1369,7 @@
     esx: esx
   });
 
-  const parser = Object.assign(new Parser(), {MODULE_URL: (typeof document !== 'undefined' ? document.currentScript && document.currentScript.src || document.baseURI : new (typeof URL !== 'undefined' ? URL : require('ur'+'l').URL)('file:' + __filename).href)});
+  const parser = Object.assign(new Parser(), {MODULE_URL: (typeof document === 'undefined' ? new (require('u' + 'rl').URL)('file:' + __filename).href : (document.currentScript && document.currentScript.src || new URL('tokenizer.experimental.js', document.baseURI).href))});
   for (const id in modes) parser.register(modes[id]);
 
   exports.MAPPINGS = MAPPINGS;

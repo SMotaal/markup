@@ -139,7 +139,7 @@ var markup = (function (exports) {
   });
 
   // TEST: Trace for ESM testing
-  typeof process === 'object' && console.info('[ESM]: %o', (typeof document !== 'undefined' ? document.currentScript && document.currentScript.src || document.baseURI : new (typeof URL !== 'undefined' ? URL : require('ur'+'l').URL)('file:' + __filename).href));
+  typeof process === 'object' && console.info('[ESM]: %o', (document.currentScript && document.currentScript.src || new URL('tokenizer.browser.stable.js', document.baseURI).href));
 
   const native = document$2 && dom;
 
@@ -1699,7 +1699,7 @@ var markup = (function (exports) {
   });
 
   const parser = new Parser();
-  parser.MODULE_URL = (typeof document !== 'undefined' ? document.currentScript && document.currentScript.src || document.baseURI : new (typeof URL !== 'undefined' ? URL : require('ur'+'l').URL)('file:' + __filename).href);
+  parser.MODULE_URL = (document.currentScript && document.currentScript.src || new URL('tokenizer.browser.stable.js', document.baseURI).href);
   for (const id in modes) parser.register(modes[id]);
 
   const TokenizerAPI = Object.setPrototypeOf(
