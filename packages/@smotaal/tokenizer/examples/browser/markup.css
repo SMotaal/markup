@@ -110,9 +110,13 @@
   }
 }
 
-.markup {
-  color: var(--color, var(--markup-color, var(--markup-light-text, currentColor)));
+.markup-line {
   font-variant-ligatures: common-ligatures discretionary-ligatures contextual historical-ligatures;
+  line-break: loose;
+}
+
+.markup-line .markup {
+  color: var(--color, var(--markup-color, var(--markup-light-text, currentColor)));
 }
 
 .markup-line-numbers pre,
