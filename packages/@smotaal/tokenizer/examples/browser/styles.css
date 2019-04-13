@@ -190,8 +190,7 @@ i[icon] {
     min-width: inherit;
     max-height: inherit;
     max-width: inherit;
-    display: flex;
-    flex-flow: column nowrap;
+    display: grid;
     margin: 0;
     padding: 0;
     overflow-x: hidden;
