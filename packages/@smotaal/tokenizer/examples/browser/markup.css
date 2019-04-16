@@ -112,7 +112,7 @@
 
 .markup-line {
   font-variant-ligatures: common-ligatures discretionary-ligatures contextual historical-ligatures;
-  line-break: loose;
+  /* line-break: loose; */
 }
 
 .markup-line .markup {
