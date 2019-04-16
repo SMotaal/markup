@@ -203,7 +203,7 @@ export default (markup, overrides) => {
     const header = renderHeader({rerender});
     const content = document.createElement('div');
     content.className = 'markup-content markup-line-numbers';
-    const slot = content.appendChild(document.createElement('span'));
+    const slot = content.appendChild(document.createElement('div'));
     slot.className = 'markup-wrapper';
     const {timing, status} = header;
     const time = async (name, executor, cycles = 1) => {
