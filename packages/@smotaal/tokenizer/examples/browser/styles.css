@@ -53,6 +53,11 @@
     box-sizing: border-box;
   }
 
+  .markup-wrapper,
+  .markup-wrapper * {
+    box-sizing: content-box;
+  }
+
   .markup-container .markup-content {
     overflow-x: hidden;
     overflow-y: visible;

@@ -14,11 +14,6 @@
     --widget: #fffa;
   }
 
-  .markup-line-numbers .markup-line:hover::before {
-    background-color: var(--markup-neutral-dim, #9993);
-    color: var(--markup-contrast);
-  }
-
   .markup-line > .markup {
     --padding: 1px;
     --debug: var(--color, var(--markup-neutral, #999));
@@ -29,7 +24,35 @@
     cursor: text;
   }
 
-  .markup-line > .markup:hover {
+  .markup-wrapper,
+  .markup-wrapper * {
+    /* box-sizing: content-box; */
+  }
+
+  /* .marker + .markup, */
+  .marker + .markup-line {
+    /* filter: drop-shadow(0 1px 0 #000); */
+    /* box-shadow: 0 0 1px #0003; */
+    background: #9991;
+    border-radius: 4px;
+    border: 1px solid #9991;
+    margin: -1px;
+    /* contain: layout; */
+    /* outline: 2px solid #9991; */
+    /* outline-offset: 4px; */
+    /* background-color: #9991; */
+  }
+
+  /* .markup-line-numbers .markup-line:focus-within::before, */
+  .marked > .marker + .markup-line::before,
+  .markup-line-numbers .markup-wrapper:not(.marked) > .markup-line:hover::before {
+    background-color: var(--markup-neutral-dim, #9993);
+    color: var(--markup-contrast);
+  }
+
+  /* .markup-line > .markup:focus, */
+  .marked > .markup-line > .marker + .markup,
+  .markup-wrapper:not(.marked) > .markup-line > .markup:hover {
     background-color: var(--markup-constast, white);
     box-shadow: 0 0 0 2px var(--markup-constast, white), 0 3px 10px -2px #0006;
     position: relative;
@@ -38,7 +61,9 @@
     z-index: 2;
   }
 
-  .markup-line > .markup:hover::before {
+  /* .markup-line > .markup:focus::before, */
+  .marked > .markup-line > .marker + .markup::before,
+  .markup-wrapper:not(.marked) > .markup-line > .markup:hover::before {
     --padding: 1.5px;
     display: grid;
     position: absolute;
