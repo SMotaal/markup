@@ -1271,6 +1271,8 @@
    * @typedef { (options: ModeOptions, modes: Modes) => Mode } ModeFactory
    */
 
+  const parser = Object.assign(new Parser(), {MODULE_URL: (typeof document === 'undefined' ? new (require('u' + 'rl').URL)('file:' + __filename).href : (document.currentScript && document.currentScript.src || new URL('tokenizer.browser.js', document.baseURI).href))});
+
   const css = Object.defineProperties(
     ({syntax} = css.defaults) => ({
       syntax,
@@ -1715,8 +1717,8 @@
     esx: esx
   });
 
-  const parser = Object.assign(new Parser(), {MODULE_URL: (typeof document === 'undefined' ? new (require('u' + 'rl').URL)('file:' + __filename).href : (document.currentScript && document.currentScript.src || new URL('tokenizer.browser.js', document.baseURI).href))});
-  for (const id in modes) parser.register(modes[id]);
+  const parser$1 = Object.assign(new Parser(), {MODULE_URL: (typeof document === 'undefined' ? new (require('u' + 'rl').URL)('file:' + __filename).href : (document.currentScript && document.currentScript.src || new URL('tokenizer.browser.js', document.baseURI).href))});
+  for (const id in modes) parser$1.register(modes[id]);
 
   const TokenizerAPI = Object.setPrototypeOf(
     class TokenizerAPI {
@@ -1798,8 +1800,8 @@
 
   /** @typedef {import('./parser.js').Parser} Parser */
 
-  var markup_experimental = ({parsers: exports.parsers, render: exports.render, tokenize: exports.tokenize, warmup: exports.warmup} = new TokenizerAPI({
-    parsers: [parser],
+  var experimental_extended = ({parsers: exports.parsers, render: exports.render, tokenize: exports.tokenize, warmup: exports.warmup} = new TokenizerAPI({
+    parsers: [parser$1],
     render: (source, options, flags) => {
       const fragment = options && options.fragment;
       const debugging = flags && /\bdebug\b/i.test(typeof flags === 'string' ? flags : [...flags].join(' '));
@@ -1811,7 +1813,7 @@
     },
   }));
 
-  exports.default = markup_experimental;
+  exports.default = experimental_extended;
   exports.encodeEntities = encodeEntities;
   exports.encodeEntity = encodeEntity;
   exports.entities = entities;

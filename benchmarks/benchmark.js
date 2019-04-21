@@ -1,6 +1,6 @@
 import setup from './tasks/tasks.js';
 // import markup from '../lib/markup.js';
-import * as markup from '../packages/@smotaal/tokenizer/browser/markup.js';
+import * as markup from '../packages/@smotaal/tokenizer/browser/extended.js';
 
 (async (sources = [['<html/>', {sourceType: 'html'}], ['export default "js";', {sourceType: 'es'}]]) => {
   const {tokenize, render, capture} = await setup(markup);

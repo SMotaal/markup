@@ -200,11 +200,8 @@ export default (markup, overrides) => {
         ({width: content.style.width, height: content.style.height} = previousStyle);
       }
     };
+
     const header = renderHeader({rerender});
-    const content = document.createElement('div');
-    content.className = 'markup-content markup-line-numbers';
-    const slot = content.appendChild(document.createElement('div'));
-    slot.className = 'markup-wrapper';
     const {timing, status} = header;
     const time = async (name, executor, cycles = 1) => {
       let start, result, end, elapsed;
@@ -216,10 +213,32 @@ export default (markup, overrides) => {
       return {name, executor, start, result, end, elapsed};
     };
 
-    slot.addEventListener('click', event => {
-      event.target.focus();
-      console.log(document.activeElement, event);
-    });
+    const content = document.createElement('div');
+    content.className = 'markup-content markup-line-numbers';
+
+
+    const slot = content.appendChild(document.createElement('div'));
+    slot.className = 'markup-wrapper';
+
+    Marker: {
+      const lineMarker = Object.assign(document.createElement('span'), {className: 'marker', textContent: '\u034F'});
+      const columnMarker = Object.assign(document.createElement('span'), {className: 'marker', textContent: '\u034F'});
+
+      slot.addEventListener('click', event => {
+        /** @type {{target: HTMLSpanElement}} */
+        const {target} = event;
+        if (!target.matches('.markup')) {
+          columnMarker.remove();
+          lineMarker.remove();
+          slot.classList.remove('marked');
+        } else {
+          target.before(columnMarker);
+          const line = target.closest('.markup-line');
+          line && line.before(lineMarker);
+          slot.classList.add('marked');
+        }
+      });
+    }
 
     container.innerHTML = '';
     container.append(header, content);

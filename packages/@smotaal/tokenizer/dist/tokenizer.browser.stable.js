@@ -1781,7 +1781,7 @@ const UNSET = Symbol('');
 
 let parsers, render, tokenize, warmup;
 
-var markup = ({parsers, render, tokenize, warmup} = new TokenizerAPI({
+var extended = ({parsers, render, tokenize, warmup} = new TokenizerAPI({
   parsers: [parser],
   render: (source, options, flags) => {
     const fragment = options && options.fragment;
@@ -1794,6 +1794,6 @@ var markup = ({parsers, render, tokenize, warmup} = new TokenizerAPI({
   },
 }));
 
-export default markup;
+export default extended;
 export { encodeEntities, encodeEntity, entities, parsers, render, tokenize, warmup };
 //# sourceMappingURL=tokenizer.browser.stable.js.map

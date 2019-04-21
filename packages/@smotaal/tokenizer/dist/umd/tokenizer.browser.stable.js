@@ -1785,7 +1785,7 @@
 
   /** @typedef {import('./parser.js').Parser} Parser */
 
-  var markup = ({parsers: exports.parsers, render: exports.render, tokenize: exports.tokenize, warmup: exports.warmup} = new TokenizerAPI({
+  var extended = ({parsers: exports.parsers, render: exports.render, tokenize: exports.tokenize, warmup: exports.warmup} = new TokenizerAPI({
     parsers: [parser],
     render: (source, options, flags) => {
       const fragment = options && options.fragment;
@@ -1798,7 +1798,7 @@
     },
   }));
 
-  exports.default = markup;
+  exports.default = extended;
   exports.encodeEntities = encodeEntities;
   exports.encodeEntity = encodeEntity;
   exports.entities = entities;

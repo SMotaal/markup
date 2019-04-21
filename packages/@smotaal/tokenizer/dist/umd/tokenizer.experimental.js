@@ -639,6 +639,8 @@
    * @typedef { (options: ModeOptions, modes: Modes) => Mode } ModeFactory
    */
 
+  const parser = Object.assign(new Parser(), {MODULE_URL: (typeof document === 'undefined' ? new (require('u' + 'rl').URL)('file:' + __filename).href : (document.currentScript && document.currentScript.src || new URL('tokenizer.experimental.js', document.baseURI).href))});
+
   /// Helpers
   const InspectSymbol = Symbol.for('nodejs.util.inspect.custom');
 
@@ -1369,15 +1371,15 @@
     esx: esx
   });
 
-  const parser = Object.assign(new Parser(), {MODULE_URL: (typeof document === 'undefined' ? new (require('u' + 'rl').URL)('file:' + __filename).href : (document.currentScript && document.currentScript.src || new URL('tokenizer.experimental.js', document.baseURI).href))});
-  for (const id in modes) parser.register(modes[id]);
+  const parser$1 = Object.assign(new Parser(), {MODULE_URL: (typeof document === 'undefined' ? new (require('u' + 'rl').URL)('file:' + __filename).href : (document.currentScript && document.currentScript.src || new URL('tokenizer.experimental.js', document.baseURI).href))});
+  for (const id in modes) parser$1.register(modes[id]);
 
   exports.MAPPINGS = MAPPINGS;
   exports.MODES = MODES;
   exports.Parser = Parser;
   exports.TOKENIZERS = TOKENIZERS;
   exports.Tokenizer = Tokenizer;
-  exports.default = parser;
+  exports.default = parser$1;
   exports.modes = modes;
 
   Object.defineProperty(exports, '__esModule', { value: true });

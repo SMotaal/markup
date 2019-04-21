@@ -1265,6 +1265,8 @@ class Parser {
  * @typedef { (options: ModeOptions, modes: Modes) => Mode } ModeFactory
  */
 
+const parser = Object.assign(new Parser(), {MODULE_URL: import.meta.url});
+
 const css = Object.defineProperties(
   ({syntax} = css.defaults) => ({
     syntax,
@@ -1709,8 +1711,8 @@ var modes = /*#__PURE__*/Object.freeze({
   esx: esx
 });
 
-const parser = Object.assign(new Parser(), {MODULE_URL: import.meta.url});
-for (const id in modes) parser.register(modes[id]);
+const parser$1 = Object.assign(new Parser(), {MODULE_URL: import.meta.url});
+for (const id in modes) parser$1.register(modes[id]);
 
 const TokenizerAPI = Object.setPrototypeOf(
   class TokenizerAPI {
@@ -1794,8 +1796,8 @@ const UNSET = Symbol('');
 
 let parsers, render, tokenize, warmup;
 
-var markup_experimental = ({parsers, render, tokenize, warmup} = new TokenizerAPI({
-  parsers: [parser],
+var experimental_extended = ({parsers, render, tokenize, warmup} = new TokenizerAPI({
+  parsers: [parser$1],
   render: (source, options, flags) => {
     const fragment = options && options.fragment;
     const debugging = flags && /\bdebug\b/i.test(typeof flags === 'string' ? flags : [...flags].join(' '));
@@ -1807,6 +1809,6 @@ var markup_experimental = ({parsers, render, tokenize, warmup} = new TokenizerAP
   },
 }));
 
-export default markup_experimental;
+export default experimental_extended;
 export { encodeEntities, encodeEntity, entities, parsers, render, tokenize, warmup };
 //# sourceMappingURL=tokenizer.browser.js.map

@@ -6,22 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline';" />
     <link rel="stylesheet" href="./packages/@smotaal/tokenizer/examples/browser/styles.css" />
-    <template id="source-header">
-      <div id="summary">
-        <span title="source"><span id="source"></span><time unit="ms"></time></span>
-      </div>
-      <div id="details">
-        <span title="mode"><span id="mode"></span><span id="variant"></span></span>
-        <span title="iterations"><span id="iterations"></span><time unit="ms"></time></span>
-        <span title="repeats"><span id="repeats"></span><time unit="ms"></time></span>
-      </div>
-      <div id="controls">
-        <span>
-          <a id="rerender" title="Repeat" onclick><i icon>&#x2301;</i></a>
-          <a id="contrast" title="Dark/Light" onclick><i icon>&#x263D;</i></a>
-        </span>
-      </div>
-    </template>
   </head>
 
   <body>
@@ -29,7 +13,7 @@
       <script src="./packages/@smotaal/tokenizer/examples/browser/ui.js"></script>
     </pre>
     <script type="module">
-      import markup from './packages/@smotaal/tokenizer/browser/markup.experimental.js';
+      import markup from './packages/@smotaal/tokenizer/browser/experimental.extended.js';
       import demo from './packages/@smotaal/tokenizer/examples/browser/demo.js';
       demo(markup);
     </script>
