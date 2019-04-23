@@ -1,34 +1,37 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>SMotaal's Markup</title>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline';" />
-    <link rel="stylesheet" href="./packages/@smotaal/tokenizer/examples/browser/styles.css" />
-  </head>
 
-  <body>
-    <pre id="source-code" class="markup-container" hidden>
+<head>
+  <title>SMotaal's Markup</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline';" />
+  <link rel="preload" href="./packages/@smotaal/tokenizer/examples/browser/ui.js" as="script" />
+  <link rel="stylesheet" href="./packages/@smotaal/tokenizer/examples/browser/styles.css" />
+</head>
+
+<body>
+  <pre id="source-code" class="markup-container" hidden>
       <script src="./packages/@smotaal/tokenizer/examples/browser/ui.js"></script>
     </pre>
-    <script type="module">
-      // Stable Parser
-      import * as markup from './packages/@smotaal/tokenizer/browser/extended.js';
+  <script type="module">
+    // Stable Parser
+    import * as markup from './packages/@smotaal/tokenizer/browser/extended.js';
 
-      // Experimental Parser
-      import experimentalParser from './packages/@smotaal/tokenizer/tokenizer.experimental.extended.js';
-      markup.parsers.push(experimentalParser);
+    // Experimental Parser
+    import experimentalParser from './packages/@smotaal/tokenizer/tokenizer.experimental.extended.js';
+    markup.parsers.push(experimentalParser);
 
-      // Baseline Parser
-      import * as baselineParser from './lib/markup-parser.js';
-      import * as baselineModes from './lib/markup-modes.js';
-      baselineModes.install(baselineParser.defaults);
-      markup.parsers.push(baselineParser);
+    // Baseline Parser
+    import * as baselineParser from './lib/markup-parser.js';
+    import * as baselineModes from './lib/markup-modes.js';
+    baselineModes.install(baselineParser.defaults);
+    markup.parsers.push(baselineParser);
 
-      // Actual Demo
-      import demo from './packages/@smotaal/tokenizer/examples/browser/demo.js';
-      demo(markup);
-    </script>
-  </body>
+    // Actual Demo
+    import demo from './packages/@smotaal/tokenizer/examples/browser/demo.js';
+    demo(markup);
+  </script>
+</body>
+
 </html>
