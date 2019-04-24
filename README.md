@@ -1,4 +1,4 @@
-# Markup (_Experimental_) <span float-right>[<kbd>GitHub</kbd>](https://github.com/SMotaal/markup)</span>
+# Markup (_Experimental_) [<kbd>GitHub</kbd>](https://github.com/SMotaal/markup)
 
 Semi-contextual parsing experiments, which fall somewhere between the scope of regular expressions and the more much more advanced realms of source code parsing.
 
