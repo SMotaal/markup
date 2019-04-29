@@ -633,7 +633,7 @@ class Parser {
  * @typedef { (options: ModeOptions, modes: Modes) => Mode } ModeFactory
  */
 
-const parser = Object.assign(new Parser(), {MODULE_URL: import.meta.url});
+Object.assign(new Parser(), {MODULE_URL: import.meta.url});
 
 /// Helpers
 const InspectSymbol = Symbol.for('nodejs.util.inspect.custom');
@@ -1354,7 +1354,7 @@ Definitions: {
 
 
 
-var modes = /*#__PURE__*/Object.freeze({
+const modes = /*#__PURE__*/Object.freeze({
   css: css,
   html: html,
   markdown: markdown,
@@ -1365,9 +1365,12 @@ var modes = /*#__PURE__*/Object.freeze({
   esx: esx
 });
 
-const parser$1 = Object.assign(new Parser(), {MODULE_URL: import.meta.url});
-for (const id in modes) parser$1.register(modes[id]);
+const tokenizer_experimental_extended = (() => {
+  const experimentalExtendedParser = Object.assign(new Parser(), {MODULE_URL: import.meta.url});
+  for (const id in modes) experimentalExtendedParser.register(modes[id]);
+  return experimentalExtendedParser;
+})();
 
-export default parser$1;
+export default tokenizer_experimental_extended;
 export { MAPPINGS, MODES, Parser, TOKENIZERS, Tokenizer, modes };
 //# sourceMappingURL=tokenizer.experimental.js.map

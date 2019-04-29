@@ -639,7 +639,7 @@
    * @typedef { (options: ModeOptions, modes: Modes) => Mode } ModeFactory
    */
 
-  const parser = Object.assign(new Parser(), {MODULE_URL: (typeof document === 'undefined' ? new (require('u' + 'rl').URL)('file:' + __filename).href : (document.currentScript && document.currentScript.src || new URL('tokenizer.experimental.js', document.baseURI).href))});
+  Object.assign(new Parser(), {MODULE_URL: (typeof document === 'undefined' ? new (require('u' + 'rl').URL)('file:' + __filename).href : (document.currentScript && document.currentScript.src || new URL('tokenizer.experimental.js', document.baseURI).href))});
 
   /// Helpers
   const InspectSymbol = Symbol.for('nodejs.util.inspect.custom');
@@ -1360,7 +1360,7 @@
 
 
 
-  var modes = /*#__PURE__*/Object.freeze({
+  const modes = /*#__PURE__*/Object.freeze({
     css: css,
     html: html,
     markdown: markdown,
@@ -1371,15 +1371,18 @@
     esx: esx
   });
 
-  const parser$1 = Object.assign(new Parser(), {MODULE_URL: (typeof document === 'undefined' ? new (require('u' + 'rl').URL)('file:' + __filename).href : (document.currentScript && document.currentScript.src || new URL('tokenizer.experimental.js', document.baseURI).href))});
-  for (const id in modes) parser$1.register(modes[id]);
+  const tokenizer_experimental_extended = (() => {
+    const experimentalExtendedParser = Object.assign(new Parser(), {MODULE_URL: (typeof document === 'undefined' ? new (require('u' + 'rl').URL)('file:' + __filename).href : (document.currentScript && document.currentScript.src || new URL('tokenizer.experimental.js', document.baseURI).href))});
+    for (const id in modes) experimentalExtendedParser.register(modes[id]);
+    return experimentalExtendedParser;
+  })();
 
   exports.MAPPINGS = MAPPINGS;
   exports.MODES = MODES;
   exports.Parser = Parser;
   exports.TOKENIZERS = TOKENIZERS;
   exports.Tokenizer = Tokenizer;
-  exports.default = parser$1;
+  exports.default = tokenizer_experimental_extended;
   exports.modes = modes;
 
   Object.defineProperty(exports, '__esModule', { value: true });

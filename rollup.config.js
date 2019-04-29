@@ -77,7 +77,7 @@ const bundle = (
 
 const defaults = {
   context: 'this',
-  output: {sourcemap: true},
+  output: {sourcemap: true, preferConst: true},
 };
 
 const esm = (name, naming = '[name].js') => bundle(`${name}:esm` in bundles ? `${name}:esm` : name, 'es', naming);

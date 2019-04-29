@@ -1,20 +1,28 @@
 export * from './helpers.js';
-import parser from '../tokenizer.experimental.extended.js';
+import experimentalExtendedParser from '../tokenizer.experimental.extended.js';
 import {TokenizerAPI} from '../lib/api.js';
+import markupDOM from '../extensions/dom.js';
 
-import dom from '../extensions/dom.js';
+/** @type {{experimentalExtendedAPI: import('../lib/api').API}} */
+const {
+  experimentalExtendedAPI,
+  experimentalExtendedAPI: {parsers, render, tokenize, warmup},
+} = {
+  //@ts-ignore
+  experimentalExtendedAPI: new TokenizerAPI({
+    parsers: [experimentalExtendedParser],
+    render: (source, options, flags) => {
+      const fragment = options && options.fragment;
+      const debugging = flags && /\bdebug\b/i.test(typeof flags === 'string' ? flags : [...flags].join(' '));
 
-export let parsers, render, tokenize, warmup;
+      debugging &&
+        console.info('render: %o', {api: experimentalExtendedAPI, source, options, flags, fragment, debugging});
+      fragment && (fragment.logs = debugging ? [] : undefined);
 
-export default ({parsers, render, tokenize, warmup} = new TokenizerAPI({
-  parsers: [parser],
-  render: (source, options, flags) => {
-    const fragment = options && options.fragment;
-    const debugging = flags && /\bdebug\b/i.test(typeof flags === 'string' ? flags : [...flags].join(' '));
+      return markupDOM.render(tokenize(source, options, flags), fragment);
+    },
+  }),
+};
 
-    debugging && console.info('render: %o', {render, source, options, flags, fragment, debugging});
-    fragment && (fragment.logs = debugging ? [] : undefined);
-
-    return dom.render(tokenize(source, options, flags), fragment);
-  },
-}));
+export default experimentalExtendedAPI;
+export {parsers, tokenize, render, warmup};

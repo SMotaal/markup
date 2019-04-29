@@ -1,4 +1,4 @@
-var tokenizer = (function (exports) {
+const tokenizer = (function (exports) {
   'use strict';
 
   /** Shared context state handler for token generator instances  */
@@ -636,7 +636,7 @@ var tokenizer = (function (exports) {
    * @typedef { (options: ModeOptions, modes: Modes) => Mode } ModeFactory
    */
 
-  const parser = Object.assign(new Parser(), {MODULE_URL: (document.currentScript && document.currentScript.src || new URL('tokenizer.experimental.js', document.baseURI).href)});
+  Object.assign(new Parser(), {MODULE_URL: (document.currentScript && document.currentScript.src || new URL('tokenizer.experimental.js', document.baseURI).href)});
 
   /// Helpers
   const InspectSymbol = Symbol.for('nodejs.util.inspect.custom');
@@ -1357,7 +1357,7 @@ var tokenizer = (function (exports) {
 
 
 
-  var modes = /*#__PURE__*/Object.freeze({
+  const modes = /*#__PURE__*/Object.freeze({
     css: css,
     html: html,
     markdown: markdown,
@@ -1368,15 +1368,18 @@ var tokenizer = (function (exports) {
     esx: esx
   });
 
-  const parser$1 = Object.assign(new Parser(), {MODULE_URL: (document.currentScript && document.currentScript.src || new URL('tokenizer.experimental.js', document.baseURI).href)});
-  for (const id in modes) parser$1.register(modes[id]);
+  const tokenizer_experimental_extended = (() => {
+    const experimentalExtendedParser = Object.assign(new Parser(), {MODULE_URL: (document.currentScript && document.currentScript.src || new URL('tokenizer.experimental.js', document.baseURI).href)});
+    for (const id in modes) experimentalExtendedParser.register(modes[id]);
+    return experimentalExtendedParser;
+  })();
 
   exports.MAPPINGS = MAPPINGS;
   exports.MODES = MODES;
   exports.Parser = Parser;
   exports.TOKENIZERS = TOKENIZERS;
   exports.Tokenizer = Tokenizer;
-  exports.default = parser$1;
+  exports.default = tokenizer_experimental_extended;
   exports.modes = modes;
 
   return exports;
