@@ -1,4 +1,4 @@
-import * as dom from '../../../pseudom/pseudom.js';
+import * as pseudom from '../../../pseudom/pseudom.js';
 export {encodeEntity, encodeEntities} from '../../../pseudom/pseudom.js';
 import {each} from './helpers.js';
 
@@ -7,9 +7,9 @@ import {each} from './helpers.js';
 /** Uses lightweight proxy objects that can be serialized into HTML text */
 const HTML_MODE = true;
 
-const supported = !!dom.native;
+const supported = !!pseudom.native;
 const native = !HTML_MODE && supported;
-const implementation = native ? dom.native : dom.pseudo;
+const implementation = native ? pseudom.native : pseudom.pseudo;
 const {createElement: Element, createText: Text, createFragment: Fragment} = implementation;
 const Template = template =>
   !supported || Template.supported === false
