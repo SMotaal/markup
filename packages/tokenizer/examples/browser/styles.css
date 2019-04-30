@@ -1,6 +1,6 @@
 @import '/pholio/styles/fonts/iosevka/iosevka.css';
-@import '../../browser/styles/markup.css';
-@import '../../browser/styles/markup-debug.css';
+@import '/markup/styles/markup.css';
+@import '/markup/styles/markup-debug.css';
 
 :host {
   --markup-neutral-light: var(--markup-neutral-light, #aaa);
