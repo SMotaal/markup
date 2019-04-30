@@ -11,19 +11,19 @@ const bundles = {
     output: {exports: 'named'},
   },
   ['tokenizer:stable:extended']: {
-    input: `${dirname}/packages/@smotaal/tokenizer/tokenizer.extended.js`,
+    input: `${dirname}/packages/tokenizer/tokenizer.extended.js`,
     output: {exports: 'named', name: 'tokenizer'},
   },
   ['tokenizer:experimental:extended']: {
-    input: `${dirname}/packages/@smotaal/tokenizer/tokenizer.experimental.extended.js`,
+    input: `${dirname}/packages/tokenizer/tokenizer.experimental.extended.js`,
     output: {exports: 'named', name: 'tokenizer'},
   },
   ['tokenizer:browser:markup:stable']: {
-    input: `${dirname}/packages/@smotaal/tokenizer/browser/extended.js`,
+    input: `${dirname}/packages/tokenizer/browser/extended.js`,
     output: {exports: 'named', name: 'markup'},
   },
   ['tokenizer:browser:markup:experimental']: {
-    input: `${dirname}/packages/@smotaal/tokenizer/browser/experimental.extended.js`,
+    input: `${dirname}/packages/tokenizer/browser/experimental.extended.js`,
     output: {exports: 'named', name: 'markup'},
   },
 };
