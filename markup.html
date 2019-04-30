@@ -6,20 +6,20 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline';" />
-  <link rel="preload" href="./packages/@smotaal/tokenizer/examples/browser/ui.js" as="script" />
-  <link rel="stylesheet" href="./packages/@smotaal/tokenizer/examples/browser/styles.css" />
+  <link rel="preload" href="./packages/tokenizer/examples/browser/ui.js" as="script" />
+  <link rel="stylesheet" href="./packages/tokenizer/examples/browser/styles.css" />
 </head>
 
 <body>
   <pre id="source-code" class="markup-container" hidden>
-      <script src="./packages/@smotaal/tokenizer/examples/browser/ui.js"></script>
+      <script src="./packages/tokenizer/examples/browser/ui.js"></script>
     </pre>
   <script type="module">
     // Stable Parser
-    import * as markup from './packages/@smotaal/tokenizer/browser/extended.js';
+    import * as markup from './packages/tokenizer/browser/extended.js';
 
     // Experimental Parser
-    import experimentalParser from './packages/@smotaal/tokenizer/tokenizer.experimental.extended.js';
+    import experimentalParser from './packages/tokenizer/tokenizer.experimental.extended.js';
     markup.parsers.push(experimentalParser);
 
     // Baseline Parser
@@ -29,7 +29,7 @@
     markup.parsers.push(baselineParser);
 
     // Actual Demo
-    import demo from './packages/@smotaal/tokenizer/examples/browser/demo.js';
+    import demo from './packages/tokenizer/examples/browser/demo.js';
     demo(markup);
   </script>
 </body>

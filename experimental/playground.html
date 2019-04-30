@@ -7,19 +7,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline';" />
   <!-- <base href="/markup/experimental/"/> -->
-  <link rel="preload" href="/markup/packages/@smotaal/tokenizer/examples/browser/ui.js" as="script" />
-  <script type="module" src="/markup/packages/@smotaal/tokenizer/browser/experimental.js"></script>
-  <script type="module" src="/markup/packages/@smotaal/tokenizer/examples/browser/demo.js"></script>
-  <link rel="stylesheet" href="/markup/packages/@smotaal/tokenizer/examples/browser/styles.css" />
+  <link rel="preload" href="/markup/packages/tokenizer/examples/browser/ui.js" as="script" />
+  <script type="module" src="/markup/packages/tokenizer/browser/experimental.js"></script>
+  <script type="module" src="/markup/packages/tokenizer/examples/browser/demo.js"></script>
+  <link rel="stylesheet" href="/markup/packages/tokenizer/examples/browser/styles.css" />
 </head>
 
 <body>
   <pre id="source-code" class="markup-container" hidden>
-      <script src="/markup/packages/@smotaal/tokenizer/examples/browser/ui.js"></script>
+      <script src="/markup/packages/tokenizer/examples/browser/ui.js"></script>
     </pre>
   <script type="module">
-    import markup from '/markup/packages/@smotaal/tokenizer/browser/experimental.js';
-    import demo from '/markup/packages/@smotaal/tokenizer/examples/browser/demo.js';
+    import markup from '/markup/packages/tokenizer/browser/experimental.js';
+    import demo from '/markup/packages/tokenizer/examples/browser/demo.js';
     (async () => {
       try {
         const experiment = await import('./playground.js');

@@ -1,0 +1,299 @@
+@import '/pholio/styles/fonts/iosevka/iosevka.css';
+@import '../../browser/styles/markup.css';
+@import '../../browser/styles/markup-debug.css';
+
+:host {
+  --markup-neutral-light: var(--markup-neutral-light, #aaa);
+  --markup-neutral: var(--markup-neutral, #999);
+  --markup-neutral-fade: var(--markup-neutral-fade, #9993);
+  --markup-neutral-dim: var(--markup-neutral, #9999);
+  --markup-neutral-dark: var(--markup-neutral-dark, #666);
+
+  --markup-light-text: var(--markup-light-text, #666);
+  --markup-light: var(--markup-light, #f9f9f9);
+  --markup-light-fade: var(--markup-light-fade, #f9f9f933);
+  --markup-dark-text: var(--markup-dark-text, #eee);
+  --markup-dark: var(--markup-dark, #333f46);
+  --markup-dark-fade: var(--markup-dark-fade, #333f4633);
+  --markup-color: var(--markup-color, currentColor);
+  --markup-background: var(--markup-background, var(--markup-neutral-fade));
+}
+
+/** INHERIT **/ /* @import '/pholio/styles/inherit.css'; */
+@media only screen {
+  html {
+    box-sizing: border-box;
+    min-height: 100vh;
+    min-width: 100vw;
+    width: 100vw;
+    margin-left: calc(100vw - 100%);
+    -webkit-text-size-adjust: 100%;
+    font-size: 1rem;
+  }
+
+  body {
+    width: inherit;
+    min-height: inherit;
+    min-width: inherit;
+    /* max-height: inherit; */
+    overflow-y: scroll;
+    touch-action: pan-y;
+    background-color: var(--markup-background, #999);
+  }
+
+  .markup-container {
+    height: max-content;
+    width: inherit;
+    /* max-width: inherit; */
+    min-height: inherit;
+    min-width: inherit;
+    /* max-height: inherit; */
+    padding: 1ch;
+    margin: 0;
+    box-sizing: border-box;
+  }
+
+  .markup-wrapper,
+  .markup-wrapper * {
+    box-sizing: content-box;
+  }
+
+  .markup-container .markup-content {
+    overflow-x: hidden;
+    overflow-y: visible;
+    padding-top: 4em;
+    margin-top: -4em;
+    margin-left: -1ch;
+    margin-right: -1ch;
+    line-break: loose;
+  }
+
+  .markup-container > header {
+    position: -webkit-sticky;
+    position: sticky;
+    top: 1ch;
+    z-index: 1;
+  }
+}
+
+/** FLEX **/ /* @import '/pholio/styles/flex.css'; */
+
+.markup-container {
+  background-color: var(--markup-background, transparent);
+  color: var(--markup-color, currentColor);
+  line-height: 1.5em;
+  tab-size: 4;
+  font-family: 'Iosevka Web', monospace;
+  font-variant-ligatures: contextual;
+  white-space: pre-wrap;
+  transition: background 0.75s ease-in-out;
+}
+
+.markup-container > header {
+  --clear: var(--markup-background, #fff);
+  --bright: var(--markup-light-fade, #fff3);
+  --light: var(--markup-light, #aaa);
+  --medium: var(--markup-neutral, #999);
+  --dim: var(--markup-neutral-fade, #9993);
+  --dark: var(--markup-dark, #333f46);
+  --border: transparent;
+  --fill: var(--dim);
+  --text: var(--medium);
+  --shadow: var(--light, transparent);
+  --outset-shadow: 0 0.875px 0;
+  --inset-shadow: 0 -0.875px 0;
+  --outset-border: 0.5px solid var(--border);
+  display: grid;
+  grid-auto-flow: column dense;
+  grid-gap: 1ch;
+  padding: 0.25ch 1ch;
+  margin-bottom: 1ch;
+  white-space: normal;
+  font-family: system-ui -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans',
+    'Helvetica Neue', sans-serif;
+  font-weight: 200;
+  line-height: initial;
+  user-select: none;
+  -moz-user-select: none;
+  -webkit-user-select: none;
+}
+
+.markup-container > header div > [title] > [id] {
+  user-select: text;
+  -moz-user-select: text;
+  -webkit-user-select: text;
+}
+
+.markup-container > header div {
+  display: grid;
+  grid-gap: 0.25ch;
+  grid-auto-flow: column dense;
+  overflow-x: hidden;
+  text-overflow: ellipsis;
+  align-content: center;
+  padding: 0.125ch;
+}
+
+.markup-container > header div:first-child {
+  justify-content: left;
+}
+
+.markup-container > header div:last-child {
+  justify-content: right;
+}
+
+.markup-container > header div#summary {
+  grid-column: 1;
+}
+
+.markup-container > header div#controls {
+  grid-row: 1;
+}
+
+.markup-container > header div > [title] {
+  white-space: pre;
+  --symbol: '';
+}
+.markup-container > header div > [title] > [id] {
+  font-weight: 300;
+}
+
+.markup-container > header div > [title] > [id]::before {
+  content: var(--symbol, '');
+}
+
+.markup-container > header #source-type {
+  font-weight: 700;
+}
+
+.markup-container > header div > [title] > [id] + time {
+  font-size: 87.5%;
+}
+
+.markup-container > header div > [title] > [id] + time::before {
+  content: ' ';
+}
+
+.markup-container > header :empty {
+  display: none;
+}
+
+.markup-container > header [value]:not([value=''])[unit]:not([unit=''])::after {
+  content: ' ' attr(unit);
+  font-size: 50%;
+  font-weight: lighter;
+}
+
+.markup-container > header a[onclick] {
+  display: inline-block;
+  width: 2.5ch;
+  height: 0;
+  padding: 25% 0;
+  border-radius: 0.75ch;
+  background-clip: border-box;
+  border: var(--outset-border, none);
+  line-height: 0;
+  vertical-align: middle;
+  white-space: nowrap;
+  text-align: center;
+  overflow: hidden;
+}
+
+.markup-container > header a[onclick]:hover {
+  color: var(--clear);
+  background-color: var(--text);
+  text-shadow: none;
+}
+
+.markup-container > header a[onclick]:active {
+  color: var(--text);
+  border-color: var(--text);
+  background-color: var(--clear);
+}
+
+i[icon] {
+  font-style: normal;
+  font-family: monospace;
+  font-weight: 100;
+  display: block;
+  height: 50%;
+  line-height: 0;
+  overflow: visible;
+  padding: 0;
+  margin: 0;
+  transform: translateY(-100%);
+}
+
+@media only screen {
+  .markup-container .markup-content {
+    /* will-change: filter, contents; */
+    transition: filter 0.15s ease-out;
+  }
+
+  .markup-container > header {
+    border-radius: 1ch;
+    border: var(--outset-border, none);
+    background: linear-gradient(to right, var(--fill), var(--fill)), var(--clear);
+    color: var(--text);
+    text-shadow: var(--outset-shadow, 0 0 0) var(--shadow);
+    opacity: 0.9;
+
+    /* TODO:  Fix sticky in Safari: http://cssdeck.com/labs/bu0nx69w */
+    user-select: none;
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    /* float: center; */
+  }
+
+  .markup-container.dark-mode > header {
+    --shadow: var(--dark, transparent);
+  }
+
+  .markup-container .markup-content.rendering,
+  .markup-container.rendering .markup-content,
+  .markup-container .rendering .markup-content {
+    pointer-events: none;
+    /* opacity: 0.85; */
+    filter: blur(10px) contrast(0.5) saturate(1.5);
+    transition: filter 0.25s ease-in;
+  }
+
+  .markup-container .markup-content.rendering *,
+  .markup-container.rendering .markup-content *,
+  .markup-container .rendering .markup-content * {
+    pointer-events: none;
+  }
+}
+
+@media print {
+  :root {
+    --markup-color: black;
+    --markup-neutral-dark: dimgrey;
+    --markup-neutral: grey;
+    --markup-neutral-light: darkgrey;
+    --markup-neutral-fade: lightgrey;
+  }
+
+  .markup-container {
+    background: transparent;
+    font-size: 10pt;
+    color-adjust: economy;
+  }
+
+  .markup-container > header {
+    grid-auto-flow: row dense;
+    border: 0 double currentColor;
+    padding-bottom: 1ch;
+    border-bottom-width: 4px;
+    position: initial;
+  }
+  .markup-container > header #controls {
+    display: none;
+  }
+}
+
+@supports (padding: env(safe-area-inset-top)) {
+  body {
+    margin: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+}
