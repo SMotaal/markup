@@ -10,9 +10,7 @@ export class Node {
     return (this.hasOwnProperty('children') && this.children.size) || 0;
   }
   get textContent() {
-    return (
-      (this.hasOwnProperty('children') && this.children.size && [...this.children].join('')) || ''
-    );
+    return (this.hasOwnProperty('children') && this.children.size && [...this.children].join('')) || '';
   }
   set textContent(text) {
     this.hasOwnProperty('children') && this.children.size && this.children.clear();
@@ -25,10 +23,7 @@ export class Node {
     if (elements.length) for (const element of elements) element && this.children.add(element);
   }
   removeChild(element) {
-    element &&
-      this.hasOwnProperty('children') &&
-      this.children.size &&
-      this.children.delete(element);
+    element && this.hasOwnProperty('children') && this.children.size && this.children.delete(element);
     return element;
   }
   remove(...elements) {
@@ -45,8 +40,18 @@ export class Element extends Node {
     this.textContent = text;
   }
   get outerHTML() {
-    const {className, tag, innerHTML} = this;
-    return `<${tag}${(className && ` class="${className}"`) || ''}>${innerHTML || ''}</${tag}>`;
+    let classList;
+    let {className, tag, innerHTML} = this;
+
+    className &&
+      (className = className.trim()) &&
+      ({
+        [className]: classList = (className &&
+          (Element.classLists[className] = [...new Set(className.split(/\s+/g))].join(' '))) ||
+          '',
+      } = Element.classLists || (Element.classLists = Object.create(null)));
+
+    return `<${tag}${(classList && ` class="${classList}"`) || ''}>${innerHTML || ''}</${tag}>`;
   }
   toString() {
     return this.outerHTML;

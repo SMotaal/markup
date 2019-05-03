@@ -16,9 +16,7 @@
       return (this.hasOwnProperty('children') && this.children.size) || 0;
     }
     get textContent() {
-      return (
-        (this.hasOwnProperty('children') && this.children.size && [...this.children].join('')) || ''
-      );
+      return (this.hasOwnProperty('children') && this.children.size && [...this.children].join('')) || '';
     }
     set textContent(text) {
       this.hasOwnProperty('children') && this.children.size && this.children.clear();
@@ -31,10 +29,7 @@
       if (elements.length) for (const element of elements) element && this.children.add(element);
     }
     removeChild(element) {
-      element &&
-        this.hasOwnProperty('children') &&
-        this.children.size &&
-        this.children.delete(element);
+      element && this.hasOwnProperty('children') && this.children.size && this.children.delete(element);
       return element;
     }
     remove(...elements) {
@@ -51,8 +46,18 @@
       this.textContent = text;
     }
     get outerHTML() {
-      const {className, tag, innerHTML} = this;
-      return `<${tag}${(className && ` class="${className}"`) || ''}>${innerHTML || ''}</${tag}>`;
+      let classList;
+      let {className, tag, innerHTML} = this;
+
+      className &&
+        (className = className.trim()) &&
+        ({
+          [className]: classList = (className &&
+            (Element.classLists[className] = [...new Set(className.split(/\s+/g))].join(' '))) ||
+            '',
+        } = Element.classLists || (Element.classLists = Object.create(null)));
+
+      return `<${tag}${(classList && ` class="${classList}"`) || ''}>${innerHTML || ''}</${tag}>`;
     }
     toString() {
       return this.outerHTML;
@@ -519,7 +524,8 @@
         whitespace: Text$2,
         text: factory(SPAN, {className: CLASS}),
 
-        variable: factory('var', {className: `${CLASS} variable`}),
+        // variable: factory('var', {className: `${CLASS} variable`}),
+        fault: factory(SPAN, {className: `${CLASS} fault`}),
         keyword: factory(SPAN, {className: `${CLASS} keyword`}),
         identifier: factory(SPAN, {className: `${CLASS} identifier`}),
         operator: factory(SPAN, {className: `${CLASS} punctuator operator`}),
@@ -535,6 +541,7 @@
         literal: factory(SPAN, {className: `${CLASS} literal`}),
         // indent: factory(SPAN, {className: `${CLASS} sequence indent`}),
         comment: factory(SPAN, {className: `${CLASS} comment`}),
+        fault: factory(SPAN, {className: `${CLASS} fault`}),
         code: factory(SPAN, {className: `${CLASS}`}),
       };
     }
@@ -596,12 +603,16 @@
                     tabSpan &&
                     (tabSpan = new RegExp(`${tabSpan}`, 'g')))) &&
                 (indent = indent.replace(tabSpan, '\t')),
-              indent && (indent = (line.append(renderers.indent(indent)), '')))));
+              indent && (indent = (line.append((line.lastChild = renderers.indent(indent))), '')))));
 
         text &&
           // Strip trailing whitespace
           (LINE_INDENTS && breaks && ([text, indent = ''] = text.split(/([ \t]*$)/, 2)),
-          text && line.appendChild(renderer(text, hint)));
+          text &&
+            (!punctuator && line.lastChild && renderer === line.lastChild.renderer
+              ? line.lastChild.appendChild(Text$2(text))
+              : line.appendChild((line.lastChild = renderer(text, hint))).childElementCount &&
+                (line.lastChild.renderer = renderer)));
 
         // TODO: Normalize multiple line breaks
         breaks && (yield line, --breaks && (yield* Array(breaks).fill(blank)), (line = null));
@@ -613,7 +624,9 @@
       return (content, hint) => {
         typeof content === 'string' && (content = Text$2(content));
         const element = Element$2(tag, properties, content);
-        element && typeof hint === 'string' && (element.className += ` ${hint}`);
+        // element &&
+        //   (element.className = [...new Set(`${element.className || ''} ${hint || ''}`.trim().split(/\s+/g))].join(' '));
+        element && typeof hint === 'string' && (element.className = `${element.className || ''} ${hint}`);
         return element;
       };
     }
@@ -1143,7 +1156,28 @@
       );
   };
 
+  const EmptyTokenArray = (EmptyTokenArray =>
+    Object.freeze(
+      new (Object.freeze(Object.freeze(Object.setPrototypeOf(EmptyTokenArray.prototype, null)).constructor, null))(),
+    ))(
+    class EmptyTokenArray {
+      *[Symbol.iterator]() {}
+    },
+  );
+
   class Parser {
+    constructor(options) {
+      if (options) {
+        const {mode, tokenizer, url, modes} = options;
+        if (mode) {
+          this.register((this.mode = mode));
+          tokenizer && this[TOKENIZERS].set(mode, tokenizer);
+        }
+        if (modes) for (const id in modes) this.register(modes[id]);
+        url && (this.MODULE_URL = url);
+      }
+    }
+
     /**
      * @param source {string}
      * @param state {{sourceType?: string}}
@@ -1152,11 +1186,11 @@
       const {
         options: {
           sourceType,
-          mode = (state.options.mode = (sourceType && this.get(sourceType)) || none),
+          mode = (state.options.mode = (sourceType && this.get(sourceType)) || this.mode || none),
         } = (state.options = {}),
       } = state;
       let tokenizer = mode && this[TOKENIZERS].get(mode);
-      if (!source || !mode) return [];
+      if (!source || !mode) return EmptyTokenArray;
       !tokenizer && this[TOKENIZERS].set(mode, (tokenizer = new Tokenizer(mode)));
       state.parser = this;
       state.tokenize = (this.hasOwnProperty('tokenize') && this.tokenize) || (this.tokenize = this.tokenize.bind(this));
@@ -1193,29 +1227,25 @@
       }
     }
 
-    /**
-     * @param mode {ModeFactory | Mode}
-     * @param options {ModeOptions}
-     */
+    /** @param {ModeFactory | Mode} mode @param {ModeOptions} [options] */
     register(mode, options) {
+      if (!this[MAPPINGS]) return;
+
       const {[MAPPINGS]: mappings, [MODES]: modes} = this;
-
-      if (!mappings) return;
-
       const factory = typeof mode === 'function' && mode;
-
       const {syntax, aliases = (options.aliases = [])} = ({syntax: options.syntax = mode.syntax} = options = {
         syntax: undefined,
         ...factory.defaults,
         ...options,
       });
 
-      if (!syntax || typeof syntax !== 'string')
+      if (!syntax || typeof syntax !== 'string') {
         throw TypeError(`Cannot register "${syntax}" since it not valid string'`);
+      }
 
       if (mappings[syntax]) {
         if (factory ? factory === mappings[syntax].factory : mode === modes[syntax]) return;
-        else throw ReferenceError(`Cannot register "${syntax}" since it is already registered`);
+        throw ReferenceError(`Cannot register "${syntax}" since it is already registered`);
       }
 
       if (aliases && aliases.length > 0) {
@@ -1228,20 +1258,19 @@
       }
 
       const mapping = factory ? {syntax, factory, options} : {syntax, mode, options};
-
       const descriptor = {value: mapping, writable: false};
+
       for (const id of [syntax, ...aliases]) {
         Object.defineProperty(mappings, id, descriptor);
       }
     }
 
-    /**
-     * @param mode {string}
-     * @param requires {string[]}
-     */
+    /** @param {string} mode @param {string[]} requires */
     requires(mode, requires) {
       const missing = [];
-      for (const mode of requires) mode in this[MAPPINGS] || missing.push(`"${mode}"`);
+      for (const mode of requires) {
+        mode in this[MAPPINGS] || missing.push(`"${mode}"`);
+      }
       if (!missing.length) return;
       throw Error(`Cannot initialize "${mode}" which requires the missing mode(s): ${missing.join(', ')}`);
     }
@@ -1255,9 +1284,7 @@
    * @typedef { (options: ModeOptions, modes: Modes) => Mode } ModeFactory
    */
 
-  // * @typedef { typeof helpers } Helpers
-
-  Object.assign(new Parser(), {MODULE_URL: (typeof document === 'undefined' ? new (require('u' + 'rl').URL)('file:' + __filename).href : (document.currentScript && document.currentScript.src || new URL('tokenizer.browser.stable.js', document.baseURI).href))});
+  new Parser({url: (typeof document === 'undefined' ? new (require('u' + 'rl').URL)('file:' + __filename).href : (document.currentScript && document.currentScript.src || new URL('tokenizer.browser.stable.js', document.baseURI).href))});
 
   const css = Object.defineProperties(
     ({syntax} = css.defaults) => ({
@@ -1586,9 +1613,9 @@
     };
 
     javascript.PUNCTUATORS = [
-      /,|;|\.\.\.|\.|\:|\?|=>/,
+      /,|;|\.\.\.|\.|:|\?|=>/,
       /\+\+|\+=|\+|--|-=|-|\*\*=|\*\*|\*=|\*|\/=|\//,
-      /&&|&=|&|\|\||\|=|\||\%=|\%|\^=|\^|~=|~/,
+      /&&|&=|&|\|\||\|=|\||%=|%|\^=|\^|~=|~/,
       /<<=|<<|<=|<|>>>=|>>>|>>=|>>|>=|>/,
       /!==|!=|!|===|==|=/,
     ];
@@ -1703,11 +1730,7 @@
     esx: esx
   });
 
-  const extendedParser = (() => {
-    const extendedParser = Object.assign(new Parser(), {MODULE_URL: (typeof document === 'undefined' ? new (require('u' + 'rl').URL)('file:' + __filename).href : (document.currentScript && document.currentScript.src || new URL('tokenizer.browser.stable.js', document.baseURI).href))});
-    for (const id in modes) extendedParser.register(modes[id]);
-    return extendedParser;
-  })();
+  const extendedParser = new Parser({url: (typeof document === 'undefined' ? new (require('u' + 'rl').URL)('file:' + __filename).href : (document.currentScript && document.currentScript.src || new URL('tokenizer.browser.stable.js', document.baseURI).href)), modes});
 
   class TokenizerAPI {
     /** @param {API.Options} [options] */

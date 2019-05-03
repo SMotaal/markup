@@ -11,24 +11,13 @@ Nestable syntax tokenizer using Regular Expressions.
 
 - Everything else for now
 
-<table><tr><td>
-
-## Supported Platforms
-
-This package uses `.js` extensions for ECMAScript modules supported by all up-to-date versions of most modern browsers, specifically Chrome, Safari, Firefox. <span><details><summary>Testing in Node.js with <code>--experimental-modules</code> mode</summary>
-
-For supporting Node.js versions, you can use this package by opting to use the `--experimental-modules --loader @smotaal/tokenizer/node/loader.mjs` approach intended to only be used for experimental work.
-
-If you use your own custom loader, you can configure it to resolve `.js` files in this package for files that do not have a sibling `.mjs` file as `format: 'esm'` (dual formats should mostly be restricted to the `dist` folder in general).
-
-Please note that no efforts are intended to make this package operational with tooling commonly used to down-transpile code for runtimes that do not natively support ECMAScript modules. If you use this path and it works, it will likely not behave as intended leading to issues that I am not able to address.
-
-</details></span></td></tr><tr><td>
+> **Important Note:** This package is designed for ECMAScript module supporting runtimes, including all major browsers and Node.js 12 or later.
 
 ## Important Changes
 
 _v0.0.6_
 
+- Switch to `@smotaal/pseudom` scoped distribution.
 - Refactor `extensions/dom.js` to `export default new class {}`
 - Cleanup extensions and related documentation
 - Rename source entries using `tokenizer‹.variant›*.js`
@@ -50,8 +39,6 @@ _v0.0.3_
 
 - Refactor source files for optimal bundling with `rollup`.
 - Add `dist/` with multiple dist `umd` and `esm` bundles.
-
-</td></tr></table>
 
 ## Getting Started
 
@@ -83,7 +70,7 @@ parser.tokenize('/* source */', {sourceType: 'javascript'});
 
 ## Demo
 
-You can see a [live demo](https://www.smotaal.io/markup/markup.html) or serve it locally from [examples/browser/index.html](./examples/browser/index.html).
+You can see a [live demo](https://www.smotaal.io/markup/markup) or serve it locally from [examples/browser/index.html](./examples/browser/index.html).
 
 <figure>
 
@@ -114,6 +101,5 @@ examples/browser/#‹specifier›!‹mode›*‹iterations›**‹repeats›
 <b>`**`</b><tt>‹repeat›</tt>
 
 - repeats the tokenized (and rendered) source text
-
 
 </figure>

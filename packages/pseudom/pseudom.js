@@ -1,6 +1,6 @@
-import * as pseudo from './lib/pseudo.js';
-import * as dom from './lib/native.js';
-export {encodeEntity, encodeEntities} from './lib/pseudo.js';
+import * as pseudo from './pseudo.js';
+import * as dom from './native.js';
+export {encodeEntity, encodeEntities} from './pseudo.js';
 
 // TEST: Trace for ESM testing
 typeof process === 'object' && console.info('[ESM]: %o', import.meta.url);

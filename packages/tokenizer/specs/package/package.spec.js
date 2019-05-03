@@ -1,7 +1,7 @@
-#!/usr/bin/env node
+#!/usr/bin/env node --experimental-modules
 
-import * as extended from '../node/tokenizer.extended.js';
-import * as tokenizer from '../node/tokenizer.js';
+import * as extended from '@smotaal/tokenizer/tokenizer.extended.js';
+import * as tokenizer from '@smotaal/tokenizer/tokenizer.js';
 
 export {extended, tokenizer};
 

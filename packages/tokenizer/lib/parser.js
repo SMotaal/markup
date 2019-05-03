@@ -22,7 +22,28 @@ const define = (instance, property, value, options) => {
     );
 };
 
+const EmptyTokenArray = (EmptyTokenArray =>
+  Object.freeze(
+    new (Object.freeze(Object.freeze(Object.setPrototypeOf(EmptyTokenArray.prototype, null)).constructor, null))(),
+  ))(
+  class EmptyTokenArray {
+    *[Symbol.iterator]() {}
+  },
+);
+
 export class Parser {
+  constructor(options) {
+    if (options) {
+      const {mode, tokenizer, url, modes} = options;
+      if (mode) {
+        this.register((this.mode = mode));
+        tokenizer && this[TOKENIZERS].set(mode, tokenizer);
+      }
+      if (modes) for (const id in modes) this.register(modes[id]);
+      url && (this.MODULE_URL = url);
+    }
+  }
+
   /**
    * @param source {string}
    * @param state {{sourceType?: string}}
@@ -31,11 +52,11 @@ export class Parser {
     const {
       options: {
         sourceType,
-        mode = (state.options.mode = (sourceType && this.get(sourceType)) || none),
+        mode = (state.options.mode = (sourceType && this.get(sourceType)) || this.mode || none),
       } = (state.options = {}),
     } = state;
     let tokenizer = mode && this[TOKENIZERS].get(mode);
-    if (!source || !mode) return [];
+    if (!source || !mode) return EmptyTokenArray;
     !tokenizer && this[TOKENIZERS].set(mode, (tokenizer = new Tokenizer(mode)));
     state.parser = this;
     state.tokenize = (this.hasOwnProperty('tokenize') && this.tokenize) || (this.tokenize = this.tokenize.bind(this));
@@ -72,29 +93,25 @@ export class Parser {
     }
   }
 
-  /**
-   * @param mode {ModeFactory | Mode}
-   * @param options {ModeOptions}
-   */
+  /** @param {ModeFactory | Mode} mode @param {ModeOptions} [options] */
   register(mode, options) {
+    if (!this[MAPPINGS]) return;
+
     const {[MAPPINGS]: mappings, [MODES]: modes} = this;
-
-    if (!mappings) return;
-
     const factory = typeof mode === 'function' && mode;
-
     const {syntax, aliases = (options.aliases = [])} = ({syntax: options.syntax = mode.syntax} = options = {
       syntax: undefined,
       ...factory.defaults,
       ...options,
     });
 
-    if (!syntax || typeof syntax !== 'string')
+    if (!syntax || typeof syntax !== 'string') {
       throw TypeError(`Cannot register "${syntax}" since it not valid string'`);
+    }
 
     if (mappings[syntax]) {
       if (factory ? factory === mappings[syntax].factory : mode === modes[syntax]) return;
-      else throw ReferenceError(`Cannot register "${syntax}" since it is already registered`);
+      throw ReferenceError(`Cannot register "${syntax}" since it is already registered`);
     }
 
     if (aliases && aliases.length > 0) {
@@ -107,20 +124,19 @@ export class Parser {
     }
 
     const mapping = factory ? {syntax, factory, options} : {syntax, mode, options};
-
     const descriptor = {value: mapping, writable: false};
+
     for (const id of [syntax, ...aliases]) {
       Object.defineProperty(mappings, id, descriptor);
     }
   }
 
-  /**
-   * @param mode {string}
-   * @param requires {string[]}
-   */
+  /** @param {string} mode @param {string[]} requires */
   requires(mode, requires) {
     const missing = [];
-    for (const mode of requires) mode in this[MAPPINGS] || missing.push(`"${mode}"`);
+    for (const mode of requires) {
+      mode in this[MAPPINGS] || missing.push(`"${mode}"`);
+    }
     if (!missing.length) return;
     throw Error(`Cannot initialize "${mode}" which requires the missing mode(s): ${missing.join(', ')}`);
   }
@@ -133,5 +149,3 @@ export class Parser {
  * @typedef { {aliases?: string[], syntax: string} } ModeOptions
  * @typedef { (options: ModeOptions, modes: Modes) => Mode } ModeFactory
  */
-
-// * @typedef { typeof helpers } Helpers
