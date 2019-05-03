@@ -1,0 +1,14 @@
+{
+  "private": true,
+  "name": "tokenizer-test",
+  "version": "0.0.0",
+  "type": "module",
+  "main": "package.spec.js",
+  "scripts": {
+    "test": "node --experimental-modules package.spec.js"
+  },
+  "dependencies": {
+    "@smotaal/tokenizer": "./../../",
+    "@smotaal/pseudom": "./../../../pseudom"
+  }
+}

@@ -1,5 +1,72 @@
 import {Resolvers, Hash, resolve, rewrite, frame, timeout} from './helpers.js';
 
+DarkMode: {
+  (() => {
+    const classList = document.documentElement.classList;
+    const toggle = async (state, auto) => {
+      if (auto === true) {
+        if (state === true) darkMode.prefers = 'dark';
+        else if (state === false) darkMode.prefers = 'light';
+        if (darkMode.state !== 'auto') return;
+      }
+      state =
+        state === 'auto'
+          ? ((auto = true), darkMode.prefers !== 'light')
+          : state == null
+          ? !classList.contains('dark-mode')
+          : !!state;
+      darkMode.state = localStorage.darkMode = auto ? 'auto' : state ? 'enabled' : 'disabled';
+      state ? classList.add('dark-mode') : classList.remove('dark-mode');
+    };
+    const enable = auto => toggle(true, auto);
+    const disable = auto => toggle(false, auto);
+    const darkMode = (({assign, create, freeze, getOwnPropertyDescriptors}) =>
+      assign(create(null, getOwnPropertyDescriptors(freeze({enable, disable, toggle}))), {
+        state: undefined,
+        prefers: undefined,
+      }))(Object);
+
+    ((prefersDarkMode, prefersLightMode) => {
+      localStorage.darkMode === 'enabled'
+        ? ((darkMode.state = 'enabled'), enable())
+        : localStorage.darkMode === 'disabled'
+        ? ((darkMode.state = 'disabled'), disable())
+        : toggle(
+            prefersDarkMode === true || prefersLightMode.matches !== true,
+            !!(localStorage.darkMode = darkMode.state = 'auto'),
+          );
+      prefersDarkMode.addListener(({matches = false}) => toggle(!!matches, true));
+      prefersLightMode.addListener(({matches = false}) => toggle(!matches, true));
+      // prefersLightMode
+    })(matchMedia('(prefers-color-scheme: dark)'), matchMedia('(prefers-color-scheme: light)'));
+    // element.style.transition = '';
+    document.darkMode = darkMode;
+  })();
+}
+
+Header: {
+  document.querySelector('template#source-header') ||
+    ((innerHTML, id = 'source-header') =>
+      document.head.append(Object.assign(document.createElement('template'), {id, innerHTML})))(
+      (html => html`
+        <div id="summary">
+          <span title="source"><span id="source"></span><time unit="ms"></time></span>
+        </div>
+        <div id="details">
+          <span title="mode"><span id="mode"></span><span id="variant"></span></span>
+          <span title="iterations"><span id="iterations"></span><time unit="ms"></time></span>
+          <span title="repeats"><span id="repeats"></span><time unit="ms"></time></span>
+        </div>
+        <div id="controls">
+          <span>
+            <a id="rerender" title="Repeat" onclick><i icon>&#x2301;</i></a>
+            <a id="contrast" title="Dark/Light" onclick><i icon>&#x263D;</i></a>
+          </span>
+        </div>
+      `)(String.raw),
+    );
+}
+
 const Examples = ({
   ['es']: ES = local('./dist/tokenizer.experimental.js'),
   ['html']: HTML = rewrite.tail(location.href),
@@ -115,24 +182,24 @@ export default (markup, overrides) => {
         header.elements[id] = (selector && header.querySelector(selector)) || undefined;
 
     {
+      /** @type {{[name:string]: HTMLElement}} */
       const {'rerender-button': renderButton, 'contrast-button': contrastButton} = header.elements;
       renderButton && (renderButton.onclick = rerender);
-      contrastButton &&
-        ((contrastButton.onclick = () => {
-          header.parentElement.classList.toggle('dark-mode')
-            ? // document.body.classList.add('dark-mode'),
-              (localStorage.lightMode = !(localStorage.darkMode = true))
-            : // document.body.classList.remove('dark-mode'),
-              (localStorage.darkMode = !(localStorage.lightMode = true));
-        }),
-        (contrastButton.ondblClick = () => {
-          delete localStorage.lightMode, delete localStorage.darkMode;
-          const classList = header.parentElement.classList;
-          classList.contains('prefers-dark-mode')
-            ? // document.body.classList.add('dark-mode'),
-              classList.add('dark-mode')
-            : classList.remove('dark-mode');
-        }));
+      if (contrastButton) {
+        let timeout, resetting;
+        contrastButton.onmousedown = () => {
+          clearTimeout(timeout);
+          timeout = setTimeout(() => {
+            document.darkMode.toggle('auto');
+            resetting = true;
+            console.log('Reset dark mode!');
+          }, 2000);
+        };
+        contrastButton.onmouseup = () => {
+          timeout = clearTimeout(timeout);
+          resetting === true ? (resetting = false) : document.darkMode.toggle();
+        };
+      }
     }
 
     {
@@ -189,6 +256,8 @@ export default (markup, overrides) => {
 
     const container = sourceCodeElement;
 
+    container.classList.add('fade');
+
     const rerender = () => {
       const {width, height} = content.getBoundingClientRect();
       const previousStyle = {};
@@ -244,9 +313,6 @@ export default (markup, overrides) => {
 
     container.innerHTML = '';
     container.append(header, content);
-    // container.classList.contains('dark-mode')
-    //   ? document.body.classList.add('dark-mode')
-    //   : document.body.classList.remove('dark-mode');
 
     try {
       let sourceName = rewrite(specifier);

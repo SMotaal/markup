@@ -1,22 +1,25 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>SMotaal's Tokenizer (experimental)</title>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline';" />
 
-    <link rel="stylesheet" href="./styles.css" />
-  </head>
+<head>
+  <title>SMotaal's Tokenizer (Experimental)</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline';" />
+  <link rel="stylesheet" href="./styles.css" />
+  <link rel="stylesheet" href="/pholio/styles/fonts/iosevka/iosevka.css"
+        onerror="this.onerror=this.remove();this.href='//smotaal.io/pholio/styles/fonts/iosevka/iosevka.css';" />
+</head>
 
-  <body>
-    <pre id="source-code" class="markup-container" hidden>
-      <script src="./ui.js"></script>
+<body>
+  <pre id="source-code" class="markup-container">
+      <!-- <script src="./ui.js"></script> -->
     </pre>
-    <script type="module">
-      import * as markup from '../../browser/experimental.extended.js';
-      import demo from './demo.js';
-      demo(markup);
-    </script>
-  </body>
+  <script type="module">
+    import * as markup from '../../browser/experimental.extended.js';
+    import demo from './demo.js';
+    demo(markup);
+  </script>
+</body>
+
 </html>

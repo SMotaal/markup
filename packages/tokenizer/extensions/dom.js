@@ -53,7 +53,8 @@ class MarkupRenderer {
       whitespace: Text,
       text: factory(SPAN, {className: CLASS}),
 
-      variable: factory('var', {className: `${CLASS} variable`}),
+      // variable: factory('var', {className: `${CLASS} variable`}),
+      fault: factory(SPAN, {className: `${CLASS} fault`}),
       keyword: factory(SPAN, {className: `${CLASS} keyword`}),
       identifier: factory(SPAN, {className: `${CLASS} identifier`}),
       operator: factory(SPAN, {className: `${CLASS} punctuator operator`}),
@@ -69,6 +70,7 @@ class MarkupRenderer {
       literal: factory(SPAN, {className: `${CLASS} literal`}),
       // indent: factory(SPAN, {className: `${CLASS} sequence indent`}),
       comment: factory(SPAN, {className: `${CLASS} comment`}),
+      fault: factory(SPAN, {className: `${CLASS} fault`}),
       code: factory(SPAN, {className: `${CLASS}`}),
     };
   }
@@ -130,12 +132,16 @@ class MarkupRenderer {
                   tabSpan &&
                   (tabSpan = new RegExp(`${tabSpan}`, 'g')))) &&
               (indent = indent.replace(tabSpan, '\t')),
-            indent && (indent = (line.append(renderers.indent(indent)), '')))));
+            indent && (indent = (line.append((line.lastChild = renderers.indent(indent))), '')))));
 
       text &&
         // Strip trailing whitespace
         (LINE_INDENTS && breaks && ([text, indent = ''] = text.split(/([ \t]*$)/, 2)),
-        text && line.appendChild(renderer(text, hint)));
+        text &&
+          (!punctuator && line.lastChild && renderer === line.lastChild.renderer
+            ? line.lastChild.appendChild(Text(text))
+            : line.appendChild((line.lastChild = renderer(text, hint))).childElementCount &&
+              (line.lastChild.renderer = renderer)));
 
       // TODO: Normalize multiple line breaks
       breaks && (yield line, --breaks && (yield* Array(breaks).fill(blank)), (line = null));
@@ -147,7 +153,9 @@ class MarkupRenderer {
     return (content, hint) => {
       typeof content === 'string' && (content = Text(content));
       const element = Element(tag, properties, content);
-      element && typeof hint === 'string' && (element.className += ` ${hint}`);
+      // element &&
+      //   (element.className = [...new Set(`${element.className || ''} ${hint || ''}`.trim().split(/\s+/g))].join(' '));
+      element && typeof hint === 'string' && (element.className = `${element.className || ''} ${hint}`);
       return element;
     };
   }

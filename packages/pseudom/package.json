@@ -1,10 +1,13 @@
 {
-  "name": "pseudom",
+  "name": "@smotaal/pseudom",
   "displayName": "pseu·dom",
-  "version": "0.0.5",
-  "description": "Documentless OM for markup",
+  "version": "0.0.6",
+  "description": "Featherweight compositional DOM for document/less runtimes",
   "license": "MIT",
   "type": "module",
-  "main": "index.mjs",
-  "module": "pseudom.js"
+  "main": "pseudom.js",
+  "module": "pseudom.js",
+  "publishConfig": {
+    "access": "public"
+  }
 }

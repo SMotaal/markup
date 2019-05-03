@@ -1,39 +1,59 @@
-# pseu·dom (_experimental_) <kbd>mjs/esm</kbd>
+# @smotaal/pseu·dom
 
-Documentless OM for markup.
-
-<blockquote>
-
-**Note:** This package is intended for environments with native ECMAScript module support to directly `import 'pseudom'` or `import 'https://unpkg.com/pseudom/'` without the need for bundling.
-
-_Node.js_ (8.x until 11.x — _experimental only_)
-
-You must use `--experimental-modules` flag in Node.js which uses <samp>pseudom/index.mjs</samp> to load ESM modules from files ending with "<samp>.mjs</samp>" only.
-
-_Node.js_ (12.x forward — _experimental only_)
-
-You must use `--experimental-modules` flag in Node.js then `import 'pseudom'` which still uses <samp>pseudom/index.mjs</samp> or alternatively `import 'pseudo/pseudom.js'` to load identical ESM modules from files ending with "<samp>.js</samp>" instead — this is likely to change.
-
-</blockquote>
+Featherweight compositional DOM for document/less runtimes.
 
 **Why?**
 
-While in most cases, it is best to rely on the DOM directly, there are times when the DOM may not be available, sluggish, or simply hitting edge cases where the overhead is unpredictable or undesirable.
+Document composition using the standard DOM can be boggled down by unrelated operations and behaviors, which essentially boil down to being able to create and nest `Element` and `Text` nodes to generate HTML output.
 
-This package was extracted from such a project, where the DOM was just not right. The intent was to provide a mirrored pipeline to compose DocumentFragments in workers. However, due to the improved performance and modularity, a shift to a more complete implementation that could be use in the main thread, workers, and Node.js was more than justified.
+**How?**
+
+- Provide purely compositional APIs independent from the DOM.
+  1. Reduced overhead by reusing elements (**work in progress**).
+  2. Fast HTML rendering (**work in progress**).
+- Provide interoperability APIs for operating directly on the DOM.
+  1. Reduced overhead by reusing elements (**being explored**).
+  2. Fast HTML rendering (**being explored**).
+
+> **Important Note:** This package is designed for ECMAScript module supporting runtimes, including all major browsers and Node.js 12 or later.
+
+## Intended Uses
+
+### **`native`** mode
+
+One use case is when you prefer using the abstract APIs directly on the native DOM. The `pseudom.native.…` APIs provide the mirrored abstractions, however, it **does not** automatically clone elements at this time but is planned future releases after addressing the various edge cases.
+
+```js
+import {createElement, createText} from '@smotaal/pseudom/native.js';
+
+console.log(createElement('div', null, createText('Real DIV')));
+```
+
+### **`pseudo`** mode
+
+The more ideal use case is when you want to compose HTML fragments and repeatedly rely on one or more recurring elements. The standard DOM approach would require normally making deep clones of those elements. The `pseudom.pseudo.…` APIs provide the most basic abstractions to a compose fake elements to generate the HTML output.
+
+```js
+import {createElement, createText} from '@smotaal/pseudom/pseudo.js';
+
+console.log(createElement('div', null, createText('Fake DIV')));
+```
+
+### **`default`** mode
+
+Another ideal use case is when the DOM may not be available, more so if the application needs transparently adapt to its presence or abscense while composing fragments. This `pseudom.…` automatically expose the right API based on the precense or absence of a valid `document` in on the global object.
+
+```js
+import {createElement, createText} from '@smotaal/pseudom';
+
+console.log(
+  createElement(
+    'div',
+    {className: 'awesome'},
+    createElement('span', createText('Awesome')),
+    createElement('span', createText('Text')),
+  ),
+);
+```
 
 If you find pseu·dom suitable for your particular case, please don't hesitate to contribute to this project. If not, please let me know why.
-
-**What it tries to do**
-
-- Provide a lightweight OM alternative for markup composition.
-- Provide a mirrored DOM wrapper for transparent interoperability.
-- Reduce overhead by allowing elements to belong to multiple parents.
-- Seemlessly go where the DOM can't.
-- Promote fast rendering into the DOM (ie HTMLTemplateElement or innerHTML).
-
-**What it does NOT try to do**
-
-- Work with actual documents or elements (ie either or).
-- Act like a DOM or a virtual DOM (ie events and such).
-- Adhere to the standards (ie completeness).

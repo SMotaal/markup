@@ -1,0 +1,262 @@
+:host {
+  --markup-neutral-light: var(--markup-neutral-light, #aaa);
+  --markup-neutral: var(--markup-neutral, #999);
+  --markup-neutral-fade: var(--markup-neutral-fade, #9993);
+  --markup-neutral-dim: var(--markup-neutral, #9999);
+  --markup-neutral-dark: var(--markup-neutral-dark, #666);
+
+  --markup-light-text: var(--markup-light-text, #666);
+  --markup-light: var(--markup-light, #f9f9f9);
+  --markup-light-fade: var(--markup-light-fade, #f9f9f933);
+  --markup-dark-text: var(--markup-dark-text, #eee);
+  --markup-dark: var(--markup-dark, #333f46);
+  --markup-dark-fade: var(--markup-dark-fade, #333f4633);
+  --markup-color: var(--markup-color, currentColor);
+  --markup-background: var(--markup-background, var(--markup-neutral-fade));
+  /* --markup-faults-solid: #FF2211; */
+}
+
+:root {
+  /**/ /**/ /**/ /**/ /** NEUTRALS **/ /**/ /**/ /**/ /**/
+  --markup-neutral-light: #aaa;
+  --markup-neutral: #999;
+  --markup-neutral-fade: #9993;
+  --markup-neutral-dark: #666;
+
+  --markup-light-text: #666;
+  --markup-light: #f9f9f9;
+  --markup-light-fade: #f9f9f933;
+  --markup-dark-text: #eee;
+  --markup-dark: #333f46;
+  --markup-dark-fade: #333f4633;
+
+  /**/ /**/ /**/ /**/ /** PRIMARIES **/ /**/ /**/ /**/ /**/
+  --markup-light-background: var(--markup-light, #f9f9f9);
+  --markup-light-faults-background: #f21;
+  --markup-light-faults-highlight: #f219;
+  --markup-light-color: var(--markup-light-text, #666);
+  --markup-light-shadow: white;
+  --markup-light-contrast: white;
+  --markup-dark-background: var(--markup-dark, #333f46);
+  --markup-dark-faults-background: #f21;
+  --markup-dark-faults-highlight: #f219;
+  --markup-dark-color: var(--markup-dark-text, #eee);
+  --markup-dark-contrast: #23262f;
+  --markup-dark-shadow: black;
+
+  /**/ /**/ /**/ /**/ /** HINTS **/ /**/ /**/ /**/ /**/
+  --markup-light-sequences: grey;
+  --markup-light-faults: white;
+  --markup-light-identifiers: darkslategrey;
+  --markup-light-keywords: chocolate;
+  --markup-light-comments: var(--markup-neutral-light, #aaa);
+  --markup-light-whitespace: var(--markup-neutral, #999);
+  --markup-dark-identifiers: lightgrey;
+  --markup-dark-comments: var(--markup-neutral, #999);
+  --markup-dark-whitespace: var(--markup-neutral-dark, #666);
+
+  /**/ /**/ /**/ /**/ /** PUNCTUATION **/ /**/ /**/ /**/ /**/
+  --markup-light-punctuators: lightseagreen;
+  --markup-light-operators: limegreen;
+  --markup-light-combinators: cornflowerblue;
+  --markup-light-breakers: grey;
+  --markup-light-quotes: cadetblue;
+  --markup-light-closures: orange;
+  --markup-light-spans: coral;
+
+  /**/ /**/ /**/ /**/ /** LIGHT THEME **/ /**/ /**/ /**/ /**/
+  --markup-background: var(--markup-light-background);
+  --markup-faults-background: var(--markup-light-faults-background);
+  --markup-faults-highlight: var(--markup-light-faults-highlight);
+  --markup-color: var(--markup-light-color);
+  --markup-contrast: var(--markup-light-contrast);
+  --markup-contrast-inverse: var(--markup-dark-contrast);
+  --markup-shadow: var(--markup-light-shadow);
+
+  --markup-faults: var(--markup-light-faults);
+  --markup-identifiers: var(--markup-light-identifiers);
+  --markup-keywords: var(--markup-light-keywords);
+  --markup-punctuators: var(--markup-light-punctuators);
+  --markup-sequences: var(--markup-light-sequences);
+  --markup-operators: var(--markup-light-operators);
+  --markup-combinators: var(--markup-light-combinators);
+  --markup-breakers: var(--markup-light-breakers);
+  --markup-quotes: var(--markup-light-quotes);
+  --markup-closures: var(--markup-light-closures);
+  --markup-spans: var(--markup-light-spans);
+
+  --markup-comments: var(--markup-light-comments);
+  --markup-whitespace: var(--markup-light-whitespace);
+}
+
+@media screen {
+  /* TODO: Add support for @media (prefers-dark-mode) when it lands */
+  .dark-mode,
+  html.dark-mode,
+  :host(.dark-mode) {
+    /**/ /**/ /**/ /**/ /** DARK THEME **/ /**/ /**/ /**/ /**/
+    --markup-background: var(--markup-dark-background, var(--markup-light-background));
+    --markup-faults-background: var(--markup-dark-faults-background, var(--markup-light-faults-background));
+    --markup-faults-highlight: var(--markup-dark-faults-highlight, var(--markup-light-faults-highlight));
+    --markup-color: var(--markup-dark-color, var(--markup-light-color));
+    --markup-contrast: var(--markup-dark-contrast, var(--markup-light-contrast));
+    --markup-contrast-inverse: var(--markup-light-contrast);
+    --markup-shadow: var(--markup-dark-shadow, var(--markup-light-shadow));
+
+    --markup-faults: var(--markup-dark-faults, var(--markup-light-faults));
+    --markup-identifiers: var(--markup-dark-identifiers, var(--markup-light-identifiers));
+    --markup-keywords: var(--markup-dark-keywords, var(--markup-light-keywords));
+    --markup-punctuators: var(--markup-dark-punctuators, var(--markup-light-punctuators));
+    --markup-sequences: var(--markup-dark-sequences, var(--markup-light-sequences));
+    --markup-operators: var(--markup-dark-operators, var(--markup-light-operators));
+    --markup-combinators: var(--markup-dark-combinators, var(--markup-light-combinators));
+    --markup-breakers: var(--markup-dark-breakers, var(--markup-light-breakers));
+    --markup-quotes: var(--markup-dark-quotes, var(--markup-light-quotes));
+    --markup-closures: var(--markup-dark-closures, var(--markup-light-closures));
+    --markup-spans: var(--markup-dark-spans, var(--markup-light-spans));
+
+    --markup-comments: var(--markup-dark-comments, var(--markup-light-comments));
+    --markup-whitespace: var(--markup-dark-whitespace, var(--markup-light-whitespace));
+  }
+}
+
+.markup-line {
+  font-variant-ligatures: common-ligatures discretionary-ligatures contextual historical-ligatures;
+}
+
+.markup-line .markup {
+  color: var(--color, var(--markup-color, var(--markup-light-text, currentColor)));
+}
+
+.markup-line-numbers pre,
+pre.markup-line-numbers,
+pre.markup[line-numbers],
+pre > .markup-line-numbers {
+  --markup-gutter: 3.5em;
+
+  padding-inline-start: var(--markup-gutter);
+}
+
+.markup-line:first-of-type {
+  counter-reset: line;
+}
+
+.markup-line {
+  break-before: auto;
+  break-inside: avoid;
+}
+
+.markup-line-numbers .markup-line::before,
+pre.markup[line-numbers] .markup-line::before {
+  float: left;
+  width: calc(var(--markup-gutter) - 0.5em);
+  /* padding: 1px; */
+  /* margin: -1px; */
+  margin-inline-start: calc(-1 * var(--markup-gutter));
+  counter-increment: line;
+  color: var(--markup-neutral-dim, #9999);
+  text-indent: 0;
+  text-align: end;
+  font-variant: small-caps;
+  font-size: 75%;
+  font-style: normal;
+  font-weight: 400;
+  height: calc(100% / 0.75);
+  vertical-align: middle;
+  white-space: pre;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  content: '';
+  content: counter(line) ' ';
+  border: 0 solid #9999;
+  border-inline-end-width: 0.5px;
+  pointer-events: none;
+}
+
+.markup-line-numbers .markup-line:empty::before,
+pre.markup[line-numbers] .markup-line:empty::before {
+  visibility: hidden;
+}
+
+/*
+.markup-line-numbers .markup-line:not(:empty)::before,
+pre.markup[line-numbers] .markup-line:not(:empty)::before {
+  content: counter(line) ' ';
+  border: 0 solid #9999;
+  border-inline-end-width: 0.5px;
+}
+*/
+
+@media only print {
+  .markup-line-numbers .markup-line::before {
+    color: black;
+  }
+}
+
+.markup.sequence {
+  --color: var(--markup-sequences, grey);
+}
+
+.markup.fault {
+  --color: var(--markup-faults, white);
+  /* text-decoration: line-through; */
+  /* text-decoration-color: var(--markup-faults, red); */
+  background-color: var(--markup-faults-highlight, #f219);
+  /* color: var(--markup-color, white); */
+  /* box-shadow: 0 0 0 var(--markup-faults, red); */
+  font-variant-ligatures: none;
+}
+
+/**/ /**/ /**/ /**/ /** LITERALS **/ /**/ /**/ /**/ /**/
+.markup.regexp {
+  font-variant-ligatures: none;
+}
+
+.markup.identifier {
+  --color: var(--markup-identifiers, darkslategrey);
+  font-style: italic;
+}
+
+.markup.keyword {
+  --color: var(--markup-keywords, chocolate);
+}
+
+.markup.punctuator {
+  --color: var(--markup-punctuators, lightseagreen);
+}
+
+.markup.operator {
+  --color: var(--markup-operators, limegreen);
+}
+
+.markup.combinator {
+  --color: var(--markup-combinators, cornflowerblue);
+}
+
+.markup.breaker {
+  --color: var(--markup-breakers, grey);
+}
+
+.markup.quote,
+.markup.in-quote {
+  --color: var(--markup-quotes, cadetblue);
+}
+
+.markup.opener,
+.markup.closer {
+  --color: var(--markup-closures, orange);
+}
+
+.markup.punctuator.span {
+  --color: var(--markup-spans, coral);
+}
+
+.markup.comment,
+.markup.in-comment {
+  --color: var(--markup-comments, #aaa);
+}
+
+.markup.whitespace {
+  --color: var(--markup-whitespace, #999);
+}

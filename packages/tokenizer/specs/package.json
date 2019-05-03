@@ -1,6 +1,6 @@
 {
   "private": true,
-  "type": "module",
-  "mode": "esm",
-  "exports": {}
+  "scripts": {
+    "test-package": "pushd package && npm install-test && npm test"
+  }
 }
