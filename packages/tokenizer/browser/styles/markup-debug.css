@@ -7,6 +7,12 @@
 
   .markup-line {
     --widget: #000a;
+    /* display: inline-block; */
+    /* white-space: pre-line; */
+  }
+
+  .markup-line > .markup {
+    /* white-space: pre; */
   }
 
   .dark-mode .markup-line {
@@ -38,9 +44,12 @@
   .marker + .markup-line {
     background: #9991;
     /* border-radius: 4px; */
-    /* border: 1px solid #9991; */
-    padding: 3px;
+    border: 1px solid #9991;
+    padding: 2px;
+    /* padding-inline-end: 100%; */
+    /* margin-inline-end: -100%; */
     margin: -3px;
+    /* width: -webkit-fill-available; position: absolute; */
   }
 
   /* .markup-line-numbers .markup-line:focus-within::before, */

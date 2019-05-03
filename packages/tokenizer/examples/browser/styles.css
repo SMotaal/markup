@@ -29,6 +29,8 @@
     margin-left: calc(100vw - 100%);
     -webkit-text-size-adjust: 100%;
     font-size: 1rem;
+    overflow-x: hidden;
+
     /* background-color: var(--markup-background, #999); */
   }
 
@@ -36,7 +38,7 @@
     width: inherit;
     min-height: inherit;
     min-width: inherit;
-    overflow-x: hidden;
+    margin: 0;
     /* max-height: inherit; */
     /* overflow-y: scroll; */
     touch-action: pan-y;
@@ -44,16 +46,16 @@
   }
 
   .markup-container {
-    box-sizing: border-box;
     height: max-content;
     width: inherit;
-    overflow-x: hidden;
+    /* overflow-x: hidden; */
     /* max-width: inherit; */
     min-height: inherit;
     min-width: inherit;
     /* max-height: inherit; */
     padding: 1ch;
     margin: 0;
+    box-sizing: border-box;
   }
   /*
   .markup-wrapper,
@@ -103,6 +105,8 @@
   font-family: 'Iosevka Web', monospace;
   font-variant-ligatures: contextual;
   white-space: pre-wrap;
+  /* display: flex; */
+  /* position: relative; */
 }
 
 .markup-container.fade {
@@ -245,10 +249,6 @@ i[icon] {
 }
 
 @media only screen {
-  body {
-    margin: 0;
-  }
-
   .markup-container .markup-content {
     /* will-change: filter, contents; */
     transition: filter 0.15s ease-out;
@@ -262,10 +262,10 @@ i[icon] {
     text-shadow: var(--outset-shadow, 0 0 0) var(--shadow);
     opacity: 0.9;
 
-    /* TODO:  Fix sticky in Safari: http://cssdeck.com/labs/bu0nx69w */
     user-select: none;
     -moz-user-select: none;
     -webkit-user-select: none;
+    will-change: transform;
     /* float: center; */
   }
 

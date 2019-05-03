@@ -138,7 +138,7 @@ class MarkupRenderer {
         // Strip trailing whitespace
         (LINE_INDENTS && breaks && ([text, indent = ''] = text.split(/([ \t]*$)/, 2)),
         text &&
-          (!punctuator && line.lastChild && renderer === line.lastChild.renderer
+          (!punctuator && type !== 'opener' && type !== 'closer' && line.lastChild && renderer === line.lastChild.renderer
             ? line.lastChild.appendChild(Text(text))
             : line.appendChild((line.lastChild = renderer(text, hint))).childElementCount &&
               (line.lastChild.renderer = renderer)));

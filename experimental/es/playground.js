@@ -18,7 +18,7 @@ const symbols = {
 
 const groups = {
   '{': {opener: '{', closer: '}'},
-  '${': {opener: '${', closer: '}'},
+  '${': {opener: '${', closer: '}', type: 'span'},
   '(': {opener: '(', closer: ')'},
   '[': {opener: '[', closer: ']'},
   '`': {opener: '`', closer: '`', goal: symbols.TemplateLiteralGoal},
@@ -26,29 +26,27 @@ const groups = {
 
 const goals = {
   [symbols.ECMAScriptGoal]: {openers: ['{', '(', '[', '`']},
-  [symbols.TemplateLiteralGoal]: {openers: ['${'], closer: '`', type: 'quote' /* matcher: /\\.|(`|$\{)/g */},
+  [symbols.TemplateLiteralGoal]: {openers: ['${'], closer: '`', type: 'quote', matcher: /\\.|(\x60|$\{)/g},
   [symbols.FaultGoal]: {openers: [], closer: '', type: 'fault'},
 };
 
+const {[symbols.ECMAScriptGoal]: ECMAScriptGoal, [symbols.FaultGoal]: FaultGoal} = goals;
+
 const open = (text, state) => {
-  if (!(state.goal || goals[symbols.ECMAScriptGoal]).openers.includes(text)) return;
+  if (!(state.goal || ECMAScriptGoal).openers.includes(text)) return;
   const group = groups[text];
   if (!group || !group.opener || !group.closer) return;
   state.groups || (state.groups = []);
   state.groups.closers || (state.groups.closers = []);
   state.groups.closers.splice(state.groups.push(group) - 1, state.groups.closers.length, group.closer);
   state.goal = (group.goal && goals[group.goal]) || undefined;
-  // TODO: if (state.goal && state.goal.matcher) …
   return 'opener';
 };
 
 const close = (text, state) => {
   if (state.goal && state.goal.closer !== text) return state.goal.type;
   const index = state.groups && state.groups.closers ? state.groups.closers.lastIndexOf(text) : -1;
-  if (index === -1 || index !== state.groups.length - 1) {
-    state.goal = goals[symbols.FaultGoal];
-    return 'fault';
-  }
+  if (index === -1 || index !== state.groups.length - 1) return (state.goal = FaultGoal).type;
   state.groups.splice(index, state.groups.length);
   state.groups.closers.splice(index, state.groups.closers.length);
   const group = index && state.groups[state.groups.length - 1];
@@ -72,7 +70,7 @@ const matcher = Matcher.define(
         // TODO: Consider dropping /m flag
         match.idenity = 'break';
         const state = match.matcher.state;
-        state.goal !== goals[symbols.FaultGoal] || (state.goal = undefined);
+        state.goal !== FaultGoal || (state.goal = undefined);
       })}\n)|
       (${entity('whitespace')}\s+)
     )|
@@ -120,19 +118,19 @@ const matcher = Matcher.define(
         !==|!=|!|===|==|=|
         \+|-|\*\*|\*|(${entity((text, entity, match) => {
           // TODO: Solidus and such
+          //   - regexp likely matches /[^+*?/\n][^\n]*)\/
           match.idenity = 'operator';
           match.punctuator = text;
           const state = match.matcher.state;
-          state.goal !== goals[symbols.FaultGoal] || (state.goal = undefined);
-          // const {input, index: offset, matcher: {state}} = match;
-          // console.log({text, entity, ...state}, input.slice(offset, offset + 10));
+          state.goal !== FaultGoal || (state.goal = undefined);
+          // console.log({text, entity, ...match.matcher.state}, match.input.slice(matcher.index, matcher.index + 10));
         })}\/)
       )
     )(${
       // TODO: Come up with a less hacky way to do this
       entity((text, entity, match) => {
-        // console.log(text, entity, match);
         match.punctuator || match.identity !== 'operator' || (match.punctuator = match[0]);
+        // console.log(text, entity, match);
       })
     })|
     \b(${entity('keyword')}
@@ -155,8 +153,6 @@ const matcher = Matcher.define(
   'mgu',
 );
 
-const hints = {};
-
 export default bootstrap(matcher, {
   syntax: 'es',
   createToken: (match, state) => {
@@ -167,25 +163,7 @@ export default bootstrap(matcher, {
       goal.type &&
       (type === 'closer' || type === 'opener' || (token.hint = `in-${(token.type = goal.type)}`))) ||
       (match.punctuator && (token.punctuator = token.type));
-    // (token.hint = token.hint.replace(
-    //   hints[type] || (hints[type] = RegExp(`(^| )${type}($| )`)),
-    //   `$1in-${(token.type = goal.type)}$2`,
-    // ))
-
     return token;
   },
   sourceURL: './playground.js',
 });
-
-// \/(?=(${entity((text, entity, match) => {
-//   // TODO: Solidus `/`
-//   // match.entity = -1;
-//   match.identity = text ? 'regexp' : 'operator';
-//   console.log(text, entity, match);
-// })}[^+*?/\n][^\n]*)\/)|
-
-// https://github.com/standard-things/esm/blob/master/test/compiler-tests.mjs#L562-L665
-
-// const LowerCaseLetter = 'abcdefghijklmnopqrstuvwxyz';
-// const UpperCaseLetter = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-// const Digit = '0123456789';
