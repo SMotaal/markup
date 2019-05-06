@@ -1,49 +1,5 @@
 import {Resolvers, Hash, resolve, rewrite, frame, timeout} from './helpers.js';
 
-DarkMode: {
-  (() => {
-    const classList = document.documentElement.classList;
-    const toggle = async (state, auto) => {
-      if (auto === true) {
-        if (state === true) darkMode.prefers = 'dark';
-        else if (state === false) darkMode.prefers = 'light';
-        if (darkMode.state !== 'auto') return;
-      }
-      state =
-        state === 'auto'
-          ? ((auto = true), darkMode.prefers !== 'light')
-          : state == null
-          ? !classList.contains('dark-mode')
-          : !!state;
-      darkMode.state = localStorage.darkMode = auto ? 'auto' : state ? 'enabled' : 'disabled';
-      state ? classList.add('dark-mode') : classList.remove('dark-mode');
-    };
-    const enable = auto => toggle(true, auto);
-    const disable = auto => toggle(false, auto);
-    const darkMode = (({assign, create, freeze, getOwnPropertyDescriptors}) =>
-      assign(create(null, getOwnPropertyDescriptors(freeze({enable, disable, toggle}))), {
-        state: undefined,
-        prefers: undefined,
-      }))(Object);
-
-    ((prefersDarkMode, prefersLightMode) => {
-      localStorage.darkMode === 'enabled'
-        ? ((darkMode.state = 'enabled'), enable())
-        : localStorage.darkMode === 'disabled'
-        ? ((darkMode.state = 'disabled'), disable())
-        : toggle(
-            prefersDarkMode === true || prefersLightMode.matches !== true,
-            !!(localStorage.darkMode = darkMode.state = 'auto'),
-          );
-      prefersDarkMode.addListener(({matches = false}) => toggle(!!matches, true));
-      prefersLightMode.addListener(({matches = false}) => toggle(!matches, true));
-      // prefersLightMode
-    })(matchMedia('(prefers-color-scheme: dark)'), matchMedia('(prefers-color-scheme: light)'));
-    // element.style.transition = '';
-    document.darkMode = darkMode;
-  })();
-}
-
 Header: {
   document.querySelector('template#source-header') ||
     ((innerHTML, id = 'source-header') =>
@@ -66,6 +22,7 @@ Header: {
       `)(String.raw),
     );
 }
+import {darkMode} from './dark-mode.js';
 
 const Examples = ({
   ['es']: ES = local('./dist/tokenizer.experimental.js'),
@@ -174,7 +131,7 @@ export default (markup, overrides) => {
     const header = document.createElement('header');
     header.append(template.content.cloneNode(true));
 
-    /** @type {{[K in selector]: HTMLElement}} */
+    /** @type {{[name: string]: HTMLElement}} */
     header.elements = {};
 
     if (selectors)
@@ -190,14 +147,14 @@ export default (markup, overrides) => {
         contrastButton.onmousedown = () => {
           clearTimeout(timeout);
           timeout = setTimeout(() => {
-            document.darkMode.toggle('auto');
+            darkMode.toggle('auto');
             resetting = true;
             console.log('Reset dark mode!');
           }, 2000);
         };
         contrastButton.onmouseup = () => {
           timeout = clearTimeout(timeout);
-          resetting === true ? (resetting = false) : document.darkMode.toggle();
+          resetting === true ? (resetting = false) : darkMode.toggle();
         };
       }
     }
@@ -292,8 +249,15 @@ export default (markup, overrides) => {
     slot.className = 'markup-wrapper';
 
     Marker: {
-      const lineMarker = Object.assign(document.createElement('span'), {className: 'marker', textContent: '\u034F'});
-      const columnMarker = Object.assign(document.createElement('span'), {className: 'marker', textContent: '\u034F'});
+      const Marker = ({className = '', tag = 'span', ...properties}) =>
+        Object.assign(
+          document.createElement(tag),
+          {className: `marker ${className}`, textContent: '\u034F', style: 'display: none'},
+          properties,
+        );
+
+      const lineMarker = Marker({className: 'line-marker'});
+      const columnMarker = Marker({className: 'column-marker'});
 
       slot.addEventListener('click', event => {
         /** @type {PointerEvent & {target: HTMLSpanElement}} */
