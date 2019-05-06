@@ -19,13 +19,14 @@ export default bootstrap(matcher, {
     const {type} = token;
     const {goal, lineIndex, lineOffset = (state.lineOffset = 0)} = state;
 
-    (goal &&
+    goal &&
       goal.type &&
-      (type === 'closer' || type === 'opener' || (
+      (type === 'closer' ||
+        type === 'opener' ||
         // token.punctuator && (console.log(token)),
-        token.hint = `in-${(token.type = goal.type)}`
-      ))) ||
-      (match.punctuator && (token.punctuator = type));
+        (token.hint = `in-${(token.type = goal.type)}`));
+    //  ||
+    match.punctuator && (token.punctuator = match.punctuator);
 
     token.columnNumber = match.index - (lineOffset || -1);
     token.lineNumber = lineIndex + 1;

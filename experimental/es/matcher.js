@@ -43,21 +43,24 @@ const close = (text, entity, match) => {
   if (state.goal && state.goal.closer !== text) {
     return state.goal.type;
   }
-  const index = state.groups && state.groups.closers ? state.groups.closers.lastIndexOf(text) : -1;
-  if (index === -1 || index !== state.groups.length - 1) {
+  const groups = state.groups;
+  const index = groups && groups.closers ? groups.closers.lastIndexOf(text) : -1;
+  if (index === -1 || index !== groups.length - 1) {
     return fault(text, entity, match);
   }
-  state.groups.splice(index, state.groups.length);
-  state.groups.closers.splice(index, state.groups.closers.length);
-  const group = index && state.groups[index - 1];
+  groups.splice(index, groups.length);
+  groups.closers.splice(index, groups.closers.length);
+  const group = groups[index - 1];
   state.goal = (group && group.goal && goals[group.goal]) || undefined;
   return 'closer';
 };
 
 const toggle = (text, entity, match) => {
-  const groups = match.matcher.state.groups;
-  groups && groups.length && groups.closers[groups.length - 1] === text
-    ? close(text, entity, match)
+  const state = match.matcher.state;
+  // const groups = match.matcher.state.groups;
+  state.goal && state.goal.closer === text
+    ? // groups && groups.length && groups.closers[groups.length - 1] === text
+      close(text, entity, match)
     : open(text, entity, match);
 };
 
@@ -138,9 +141,8 @@ const ECMAScriptGrammar = {
       entity => Matcher.sequence`(${entities.GraveAccent}
         ${entity((text, entity, match) => {
           const goal = match.matcher.state.goal;
-          (!goal || goal === TemplateLiteralGoal || goal === ECMAScriptGoal) &&
-          (match.identity = toggle(text, entity, match))
-            ? capture('quote', match)
+          !goal || goal === TemplateLiteralGoal || goal === ECMAScriptGoal
+            ? ((match.identity = toggle(text, entity, match)), capture((match.punctuator = 'quote'), match))
             : (match.identity = 'sequence');
         })}
       )`,
