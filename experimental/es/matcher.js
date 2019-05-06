@@ -73,9 +73,10 @@ const ECMAScriptGrammar = {
           // TODO: Consider dropping /m flag
           capture('break', match);
           const state = match.matcher.state;
-          state.lineFault = false;
-          state.lineIndex++; // = (state.lineIndex || 0) + 1;
+          match.columnNumber = match.index - (state.lineOffset || -1);
+          match.lineNumber = ++state.lineIndex; // = (state.lineIndex || 0) + 1;
           state.lineOffset = match.index + text.length - 1;
+          state.lineFault = false;
         })}
       )`,
     ),

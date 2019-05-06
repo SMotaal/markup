@@ -26,10 +26,12 @@ export default bootstrap(matcher, {
         // token.punctuator && (console.log(token)),
         (token.hint = `in-${(token.type = goal.type)}`));
     //  ||
-    match.punctuator && (token.punctuator = match.punctuator);
+    ({
+      columnNumber: token.columnNumber = match.index - (lineOffset || -1),
+      lineNumber: token.lineNumber = lineIndex + 1,
+      punctuator: token.punctuator,
+    } = match);
 
-    token.columnNumber = match.index - (lineOffset || -1);
-    token.lineNumber = lineIndex + 1;
     token.goal = (goal || matcher.goal).name;
     token.hint = `${token.hint || ''} [${token.goal}:${token.lineNumber}:${token.columnNumber}]`;
     // ${(type !== 'inset' && token.inset && token.inset.replace(/\t/g, HT).replace(/\s/g, SP)) || ''}
