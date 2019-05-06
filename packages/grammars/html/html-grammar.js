@@ -13,7 +13,7 @@ export const html = Object.defineProperties(
         closeTag: /<\/\w[^<>{}]*?>/g,
         // maybeIdentifier: /^(?:(?:[a-z][\-a-z]*)?[a-z]+\:)?(?:[a-z][\-a-z]*)?[a-z]+$/,
       },
-      matcher: /([\s\n]+)|("|'|=|&#x?[a-f0-9]+;|&[a-z]+;|\/?>|<%|%>|<!--|-->|<[\/\!]?(?=[a-z]+\:?[a-z\-]*[a-z]|[a-z]+))/gi,
+      matcher: /(\n|\s+)|("|'|=|&#x?[a-f0-9]+;|&[a-z]+;|\/?>|<%|%>|<!--|-->|<[\/\!]?(?=[a-z]+\:?[a-z\-]*[a-z]|[a-z]+))/gi,
       matchers: {
         quote: /(\n)|(\\(?:(?:\\\\)*\\|[^\\\s])|"|')/g,
         comment: /(\n)|(-->)/g,

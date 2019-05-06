@@ -61,8 +61,8 @@ Definitions: {
   const QUOTES = (javascript.extended.QUOTES = /`|"(?:[^\\"]+|\\.)*(?:"|$)|'(?:[^\\']+|\\.)*(?:'|$)/g);
   const COMMENTS = (javascript.extended.COMMENTS = /\/\/.*(?:\n|$)|\/\*[^]*?(?:\*\/|$)|^\#\!.*\n|<!--/g);
   const STATEMENTS = (javascript.extended.STATEMENTS = all(QUOTES, CLOSURES, REGEXPS, COMMENTS));
-  const BLOCKLEVEL = (javascript.extended.BLOCKLEVEL = sequence`([\s\n]+)|(${STATEMENTS})`);
-  const TOPLEVEL = (javascript.extended.TOPLEVEL = sequence`([\s\n]+)|(${STATEMENTS})`);
+  const BLOCKLEVEL = (javascript.extended.BLOCKLEVEL = sequence`(\n|\s+)|(${STATEMENTS})`);
+  const TOPLEVEL = (javascript.extended.TOPLEVEL = sequence`(\n|\s+)|(${STATEMENTS})`);
   javascript.extended.CLOSURE = sequence`(\n+)|(${STATEMENTS})`;
   javascript.extended.MJS = sequence`${TOPLEVEL}|\bexport\b|\bimport\b`;
   javascript.extended.CJS = sequence`${BLOCKLEVEL}|\bexports\b|\bmodule.exports\b|\brequire\b|\bimport(?=\(|\.)`;
