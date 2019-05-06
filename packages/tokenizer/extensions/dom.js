@@ -27,29 +27,18 @@ class MarkupRenderer {
     // TODO: Consider making Renderer a thing
     const {factory, defaults} = new.target;
 
-    const {SPAN = 'span', LINE = 'span', CLASS = 'markup', LINE_INDENTS, LINE_REINDENTS} = {
+    const {SPAN = 'span', LINE = 'span', CLASS = 'markup'} = {
       ...defaults,
       ...options,
     };
 
-    this.LINE_INDENTS =
-      LINE_INDENTS != null
-        ? !!LINE_INDENTS
-        : !defaults || defaults.LINE_INDENTS == null
-        ? false
-        : !!defaults.LINE_INDENTS;
-
-    this.LINE_REINDENTS =
-      LINE_REINDENTS != null
-        ? !!LINE_REINDENTS
-        : !defaults || defaults.LINE_REINDENTS == null
-        ? false
-        : !!defaults.LINE_REINDENTS;
-
     this.renderers = {
       line: factory(LINE, {className: `${CLASS} ${CLASS}-line`}),
-      indent: factory(LINE, {className: `${CLASS} whitespace ${CLASS}-indent`}),
-
+      // indent: factory(SPAN, {className: `${CLASS} ${CLASS}-indent whitespace`}),
+      inset: factory(SPAN, {className: `${CLASS} inset whitespace`}),
+      break: factory(SPAN, {className: `${CLASS} break whitespace`}),
+      // break: Text,
+      // whitespace: factory(SPAN, {className: `${CLASS} whitespace`}),
       whitespace: Text,
       text: factory(SPAN, {className: CLASS}),
 
@@ -57,11 +46,13 @@ class MarkupRenderer {
       fault: factory(SPAN, {className: `${CLASS} fault`}),
       keyword: factory(SPAN, {className: `${CLASS} keyword`}),
       identifier: factory(SPAN, {className: `${CLASS} identifier`}),
+      quote: factory(SPAN, {className: `${CLASS} quote`}),
+
       operator: factory(SPAN, {className: `${CLASS} punctuator operator`}),
       assigner: factory(SPAN, {className: `${CLASS} punctuator operator assigner`}),
       combinator: factory(SPAN, {className: `${CLASS} punctuator operator combinator`}),
       punctuation: factory(SPAN, {className: `${CLASS} punctuator punctuation`}),
-      quote: factory(SPAN, {className: `${CLASS} punctuator quote`}),
+
       breaker: factory(SPAN, {className: `${CLASS} punctuator breaker`}),
       opener: factory(SPAN, {className: `${CLASS} punctuator opener`}),
       closer: factory(SPAN, {className: `${CLASS} punctuator closer`}),
@@ -108,51 +99,69 @@ class MarkupRenderer {
 
   *renderer(tokens) {
     const {renderers, LINE_INDENTS, LINE_REINDENTS} = this;
-    let line, indent, trim;
-    let tabSpan;
+    let renderedLine, Inset, lineInset, lineText, insetHint;
+    // let line, indent, trim, tabSpan;
     const blank = renderers.line();
+    const emit = (renderer, text, type, hint, flatten) => {
+      flatten && renderedLine.lastChild && renderer === renderedLine.lastChild.renderer
+        ? renderedLine.lastChild.appendChild(Text(text))
+        : renderedLine.appendChild((renderedLine.lastChild = renderer(text, hint || type))).childElementCount &&
+          (renderedLine.lastChild.renderer = renderer);
+    };
+    const emitInset = (text, hint) => emit(renderers.inset, text, 'inset', hint, false);
+    const Lines = /^/gm;
     for (const token of tokens) {
-      let {type = 'text', text, punctuator, breaks, hint} = token;
+      let {type = 'text', text, inset, punctuator, breaks, hint} = token;
       let renderer =
         (punctuator && (renderers[punctuator] || renderers.operator)) ||
         (type && renderers[type]) ||
-        (text && renderers.text);
+        (type !== 'whitespace' && type !== 'break' && renderers.text) ||
+        Text;
 
-      line ||
-        // Create new line
-        ((line = renderers.line()),
-        // Concatenate stripped and leading whitesp into a separate "indent" tokenace
-        LINE_INDENTS &&
-          // ((indent = `${indent || ''}${text.slice(0, text.indexOf((trim = text.trimLeft())))}`), (text = trim)),
-          (([, indent = '', text = ''] = /^([ \t]*)([^]*)$/.exec(`${indent || ''}${text}`)),
-          indent &&
-            (LINE_REINDENTS &&
-              (tabSpan ||
-                (([tabSpan] = /^(?: {4}| {2}|)/.exec(indent)) &&
-                  tabSpan &&
-                  (tabSpan = new RegExp(`${tabSpan}`, 'g')))) &&
-              (indent = indent.replace(tabSpan, '\t')),
-            indent && (indent = (line.append((line.lastChild = renderers.indent(indent))), '')))));
+      if (!text) continue;
 
-      text &&
-        // Strip trailing whitespace
-        (LINE_INDENTS && breaks && ([text, indent = ''] = text.split(/([ \t]*$)/, 2)),
-        text &&
-          (!punctuator && type !== 'opener' && type !== 'closer' && line.lastChild && renderer === line.lastChild.renderer
-            ? line.lastChild.appendChild(Text(text))
-            : line.appendChild((line.lastChild = renderer(text, hint))).childElementCount &&
-              (line.lastChild.renderer = renderer)));
+      // Create new line
+      renderedLine || (renderedLine = renderers.line());
+
+      const flatten = !punctuator && type !== 'fault' && type !== 'opener' && type !== 'closer' && type !== 'break';
+
+      // Normlize inset for { type != 'inset', inset = /\s+/ }
+      if (breaks && type !== 'break') {
+        Inset = void (inset = inset || '');
+        insetHint = `${hint || ''} in-${type || ''}`;
+        for (const line of text.split(Lines)) {
+          renderedLine || (renderedLine = renderers.line());
+          (lineInset = line.startsWith(inset)
+            ? line.slice(0, inset.length)
+            : line.match(Inset || (Inset = RegExp(`^${inset.replace(/./g, '$&?')}`)))[0]) &&
+            emitInset(lineInset, insetHint);
+          (lineText = lineInset ? line.slice(lineInset.length) : line) &&
+            (emit(renderer, lineText, type, hint, flatten),
+            lineText.endsWith('\n') && (yield renderedLine, (renderedLine = null)));
+        }
+        // console.log(lines);
+        // emit(renderer, text, type, hint, punctuator);
+      } else {
+        emit(renderer, text, type, hint, flatten);
+        type === 'break' && (yield renderedLine, (renderedLine = null));
+      }
+
+      // Strip trailing whitespace
+      // !punctuator && type !== 'opener' && type !== 'closer' && line.lastChild && renderer === line.lastChild.renderer
+      //   ? line.lastChild.appendChild(Text(text))
+      //   : line.appendChild((line.lastChild = renderer(text, hint))).childElementCount &&
+      //     (line.lastChild.renderer = renderer);
 
       // TODO: Normalize multiple line breaks
-      breaks && (yield line, --breaks && (yield* Array(breaks).fill(blank)), (line = null));
+      // breaks && (yield line, --breaks && (yield* Array(breaks).fill(blank)), (line = null));
     }
-    line && (yield line);
+    renderedLine && (yield renderedLine);
   }
 
   static factory(tag, properties) {
     return (content, hint) => {
       typeof content === 'string' && (content = Text(content));
-      const element = Element(tag, properties, content);
+      const element = content != null ? Element(tag, properties, content) : Element(tag, properties);
       // element &&
       //   (element.className = [...new Set(`${element.className || ''} ${hint || ''}`.trim().split(/\s+/g))].join(' '));
       element && typeof hint === 'string' && (element.className = `${element.className || ''} ${hint}`);
@@ -168,10 +177,6 @@ MarkupRenderer.defaults = Object.freeze({
   LINE: 'span',
   /** The class name of the element to use for rendering a token. */
   CLASS: 'markup',
-  /** Concatenates leading whitespace into a separate "indent" token */
-  LINE_INDENTS: false,
-  /** Replaces uniform leading spaces with tabs based on first indent size */
-  LINE_REINDENTS: false,
 });
 
 /// INTERFACE

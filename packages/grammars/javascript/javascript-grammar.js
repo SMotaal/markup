@@ -22,7 +22,7 @@ export const javascript = Object.defineProperties(
         regexp: /^\/(?![\n*+/?])[^\n]*[^\\\n]\//,
       },
     },
-    matcher: sequence`([\s\n]+)|(${all(
+    matcher: sequence`(\n|\s+)|(${all(
       javascript.REGEXPS,
       javascript.COMMENTS,
       javascript.QUOTES,
