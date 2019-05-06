@@ -13,6 +13,7 @@
   --markup-dark-fade: var(--markup-dark-fade, #333f4633);
   --markup-color: var(--markup-color, currentColor);
   --markup-background: var(--markup-background, var(--markup-neutral-fade));
+
   /* --markup-faults-solid: #FF2211; */
 }
 
@@ -29,6 +30,9 @@
   --markup-dark-text: #eee;
   --markup-dark: #333f46;
   --markup-dark-fade: #333f4633;
+
+  --markup-tab-size: 4;
+  --markup-soft-indent-tab-size: 2;
 
   /**/ /**/ /**/ /**/ /** PRIMARIES **/ /**/ /**/ /**/ /**/
   --markup-light-background: var(--markup-light, #f9f9f9);
@@ -122,46 +126,75 @@
 
 .markup-line {
   font-variant-ligatures: common-ligatures discretionary-ligatures contextual historical-ligatures;
+  break-before: auto;
+  break-inside: avoid;
+
+  --markup-soft-indent: calc(1em * var(--markup-soft-indent-tab-size));
+  /* --markup-soft-indent: 1em; */
+  /* --markup-soft-indent: 0; */
+
+  display: block;
+  padding: 0;
+  margin: 0;
+  margin-inline-start: var(--markup-gutter, 0);
+  text-indent: calc(-1 * var(--markup-soft-indent));
+  padding-inline-start: calc(0.25em + var(--markup-soft-indent));
+
+  border: 0 solid #9999;
+  /* width: -webkit-fill-available; */
+  /* width: -moz-fill-available; */
+  /* width: fill-available; */
+  /* contain: layout; */
 }
 
 .markup-line .markup {
   color: var(--color, var(--markup-color, var(--markup-light-text, currentColor)));
+  /* text-indent: calc(-1 * var(--markup-soft-indent)); */
 }
+
+.markup-line .markup:first-child + .markup:last-child {
+  /* outline: 1px solid red; */
+  /* margin-inline-start: calc(-1 * var(--markup-soft-indent)); */
+  /* text-indent: 0; */
+  /* display: inline-block; */
+
+  /* white-space: pre-line; */
+  /* margin-inline-start: calc(var(--markup-soft-indent)); */
+}
+
+/* .markup-line .markup:first-of-type {} */
 
 .markup-line-numbers pre,
 pre.markup-line-numbers,
 pre.markup[line-numbers],
 pre > .markup-line-numbers {
   --markup-gutter: 3.5em;
-
-  padding-inline-start: var(--markup-gutter);
-}
-
-.markup-line:first-of-type {
+  /* --markup-gutter: 0; */
   counter-reset: line;
 }
 
-.markup-line {
-  break-before: auto;
-  break-inside: avoid;
+.markup-line-numbers pre .markup-line,
+pre.markup-line-numbers .markup-line,
+pre.markup[line-numbers] .markup-line,
+pre > .markup-line-numbers .markup-line {
+  border-inline-start-width: 1px;
 }
 
 .markup-line-numbers .markup-line::before,
 pre.markup[line-numbers] .markup-line::before {
+  --font-scale: 0.75;
   float: left;
-  width: calc(var(--markup-gutter) - 0.5em);
-  /* padding: 1px; */
-  /* margin: -1px; */
-  margin-inline-start: calc(-1 * var(--markup-gutter));
+  width: calc(-0.5em + var(--markup-gutter, 0.5em));
+  margin-inline-start: calc(-1 * var(--markup-gutter, 0) - var(--markup-soft-indent) / 0.75);
   counter-increment: line;
   color: var(--markup-neutral-dim, #9999);
   text-indent: 0;
   text-align: end;
   font-variant: small-caps;
-  font-size: 75%;
+  font-size: calc(100% * var(--font-scale));
   font-style: normal;
   font-weight: 400;
-  height: calc(100% / 0.75);
+  height: calc(100% * var(--font-scale));
   vertical-align: middle;
   white-space: pre;
   user-select: none;
@@ -170,23 +203,15 @@ pre.markup[line-numbers] .markup-line::before {
   content: '';
   content: counter(line) ' ';
   border: 0 solid #9999;
-  border-inline-end-width: 0.5px;
+  /* border-inline-end-width: 0.55px; */
   pointer-events: none;
+  /* overflow: hidden; */
 }
 
 .markup-line-numbers .markup-line:empty::before,
 pre.markup[line-numbers] .markup-line:empty::before {
   visibility: hidden;
 }
-
-/*
-.markup-line-numbers .markup-line:not(:empty)::before,
-pre.markup[line-numbers] .markup-line:not(:empty)::before {
-  content: counter(line) ' ';
-  border: 0 solid #9999;
-  border-inline-end-width: 0.5px;
-}
-*/
 
 @media only print {
   .markup-line-numbers .markup-line::before {
@@ -200,11 +225,7 @@ pre.markup[line-numbers] .markup-line:not(:empty)::before {
 
 .markup.fault {
   --color: var(--markup-faults, white);
-  /* text-decoration: line-through; */
-  /* text-decoration-color: var(--markup-faults, red); */
   background-color: var(--markup-faults-highlight, #f219);
-  /* color: var(--markup-color, white); */
-  /* box-shadow: 0 0 0 var(--markup-faults, red); */
   font-variant-ligatures: none;
 }
 
@@ -260,3 +281,42 @@ pre.markup[line-numbers] .markup-line:not(:empty)::before {
 .markup.whitespace {
   --color: var(--markup-whitespace, #999);
 }
+
+/* .markup-line .markup:first-of-type.inset { */
+/* margin-inline-start: calc(-1 * var(--markup-gutter, 0)); */
+/* display: inline-block; */
+/* outline: 1px solid blue; */
+/* place-self: stretch; */
+/* width: max-content; */
+/* ; */
+/* flex: 1; */
+/* position: relative; */
+/* margin: 0; */
+/* min-height: 100%; */
+/* height: -webkit-fill-available; */
+/* height: -moz-fill-available; */
+/* height: fill-available; */
+/* margin-bottom: 100px; */
+/* position: absolute; */
+/* top: 0; */
+/* bottom: 0; */
+/* float: left; */
+/* margin-inline-start: 1em; */
+/* text-indent: 0; */
+/* } */
+/*
+.markup-line .markup:first-of-type.inset::before {
+  float:left;
+  content: '';
+  outline: 1px solid red;
+  height: 100%;
+} */
+
+/*
+.markup-line-numbers .markup-line:not(:empty)::before,
+pre.markup[line-numbers] .markup-line:not(:empty)::before {
+  content: counter(line) ' ';
+  border: 0 solid #9999;
+  border-inline-end-width: 0.5px;
+}
+*/
