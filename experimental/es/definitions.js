@@ -1,4 +1,5 @@
-﻿import * as entities from './entities.js';
+﻿// import * as entities from './entities.js';
+import {ranges, GraveAccent} from './ranges.js';
 
 const symbols = {};
 
@@ -17,10 +18,10 @@ const identities = {
 };
 
 const goals = {
-  [symbol('ECMAScriptGoal')]: {openers: ['{', '(', '[', entities.GraveAccent]},
+  [symbol('ECMAScriptGoal')]: {openers: ['{', '(', '[', GraveAccent]},
   [symbol('TemplateLiteralGoal')]: {
     openers: ['${'],
-    closer: entities.GraveAccent,
+    closer: GraveAccent,
     type: 'quote',
     matcher: /\\.|(\x60|$\{)/g,
   },
@@ -32,9 +33,9 @@ const groups = {
   '${': {opener: '${', closer: '}', type: 'span'},
   '(': {opener: '(', closer: ')'},
   '[': {opener: '[', closer: ']'},
-  [entities.GraveAccent]: {
-    opener: entities.GraveAccent,
-    closer: entities.GraveAccent,
+  [GraveAccent]: {
+    opener: GraveAccent,
+    closer: GraveAccent,
     goal: symbols.TemplateLiteralGoal,
   },
 };
@@ -66,7 +67,108 @@ const groups = {
   freeze(symbols);
 }
 
-export {entities, identities, goals, groups, symbols};
+/**
+ * @typedef {'await'|'break'|'case'|'catch'|'class'|'const'|'continue'|'debugger'|'default'|'delete'|'do'|'else'|'export'|'extends'|'finally'|'for'|'function'|'if'|'import'|'in'|'instanceof'|'new'|'return'|'super'|'switch'|'this'|'throw'|'try'|'typeof'|'var'|'void'|'while'|'with'|'yield'} ECMAScript.Keyword
+ * @typedef {'interface'|'implements'|'package'|'private'|'protected'|'public'} ECMAScript.RestrictedWord
+ * @typedef {'enum'} ECMAScript.FutureReservedWord
+ * @typedef {'arguments'|'async'|'as'|'from'|'of'|'static'} ECMAScript.ContextualKeyword
+ * @type {Record<ECMAScript.Keyword|ECMAScript.RestrictedWord|ECMAScript.FutureReservedWord|ECMAScript.ContextualKeyword, symbol>} */
+const keywords = {};
+
+{
+  for (const keyword of [
+    'await',
+    'break',
+    'case',
+    'catch',
+    'class',
+    'const',
+    'continue',
+    'debugger',
+    'default',
+    'delete',
+    'do',
+    'else',
+    'export',
+    'extends',
+    'finally',
+    'for',
+    'function',
+    'if',
+    'import',
+    'in',
+    'instanceof',
+    'new',
+    'return',
+    'super',
+    'switch',
+    'this',
+    'throw',
+    'try',
+    'typeof',
+    'var',
+    'void',
+    'while',
+    'with',
+    'yield',
+  ])
+    keywords[keyword] = identities.Keyword;
+  for (const keyword of ['interface', 'implements', 'package', 'private', 'protected', 'public'])
+    keywords[keyword] = identities.RestrictedWord;
+  for (const keyword of ['enum']) keywords[keyword] = identities.FutureReservedWord;
+  for (const keyword of ['arguments', 'async', 'as', 'from', 'of', 'static'])
+    keywords[keyword] = identities.ContextualWord;
+
+  //   Keyword: () =>
+  //   Matcher.define(
+  //     entity => Matcher.sequence`\b(
+
+  //       ${entity((text, entity, match) => {
+  //         match.capture[identities.Keyword] = text;
+  //         capture('keyword', match);
+  //       })}
+  //     )\b`,
+  //   ),
+  // RestrictedWord: () =>
+  //   Matcher.define(
+  //     entity => Matcher.sequence`\b(
+  //       interface|implements|package|private|protected|public
+  //       ${entity((text, entity, match) => {
+  //         match.capture[identities.RestrictedWord] = text;
+  //         capture('keyword', match);
+  //       })}
+  //     )\b`,
+  //   ),
+  // FutureReservedWord: () =>
+  //   Matcher.define(
+  //     entity => Matcher.sequence`\b(
+  //       enum
+  //       ${entity((text, entity, match) => {
+  //         match.capture[identities.FutureReservedWord] = text;
+  //         capture('identifier', match);
+  //       })}
+  //     )\b`,
+  //   ),
+}
+
+// {
+//   const {
+//     Null = '\0',
+//     ZeroWidthNonJoiner = '\u200c',
+//     ZeroWidthJoiner = '\u200d',
+//     ZeroWidthNoBreakSpace = '\ufeff',
+//     Whitespace,
+//     ECMAScript,
+//   } = ranges;
+
+//   const {
+//     Terminator = (partials.Enders = String.raw`%&|)*,./:;<=>?^|}\]`),
+//     CommentStart = (partials.CommentStart = String.raw`//|/\*`),
+//     ExpressionStart = (partials.ExpressionStart = String.raw`[^${Null}${Whitespace}${Terminator}]|${CommentStart}`),
+//   } = partials;
+// }
+
+export {ranges, identities, goals, groups, symbols, keywords};
 
 // UnicodeIDStart: Symbol(identities.UnicodeIDStart),
 // UnicodeIDContinue: Symbol(identities.UnicodeIDContinue),
