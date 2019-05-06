@@ -15,7 +15,7 @@ export const {createTokenFromMatch, createMatcherInstance, createString, countLi
 
   /** @type {<T extends RegExp & Partial<{constructor: {prototype: T}>>(matcher: T | RegExp, instance?: T) => T} */
   const createMatcherClone = ({constructor: {prototype}, source, flags, lastIndex, ...properties}, instance) => (
-    (instance = assign(instance || RegExp(source, flags || g), properties)),
+    (instance = assign(instance || RegExp(source, flags || 'g'), properties)),
     prototype && setPrototypeOf(instance, prototype),
     instance
   );
@@ -41,8 +41,9 @@ export const {createTokenFromMatch, createMatcherInstance, createString, countLi
     type: (identity && (identity.description || identity)) || 'text',
     text,
     breaks: countLineBreaks(text),
+    inset: capture.inset || '',
     offset: index,
-    hint: getOwnPropertyNames(capture).join(' '),
+    // hint: getOwnPropertyNames(capture).join(' '),
     capture,
   });
 

@@ -12,20 +12,28 @@ export default //
   matcher = freeze(createMatcherInstance(matcher));
   const tokenizer = {
     createToken: createTokenFromMatch,
+    /** @type {(state: {}) =>  void} */
+    initializeState: undefined,
     /**
      * @param {string} sourceText @param {{sourceType?: string}} [state]
      */
     *tokenize(sourceText, state) {
+      const {createToken, initializeState} = this;
       const string = (state.sourceText = createString(sourceText));
       const matcherInstance = (state.matcher = createMatcherInstance(matcher, state || {}));
       const {state: matcherState} = matcherInstance;
-      const {createToken} = this;
+      initializeState && initializeState(matcherState);
+      let nextToken;
       for (
-        let match;
+        let match, matchedToken;
         // TODO: Consider optimizations for RegExp.prototype.exec
         (match = matcherInstance.exec(string));
-        yield (matcherState.previousToken = createToken(match, matcherState))
+        // We hold back one grace token
+        matchedToken = createToken(match, matcherState),
+          nextToken && (yield nextToken),
+          nextToken = matcherState.previousToken = matchedToken
       );
+      nextToken && (yield nextToken);
     },
   };
   const mode = {syntax: 'matcher', tokenizer};
@@ -33,6 +41,7 @@ export default //
     ({
       syntax: mode.syntax = mode.syntax,
       createToken: tokenizer.createToken = tokenizer.createToken,
+      initializeState: tokenizer.initializeState,
       ...overrides
     } = overrides);
   const parser = new Parser({mode, tokenizer, url: import.meta.url});
