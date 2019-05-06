@@ -296,15 +296,19 @@ export default (markup, overrides) => {
       const columnMarker = Object.assign(document.createElement('span'), {className: 'marker', textContent: '\u034F'});
 
       slot.addEventListener('click', event => {
-        /** @type {{target: HTMLSpanElement}} */
-        const {target} = event;
-        if (!target.matches('.markup')) {
+        /** @type {PointerEvent & {target: HTMLSpanElement}} */
+        // const {target} = event;
+        // (({currentTarget, composedPath}) => console.log({target, currentTarget, composedPath}, event))(event);
+        // console.log({target, currentTarget, composedPath}, event);
+
+        // if (event.target.matches('.marker + .markup-line, .marker + .markup')) return;
+        if (event.target.matches('.marker + .markup-line, :not(.markup)')) {
           columnMarker.remove();
           lineMarker.remove();
           slot.classList.remove('marked');
         } else {
-          target.before(columnMarker);
-          const line = target.closest('.markup-line');
+          event.target.before(columnMarker);
+          const line = event.target.closest('.markup-line');
           line && line.before(lineMarker);
           slot.classList.add('marked');
         }

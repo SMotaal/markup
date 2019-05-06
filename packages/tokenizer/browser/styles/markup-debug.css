@@ -35,26 +35,23 @@
     --debug: var(--markup-faults-background, #f21);
   }
 
-  .markup-wrapper,
-  .markup-wrapper * {
-    /* box-sizing: content-box; */
-    /* overflow-y: visible; */
-  }
-
   .marker + .markup-line {
     background: #9991;
+    outline: 1px solid #9993;
+    outline-offset: -1px;
     /* border-radius: 4px; */
-    border: 1px solid #9991;
-    padding: 2px;
-    /* padding-inline-end: 100%; */
-    /* margin-inline-end: -100%; */
-    margin: -3px;
+    /* border: 1px solid #9991; */
+    /* padding: 2px; */
+    /* padding-inline-start: calc(2px + var(--markup-soft-indent, 0)); */
+    /* margin: -3px; */
     /* width: -webkit-fill-available; position: absolute; */
   }
 
   /* .markup-line-numbers .markup-line:focus-within::before, */
   .marked > .marker + .markup-line::before,
   .markup-line-numbers .markup-wrapper:not(.marked) > .markup-line:hover::before {
+    outline: 1px solid #9996;
+    outline-offset: -1px;
     background-color: var(--widge, #9996);
     color: var(--markup-contrast);
     /* padding: 1px; */
@@ -64,6 +61,11 @@
     user-select: none;
     -webkit-user-select: none;
     -moz-user-select: none;
+  }
+
+  .markup-line:hover::before {
+    outline: 1px solid #9996;
+    outline-offset: -1px;
   }
 
   /* .markup-line > .markup:focus, */
@@ -105,8 +107,9 @@
     will-change: transform transition;
     transform: translateX(-50%);
     text-align: center;
+    text-indent: 0;
     width: max-content;
-    min-width: 10em;
+    min-width: min-content;
     max-width: -webkit-fill-available;
     max-width: fill-available;
     bottom: calc(100% + 0.5ch + -2 * var(--padding, 2px));
@@ -142,7 +145,12 @@
     line-height: 150%;
     vertical-align: initial;
     text-align: center;
+    text-indent: 0;
   }
 
   /* (element => element && (element.scrollIntoView(), inspect(element)))(document.querySelector('.fault')) */
+}
+
+.marker {
+  display: none;
 }
