@@ -191,12 +191,13 @@ const ECMAScriptGrammar = {
   ContextualWord: () =>
     Matcher.define(
       entity => Matcher.sequence`\b(
-        arguments|as|async|from|of|static
+        arguments|async|as|from|of|static
         ${entity((text, entity, match) => {
-          // match.capture[symbols.ECMAScriptKeyword] = text;
-          capture('keyowrd', match);
+          match.capture[identities.ContextualWord] = text;
+          capture('keyword', match);
         })}
       )\b`,
+      'gu',
     ),
   Keyword: () =>
     Matcher.define(
@@ -210,6 +211,7 @@ const ECMAScriptGrammar = {
           capture('keyword', match);
         })}
       )\b`,
+      'gu',
     ),
   RestrictedWord: () =>
     Matcher.define(
@@ -220,6 +222,7 @@ const ECMAScriptGrammar = {
           capture('keyword', match);
         })}
       )\b`,
+      'gu',
     ),
   FutureReservedWord: () =>
     Matcher.define(
@@ -230,6 +233,7 @@ const ECMAScriptGrammar = {
           capture('identifier', match);
         })}
       )\b`,
+      'gu',
     ),
   Identifier: () =>
     Matcher.define(
@@ -252,9 +256,9 @@ export const matcher = Matcher.define(
     ${entity(ECMAScriptGrammar.Opener())}|
     ${entity(ECMAScriptGrammar.Closer())}|
     ${entity(ECMAScriptGrammar.Operator())}|
+    ${entity(ECMAScriptGrammar.ContextualWord())}|
     ${entity(ECMAScriptGrammar.Keyword())}|
     ${entity(ECMAScriptGrammar.RestrictedWord())}|
-    ${entity(ECMAScriptGrammar.ContextualWord())}|
     ${entity(ECMAScriptGrammar.FutureReservedWord())}|
     ${entity(ECMAScriptGrammar.Identifier())}|
     .

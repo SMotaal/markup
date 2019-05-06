@@ -10,6 +10,7 @@ const identities = {
   HexDigits: 'ECMAScript.HexDigits',
   CodePoint: 'ECMAScript.CodePoint',
   ControlEscape: 'ECMAScript.ControlEscape',
+  ContextualWord: 'ECMAScript.ContextualWord',
   RestrictedWord: 'ECMAScript.RestrictedWord',
   FutureReservedWord: 'ECMAScript.FutureReservedWord',
   Keyword: 'ECMAScript.Keyword',
