@@ -495,29 +495,18 @@ const markup = (function (exports) {
       // TODO: Consider making Renderer a thing
       const {factory, defaults} = new.target;
 
-      const {SPAN = 'span', LINE = 'span', CLASS = 'markup', LINE_INDENTS, LINE_REINDENTS} = {
+      const {SPAN = 'span', LINE = 'span', CLASS = 'markup'} = {
         ...defaults,
         ...options,
       };
 
-      this.LINE_INDENTS =
-        LINE_INDENTS != null
-          ? !!LINE_INDENTS
-          : !defaults || defaults.LINE_INDENTS == null
-          ? false
-          : !!defaults.LINE_INDENTS;
-
-      this.LINE_REINDENTS =
-        LINE_REINDENTS != null
-          ? !!LINE_REINDENTS
-          : !defaults || defaults.LINE_REINDENTS == null
-          ? false
-          : !!defaults.LINE_REINDENTS;
-
       this.renderers = {
         line: factory(LINE, {className: `${CLASS} ${CLASS}-line`}),
-        indent: factory(LINE, {className: `${CLASS} whitespace ${CLASS}-indent`}),
-
+        // indent: factory(SPAN, {className: `${CLASS} ${CLASS}-indent whitespace`}),
+        inset: factory(SPAN, {className: `${CLASS} inset whitespace`}),
+        break: factory(SPAN, {className: `${CLASS} break whitespace`}),
+        // break: Text,
+        // whitespace: factory(SPAN, {className: `${CLASS} whitespace`}),
         whitespace: Text$2,
         text: factory(SPAN, {className: CLASS}),
 
@@ -525,11 +514,13 @@ const markup = (function (exports) {
         fault: factory(SPAN, {className: `${CLASS} fault`}),
         keyword: factory(SPAN, {className: `${CLASS} keyword`}),
         identifier: factory(SPAN, {className: `${CLASS} identifier`}),
+        quote: factory(SPAN, {className: `${CLASS} quote`}),
+
         operator: factory(SPAN, {className: `${CLASS} punctuator operator`}),
         assigner: factory(SPAN, {className: `${CLASS} punctuator operator assigner`}),
         combinator: factory(SPAN, {className: `${CLASS} punctuator operator combinator`}),
         punctuation: factory(SPAN, {className: `${CLASS} punctuator punctuation`}),
-        quote: factory(SPAN, {className: `${CLASS} punctuator quote`}),
+
         breaker: factory(SPAN, {className: `${CLASS} punctuator breaker`}),
         opener: factory(SPAN, {className: `${CLASS} punctuator opener`}),
         closer: factory(SPAN, {className: `${CLASS} punctuator closer`}),
@@ -576,51 +567,69 @@ const markup = (function (exports) {
 
     *renderer(tokens) {
       const {renderers, LINE_INDENTS, LINE_REINDENTS} = this;
-      let line, indent;
-      let tabSpan;
+      let renderedLine, Inset, lineInset, lineText, insetHint;
+      // let line, indent, trim, tabSpan;
       const blank = renderers.line();
+      const emit = (renderer, text, type, hint, flatten) => {
+        flatten && renderedLine.lastChild && renderer === renderedLine.lastChild.renderer
+          ? renderedLine.lastChild.appendChild(Text$2(text))
+          : renderedLine.appendChild((renderedLine.lastChild = renderer(text, hint || type))).childElementCount &&
+            (renderedLine.lastChild.renderer = renderer);
+      };
+      const emitInset = (text, hint) => emit(renderers.inset, text, 'inset', hint, false);
+      const Lines = /^/gm;
       for (const token of tokens) {
-        let {type = 'text', text, punctuator, breaks, hint} = token;
+        let {type = 'text', text, inset, punctuator, breaks, hint} = token;
         let renderer =
           (punctuator && (renderers[punctuator] || renderers.operator)) ||
           (type && renderers[type]) ||
-          (text && renderers.text);
+          (type !== 'whitespace' && type !== 'break' && renderers.text) ||
+          Text$2;
 
-        line ||
-          // Create new line
-          ((line = renderers.line()),
-          // Concatenate stripped and leading whitesp into a separate "indent" tokenace
-          LINE_INDENTS &&
-            // ((indent = `${indent || ''}${text.slice(0, text.indexOf((trim = text.trimLeft())))}`), (text = trim)),
-            (([, indent = '', text = ''] = /^([ \t]*)([^]*)$/.exec(`${indent || ''}${text}`)),
-            indent &&
-              (LINE_REINDENTS &&
-                (tabSpan ||
-                  (([tabSpan] = /^(?: {4}| {2}|)/.exec(indent)) &&
-                    tabSpan &&
-                    (tabSpan = new RegExp(`${tabSpan}`, 'g')))) &&
-                (indent = indent.replace(tabSpan, '\t')),
-              indent && (indent = (line.append((line.lastChild = renderers.indent(indent))), '')))));
+        if (!text) continue;
 
-        text &&
-          // Strip trailing whitespace
-          (LINE_INDENTS && breaks && ([text, indent = ''] = text.split(/([ \t]*$)/, 2)),
-          text &&
-            (!punctuator && line.lastChild && renderer === line.lastChild.renderer
-              ? line.lastChild.appendChild(Text$2(text))
-              : line.appendChild((line.lastChild = renderer(text, hint))).childElementCount &&
-                (line.lastChild.renderer = renderer)));
+        // Create new line
+        renderedLine || (renderedLine = renderers.line());
+
+        const flatten = !punctuator && type !== 'fault' && type !== 'opener' && type !== 'closer' && type !== 'break';
+
+        // Normlize inset for { type != 'inset', inset = /\s+/ }
+        if (breaks && type !== 'break') {
+          Inset = void (inset = inset || '');
+          insetHint = `${hint || ''} in-${type || ''}`;
+          for (const line of text.split(Lines)) {
+            renderedLine || (renderedLine = renderers.line());
+            (lineInset = line.startsWith(inset)
+              ? line.slice(0, inset.length)
+              : line.match(Inset || (Inset = RegExp(`^${inset.replace(/./g, '$&?')}`)))[0]) &&
+              emitInset(lineInset, insetHint);
+            (lineText = lineInset ? line.slice(lineInset.length) : line) &&
+              (emit(renderer, lineText, type, hint, flatten),
+              lineText.endsWith('\n') && (yield renderedLine, (renderedLine = null)));
+          }
+          // console.log(lines);
+          // emit(renderer, text, type, hint, punctuator);
+        } else {
+          emit(renderer, text, type, hint, flatten);
+          type === 'break' && (yield renderedLine, (renderedLine = null));
+        }
+
+        // Strip trailing whitespace
+        // !punctuator && type !== 'opener' && type !== 'closer' && line.lastChild && renderer === line.lastChild.renderer
+        //   ? line.lastChild.appendChild(Text(text))
+        //   : line.appendChild((line.lastChild = renderer(text, hint))).childElementCount &&
+        //     (line.lastChild.renderer = renderer);
 
         // TODO: Normalize multiple line breaks
-        breaks && (yield line, --breaks && (yield* Array(breaks).fill(blank)), (line = null));
+        // breaks && (yield line, --breaks && (yield* Array(breaks).fill(blank)), (line = null));
       }
-      line && (yield line);
+      renderedLine && (yield renderedLine);
     }
 
     static factory(tag, properties) {
       return (content, hint) => {
         typeof content === 'string' && (content = Text$2(content));
-        const element = Element$2(tag, properties, content);
+        const element = content != null ? Element$2(tag, properties, content) : Element$2(tag, properties);
         // element &&
         //   (element.className = [...new Set(`${element.className || ''} ${hint || ''}`.trim().split(/\s+/g))].join(' '));
         element && typeof hint === 'string' && (element.className = `${element.className || ''} ${hint}`);
@@ -636,10 +645,6 @@ const markup = (function (exports) {
     LINE: 'span',
     /** The class name of the element to use for rendering a token. */
     CLASS: 'markup',
-    /** Concatenates leading whitespace into a separate "indent" token */
-    LINE_INDENTS: false,
-    /** Replaces uniform leading spaces with tabs based on first indent size */
-    LINE_REINDENTS: false,
   });
 
   /// INTERFACE
@@ -1293,7 +1298,7 @@ const markup = (function (exports) {
       combinators: Symbols.from('> :: + :'),
       nonbreakers: Symbols.from(`-`),
       breakers: Symbols.from(', ;'),
-      matcher: /([\s\n]+)|(\\(?:(?:\\\\)*\\|[^\\\s])?|\/\*|\*\/|\(|\)|\[|\]|"|'|\{|\}|,|;|\.|\b:\/\/\b|::\b|:(?!active|after|any|any-link|backdrop|before|checked|default|defined|dir|disabled|empty|enabled|first|first-child|first-letter|first-line|first-of-type|focus|focus-visible|focus-within|fullscreen|host|hover|in-range|indeterminate|invalid|lang|last-child|last-of-type|left|link|matches|not|nth-child|nth-last-child|nth-last-of-type|nth-of-type|only-child|only-of-type|optional|out-of-range|read-only|required|right|root|scope|target|valid|visited))/g,
+      matcher: /(\n|\s+)|(\\(?:(?:\\\\)*\\|[^\\\s])?|\/\*|\*\/|\(|\)|\[|\]|"|'|\{|\}|,|;|\.|\b:\/\/\b|::\b|:(?!active|after|any|any-link|backdrop|before|checked|default|defined|dir|disabled|empty|enabled|first|first-child|first-letter|first-line|first-of-type|focus|focus-visible|focus-within|fullscreen|host|hover|in-range|indeterminate|invalid|lang|last-child|last-of-type|left|link|matches|not|nth-child|nth-last-child|nth-last-of-type|nth-of-type|only-child|only-of-type|optional|out-of-range|read-only|required|right|root|scope|target|valid|visited))/g,
       matchers: {
         quote: /(\n)|(\\(?:(?:\\\\)*\\|[^\\\s])?|\*\/|`|"|'|\$\{)/g,
         comment: /(\n)|(\*\/|\b(?:[a-z]+\:\/\/|\w[\w\+\.]*\w@[a-z]+)\S+|@[a-z]+)/gi,
@@ -1317,7 +1322,7 @@ const markup = (function (exports) {
           closeTag: /<\/\w[^<>{}]*?>/g,
           // maybeIdentifier: /^(?:(?:[a-z][\-a-z]*)?[a-z]+\:)?(?:[a-z][\-a-z]*)?[a-z]+$/,
         },
-        matcher: /([\s\n]+)|("|'|=|&#x?[a-f0-9]+;|&[a-z]+;|\/?>|<%|%>|<!--|-->|<[\/\!]?(?=[a-z]+\:?[a-z\-]*[a-z]|[a-z]+))/gi,
+        matcher: /(\n|\s+)|("|'|=|&#x?[a-f0-9]+;|&[a-z]+;|\/?>|<%|%>|<!--|-->|<[\/\!]?(?=[a-z]+\:?[a-z\-]*[a-z]|[a-z]+))/gi,
         matchers: {
           quote: /(\n)|(\\(?:(?:\\\\)*\\|[^\\\s])|"|')/g,
           comment: /(\n)|(-->)/g,
@@ -1565,7 +1570,7 @@ const markup = (function (exports) {
           regexp: /^\/(?![\n*+/?])[^\n]*[^\\\n]\//,
         },
       },
-      matcher: sequence`([\s\n]+)|(${all(
+      matcher: sequence`(\n|\s+)|(${all(
       javascript.REGEXPS,
       javascript.COMMENTS,
       javascript.QUOTES,
@@ -1706,8 +1711,8 @@ const markup = (function (exports) {
     const QUOTES = (javascript.extended.QUOTES = /`|"(?:[^\\"]+|\\.)*(?:"|$)|'(?:[^\\']+|\\.)*(?:'|$)/g);
     const COMMENTS = (javascript.extended.COMMENTS = /\/\/.*(?:\n|$)|\/\*[^]*?(?:\*\/|$)|^\#\!.*\n|<!--/g);
     const STATEMENTS = (javascript.extended.STATEMENTS = all(QUOTES, CLOSURES, REGEXPS, COMMENTS));
-    const BLOCKLEVEL = (javascript.extended.BLOCKLEVEL = sequence`([\s\n]+)|(${STATEMENTS})`);
-    const TOPLEVEL = (javascript.extended.TOPLEVEL = sequence`([\s\n]+)|(${STATEMENTS})`);
+    const BLOCKLEVEL = (javascript.extended.BLOCKLEVEL = sequence`(\n|\s+)|(${STATEMENTS})`);
+    const TOPLEVEL = (javascript.extended.TOPLEVEL = sequence`(\n|\s+)|(${STATEMENTS})`);
     javascript.extended.CLOSURE = sequence`(\n+)|(${STATEMENTS})`;
     javascript.extended.MJS = sequence`${TOPLEVEL}|\bexport\b|\bimport\b`;
     javascript.extended.CJS = sequence`${BLOCKLEVEL}|\bexports\b|\bmodule.exports\b|\brequire\b|\bimport(?=\(|\.)`;
