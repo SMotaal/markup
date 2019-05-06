@@ -238,12 +238,7 @@ export default (markup, overrides) => {
 
       slot.addEventListener('click', event => {
         /** @type {PointerEvent & {target: HTMLSpanElement}} */
-        // const {target} = event;
-        // (({currentTarget, composedPath}) => console.log({target, currentTarget, composedPath}, event))(event);
-        // console.log({target, currentTarget, composedPath}, event);
-
-        // if (event.target.matches('.marker + .markup-line, .marker + .markup')) return;
-        if (event.target.matches('.marker + .markup-line, :not(.markup)')) {
+        if (event.target.matches('.marker + .markup-line, .marker + .markup')) {
           columnMarker.remove();
           lineMarker.remove();
           slot.classList.remove('marked');
