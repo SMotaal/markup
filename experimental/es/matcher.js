@@ -1,5 +1,5 @@
 ﻿import {Matcher} from '/modules/matcher/matcher.js';
-import {entities, identities, goals, groups, symbols} from './definitions.js';
+import {ranges, keywords, identities, goals, groups, symbols} from './definitions.js';
 
 const {[symbols.ECMAScriptGoal]: ECMAScriptGoal, [symbols.TemplateLiteralGoal]: TemplateLiteralGoal} = goals;
 
@@ -84,17 +84,17 @@ const ECMAScriptGrammar = {
     Matcher.define(entity =>
       captureSymbols
         ? Matcher.sequence`(\\${entity('escape')}(?:
-          x(${entity(symbols.HexDigits)}[${entities.HexDigit}]{2})|
-          u(${entity(symbols.HexDigits)}[${entities.HexDigit}]{4})|
-          u\{(${entity(symbols.CodePoint)}[${entities.HexDigit}]{1,4})\}|
+          x(${entity(symbols.HexDigits)}[${ranges.HexDigit}]{2})|
+          u(${entity(symbols.HexDigits)}[${ranges.HexDigit}]{4})|
+          u\{(${entity(symbols.CodePoint)}[${ranges.HexDigit}]{1,4})\}|
           (${entity(symbols.ControlEscape)}f|n|r|t|v)|
-          c(${entity(symbols.ControlLetter)}[${entities.ControlLetter}])|
+          c(${entity(symbols.ControlLetter)}[${ranges.ControlLetter}])|
           (${entity(symbols.CharacterEscape)}.)
         ))`
         : Matcher.sequence`(\\${entity('escape')}(?:
-          x[${entities.HexDigit}]{2}|
-          u[${entities.HexDigit}]{4}|u\{[${entities.HexDigit}]{1,4}\}|
-          f|n|r|t|v|c[${entities.ControlLetter}]|.
+          x[${ranges.HexDigit}]{2}|
+          u[${ranges.HexDigit}]{4}|u\{[${ranges.HexDigit}]{1,4}\}|
+          f|n|r|t|v|c[${ranges.ControlLetter}]|.
         ))`,
     ),
   Comment: () =>
@@ -139,7 +139,7 @@ const ECMAScriptGrammar = {
     ),
   TemplateLiteral: () =>
     Matcher.define(
-      entity => Matcher.sequence`(${entities.GraveAccent}
+      entity => Matcher.sequence`(${ranges.GraveAccent}
         ${entity((text, entity, match) => {
           const goal = match.matcher.state.goal;
           !goal || goal === TemplateLiteralGoal || goal === ECMAScriptGoal
@@ -189,60 +189,28 @@ const ECMAScriptGrammar = {
         ${entity(ECMAScriptGrammar.Solidus())}
       )`,
     ),
-  ContextualWord: () =>
-    Matcher.define(
-      entity => Matcher.sequence`\b(
-        arguments|async|as|from|of|static
-        ${entity((text, entity, match) => {
-          match.capture[identities.ContextualWord] = text;
-          capture('keyword', match);
-        })}
-      )\b`,
-      'gu',
-    ),
   Keyword: () =>
     Matcher.define(
       entity => Matcher.sequence`\b(
-        await|break|case|catch|class|const|continue|debugger|
-        default|delete|do|else|export|extends|finally|for|
-        function|if|import|in|instanceof|new|return|super|
-        switch|this|throw|try|typeof|var|void|while|with|yield
+        new(?=\.target)|
+        function(?=\.sent)|
+        import(?=\.meta)|
+        this(?=\.)|
+        super(?=\.)|
+        (?:${Object.keys(keywords).join('|')})(?=[^\s$_:.]|\s*[^:])
         ${entity((text, entity, match) => {
-          match.capture[identities.Keyword] = text;
+          match.capture[keywords[text]] = text;
           capture('keyword', match);
         })}
       )\b`,
-      'gu',
-    ),
-  RestrictedWord: () =>
-    Matcher.define(
-      entity => Matcher.sequence`\b(
-        interface|implements|package|private|protected|public
-        ${entity((text, entity, match) => {
-          match.capture[identities.RestrictedWord] = text;
-          capture('keyword', match);
-        })}
-      )\b`,
-      'gu',
-    ),
-  FutureReservedWord: () =>
-    Matcher.define(
-      entity => Matcher.sequence`\b(
-        enum
-        ${entity((text, entity, match) => {
-          match.capture[identities.FutureReservedWord] = text;
-          capture('identifier', match);
-        })}
-      )\b`,
-      'gu',
     ),
   Identifier: () =>
     Matcher.define(
       entity => Matcher.sequence`(${entity('identifier')}
-        (${entity(symbols.UnicodeIDStart)}[_$${entities.ID_Start}])
-        (${entity(symbols.UnicodeIDContinue)}[_$\u200c\u200d${entities.ID_Continue}\u034f]+)?
+        (${entity(symbols.UnicodeIDStart)}[${ranges.UnicodeIDStart}])
+        (${entity(symbols.UnicodeIDContinue)}[${ranges.UnicodeIDContinue}]+)?
       )`,
-      'gu',
+      'u',
     ),
 };
 
@@ -257,10 +225,7 @@ export const matcher = Matcher.define(
     ${entity(ECMAScriptGrammar.Opener())}|
     ${entity(ECMAScriptGrammar.Closer())}|
     ${entity(ECMAScriptGrammar.Operator())}|
-    ${entity(ECMAScriptGrammar.ContextualWord())}|
     ${entity(ECMAScriptGrammar.Keyword())}|
-    ${entity(ECMAScriptGrammar.RestrictedWord())}|
-    ${entity(ECMAScriptGrammar.FutureReservedWord())}|
     ${entity(ECMAScriptGrammar.Identifier())}|
     .
   `,
