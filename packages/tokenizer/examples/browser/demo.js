@@ -1,27 +1,4 @@
 import {Resolvers, Hash, resolve, rewrite, frame, timeout} from './helpers.js';
-
-Header: {
-  document.querySelector('template#source-header') ||
-    ((innerHTML, id = 'source-header') =>
-      document.head.append(Object.assign(document.createElement('template'), {id, innerHTML})))(
-      (html => html`
-        <div id="summary">
-          <span title="source"><span id="source"></span><time unit="ms"></time></span>
-        </div>
-        <div id="details">
-          <span title="mode"><span id="mode"></span><span id="variant"></span></span>
-          <span title="iterations"><span id="iterations"></span><time unit="ms"></time></span>
-          <span title="repeats"><span id="repeats"></span><time unit="ms"></time></span>
-        </div>
-        <div id="controls">
-          <span>
-            <a id="rerender" title="Repeat" onclick><i icon>&#x2301;</i></a>
-            <a id="contrast" title="Dark/Light" onclick><i icon>&#x263D;</i></a>
-          </span>
-        </div>
-      `)(String.raw),
-    );
-}
 import {darkMode} from './dark-mode.js';
 
 const Examples = ({
@@ -403,23 +380,40 @@ export default (markup, overrides) => {
   };
 
   window.addEventListener('hashchange', () => renderFromHash());
-
-  const selectors = {
-    ['source-span']: '#source',
-    ['source-time']: '#source + time',
-    ['mode-span']: '#mode',
-    ['variant-span']: '#variant',
-    ['repeats-span']: '#repeats',
-    ['repeats-time']: '#repeats + time',
-    ['iterations-span']: '#iterations',
-    ['iterations-time']: '#iterations + time',
-    ['rerender-button']: '#rerender[onclick]',
-    ['contrast-button']: '#contrast[onclick]',
-  };
-
-  /** @typedef {keyof typeof selectors} selector */
-
-  sourceHeaderTemplate && (sourceHeaderTemplate.selectors = selectors);
-
   requestAnimationFrame(() => renderFromHash());
 };
+
+Header: {
+  document.querySelector('template#source-header') ||
+    ((innerHTML, selectors, id = 'source-header') =>
+      document.head.append(Object.assign(document.createElement('template'), {id, selectors, innerHTML})))(
+      (html => html`
+        <div id="summary">
+          <span title="source"><span id="source"></span><time unit="ms"></time></span>
+        </div>
+        <div id="details">
+          <span title="mode"><span id="mode"></span><span id="variant"></span></span>
+          <span title="iterations"><span id="iterations"></span><time unit="ms"></time></span>
+          <span title="repeats"><span id="repeats"></span><time unit="ms"></time></span>
+        </div>
+        <div id="controls">
+          <span>
+            <a id="rerender" title="Repeat" onclick><i icon>&#x2301;</i></a>
+            <a id="contrast" title="Dark/Light" onclick><i icon>&#x263D;</i></a>
+          </span>
+        </div>
+      `)(String.raw),
+      {
+        ['source-span']: '#source',
+        ['source-time']: '#source + time',
+        ['mode-span']: '#mode',
+        ['variant-span']: '#variant',
+        ['repeats-span']: '#repeats',
+        ['repeats-time']: '#repeats + time',
+        ['iterations-span']: '#iterations',
+        ['iterations-time']: '#iterations + time',
+        ['rerender-button']: '#rerender[onclick]',
+        ['contrast-button']: '#contrast[onclick]',
+      },
+    );
+}
