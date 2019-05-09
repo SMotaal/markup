@@ -1,7 +1,7 @@
 {
   "name": "@smotaal/pseudom",
   "displayName": "pseu·dom",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "Featherweight compositional DOM for document/less runtimes",
   "license": "MIT",
   "type": "module",
