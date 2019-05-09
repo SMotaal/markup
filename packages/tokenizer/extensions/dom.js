@@ -59,6 +59,7 @@ class MarkupRenderer {
       opener: factory(SPAN, {className: `${CLASS} punctuator opener`}, UNFLATTEN),
       closer: factory(SPAN, {className: `${CLASS} punctuator closer`}, UNFLATTEN),
       span: factory(SPAN, {className: `${CLASS} punctuator span`}),
+      pattern: factory(SPAN, {className: `${CLASS} pattern`}),
       sequence: factory(SPAN, {className: `${CLASS} sequence`}),
       literal: factory(SPAN, {className: `${CLASS} literal`}, UNFLATTEN),
       // indent: factory(SPAN, {className: `${CLASS} sequence indent`}),

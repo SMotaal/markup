@@ -67,6 +67,7 @@
   --markup-light-quotes: cadetblue;
   --markup-light-closures: orange;
   --markup-light-spans: coral;
+  --markup-light-patterns: grey;
 
   /**/ /**/ /**/ /**/ /** LIGHT THEME **/ /**/ /**/ /**/ /**/
   --markup-background: var(--markup-light-background);
@@ -88,6 +89,7 @@
   --markup-quotes: var(--markup-light-quotes);
   --markup-closures: var(--markup-light-closures);
   --markup-spans: var(--markup-light-spans);
+  --markup-patterns: var(--markup-light-patterns);
 
   --markup-comments: var(--markup-light-comments);
   --markup-whitespace: var(--markup-light-whitespace);
@@ -118,6 +120,7 @@
     --markup-quotes: var(--markup-dark-quotes, var(--markup-light-quotes));
     --markup-closures: var(--markup-dark-closures, var(--markup-light-closures));
     --markup-spans: var(--markup-dark-spans, var(--markup-light-spans));
+    --markup-patterns: var(--markup-dark-patterns, var(--markup-light-patterns));
 
     --markup-comments: var(--markup-dark-comments, var(--markup-light-comments));
     --markup-whitespace: var(--markup-dark-whitespace, var(--markup-light-whitespace));
@@ -279,6 +282,9 @@ pre.markup[line-numbers] .markup-line:empty::before {
 
 .markup.punctuator.span {
   --color: var(--markup-spans, coral);
+}
+.markup.pattern {
+  --color: var(--markup-patterns, grey);
 }
 
 .markup.comment,
