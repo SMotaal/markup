@@ -9,31 +9,36 @@ export default //
 (matcher, overrides) => {
   const {freeze} = globalThis.Object;
 
-  matcher = freeze(createMatcherInstance(matcher));
+  const matcherInstance = (matcher = freeze(createMatcherInstance(matcher)));
   const tokenizer = {
     createToken: createTokenFromMatch,
     /** @type {(state: {}) =>  void} */
     initializeState: undefined,
     /**
-     * @param {string} sourceText @param {{sourceType?: string}} [state]
+     * @param {string} sourceText @param {{sourceType?: string}} [initialState]
      */
-    *tokenize(sourceText, state) {
+    *tokenize(sourceText, initialState) {
       const {createToken, initializeState} = this;
-      const string = (state.sourceText = createString(sourceText));
-      const matcherInstance = (state.matcher = createMatcherInstance(matcher, state || {}));
-      const {state: matcherState} = matcherInstance;
-      initializeState && initializeState(matcherState);
-      let nextToken;
+      const string = (initialState.sourceText = createString(sourceText));
+      const matcher = (initialState.matcher = createMatcherInstance(matcherInstance, initialState || {}));
+      const {state} = matcher;
+      initializeState && initializeState(state);
+      let next;
       for (
-        let match, matchedToken;
+        let match, token, index = 0;
         // TODO: Consider optimizations for RegExp.prototype.exec
-        (match = matcherInstance.exec(string));
+        (match = matcher.exec(string));
         // We hold back one grace token
-        matchedToken = createToken(match, matcherState),
-          nextToken && (yield nextToken),
-          nextToken = matcherState.previousToken = matchedToken
+        (token = createToken(match, state)) &&
+        ((token.index = index++),
+        (state.lastToken = token),
+        // (state[(match.capture.whitespace && 'lastWhitespaceToken') || 'lastTextToken'] = state[
+        //   `last.${token.type || 'sequence'}`
+        // ] = token),
+        next && (yield next),
+        (next = state.previousToken = token))
       );
-      nextToken && (yield nextToken);
+      next && (yield next);
     },
   };
   const mode = {syntax: 'matcher', tokenizer};

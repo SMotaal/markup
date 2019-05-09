@@ -1,11 +1,10 @@
 ﻿import bootstrap from '../matcher/matcher.js';
-import {createTokenFromMatch} from '../matcher/helpers.js';
-// import {Matcher} from '/modules/matcher/matcher.js';
+import {countLineBreaks} from '../matcher/helpers.js';
 import {matcher} from './matcher.js';
-// import {entities, identities, goals, groups, symbols} from './definitions.js';
+import {FaultGoal} from './definitions.js';
 
-const SP = `\u2420`;
-const HT = `\u2409`;
+const {goal: rootGoal} = matcher;
+const {name: rootGoalName} = rootGoal;
 
 export default bootstrap(matcher, {
   syntax: 'es',
@@ -13,31 +12,72 @@ export default bootstrap(matcher, {
     (state.groups = []).closers = [];
     state.lineOffset = state.lineIndex = 0;
     state.lineFault = false;
+    state.goal = state.nextGoal = rootGoal;
+    state.group = state.nextGroup = undefined;
   },
   createToken: (match, state) => {
-    const token = createTokenFromMatch(match);
-    const {type} = token;
-    const {goal, lineIndex, lineOffset = (state.lineOffset = 0)} = state;
+    // if (!match.text) return;
 
-    goal &&
-      goal.type &&
-      (type === 'closer' ||
-        type === 'opener' ||
-        // token.punctuator && (console.log(token)),
-        (token.hint = `in-${(token.type = goal.type)}`));
-    //  ||
-    ({
-      columnNumber: token.columnNumber = match.index - (lineOffset || -1),
-      lineNumber: token.lineNumber = lineIndex + 1,
-      punctuator: token.punctuator,
-    } = match);
+    const {
+      goal: currentGoal,
+      group: currentGroup,
+      lineIndex: currentLineIndex,
+      lineOffset: currentLineOffset = (state.lineOffset = 0),
+      previousToken,
+      nextGoal,
+      nextGroup,
+    } = state;
 
-    token.goal = (goal || matcher.goal).name;
-    token.hint = `${token.hint || ''} [${token.goal}:${token.lineNumber}:${token.columnNumber}]`;
-    // ${(type !== 'inset' && token.inset && token.inset.replace(/\t/g, HT).replace(/\s/g, SP)) || ''}
+    const {
+      0: text,
+      identity,
+      flatten,
+      fault,
+      punctuator,
+      index,
+      capture: {inset},
+    } = match;
 
-    // Manually update lineNumber for multi-line strings and comments
-    token.breaks && type !== 'break' && (state.lineIndex += token.breaks);
+    const breaks = (identity === 'break' && 1) || countLineBreaks(text);
+    const delimiter = identity === 'closer' || identity === 'opener';
+    const whitespace = !delimiter && (identity === 'whitespace' || identity === 'break' || identity === 'inset');
+
+    nextGoal === currentGoal || (state.goal = state.nextGoal = nextGoal || FaultGoal);
+    nextGroup === currentGroup || (state.group = state.nextGroup = nextGroup);
+
+    if (breaks) {
+      state.lineIndex += breaks;
+      state.lineOffset = index + text.lastIndexOf('\n');
+    }
+
+    if (flatten && !fault && currentGoal !== rootGoal && previousToken && previousToken.type === identity) {
+      previousToken.text += text;
+      breaks && (previousToken.breaks += breaks);
+      return;
+    }
+
+    const {name: goalName, type: goalType} = currentGoal || rootGoal;
+    const columnNumber = index - (currentLineOffset || -1);
+    const lineNumber = currentLineIndex + 1;
+    const token = {
+      type: (!delimiter && goalType) || identity || 'text',
+      text,
+      offset: index,
+      breaks,
+      inset: inset || '',
+      columnNumber,
+      lineNumber,
+      punctuator,
+      flatten,
+      // flatten: false,
+      delimiter,
+      whitespace,
+      goal: goalName || rootGoalName,
+      hint: `${(delimiter ? identity : goalType && `in-${goalType}`) || ''} [${goalName ||
+        rootGoalName}:${lineNumber}:${columnNumber}]`,
+    };
+
+    currentGoal !== rootGoal || whitespace || (state.previousAtom = token);
 
     return token;
   },
