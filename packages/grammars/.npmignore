@@ -1,0 +1,7 @@
+/index.html
+/specs/
+/docs/
+/*.tgz
+**/trash/
+**/[[]trash[]]/
+**/.DS_Store
