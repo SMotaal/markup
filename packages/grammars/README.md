@@ -2,32 +2,32 @@
 
 Regular expression markup grammars.
 
-<details><summary><b>Note</b>: These grammars are not yet stable.</summary><blockquote>
+These grammars represent the set of barebone elements needed for fine-enough grained parsing with a one-size-fits semi-contextual tokenizer. Naturally, they rely on abstractions that do not currently have a well-defined conceptual paradigm.
+
+<blockquote>
+
+**Note**: All grammars are not yet stable.
 
 These grammars are constantly being revised to meet experimental requirements of [`@smotaal/tokenizer`](https://github.com/smotaal/markup/tree/master/packages/tokenizer/). They do not conform to any particular specifications at the moment.
 
-</blockquote></details>
+</blockquote>
 
-<!-- prettier-ignore-start -->
-## `   JS` <sub><sup>JavaScript</sup></sub> <span float=right>[<kbd>Grammar</kbd>](https://github.com/smotaal/markup/tree/master/packages/@smotaal/grammars/javascript/javascript-grammar.js)</span>
-<!-- prettier-ignore-end -->
+That said, they have been used reliably and responsibly to build the prototype of the Markout client-side engine I use on my own site.
 
----
+## `JS` JavaScript
 
-<!-- prettier-ignore-start -->
-## ` HTML` <sub><sup>Hypertext Markup Language</sup></sub> <span float=right>[<kbd>Grammar</kbd>](https://github.com/smotaal/markup/tree/master/packages/@smotaal/grammars/html/html-grammar.js)</span>
-<!-- prettier-ignore-end -->
+- `javascript-grammar` aims for spec-level granularity.
+- `javascript-extended-grammar` intends to go rouge.
+- `typescript-grammar` is there to make `markout` happy.
 
----
+## `HTML` Hypertext Markup Language
 
-<!-- prettier-ignore-start -->
-## `  CSS` <sub><sup>Cascading Style Sheets</sup></sub> <span float=right>[<kbd>Grammar</kbd>](https://github.com/smotaal/markup/tree/master/packages/@smotaal/grammars/css/css-grammar.js)</span>
-<!-- prettier-ignore-end -->
+- `html-grammar` aims for spec-level granularity.
 
----
+## `CSS` Cascading Style Sheets
 
-<!-- prettier-ignore-start -->
-## `   MD` <sub><sup>Markout-flavoured Markdown</sup></sub> <span float=right>[<kbd>Grammar</kbd>](https://github.com/smotaal/markup/tree/master/packages/@smotaal/grammars/markdown/markdown-grammar.js)</span>
-<!-- prettier-ignore-end -->
+- `css-grammar` is there to make `html-grammar` happy.
 
----
+## `MOMD` Markout-Markdown
+
+- `markdown-grammar` is there to make `markout` happy.
