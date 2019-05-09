@@ -44,7 +44,7 @@ export const {createTokenFromMatch, createMatcherInstance, createString, countLi
     inset: capture.inset || '',
     offset: index,
     // hint: getOwnPropertyNames(capture).join(' '),
-    capture,
+    // capture,
   });
 
   return {createTokenFromMatch, createMatcherInstance, createString, countLineBreaks};

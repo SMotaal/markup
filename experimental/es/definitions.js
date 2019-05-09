@@ -1,9 +1,9 @@
-﻿// import * as entities from './entities.js';
-import {ranges, GraveAccent} from './ranges.js';
+﻿import {ranges, GraveAccent} from './ranges.js';
 
 const symbols = {};
 
-const symbol = (description, key) => (symbols[key || description] = Symbol(description));
+const symbol = (description, key = description) =>
+  (!key && Symbol('')) || symbols[key] || (symbols[key] = Symbol(description));
 
 const identities = {
   UnicodeIDStart: 'ECMAScript.UnicodeIDStart',
@@ -18,30 +18,73 @@ const identities = {
 };
 
 const goals = {
-  [symbol('ECMAScriptGoal')]: {openers: ['{', '(', '[', GraveAccent]},
+  [symbol('ECMAScriptGoal')]: {openers: ['{', '(', '[', "'", '"', '`', '/', '/*', '//'], closers: ['}', ')', ']']},
+  [symbol('CommentGoal')]: {type: 'comment'},
+  [symbol('RegExpGoal')]: {openers: ['['], closers: [']'], type: 'pattern'},
+  [symbol('StringGoal')]: {type: 'quote'},
   [symbol('TemplateLiteralGoal')]: {
     openers: ['${'],
-    closer: GraveAccent,
     type: 'quote',
     matcher: /\\.|(\x60|$\{)/g,
   },
-  [symbol('FaultGoal')]: {openers: [], closer: '', type: 'fault'},
+  [symbol('FaultGoal')]: {type: 'fault', groups: {}},
 };
+
+const {[symbols.FaultGoal]: FaultGoal} = goals;
 
 const groups = {
   '{': {opener: '{', closer: '}'},
-  '${': {opener: '${', closer: '}', type: 'span'},
   '(': {opener: '(', closer: ')'},
   '[': {opener: '[', closer: ']'},
-  [GraveAccent]: {
-    opener: GraveAccent,
-    closer: GraveAccent,
+  '//': {opener: '//', closer: '\n', goal: symbols.CommentGoal, parentGoal: symbols.ECMAScriptGoal},
+  '/*': {opener: '/*', closer: '*/', goal: symbols.CommentGoal, parentGoal: symbols.ECMAScriptGoal},
+  '/': {opener: '/', closer: '/', goal: symbols.RegExpGoal, parentGoal: symbols.ECMAScriptGoal},
+  "'": {opener: "'", closer: "'", goal: symbols.StringGoal, parentGoal: symbols.ECMAScriptGoal},
+  '"': {opener: '"', closer: '"', goal: symbols.StringGoal, parentGoal: symbols.ECMAScriptGoal},
+  ['`']: {
+    opener: '`',
+    closer: '`',
     goal: symbols.TemplateLiteralGoal,
+    parentGoal: symbols.ECMAScriptGoal,
+  },
+  '${': {
+    opener: '${',
+    closer: '}',
+    goal: symbols.ECMAScriptGoal,
+    parentGoal: symbols.TemplateLiteralGoal,
   },
 };
 
+/**
+ * @typedef {'await'|'break'|'case'|'catch'|'class'|'const'|'continue'|'debugger'|'default'|'delete'|'do'|'else'|'export'|'extends'|'finally'|'for'|'function'|'if'|'import'|'in'|'instanceof'|'new'|'return'|'super'|'switch'|'this'|'throw'|'try'|'typeof'|'var'|'void'|'while'|'with'|'yield'} ECMAScript.Keyword
+ * @typedef {'interface'|'implements'|'package'|'private'|'protected'|'public'} ECMAScript.RestrictedWord
+ * @typedef {'enum'} ECMAScript.FutureReservedWord
+ * @typedef {'arguments'|'async'|'as'|'from'|'of'|'static'} ECMAScript.ContextualKeyword
+ * @type {Record<ECMAScript.Keyword|ECMAScript.RestrictedWord|ECMAScript.FutureReservedWord|ECMAScript.ContextualKeyword, symbol>} */
+const keywords = {};
+
 {
-  const {freeze, getOwnPropertySymbols} = Object;
+  const {freeze, getOwnPropertySymbols, getOwnPropertyNames} = Object;
+
+  for (const opener of getOwnPropertyNames(groups)) {
+    const {[opener]: group} = groups;
+    'goal' in group && (group.goal = goals[group.goal] || FaultGoal);
+    'parentGoal' in group && (group.parentGoal = goals[group.parentGoal] || FaultGoal);
+    freeze(groups[group]);
+  }
+
+  for (const symbol of getOwnPropertySymbols(goals)) {
+    const {[symbol]: goal} = goals;
+    goal.name = (goal.symbol = symbol).description.replace(/Goal$/, '');
+    goal.groups = [];
+    if ('openers' in goal) {
+      for (const opener of goal.openers) goal.groups[opener] = groups[opener];
+      freeze(goal.openers);
+    }
+    freeze(goal.groups);
+    goal.closers && freeze(goal.closers);
+    freeze(goal);
+  }
 
   for (const identity of [
     'UnicodeIDStart',
@@ -56,26 +99,11 @@ const groups = {
     symbol((identities[identity] = `ECMAScript.${identity}`), identity);
   }
 
-  for (const symbol of getOwnPropertySymbols(goals)) {
-    goals[symbol].name = (goals[symbol].symbol = symbol).description.replace(/Goal$/, '');
-    freeze(goals[symbol]);
-  }
-
   freeze(goals);
   freeze(groups);
   freeze(identities);
   freeze(symbols);
-}
 
-/**
- * @typedef {'await'|'break'|'case'|'catch'|'class'|'const'|'continue'|'debugger'|'default'|'delete'|'do'|'else'|'export'|'extends'|'finally'|'for'|'function'|'if'|'import'|'in'|'instanceof'|'new'|'return'|'super'|'switch'|'this'|'throw'|'try'|'typeof'|'var'|'void'|'while'|'with'|'yield'} ECMAScript.Keyword
- * @typedef {'interface'|'implements'|'package'|'private'|'protected'|'public'} ECMAScript.RestrictedWord
- * @typedef {'enum'} ECMAScript.FutureReservedWord
- * @typedef {'arguments'|'async'|'as'|'from'|'of'|'static'} ECMAScript.ContextualKeyword
- * @type {Record<ECMAScript.Keyword|ECMAScript.RestrictedWord|ECMAScript.FutureReservedWord|ECMAScript.ContextualKeyword, symbol>} */
-const keywords = {};
-
-{
   for (const keyword of [
     'await',
     'break',
@@ -98,6 +126,7 @@ const keywords = {};
     'import',
     'in',
     'instanceof',
+    'let',
     'new',
     'return',
     'super',
@@ -119,62 +148,7 @@ const keywords = {};
   for (const keyword of ['arguments', 'async', 'as', 'from', 'of', 'static'])
     keywords[keyword] = identities.ContextualWord;
 
-  //   Keyword: () =>
-  //   Matcher.define(
-  //     entity => Matcher.sequence`\b(
-
-  //       ${entity((text, entity, match) => {
-  //         match.capture[identities.Keyword] = text;
-  //         capture('keyword', match);
-  //       })}
-  //     )\b`,
-  //   ),
-  // RestrictedWord: () =>
-  //   Matcher.define(
-  //     entity => Matcher.sequence`\b(
-  //       interface|implements|package|private|protected|public
-  //       ${entity((text, entity, match) => {
-  //         match.capture[identities.RestrictedWord] = text;
-  //         capture('keyword', match);
-  //       })}
-  //     )\b`,
-  //   ),
-  // FutureReservedWord: () =>
-  //   Matcher.define(
-  //     entity => Matcher.sequence`\b(
-  //       enum
-  //       ${entity((text, entity, match) => {
-  //         match.capture[identities.FutureReservedWord] = text;
-  //         capture('identifier', match);
-  //       })}
-  //     )\b`,
-  //   ),
+  freeze(keywords);
 }
 
-// {
-//   const {
-//     Null = '\0',
-//     ZeroWidthNonJoiner = '\u200c',
-//     ZeroWidthJoiner = '\u200d',
-//     ZeroWidthNoBreakSpace = '\ufeff',
-//     Whitespace,
-//     ECMAScript,
-//   } = ranges;
-
-//   const {
-//     Terminator = (partials.Enders = String.raw`%&|)*,./:;<=>?^|}\]`),
-//     CommentStart = (partials.CommentStart = String.raw`//|/\*`),
-//     ExpressionStart = (partials.ExpressionStart = String.raw`[^${Null}${Whitespace}${Terminator}]|${CommentStart}`),
-//   } = partials;
-// }
-
-export {ranges, identities, goals, groups, symbols, keywords};
-
-// UnicodeIDStart: Symbol(identities.UnicodeIDStart),
-// UnicodeIDContinue: Symbol(identities.UnicodeIDContinue),
-// HexDigits: Symbol(identities.HexDigits),
-// CodePoint: Symbol(identities.CodePoint),
-// ControlEscape: Symbol(identities.ControlEscape),
-// RestrictedWord: Symbol(identities.RestrictedWord),
-// FutureReservedWord: Symbol(identities.FutureReservedWord),
-// Keyword: Symbol(identities.Keyword),
+export {identities, goals, groups, symbols, keywords, FaultGoal};
