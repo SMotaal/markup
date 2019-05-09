@@ -27,43 +27,47 @@ class MarkupRenderer {
     // TODO: Consider making Renderer a thing
     const {factory, defaults} = new.target;
 
-    const {SPAN = 'span', LINE = 'span', CLASS = 'markup'} = {
+    const {SPAN = 'span', LINE = 'span', CLASS = 'markup', FLATTEN = true, REFLOW = true} = {
       ...defaults,
       ...options,
     };
 
+    const UNFLATTEN = 'unflatten';
+
     this.renderers = {
       line: factory(LINE, {className: `${CLASS} ${CLASS}-line`}),
       // indent: factory(SPAN, {className: `${CLASS} ${CLASS}-indent whitespace`}),
-      inset: factory(SPAN, {className: `${CLASS} inset whitespace`}),
-      break: factory(SPAN, {className: `${CLASS} break whitespace`}),
+      inset: factory(SPAN, {className: `${CLASS} inset whitespace`}, UNFLATTEN),
+      break: factory(SPAN, {className: `${CLASS} break whitespace`}, UNFLATTEN),
       // break: Text,
       // whitespace: factory(SPAN, {className: `${CLASS} whitespace`}),
       whitespace: Text,
       text: factory(SPAN, {className: CLASS}),
 
       // variable: factory('var', {className: `${CLASS} variable`}),
-      fault: factory(SPAN, {className: `${CLASS} fault`}),
-      keyword: factory(SPAN, {className: `${CLASS} keyword`}),
+      fault: factory(SPAN, {className: `${CLASS} fault`}, UNFLATTEN),
+      keyword: factory(SPAN, {className: `${CLASS} keyword`}, UNFLATTEN),
       identifier: factory(SPAN, {className: `${CLASS} identifier`}),
       quote: factory(SPAN, {className: `${CLASS} quote`}),
 
-      operator: factory(SPAN, {className: `${CLASS} punctuator operator`}),
-      assigner: factory(SPAN, {className: `${CLASS} punctuator operator assigner`}),
-      combinator: factory(SPAN, {className: `${CLASS} punctuator operator combinator`}),
-      punctuation: factory(SPAN, {className: `${CLASS} punctuator punctuation`}),
+      operator: factory(SPAN, {className: `${CLASS} punctuator operator`}, UNFLATTEN),
+      assigner: factory(SPAN, {className: `${CLASS} punctuator operator assigner`}, UNFLATTEN),
+      combinator: factory(SPAN, {className: `${CLASS} punctuator operator combinator`}, UNFLATTEN),
+      punctuation: factory(SPAN, {className: `${CLASS} punctuator punctuation`}, UNFLATTEN),
 
-      breaker: factory(SPAN, {className: `${CLASS} punctuator breaker`}),
-      opener: factory(SPAN, {className: `${CLASS} punctuator opener`}),
-      closer: factory(SPAN, {className: `${CLASS} punctuator closer`}),
+      breaker: factory(SPAN, {className: `${CLASS} punctuator breaker`}, UNFLATTEN),
+      opener: factory(SPAN, {className: `${CLASS} punctuator opener`}, UNFLATTEN),
+      closer: factory(SPAN, {className: `${CLASS} punctuator closer`}, UNFLATTEN),
       span: factory(SPAN, {className: `${CLASS} punctuator span`}),
       sequence: factory(SPAN, {className: `${CLASS} sequence`}),
-      literal: factory(SPAN, {className: `${CLASS} literal`}),
+      literal: factory(SPAN, {className: `${CLASS} literal`}, UNFLATTEN),
       // indent: factory(SPAN, {className: `${CLASS} sequence indent`}),
       comment: factory(SPAN, {className: `${CLASS} comment`}),
-      fault: factory(SPAN, {className: `${CLASS} fault`}),
-      code: factory(SPAN, {className: `${CLASS}`}),
+      // code: factory(SPAN, {className: `${CLASS}`}),
     };
+
+    this.flattens = FLATTEN;
+    this.reflows = REFLOW;
   }
 
   async render(tokens, fragment) {
@@ -98,10 +102,10 @@ class MarkupRenderer {
   }
 
   *renderer(tokens) {
-    const {renderers, LINE_INDENTS, LINE_REINDENTS} = this;
+    const {renderers, flattens, reflows} = this;
     let renderedLine, Inset, lineInset, lineText, insetHint;
     // let line, indent, trim, tabSpan;
-    const blank = renderers.line();
+    // const blank = renderers.line();
     const emit = (renderer, text, type, hint, flatten) => {
       flatten && renderedLine.lastChild && renderer === renderedLine.lastChild.renderer
         ? renderedLine.lastChild.appendChild(Text(text))
@@ -111,22 +115,28 @@ class MarkupRenderer {
     const emitInset = (text, hint) => emit(renderers.inset, text, 'inset', hint, false);
     const Lines = /^/gm;
     for (const token of tokens) {
-      let {type = 'text', text, inset, punctuator, breaks, hint} = token;
+      if (!token || !token.text) continue;
+
+      let {type = 'text', text, inset, punctuator, breaks, hint, flatten} = token;
       let renderer =
-        (punctuator && (renderers[punctuator] || renderers.operator)) ||
+        (punctuator && (renderers[punctuator] || (type && renderers[type]) || renderers.operator)) ||
+        // (punctuator && (renderers[punctuator] ? ((type = punctuator), renderers[punctuator]) : renderers.operator)) ||
         (type && renderers[type]) ||
         (type !== 'whitespace' && type !== 'break' && renderers.text) ||
         Text;
 
-      if (!text) continue;
-
       // Create new line
-      renderedLine || (renderedLine = renderers.line());
+      // renderedLine || (renderedLine = renderers.line());
+      renderedLine || (renderedLine = renderers.line('', (!reflows && 'no-reflow') || ''));
 
-      const flatten = !punctuator && type !== 'fault' && type !== 'opener' && type !== 'closer' && type !== 'break';
+      // flattens && flatten == null && (flatten = renderer.flatten || false);
+      flattens &&
+      flatten == null &&
+        (flatten = renderer.flatten);
+        // ({flatten = /fault|opener|closer|break|operator|combinator|whitespace|break|inset/.test(text)} = renderer);
 
       // Normlize inset for { type != 'inset', inset = /\s+/ }
-      if (breaks && type !== 'break') {
+      if (breaks && type !== 'break') { // reflows &&
         Inset = void (inset = inset || '');
         insetHint = `${hint || ''} in-${type || ''}`;
         for (const line of text.split(Lines)) {
@@ -136,37 +146,38 @@ class MarkupRenderer {
             : line.match(Inset || (Inset = RegExp(`^${inset.replace(/./g, '$&?')}`)))[0]) &&
             emitInset(lineInset, insetHint);
           (lineText = lineInset ? line.slice(lineInset.length) : line) &&
-            (emit(renderer, lineText, type, hint, flatten),
+            (emit(renderer, lineText, type, hint, flattens && flatten), // flattens &&
             lineText.endsWith('\n') && (yield renderedLine, (renderedLine = null)));
         }
-        // console.log(lines);
-        // emit(renderer, text, type, hint, punctuator);
       } else {
-        emit(renderer, text, type, hint, flatten);
+        // reflow && (hint += ' no-reflow');
+        emit(renderer, text, type, hint, flattens && flatten); //
         type === 'break' && (yield renderedLine, (renderedLine = null));
       }
-
-      // Strip trailing whitespace
-      // !punctuator && type !== 'opener' && type !== 'closer' && line.lastChild && renderer === line.lastChild.renderer
-      //   ? line.lastChild.appendChild(Text(text))
-      //   : line.appendChild((line.lastChild = renderer(text, hint))).childElementCount &&
-      //     (line.lastChild.renderer = renderer);
-
-      // TODO: Normalize multiple line breaks
-      // breaks && (yield line, --breaks && (yield* Array(breaks).fill(blank)), (line = null));
     }
     renderedLine && (yield renderedLine);
   }
 
-  static factory(tag, properties) {
-    return (content, hint) => {
-      typeof content === 'string' && (content = Text(content));
-      const element = content != null ? Element(tag, properties, content) : Element(tag, properties);
-      // element &&
-      //   (element.className = [...new Set(`${element.className || ''} ${hint || ''}`.trim().split(/\s+/g))].join(' '));
-      element && typeof hint === 'string' && (element.className = `${element.className || ''} ${hint}`);
-      return element;
-    };
+  /**
+   * @param {string} tag
+   * @param {Partial<HTMLElement>} [properties]
+   * @param {boolean} [unflattened]
+   */
+  static factory(tagName, elementProperties, flattening) {
+    const [tag, properties] = arguments;
+    return Object.defineProperties(
+      (content, hint) => {
+        typeof content === 'string' && (content = Text(content));
+        const element = content != null ? Element(tag, properties, content) : Element(tag, properties);
+        element && typeof hint === 'string' && (element.className = `${element.className || ''} ${hint}`);
+        return element;
+      },
+      {
+        flatten: {
+          value: !arguments[2] || (/\bunflatten\b/i.test(arguments[2]) ? false : /\bflatten\b/i.test(arguments[2])),
+        },
+      },
+    );
   }
 }
 
@@ -177,6 +188,10 @@ MarkupRenderer.defaults = Object.freeze({
   LINE: 'span',
   /** The class name of the element to use for rendering a token. */
   CLASS: 'markup',
+  /** Enable renderer-side packing of similar { flatten = true } tokens */
+  FLATTEN: true,
+  /** Enable renderer-side unpacking { inset } || { breaks > 0 } tokens */
+  REFLOW: true,
 });
 
 /// INTERFACE
