@@ -147,6 +147,14 @@
   /* contain: layout; */
 }
 
+.markup-line.no-reflow {
+  --markup-soft-indent: 0.0001rem;
+}
+
+/* .markup-line .markup.no-reflow {
+  text-indent: 0;
+} */
+
 .markup-line .markup {
   color: var(--color, var(--markup-color, var(--markup-light-text, currentColor)));
   /* text-indent: calc(-1 * var(--markup-soft-indent)); */

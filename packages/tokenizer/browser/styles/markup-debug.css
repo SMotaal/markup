@@ -6,15 +6,15 @@
   }
 
   .markup-line {
-    --widget-shadow: #0009;
-    --widget-underlay: #6666;
-    --widget-overlay: #9996;
+    --widget-shadow: #00096;
+    --widget-underlay: #6664;
+    --widget-overlay: #ccc8;
   }
 
   .dark-mode .markup-line {
-    --widget-shadow: #fff9;
-    --widget-underlay: #ccc6;
-    --widget-overlay: #ccc6;
+    --widget-shadow: #fff6;
+    --widget-underlay: #ccc4;
+    --widget-overlay: #ccc4;
   }
 
   .markup-line > .markup {
@@ -147,6 +147,20 @@
     content: '\23CE\00A0\000A';
     font-size: 75%;
     vertical-align: bottom;
+  }
+}
+
+@media screen and (-webkit-min-device-pixel-ratio: 0) and (min-color-index: 0) {
+  .markup-line {
+    --widget-shadow: #0009;
+    --widget-underlay: #6663;
+    --widget-overlay: #ccc6;
+  }
+
+  .dark-mode .markup-line {
+    --widget-shadow: #fff9;
+    --widget-underlay: #ccc6;
+    --widget-overlay: #ccc6;
   }
 }
 

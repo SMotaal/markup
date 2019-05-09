@@ -8,51 +8,55 @@ export const sequence = (...args) =>
 // .replace(/^\s+|\s+\/\/\s+.*$\n?|\n\s*|\s+$/gm, '');
 
 export const Hash = (() => {
-  const symbols = {HASH: '#', MODE: '!', ITERATIONS: '*', REPEATS: '**', VARIANT: '@', DEBUGGING: '!!'};
+  const symbols = {HASH: '#', MODE: '!', ITERATIONS: '*', REPEATS: '**', VARIANT: '@', ANCHOR: '#', DEBUGGING: '!!'};
 
-  const scope = ':' || '<scope>';
-  const entry = ':' || '<entry>';
-  const parameters = ':' || '<parameters>';
-
-  const Hash = ((HASH, MODE, ITERATIONS, REPEATS, VARIANT, DEBUGGING) =>
+  const Hash = ((HASH, MODE, ITERATIONS, REPEATS, VARIANT, ANCHOR, DEBUGGING, SYMBOL) =>
     new RegExp(
       sequence`
         ^(?:${HASH}
           (
-            (?${scope}https?:\/\/|[a-z]+:|[~]\/|[.]{0,2}\/|)
-            (?${entry}(?:[^!*@]*(?:@[a-z])?[^\/]+\/)?[^!*@]*)
+            (?:${void 'scope'}https?:\/\/|[a-z]+:|[~]\/|[.]{0,2}\/|)
+            (?:${void 'entry'}
+              (?:${void 'base'}
+                [^\s${SYMBOL}\/]*
+                (?:
+                  @[-_a-z][-_.\w]+\/|
+                  [^\/]+\/|
+                  \/
+                )*
+              )?
+              [^${SYMBOL}]*
+            )
           )
-          (?${parameters}
+          (?${/* parameters */ ':'}
             (?=.*${MODE}([a-zA-Z]+)|)
             (?=.*${ITERATIONS}(\d+)|)
             (?=.*${REPEATS}(\d+)|)
             (?=.*${VARIANT}(\d+)|)
+            (?=.*${ANCHOR}([^\s${SYMBOL}]+)|)
             (?=.*(${DEBUGGING})|)
-            (?:${MODE}\2|${ITERATIONS}\3|${REPEATS}\4|${VARIANT}\5|\6)*
+            (?:${MODE}\2|${ITERATIONS}\3|${REPEATS}\4|${VARIANT}\5|${ANCHOR}\6|\7)*
           |)
         |)(.*?)$`,
-      'i',
-    ))(
-    ...[symbols.HASH, symbols.MODE, symbols.ITERATIONS, symbols.REPEATS, symbols.VARIANT, symbols.DEBUGGING].map(
-      escape,
-    ),
-  );
+      'iu',
+    ))(...[...Object.values(symbols), [...new Set([...Object.values(symbols).join('')])].sort().join('')].map(escape));
 
   const parse = string => {
     let parsed, matched;
     try {
       matched = Hash.exec(string);
 
-      let {0: hash, 1: specifier, 2: mode, 3: iterations, 4: repeats, 5: variant, 6: debugging, 7: invalid} = matched;
+      let [hash, specifier, mode, iterations, repeats, variant, anchor, debugging, invalid] = matched;
 
       iterations = iterations >= 0 ? parseInt(iterations) : undefined;
       repeats = repeats >= 0 ? parseInt(repeats) : undefined;
       variant = variant >= 0 ? parseInt(variant) : undefined;
       debugging = debugging ? true : undefined;
 
-      return (parsed = {hash, specifier, mode, iterations, repeats, variant, debugging, invalid});
+      return (parsed = {hash, specifier, mode, iterations, repeats, variant, anchor, debugging, invalid});
     } finally {
-      console.log('Hash ‹%o — %o›', string, parsed);
+      parsed && (parsed[Symbol.toStringTag] = 'Details');
+      console.log('Hash ‹%o›  — %O', string, parsed); // , Hash
     }
   };
 

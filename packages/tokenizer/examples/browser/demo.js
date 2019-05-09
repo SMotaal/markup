@@ -222,8 +222,85 @@ export default (markup, overrides) => {
     const content = document.createElement('div');
     content.className = 'markup-content markup-line-numbers';
 
+    /** @type {HTMLDivElement & {mark?(element: HTMLSpanElement, scrollIntoView?: boolean); token?(position: string); token?(line: number, column: number)}} */
     const slot = content.appendChild(document.createElement('div'));
     slot.className = 'markup-wrapper';
+
+    slot.token = (...position) => {
+      let match, line, column, token, element, columns, tokens, selector;
+      const {lines, TEXT_NODE, ELEMENT_NODE} = slot;
+
+      try {
+        [, match.line, match.column, match.selector] = match = /^(?:(-?\d+)?(?:[:,](-?\d+)|:)(?:[:,](-?\d+|.+))?)/.exec(
+          `${position}`,
+        );
+
+        match.column && (match.column = column = parseInt(match.column));
+
+        if (match.line) {
+          (line = match.line = parseInt(match.line)) < 0 && (line = lines.length + line);
+          line = (position.line = line) > lines.length ? lines[lines.length] : line < 1 ? lines[0] : lines[line - 1];
+        } else if (match.column) {
+          position.offsets = columns = slot.columns >= 0 ? slot.columns : (slot.columns = slot.innerText.length);
+          // starting from the end of text
+          position.offset = column < 0 ? (column = columns + column) : column;
+          // don't look if out of range
+          if (column < 0 || column > columns)
+            return (
+              (line = lines[column < 0 ? 0 : lines.length - 1]) &&
+              (element =
+                (token = line.querySelector(`:scope>.markup:${column < 0 ? 'first' : 'last'}-of-type`)) || line)
+            );
+          // finding the line for the column
+          for (
+            let i = 0, c = 0, l;
+            (l = lines[i++]) && c < column;
+            position.line = i,
+              line = l,
+              c =
+                (l.column === c ? c : (l.column = c)) + (l.columns >= 0 ? l.columns : (l.columns = l.innerText.length))
+          );
+          line &&
+            (element = position.line = line) &&
+            ((column -= line.column) > 0 || (console.warn('fixing column %s', column), (column = 0)));
+        }
+
+        line && (tokens = line.querySelectorAll(':scope>.markup')) && (position.tokens = tokens.length);
+
+        if (match.selector && !isNaN((match.token = token = parseInt(match.selector)))) {
+          line || (tokens = slot.querySelectorAll('.markup-line>.markup'));
+          if (tokens && tokens.length) {
+            token < 0 && (position.token = token = tokens.length + token);
+            position.token = token = token < 1 ? 0 : token > tokens.length ? tokens.length - 1 : token - 1;
+            token = tokens[token];
+          }
+        } else if (line && tokens.length) {
+          (position.columns = columns = line.innerText.length),
+            (position.column = column < 0 ? (column = columns + column) : column);
+
+          if (tokens.length === 1 || column < 0) {
+            token = tokens[0];
+          } else if (column > columns) {
+            token = tokens[tokens.length - 1];
+          } else if (column) {
+            tokens = new Set(tokens);
+            for (let i = 0, c = 0, t = line.firstChild; t && c < column; t = t.nextSibling) {
+              (t.nodeType === TEXT_NODE || (tokens.has(t) && (token = t))) &&
+                ((position.token = i++),
+                (c =
+                  (t.column === c ? c : (t.column = c)) +
+                  (t.columns >= 0
+                    ? t.columns
+                    : (t.columns = t.nodeType === TEXT_NODE ? t.length : t.innerText.length))));
+            }
+          }
+        }
+
+        return (element = token || line);
+      } finally {
+        console.log({position, lines, match, line, column, token, element, columns, tokens, selector});
+      }
+    };
 
     Marker: {
       const Marker = ({className = '', tag = 'span', ...properties}) =>
@@ -236,19 +313,38 @@ export default (markup, overrides) => {
       const lineMarker = Marker({className: 'line-marker'});
       const columnMarker = Marker({className: 'column-marker'});
 
-      slot.addEventListener('click', event => {
-        /** @type {PointerEvent & {target: HTMLSpanElement}} */
-        if (event.target.matches('.marker + .markup-line, .marker + .markup')) {
-          columnMarker.remove();
-          lineMarker.remove();
+      slot.mark = (element = slot, scrollIntoView = element !== slot) => {
+        if (
+          element !== slot &&
+          !(element =
+            element &&
+            element.nodeType === slot.ELEMENT_NODE &&
+            slot.contains(element) &&
+            element.closest('.markup-line>.markup,.markup-line'))
+        )
+          return;
+        const line = element.closest('.markup-line');
+        if (element === slot || element.matches('.marker+.markup')) {
+          slot.tokenNumber = void columnMarker.remove();
+          slot.lineNumber = void lineMarker.remove();
+          slot.anchor = undefined;
           slot.classList.remove('marked');
-        } else {
-          event.target.before(columnMarker);
-          const line = event.target.closest('.markup-line');
-          line && line.before(lineMarker);
+        } else if (line) {
+          element === line
+            ? (slot.tokenNumber = void columnMarker.remove())
+            : ((slot.tokenNumber =
+                element.tokenNumber >= 0
+                  ? element.tokenNumber
+                  : (element.tokenNumber = [...line.querySelectorAll(':scope>.markup')].indexOf(element) + 1)),
+              element.before(columnMarker));
+          line.before(lineMarker);
+          slot.anchor = `${(slot.lineNumber = line.lineNumber)}::${slot.tokenNumber || ''}`;
           slot.classList.add('marked');
+          scrollIntoView && element.scrollIntoView({block: 'center'});
         }
-      });
+      };
+
+      slot.addEventListener('click', event => slot.mark(event.target, false));
     }
 
     container.innerHTML = '';
@@ -264,11 +360,9 @@ export default (markup, overrides) => {
         sourceType ||
         `${response.headers.get('Content-Type')}`.replace(/^(?:.*?\/)?(\w+).*$/, '$1').toLowerCase() ||
         options.sourceType;
-      // const {v2 = (options.v2 = /[A-Z]/.test(sourceType))} = options;
       sourceType = sourceType.toLowerCase();
       const variant = options.variant > 0 ? options.variant : defaults.variant;
       const markupOptions = {sourceType, variant};
-      // const markupFlags = [... flags].join('');
       header.status('source', sourceName, `${specifier}`);
 
       fragment = slot;
@@ -276,9 +370,7 @@ export default (markup, overrides) => {
       const sourceID = `«${sourceName} [${sourceText.length}] ${sourceType}»`;
 
       const iterate = iterations => {
-        // console.log(Array.from(markup.tokenize(sourceText, markupOptions, flags)));
         for (; iterations--; ) Array.from(markup.tokenize(sourceText, markupOptions, flags));
-        // for (const t of markup.tokenize(sourceText, markupOptions, flags));
       };
 
       const repeat = async repeats => {
@@ -323,6 +415,15 @@ export default (markup, overrides) => {
           await frame();
           await timed(`${repeats} repeats`, 'repeats', async ƒ => void (await repeat(repeats)), repeats);
           await frame(header.status('repeats', `${repeats}`));
+          if ((slot.lines = slot.querySelectorAll(':scope>.markup-line')) && (slot.lines = [...slot.lines])) {
+            for (let i = 0, n = slot.lines.length; n--; slot.lines[i].lineNumber = ++i);
+
+            const anchor = slot.anchor || options.anchor;
+            anchor &&
+              slot.mark &&
+              requestAnimationFrame(element => void ((element = slot.token(anchor)) && slot.mark(element, true)));
+          }
+          slot.columns = slot.innerText.length;
         }
 
         return fragment;
@@ -365,6 +466,7 @@ export default (markup, overrides) => {
       iterations: options.iterations = options.defaults.iterations,
       repeats: options.repeats = options.defaults.repeats,
       variant: options.variant = options.defaults.variant,
+      anchor: options.anchor = options.defaults.anchor,
     } = parsed).debugging
       ? flags.add('debug')
       : flags.delete('debug');
