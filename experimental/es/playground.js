@@ -14,7 +14,8 @@ const {
 } = goals;
 
 export default bootstrap(matcher, {
-  syntax: 'es',
+  syntax: 'ecmascript',
+  aliases: ['es'],
   initializeState: state => {
     (state.groups = []).closers = [];
     state.lineOffset = state.lineIndex = 0;
@@ -27,6 +28,12 @@ export default bootstrap(matcher, {
       group: undefined,
       state,
     };
+  },
+  preregister: parser => {
+    parser.unregister('es');
+    parser.unregister('ecmascript');
+    // delete parser.mappings.ecmascript;
+    // delete parser.mappings.es;
   },
   createToken: (match, state) => {
     let currentGoal,
@@ -61,6 +68,8 @@ export default bootstrap(matcher, {
       punctuator,
       index: offset,
     } = match);
+
+    if (!text) return;
 
     /* Context */
 
@@ -134,5 +143,5 @@ export default bootstrap(matcher, {
       });
     }
   },
-  sourceURL: './matcher.js',
+  sourceURL: '/markup/experimental/es/matcher.js',
 });

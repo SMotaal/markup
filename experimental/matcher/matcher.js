@@ -1,6 +1,6 @@
 ﻿/// <reference path="./types.d.ts" />
 
-import {Parser} from '/markup/packages/tokenizer/lib/parser.js';
+import {Parser, TOKENIZERS} from '/markup/packages/tokenizer/lib/parser.js';
 import {createTokenFromMatch, createMatcherInstance, createString} from './helpers.js';
 
 /**
@@ -76,15 +76,18 @@ export default //
 
   // tokenizer.tokenize = createTokenizer.bind(tokenizer, matcherInstance);
   const mode = {syntax: 'matcher', tokenizer};
+  const options = {};
   overrides &&
     ({
       syntax: mode.syntax = mode.syntax,
+      aliases: options.aliases,
+      preregister: options.preregister,
       createToken: tokenizer.createToken = tokenizer.createToken,
       initializeState: tokenizer.initializeState,
       // tokenizer: tokenizer.tokenize = createTokenizer.bind(tokenizer, matcherInstance),
       ...overrides
     } = overrides);
-  const parser = new Parser({mode, tokenizer, url: import.meta.url});
+  // const parser = new Parser({mode, tokenizer, url: import.meta.url});
 
   freeze(tokenizer);
 
@@ -93,8 +96,16 @@ export default //
      * @param {import('/markup/packages/tokenizer/lib/api').API} markup
      */
     async markup => {
+      const parser = markup.parsers[0];
+
+      options.preregister && options.preregister(parser);
+
+      parser.register(mode, options);
+      parser[TOKENIZERS].set(mode, tokenizer);
+      console.log(parser);
+
       // console.log({matcher, overrides, parser});
-      markup.parsers.splice(0, markup.parsers.length, parser);
+      // markup.parsers.splice(0, markup.parsers.length, parser);
       return {...overrides};
     }
   );
