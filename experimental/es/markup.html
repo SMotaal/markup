@@ -15,14 +15,15 @@
 <body>
   <pre id="source-code" class="markup-container"></pre>
   <script type="module">
-    import markup from '/markup/packages/tokenizer/browser/experimental.js';
+    // import markup from '/markup/packages/tokenizer/browser/experimental.js';
     import demo from '/markup/packages/tokenizer/examples/browser/demo.js';
     import dynamicImport from '/browser/dynamicImport.js';
-    // import markup from '/markup/packages/tokenizer/browser/experimental.extended.js';
+    import markup from '/markup/packages/tokenizer/browser/experimental.extended.js';
     (async () => {
       try {
-        const experiment = await dynamicImport('./playground.js');
-        demo(markup, await experiment.default(markup));
+        demo(markup);
+        // const experiment = await dynamicImport('./playground.js');
+        // demo(markup, await experiment.default(markup));
       } catch (exception) {
         (document.body.querySelector('.markup-container') || document.body).appendChild(new Text(`${exception}`));
       }
