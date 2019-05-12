@@ -143,5 +143,6 @@ export default bootstrap(matcher, {
       });
     }
   },
-  sourceURL: '/markup/experimental/es/matcher.js',
+  sourceURL: './matcher.js',
+  sourceType: 'es',
 });

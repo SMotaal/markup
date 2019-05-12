@@ -80,6 +80,7 @@ export default //
   overrides &&
     ({
       syntax: mode.syntax = mode.syntax,
+      syntax: options.syntax = mode.syntax,
       aliases: options.aliases,
       preregister: options.preregister,
       createToken: tokenizer.createToken = tokenizer.createToken,
