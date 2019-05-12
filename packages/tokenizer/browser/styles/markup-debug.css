@@ -1,4 +1,12 @@
 @media only screen {
+  .markup-wrapper .markup:hover,
+  .markup-wrapper .markup:hover::before,
+  .markup-wrapper :hover .markup,
+  .markup-wrapper :hover .markup::before,
+  .markup-wrapper:hover {
+    /* outline: 0.5px dotted var(--color, currentColor); */
+  }
+
   .markup-line .markup.comment,
   .markup-line .markup.in-comment,
   .markup-line .markup.whitespace {
@@ -9,6 +17,10 @@
     --widget-shadow: #00096;
     --widget-underlay: #6664;
     --widget-overlay: #ccc8;
+    /* user-select: text; */
+    /* -webkit-user-select: text; */
+    /* -moz-user-select: text; */
+    /* white-space: pre; */
   }
 
   .dark-mode .markup-line {
@@ -26,6 +38,10 @@
     border-radius: 1ch;
     border: calc(2 * var(--padding, 2px)) solid transparent;
     cursor: text;
+    position: relative;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+    /* contain: layout; */
   }
 
   .markup-line > .markup.fault {
@@ -33,14 +49,15 @@
     --debug: var(--markup-faults-background, #f21);
   }
 
-  .marker + .markup-line {
+  /* .marker + .markup-line { */
+  .markup-line.marked {
     background: #9991;
     outline: 1px solid #9993;
     outline-offset: -1px;
   }
 
-  /* .markup-line-numbers .markup-line:focus-within::before, */
-  .marked > .marker + .markup-line::before,
+  /* .marked > .marker + .markup-line::before, */
+  .marked > .markup-line.marked::before,
   .markup-line-numbers .markup-wrapper:not(.marked) > .markup-line:hover::before {
     outline: 1px solid #9996;
     outline-offset: -1px;
@@ -57,24 +74,22 @@
     outline-offset: -1px;
   }
 
-  /* .markup-line > .markup:focus, */
-  .marked > .markup-line > .marker + .markup,
+  /* .marked > .markup-line > .marker + .markup, */
+  .marked > .markup-line > .markup.marked,
   .markup-wrapper:not(.marked) > .markup-line > .markup:hover {
     background-color: var(--bezel, white);
     box-shadow: 0 0 0 2px var(--bezel, white), 0 3px 10px -2px #0006;
-    position: relative;
-    -webkit-box-decoration-break: clone;
-    box-decoration-break: slice;
     z-index: 2;
   }
 
-  /* .markup-line > .markup:focus::before, */
-  .marked > .markup-line > .marker + .markup::before,
-  .markup-wrapper:not(.marked) > .markup-line > .markup:hover::before {
+  /* .marked > .markup-line > .marker + .markup::before, */
+  .marked > .markup-line > .markup.marked::after,
+  .markup-wrapper:not(.marked) > .markup-line > .markup:hover::after {
     --padding: 1.75px;
     position: absolute;
     pointer-events: none;
-    content: attr(class);
+    content: attr(data-hint);
+    /* content: attr(class); */
     line-height: initial;
     font-weight: 400;
     font-style: initial;
@@ -109,14 +124,50 @@
     user-select: none;
     -webkit-user-select: none;
     -moz-user-select: none;
+    z-index: 1;
+    /* visibility: visible; */
   }
 
-  .markup.fault::after {
+  .markup-line > .markup.break:last-child {
+    position: relative;
+    margin: 0;
+    margin-inline-end: -1em;
+    display: inline-flex;
+    width: 1em;
+    height: 1em;
+    line-height: 1em;
+    vertical-align: text-bottom;
+    place-content: center;
+    place-items: center;
+  }
+
+  /* .markup-line > .markup.break:last-child::before, */
+  .markup-line.marked > .markup.break:last-child::before,
+  .markup-line:hover > .markup.break:last-child::before {
+    content: '\23CE';
+    position: absolute;
+    overflow: visible;
+    pointer-events: none;
+    font-family: monospace;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    /* visibility: visible; */
+    color: var(--widget-shadow, currentColor);
+    padding-inline-start: 2em;
+    text-align: center;
+    width: 1em;
+    height: 1em;
+    line-height: 1em;
+    inline-size: 0;
+  }
+
+  .markup.fault::before {
     float: right;
     width: 1.5em;
     height: 1.5em;
     overflow: hidden;
-    contain: strict;
+    /* contain: strict; */
     margin: 0 2px 0 0;
     padding: 0;
     order: -1;
@@ -136,17 +187,11 @@
     vertical-align: initial;
     text-align: center;
     text-indent: 0;
-  }
-
-  .markup.break {
-    white-space: nowrap;
-  }
-
-  .markup.break::after {
-    white-space: pre;
-    content: '\23CE\00A0\000A';
-    font-size: 75%;
-    vertical-align: bottom;
+    /* visibility: visible; */
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    /* position: relative; */
   }
 }
 
@@ -164,6 +209,6 @@
   }
 }
 
-.markup-wrapper .marker {
+/* .markup-wrapper .marker {
   display: none;
-}
+} */

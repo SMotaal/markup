@@ -16,6 +16,8 @@ const Examples = ({
   ['json']: {url: local('./examples/samples/sample.json')},
   ['gfm']: {url: local('./examples/samples/gfm.md')},
   ['babel']: {url: unpkg('@babel/standalone')},
+  ['sesm']: {url: unpkg('ses?module'), mode: 'es'},
+  ['ses']: {url: unpkg('ses'), mode: 'es'},
   ['acorn-esm']: {url: unpkg('acorn?module'), mode: 'esm'},
   ['acorn-cjs']: {url: unpkg('acorn'), mode: 'cjs'},
   ['acorn-loose']: {url: cdnjs('acorn/5.7.3/acorn_loose.es.js')},
@@ -303,15 +305,21 @@ export default (markup, overrides) => {
     };
 
     Marker: {
-      const Marker = ({className = '', tag = 'span', ...properties}) =>
-        Object.assign(
-          document.createElement(tag),
-          {className: `marker ${className}`, textContent: '\u034F', style: 'display: none'},
-          properties,
-        );
+      // const Marker = ({className = '', tag = 'span', ...properties}) =>
+      //   Object.assign(
+      //     document.createElement(tag),
+      //     {className: `marker ${className}`, textContent: '\u034F', style: 'display: none'},
+      //     properties,
+      //   );
 
-      const lineMarker = Marker({className: 'line-marker'});
-      const columnMarker = Marker({className: 'column-marker'});
+      // const lineMarker = Marker({className: 'line-marker'});
+      // const columnMarker = Marker({className: 'column-marker'});
+
+      slot.clearMark = (...nodes) => {
+        slot.classList.remove('marked');
+        nodes.length || (nodes = slot.querySelectorAll('.marked'));
+        if (nodes) for (const node of nodes) node.classList.remove('marked');
+      };
 
       slot.mark = (element = slot, scrollIntoView = element !== slot) => {
         if (
@@ -324,20 +332,25 @@ export default (markup, overrides) => {
         )
           return;
         const line = element.closest('.markup-line');
-        if (element === slot || element.matches('.marker+.markup')) {
-          slot.tokenNumber = void columnMarker.remove();
-          slot.lineNumber = void lineMarker.remove();
-          slot.anchor = undefined;
+        // if (element === slot || element.matches('.marker+.markup')) {
+        if (element === slot || element.matches('.markup.marked')) {
+          // slot.tokenNumber = void columnMarker.remove();
+          // slot.lineNumber = void lineMarker.remove();
+          slot.anchor = undefined = slot.tokenNumber = slot.lineNumber = slot.clearMark();
           slot.classList.remove('marked');
         } else if (line) {
+          slot.clearMark();
           element === line
-            ? (slot.tokenNumber = void columnMarker.remove())
+            ? // ? (slot.tokenNumber = void columnMarker.remove())
+              (slot.tokenNumber = undefined)
             : ((slot.tokenNumber =
                 element.tokenNumber >= 0
                   ? element.tokenNumber
                   : (element.tokenNumber = [...line.querySelectorAll(':scope>.markup')].indexOf(element) + 1)),
-              element.before(columnMarker));
-          line.before(lineMarker);
+              element.classList.add('marked'));
+          // element.before(columnMarker)
+          line.classList.add('marked');
+          // line.before(lineMarker);
           slot.anchor = `${(slot.lineNumber = line.lineNumber)}::${slot.tokenNumber || ''}`;
           slot.classList.add('marked');
           scrollIntoView && element.scrollIntoView({block: 'center'});
@@ -484,7 +497,7 @@ Header: {
   document.querySelector('template#source-header') ||
     ((innerHTML, selectors, id = 'source-header') =>
       document.head.append(Object.assign(document.createElement('template'), {id, selectors, innerHTML})))(
-      (html => html`
+      ((html, entity) => html`
         <div id="summary">
           <span title="source"><span id="source"></span><time unit="ms"></time></span>
         </div>
@@ -495,11 +508,12 @@ Header: {
         </div>
         <div id="controls">
           <span>
-            <a id="rerender" title="Repeat" onclick><i icon>&#x2301;</i></a>
-            <a id="contrast" title="Dark/Light" onclick><i icon>&#x263D;</i></a>
+            <!-- <a id="hover" title="Debugging" onclick><i icon>${entity('🄷')}</i></a> -->
+            <a id="rerender" title="Repeat" onclick><i icon>${entity('⌁')}</i></a>
+            <a id="contrast" title="Dark/Light" onclick><i icon>${entity('☽')}</i></a>
           </span>
         </div>
-      `)(String.raw),
+      `)(String.raw, string => `&#x${`${string}`.codePointAt(0).toString(16)};`),
       {
         ['source-span']: '#source',
         ['source-time']: '#source + time',
