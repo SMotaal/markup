@@ -1,8 +1,10 @@
 (function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
-  typeof define === 'function' && define.amd ? define(['exports'], factory) :
-  (global = global || self, factory(global.markup = {}));
-}(this, function (exports) { 'use strict';
+  typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('../../../../../markup/experimental/es/playground.js')) :
+  typeof define === 'function' && define.amd ? define(['exports', '../../../../../markup/experimental/es/playground.js'], factory) :
+  (global = global || self, factory(global.markup = {}, global.experimentalES));
+}(this, function (exports, experimentalES) { 'use strict';
+
+  experimentalES = experimentalES && experimentalES.hasOwnProperty('default') ? experimentalES['default'] : experimentalES;
 
   const {assign, defineProperty} = Object;
 
@@ -1231,17 +1233,22 @@
       if (id in modes) return modes[id];
       let mapping = mappings[id];
       !mapping || mapping.syntax === id || (mapping = mappings[mapping.syntax]);
-      if (mapping && mapping.factory) {
-        const {syntax, factory, options} = mapping;
-        if (options.requires && options.requires.length > 0) {
-          const list = [];
-          for (const id of options.requires) id in modes || this.get(id) || list.push(id);
-          if (list.length) {
-            list.length > 1 && list.push(list.splice(-2, 2).join(' and '));
-            throw Error(`Cannot initialize "${syntax}" which requires the list mode(s): ${list.join(', ')}`);
-          }
+      if (mapping) {
+        const {syntax, mode, factory, options} = mapping;
+        if (mode) {
+          return (modes[id] = mode);
         }
-        return (mapping.mode = modes[id] = factory(options, modes));
+        if (factory) {
+          if (options.requires && options.requires.length > 0) {
+            const list = [];
+            for (const id of options.requires) id in modes || this.get(id) || list.push(id);
+            if (list.length) {
+              list.length > 1 && list.push(list.splice(-2, 2).join(' and '));
+              throw Error(`Cannot initialize "${syntax}" which requires the list mode(s): ${list.join(', ')}`);
+            }
+          }
+          return (mapping.mode = modes[id] = factory(options, modes));
+        }
       }
     }
 
@@ -1276,11 +1283,20 @@
       }
 
       const mapping = factory ? {syntax, factory, options} : {syntax, mode, options};
-      const descriptor = {value: mapping, writable: false};
+      const descriptor = {value: mapping, writable: false, configurable: true};
 
       for (const id of [syntax, ...aliases]) {
         Object.defineProperty(mappings, id, descriptor);
       }
+    }
+
+    unregister(id) {
+      const {[MAPPINGS]: mappings, [MODES]: modes} = this;
+      if (id in modes) {
+        throw ReferenceError(`Cannot unregister "${id}" since it's already been bootstrapped for use.`);
+      }
+      Object.defineProperty(mappings, id, {writable: true, configurable: true});
+      delete mappings[id];
     }
 
     /** @param {string} mode @param {string[]} requires */
@@ -2118,6 +2134,7 @@
   Definitions: {
     Defaults: {
       javascript.DEFAULTS = {syntax: 'javascript', aliases: ['javascript', 'es', 'js', 'ecmascript']};
+      // javascript.DEFAULTS = {syntax: 'javascript', aliases: ['js']};
     }
 
     javascript.REGEXPS = /\/(?=[^*/\n][^\n]*\/(?:[a-z]+\b|)(?:[ \t]+[^\n\s\(\[\{\w]|[.\[;,]|[ \t]*[)\]};,\n]|\n|$))(?:[^\\\/\n\t\[]+|\\[^\n]|\[(?:\\[^\n]|[^\\\n\t\]]+)*?\][+*]?\??)*\/(?:[a-z]+\b|)/g;
@@ -2372,6 +2389,9 @@
       },
     }),
   };
+
+  console.log({experimentalES, experimentalExtendedAPI});
+  experimentalES(experimentalExtendedAPI);
 
   exports.default = experimentalExtendedAPI;
   exports.encodeEntities = encodeEntities;

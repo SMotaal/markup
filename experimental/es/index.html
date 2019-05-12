@@ -1,1 +1,34 @@
-../playground.html
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>SMotaal's Markup (Playground)</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline';" />
+  <script type="module" src="/markup/packages/tokenizer/browser/experimental.js"></script>
+  <script type="module" src="/markup/packages/tokenizer/examples/browser/demo.js"></script>
+  <link rel="stylesheet" href="/markup/packages/tokenizer/examples/browser/styles.css" />
+  <link rel="stylesheet" href="/pholio/styles/fonts/iosevka/iosevka.css" />
+</head>
+
+<body>
+  <pre id="source-code" class="markup-container"></pre>
+  <script type="module">
+    // import markup from '/markup/packages/tokenizer/browser/experimental.js';
+    import demo from '/markup/packages/tokenizer/examples/browser/demo.js';
+    import dynamicImport from '/browser/dynamicImport.js';
+    import markup from '/markup/packages/tokenizer/browser/experimental.extended.js';
+    (async () => {
+      try {
+        demo(markup);
+        // const experiment = await dynamicImport('./playground.js');
+        // demo(markup, await experiment.default(markup));
+      } catch (exception) {
+        (document.body.querySelector('.markup-container') || document.body).appendChild(new Text(`${exception}`));
+      }
+    })()
+  </script>
+</body>
+
+</html>
