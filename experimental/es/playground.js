@@ -1,10 +1,17 @@
 ﻿import bootstrap from '../matcher/matcher.js';
 import {countLineBreaks} from '../matcher/helpers.js';
 import {matcher} from './matcher.js';
-import {FaultGoal} from './definitions.js';
+import {FaultGoal, goals, symbols} from './definitions.js';
 
 const {goal: rootGoal} = matcher;
 const {name: rootGoalName} = rootGoal;
+const {
+  [symbols.ECMAScriptGoal]: ECMAScriptGoal,
+  [symbols.CommentGoal]: CommentGoal,
+  [symbols.RegExpGoal]: RegExpGoal,
+  [symbols.StringGoal]: StringGoal,
+  [symbols.TemplateLiteralGoal]: TemplateLiteralGoal,
+} = goals;
 
 export default bootstrap(matcher, {
   syntax: 'es',
@@ -12,74 +19,120 @@ export default bootstrap(matcher, {
     (state.groups = []).closers = [];
     state.lineOffset = state.lineIndex = 0;
     state.lineFault = false;
-    state.goal = state.nextGoal = rootGoal;
-    state.group = state.nextGroup = undefined;
+    (state.contexts = Array(100))[-1] = state.context = {
+      id: (state.contexts.count = 1),
+      depth: 0,
+      parent: undefined,
+      goal: rootGoal,
+      group: undefined,
+      state,
+    };
   },
   createToken: (match, state) => {
-    // if (!match.text) return;
+    let currentGoal,
+      goalName,
+      goalType,
+      text,
+      type,
+      fault,
+      punctuator,
+      offset,
+      inset,
+      breaks,
+      delimiter,
+      comment,
+      whitespace,
+      flatten,
+      fold,
+      columnNumber,
+      lineNumber,
+      hint;
 
-    const {
-      goal: currentGoal,
-      group: currentGroup,
-      lineIndex: currentLineIndex,
-      lineOffset: currentLineOffset = (state.lineOffset = 0),
-      previousToken,
-      nextGoal,
-      nextGroup,
-    } = state;
+    const {context, nextContext, lineIndex, lineOffset, nextOffset, previousToken} = state;
 
-    const {
+    /* Capture */
+
+    ({
       0: text,
-      identity,
+      capture: {inset},
+      identity: type,
       flatten,
       fault,
       punctuator,
-      index,
-      capture: {inset},
-    } = match;
+      index: offset,
+    } = match);
 
-    const breaks = (identity === 'break' && 1) || countLineBreaks(text);
-    const delimiter = identity === 'closer' || identity === 'opener';
-    const whitespace = !delimiter && (identity === 'whitespace' || identity === 'break' || identity === 'inset');
+    /* Context */
 
-    nextGoal === currentGoal || (state.goal = state.nextGoal = nextGoal || FaultGoal);
-    nextGroup === currentGroup || (state.group = state.nextGroup = nextGroup);
+    nextContext && (state.nextContext = void (nextContext !== context && (state.context = nextContext)));
+
+    ({goal: currentGoal} = context);
+    ({name: goalName, type: goalType} = currentGoal);
+
+    nextOffset &&
+      (state.nextOffset = void (nextOffset > offset && (text = match.input.slice(offset, nextOffset)),
+      (state.matcher.lastIndex = nextOffset)));
+
+    breaks = (text === '\n' && 1) || countLineBreaks(text);
+    comment = type === 'comment' || punctuator === 'comment';
+    delimiter = type === 'closer' || type === 'opener';
+    whitespace = !delimiter && (type === 'whitespace' || type === 'break' || type === 'inset');
+
+    type || (type = (!delimiter && !fault && goalType) || 'text');
 
     if (breaks) {
       state.lineIndex += breaks;
-      state.lineOffset = index + text.lastIndexOf('\n');
+      state.lineOffset = offset + (text === '\n' ? 1 : text.lastIndexOf('\n'));
     }
 
-    if (flatten && !fault && currentGoal !== rootGoal && previousToken && previousToken.type === identity) {
+    /* Flattening / Token Folding */
+
+    flatten === false || flatten === true || (flatten = !delimiter && currentGoal.flatten === true);
+
+    if (
+      (fold = flatten) && // fold only if flatten is allowed
+      previousToken != null &&
+      previousToken.fold === true &&
+      previousToken.context === context &&
+      // currentGoal !== rootGoal && // never fold across goals
+      // previousToken.flatten === true &&
+      // !previousToken.delimiter &&
+      (previousToken.type === type ||
+        ((currentGoal === StringGoal || currentGoal === CommentGoal) && (previousToken.type = currentGoal.type)))
+      // previousToken.type === type
+    ) {
       previousToken.text += text;
       breaks && (previousToken.breaks += breaks);
-      return;
+    } else {
+      /* Token Creation */
+      columnNumber = offset - (lineOffset || -1);
+      lineNumber = lineIndex + 1;
+      hint = `${(delimiter ? type : goalType && `in-${goalType}`) || ''} [${goalName ||
+        rootGoalName}:${lineNumber}:${columnNumber}]`;
+      // fold || nextGoal !== StringGoal || nextGoal !== CommentGoal || (fold = true);
+      flatten = false;
+      return (state.previousToken = state[whitespace || comment ? 'previousTrivia' : 'previousAtom'] = {
+        type,
+        text,
+        offset,
+        breaks,
+        inset,
+        columnNumber,
+        lineNumber,
+        punctuator,
+        fault,
+        fold,
+        flatten,
+        delimiter,
+        whitespace,
+        comment,
+        hint,
+
+        context,
+        lineIndex,
+        lineOffset,
+      });
     }
-
-    const {name: goalName, type: goalType} = currentGoal || rootGoal;
-    const columnNumber = index - (currentLineOffset || -1);
-    const lineNumber = currentLineIndex + 1;
-    const token = {
-      type: (!delimiter && goalType) || identity || 'text',
-      text,
-      offset: index,
-      breaks,
-      inset: inset || '',
-      columnNumber,
-      lineNumber,
-      punctuator,
-      flatten,
-      // flatten: false,
-      delimiter,
-      whitespace,
-      goal: goalName || rootGoalName,
-      hint: `${(delimiter ? identity : goalType && `in-${goalType}`) || ''} [${goalName ||
-        rootGoalName}:${lineNumber}:${columnNumber}]`,
-    };
-
-    currentGoal !== rootGoal || whitespace || (state.previousAtom = token);
-
-    return token;
   },
   sourceURL: './matcher.js',
 });

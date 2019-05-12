@@ -47,7 +47,7 @@
     }
     get outerHTML() {
       let classList;
-      let {className, tag, innerHTML} = this;
+      let {className, tag, innerHTML, dataset} = this;
 
       className &&
         (className = className.trim()) &&
@@ -57,8 +57,17 @@
             '',
         } = Element.classLists || (Element.classLists = Object.create(null)));
 
-      return `<${tag}${(classList && ` class="${classList}"`) || ''}>${innerHTML || ''}</${tag}>`;
+      const openTag = [tag];
+
+      classList && openTag.push(`class="${classList}"`);
+
+      if (dataset)
+        for (const [key, value] of Object.entries(dataset))
+          value == null || !key.trim || openTag.push(`data-${key}=${JSON.stringify(`${value}`)}`);
+
+      return `<${openTag.join(' ')}>${innerHTML || ''}</${tag}>`;
     }
+
     toString() {
       return this.outerHTML;
     }
@@ -498,7 +507,7 @@
       // TODO: Consider making Renderer a thing
       const {factory, defaults} = new.target;
 
-      const {SPAN = 'span', LINE = 'span', CLASS = 'markup'} = {
+      const {SPAN = 'span', LINE = 'span', CLASS = 'markup', REFLOW = true} = {
         ...defaults,
         ...options,
       };
@@ -528,13 +537,15 @@
         opener: factory(SPAN, {className: `${CLASS} punctuator opener`}),
         closer: factory(SPAN, {className: `${CLASS} punctuator closer`}),
         span: factory(SPAN, {className: `${CLASS} punctuator span`}),
+        pattern: factory(SPAN, {className: `${CLASS} pattern`}),
         sequence: factory(SPAN, {className: `${CLASS} sequence`}),
         literal: factory(SPAN, {className: `${CLASS} literal`}),
         // indent: factory(SPAN, {className: `${CLASS} sequence indent`}),
         comment: factory(SPAN, {className: `${CLASS} comment`}),
-        fault: factory(SPAN, {className: `${CLASS} fault`}),
-        code: factory(SPAN, {className: `${CLASS}`}),
+        // code: factory(SPAN, {className: `${CLASS}`}),
       };
+
+      this.reflows = REFLOW;
     }
 
     async render(tokens, fragment) {
@@ -569,75 +580,75 @@
     }
 
     *renderer(tokens) {
-      const {renderers, LINE_INDENTS, LINE_REINDENTS} = this;
-      let renderedLine, Inset, lineInset, lineText, insetHint;
-      // let line, indent, trim, tabSpan;
-      const blank = renderers.line();
-      const emit = (renderer, text, type, hint, flatten) => {
-        flatten && renderedLine.lastChild && renderer === renderedLine.lastChild.renderer
-          ? renderedLine.lastChild.appendChild(Text$2(text))
-          : renderedLine.appendChild((renderedLine.lastChild = renderer(text, hint || type))).childElementCount &&
-            (renderedLine.lastChild.renderer = renderer);
+      const {renderers, reflows} = this;
+      let renderedLine, LineInset, lineInset, lineText, lineBreak, insetHint;
+      const createLine = reflows
+        ? () => (renderedLine = renderers.line('', 'no-reflow'))
+        : () => (renderedLine = renderers.line());
+      const emit = (renderer, text, type, hint) => {
+        (renderedLine || createLine()).appendChild((renderedLine.lastChild = renderer(text, hint || type)));
       };
-      const emitInset = (text, hint) => emit(renderers.inset, text, 'inset', hint, false);
+      const emitInset = (text, hint) => emit(renderers.inset, text, 'inset', hint);
+      const emitBreak = hint => emit(renderers.break, '\n', 'break', hint);
       const Lines = /^/gm;
       for (const token of tokens) {
+        if (!token || !token.text) continue;
+
         let {type = 'text', text, inset, punctuator, breaks, hint} = token;
         let renderer =
-          (punctuator && (renderers[punctuator] || renderers.operator)) ||
+          (punctuator && (renderers[punctuator] || (type && renderers[type]) || renderers.operator)) ||
           (type && renderers[type]) ||
           (type !== 'whitespace' && type !== 'break' && renderers.text) ||
           Text$2;
 
-        if (!text) continue;
-
-        // Create new line
-        renderedLine || (renderedLine = renderers.line());
-
-        const flatten = !punctuator && type !== 'fault' && type !== 'opener' && type !== 'closer' && type !== 'break';
-
         // Normlize inset for { type != 'inset', inset = /\s+/ }
-        if (breaks && type !== 'break') {
-          Inset = void (inset = inset || '');
+        if (reflows && breaks && type !== 'break') {
+          LineInset = void (inset = inset || '');
           insetHint = `${hint || ''} in-${type || ''}`;
           for (const line of text.split(Lines)) {
-            renderedLine || (renderedLine = renderers.line());
             (lineInset = line.startsWith(inset)
               ? line.slice(0, inset.length)
-              : line.match(Inset || (Inset = RegExp(`^${inset.replace(/./g, '$&?')}`)))[0]) &&
+              : line.match(LineInset || (LineInset = RegExp(`^${inset.replace(/./g, '$&?')}`)))[0]) &&
               emitInset(lineInset, insetHint);
+
             (lineText = lineInset ? line.slice(lineInset.length) : line) &&
-              (emit(renderer, lineText, type, hint, flatten),
-              lineText.endsWith('\n') && (yield renderedLine, (renderedLine = null)));
+              ((lineText === '\n'
+                ? ((lineBreak = lineText), (lineText = ''))
+                : lineText.endsWith('\n')
+                ? ((lineBreak = '\n'), (lineText = lineText.slice(0, lineText.endsWith('\r\n') ? -2 : -1)))
+                : !(lineBreak = '')) && emit(renderer, lineText, type, hint),
+              lineBreak && (emitBreak(), (renderedLine = void (yield renderedLine))));
           }
-          // console.log(lines);
-          // emit(renderer, text, type, hint, punctuator);
         } else {
-          emit(renderer, text, type, hint, flatten);
-          type === 'break' && (yield renderedLine, (renderedLine = null));
+          emit(renderer, text, type, hint);
+          type === 'break' && (renderedLine = void (yield renderedLine));
         }
-
-        // Strip trailing whitespace
-        // !punctuator && type !== 'opener' && type !== 'closer' && line.lastChild && renderer === line.lastChild.renderer
-        //   ? line.lastChild.appendChild(Text(text))
-        //   : line.appendChild((line.lastChild = renderer(text, hint))).childElementCount &&
-        //     (line.lastChild.renderer = renderer);
-
-        // TODO: Normalize multiple line breaks
-        // breaks && (yield line, --breaks && (yield* Array(breaks).fill(blank)), (line = null));
       }
       renderedLine && (yield renderedLine);
     }
 
-    static factory(tag, properties) {
-      return (content, hint) => {
-        typeof content === 'string' && (content = Text$2(content));
-        const element = content != null ? Element$2(tag, properties, content) : Element$2(tag, properties);
-        // element &&
-        //   (element.className = [...new Set(`${element.className || ''} ${hint || ''}`.trim().split(/\s+/g))].join(' '));
-        element && typeof hint === 'string' && (element.className = `${element.className || ''} ${hint}`);
-        return element;
-      };
+    /**
+     * @param {string} tag
+     * @param {Partial<HTMLElement>} [properties]
+     * @param {boolean} [unflattened]
+     */
+    static factory(tagName, elementProperties) {
+      const [tag, properties] = arguments;
+      return Object.defineProperties(
+        (content, hint) => {
+          typeof content === 'string' && (content = Text$2(content));
+          const element = content != null ? Element$2(tag, properties, content) : Element$2(tag, properties);
+          element &&
+            (hint = typeof hint === 'string' && (element.className = `${element.className || ''} ${hint}`)) &&
+            (element.dataset = {hint: hint.slice(6)});
+          return element;
+        },
+        {
+          // flatten: {
+          //   value: !arguments[2] || (/\bunflatten\b/i.test(arguments[2]) ? false : /\bflatten\b/i.test(arguments[2])),
+          // },
+        },
+      );
     }
   }
 
@@ -648,6 +659,8 @@
     LINE: 'span',
     /** The class name of the element to use for rendering a token. */
     CLASS: 'markup',
+    /** Enable renderer-side unpacking { inset } || { breaks > 0 } tokens */
+    REFLOW: true,
   });
 
   /// INTERFACE

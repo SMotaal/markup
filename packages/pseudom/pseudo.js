@@ -41,7 +41,7 @@ export class Element extends Node {
   }
   get outerHTML() {
     let classList;
-    let {className, tag, innerHTML} = this;
+    let {className, tag, innerHTML, dataset} = this;
 
     className &&
       (className = className.trim()) &&
@@ -51,8 +51,17 @@ export class Element extends Node {
           '',
       } = Element.classLists || (Element.classLists = Object.create(null)));
 
-    return `<${tag}${(classList && ` class="${classList}"`) || ''}>${innerHTML || ''}</${tag}>`;
+    const openTag = [tag];
+
+    classList && openTag.push(`class="${classList}"`);
+
+    if (dataset)
+      for (const [key, value] of Object.entries(dataset))
+        value == null || !key.trim || openTag.push(`data-${key}=${JSON.stringify(`${value}`)}`);
+
+    return `<${openTag.join(' ')}>${innerHTML || ''}</${tag}>`;
   }
+
   toString() {
     return this.outerHTML;
   }
