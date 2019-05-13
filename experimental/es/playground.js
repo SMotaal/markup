@@ -101,14 +101,11 @@ export default bootstrap(matcher, {
     if (
       (fold = flatten) && // fold only if flatten is allowed
       previousToken != null &&
+      previousToken.context === context && // never fold across contexts
       previousToken.fold === true &&
-      previousToken.context === context &&
-      // currentGoal !== rootGoal && // never fold across goals
-      // previousToken.flatten === true &&
-      // !previousToken.delimiter &&
-      (previousToken.type === type ||
-        ((currentGoal === StringGoal || currentGoal === CommentGoal) && (previousToken.type = currentGoal.type)))
-      // previousToken.type === type
+      // (previousToken.type === type ||
+      //   ((currentGoal === StringGoal || currentGoal === CommentGoal) && (previousToken.type = currentGoal.type)))
+      (previousToken.type === type || (currentGoal.fold === true && (previousToken.type = currentGoal.type)))
     ) {
       previousToken.text += text;
       breaks && (previousToken.breaks += breaks);
