@@ -1,7 +1,5 @@
-const markup = (function (exports, experimentalES) {
+const markup = (function (exports) {
   'use strict';
-
-  experimentalES = experimentalES && experimentalES.hasOwnProperty('default') ? experimentalES['default'] : experimentalES;
 
   const {assign, defineProperty} = Object;
 
@@ -1255,11 +1253,11 @@ const markup = (function (exports, experimentalES) {
 
       const {[MAPPINGS]: mappings, [MODES]: modes} = this;
       const factory = typeof mode === 'function' && mode;
-      const {syntax, aliases = (options.aliases = []), preregister} = ({
+      const {syntax, aliases = (options.aliases = []), preregister, tokenizer} = ({
         syntax: options.syntax = mode.syntax,
       } = options = {
         syntax: undefined,
-        ...factory.defaults,
+        ...(factory ? factory.defaults : mode),
         ...options,
       });
 
@@ -1281,17 +1279,21 @@ const markup = (function (exports, experimentalES) {
       if (aliases && aliases.length > 0) {
         for (const alias of aliases) {
           const mapping = mappings[alias];
-          if (!alias || typeof alias !== 'string')
+          if (!alias || typeof alias !== 'string') {
             throw TypeError(`Cannot register "${syntax}" since it's alias "${alias}" not valid string'`);
-          else if (mapping && !(alias in modes)) {
-            if (mapping.syntax === alias || mapping.syntax[0] === alias[0]) continue;
+          }
+
+          if (alias in modes || (mapping && (mapping.syntax === alias || mapping.syntax[0] === alias[0]))) {
+            continue;
+          }
+
+          if (mapping) {
             Object.defineProperty(mappings, alias, {writable: true, configurable: true});
             delete mappings[alias];
             ids.push(alias);
-            // throw ReferenceError(`Cannot register "${syntax}" since it's alias "${alias}" is already registered`);
-          } else {
-            ids.push(alias);
           }
+
+          ids.push(alias);
         }
       }
 
@@ -1299,6 +1301,8 @@ const markup = (function (exports, experimentalES) {
       const descriptor = {value: mapping, writable: false, configurable: true};
 
       for (const id of ids) Object.defineProperty(mappings, id, descriptor);
+
+      if (tokenizer) this[TOKENIZERS].set(mode, tokenizer);
     }
 
     unregister(id) {
@@ -2401,9 +2405,6 @@ const markup = (function (exports, experimentalES) {
     }),
   };
 
-  // console.log({experimentalES, experimentalExtendedAPI});
-  experimentalES(experimentalExtendedAPI);
-
   exports.default = experimentalExtendedAPI;
   exports.encodeEntities = encodeEntities;
   exports.encodeEntity = encodeEntity;
@@ -2415,5 +2416,5 @@ const markup = (function (exports, experimentalES) {
 
   return exports;
 
-}({}, experimentalES));
+}({}));
 //# sourceMappingURL=tokenizer.browser.js.map

@@ -1,4 +1,4 @@
-﻿import {Matcher} from '/modules/matcher/matcher.js';
+﻿import {Matcher} from '../../../modules/matcher/matcher.js';
 import {ranges} from './ranges.js';
 import {keywords, goals, symbols, FaultGoal} from './definitions.js';
 import {capture, forward, fault, open, close} from './helpers.js';
