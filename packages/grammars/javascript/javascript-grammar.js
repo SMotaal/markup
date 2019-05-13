@@ -44,7 +44,7 @@ export const javascript = Object.defineProperties(
 
 Definitions: {
   Defaults: {
-    javascript.DEFAULTS = {syntax: 'javascript', aliases: ['javascript', 'es', 'js', 'ecmascript']};
+    javascript.DEFAULTS = {syntax: 'javascript', aliases: ['js', 'es', 'ecmascript']};
     // javascript.DEFAULTS = {syntax: 'javascript', aliases: ['js']};
   }
 

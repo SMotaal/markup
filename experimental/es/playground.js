@@ -15,7 +15,7 @@ const {
 
 export default bootstrap(matcher, {
   syntax: 'ecmascript',
-  aliases: ['es'],
+  aliases: ['es', 'js', 'javascript'],
   initializeState: state => {
     (state.groups = []).closers = [];
     state.lineOffset = state.lineIndex = 0;
