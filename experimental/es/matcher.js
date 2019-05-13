@@ -43,8 +43,8 @@ const dummy = async () => {
     const y = function ƒ () {}
                       /(div)/g.exec(c).map(d);
 
-    // Keyword always regexp (regardless of ASI)
-    return await      /(regexp)/g.exec(c).map(d);
+                      // Keyword always regexp (regardless of ASI)
+    return await/*  *//(regexp)/g.exec(c).map(d);
 
     // Matt Austin's
     Function("arg=`", "/*body`){});({x: this/**/");
@@ -78,7 +78,7 @@ const ECMAScriptGrammar = {
       entity => Matcher.sequence`(
         \s+
         ${entity((text, entity, match, state) => {
-          capture((match.flatten = (state.lineOffset || -1) + 1 !== match.index) ? 'whitespace' : 'inset', match, text);
+          capture((match.flatten = state.lineOffset !== match.index) ? 'whitespace' : 'inset', match, text);
         })}
       )`,
     ),
