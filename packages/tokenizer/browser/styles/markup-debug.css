@@ -1,11 +1,13 @@
 @media only screen {
+  /*
   .markup-wrapper .markup:hover,
   .markup-wrapper .markup:hover::before,
   .markup-wrapper :hover .markup,
   .markup-wrapper :hover .markup::before,
   .markup-wrapper:hover {
-    /* outline: 0.5px dotted var(--color, currentColor); */
+    outline: 0.5px dotted var(--color, currentColor);
   }
+  */
 
   .markup-line .markup.comment,
   .markup-line .markup.in-comment,
@@ -49,14 +51,12 @@
     --debug: var(--markup-faults-background, #f21);
   }
 
-  /* .marker + .markup-line { */
   .markup-line.marked {
     background: #9991;
     outline: 1px solid #9993;
     outline-offset: -1px;
   }
 
-  /* .marked > .marker + .markup-line::before, */
   .marked > .markup-line.marked::before,
   .markup-line-numbers .markup-wrapper:not(.marked) > .markup-line:hover::before {
     outline: 1px solid #9996;
@@ -74,7 +74,6 @@
     outline-offset: -1px;
   }
 
-  /* .marked > .markup-line > .marker + .markup, */
   .marked > .markup-line > .markup.marked,
   .markup-wrapper:not(.marked) > .markup-line > .markup:hover {
     background-color: var(--bezel, white);
@@ -82,7 +81,6 @@
     z-index: 2;
   }
 
-  /* .marked > .markup-line > .marker + .markup::before, */
   .marked > .markup-line > .markup.marked::after,
   .markup-wrapper:not(.marked) > .markup-line > .markup:hover::after {
     --padding: 1.75px;
@@ -129,37 +127,28 @@
   }
 
   .markup-line > .markup.break:last-child {
-    position: relative;
+    display: inline-block;
+    line-height: 100%;
+    /* outline: 1px solid greenyellow; */
     margin: 0;
-    margin-inline-end: -1em;
-    display: inline-flex;
-    width: 1em;
-    height: 1em;
-    line-height: 1em;
-    vertical-align: text-bottom;
-    place-content: center;
-    place-items: center;
+    padding: 0;
+    margin-inline-end: -100%;
+    pointer-events: none;
+    width: 0;
+    overflow: visible;
   }
 
   /* .markup-line > .markup.break:last-child::before, */
   .markup-line.marked > .markup.break:last-child::before,
   .markup-line:hover > .markup.break:last-child::before {
+    display: inline-block;
+    position: relative;
     content: '\23CE';
-    position: absolute;
-    overflow: visible;
-    pointer-events: none;
-    font-family: monospace;
-    user-select: none;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    /* visibility: visible; */
     color: var(--widget-shadow, currentColor);
-    padding-inline-start: 2em;
-    text-align: center;
-    width: 1em;
-    height: 1em;
-    line-height: 1em;
-    inline-size: 0;
+    left: calc(1em + var(--markup-inset-margin, 0.0001em));
+    font-family: monospace;
+    /* pointer-events: all; */
+    text-indent: var(--markup-text-indent, 0);
   }
 
   .markup.fault::before {
