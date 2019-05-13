@@ -388,6 +388,7 @@ export default (markup, overrides) => {
 
       const repeat = async repeats => {
         const contents = [];
+        slot.columns = sourceText.length * repeats;
         for (; repeats--; contents.push(await renderMarkup(sourceText, markupOptions)));
         slot.innerText = '';
         slot.append(...contents);
@@ -436,7 +437,7 @@ export default (markup, overrides) => {
               slot.mark &&
               requestAnimationFrame(element => void ((element = slot.token(anchor)) && slot.mark(element, true)));
           }
-          slot.columns = slot.innerText.length;
+          // slot.columns = slot.innerText.length;
         }
 
         return fragment;
@@ -490,7 +491,8 @@ export default (markup, overrides) => {
   };
 
   window.addEventListener('hashchange', () => renderFromHash());
-  requestAnimationFrame(() => renderFromHash());
+
+  setTimeout(() => requestAnimationFrame(() => renderFromHash()), 100);
 };
 
 Header: {
