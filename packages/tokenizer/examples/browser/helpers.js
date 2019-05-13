@@ -83,7 +83,7 @@ export const Resolver = (scope, {base = baseURL, prefix} = {}) => {
     (specifier, referrer = resolver.scope) => {
       let returned;
       try {
-        return (returned = resolve(specifier, referrer));
+        return (returned = resolveURL(specifier, referrer));
       } finally {
         returned === undefined && console.log({specifier, referrer, scope});
       }
@@ -98,7 +98,7 @@ export const Resolver = (scope, {base = baseURL, prefix} = {}) => {
   return (resolver.scope = scope), resolver;
 };
 
-export const resolve = (specifier, referrer) => `${referrer ? new URL(specifier, referrer) : new URL(specifier)}`;
+export const resolveURL = (specifier, referrer) => `${referrer ? new URL(specifier, referrer) : new URL(specifier)}`;
 
 export const rewrite = (specifier, {tail = '', head = ''} = {}) => (
   specifier &&

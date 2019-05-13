@@ -142,4 +142,9 @@ export default bootstrap(matcher, {
   },
   sourceURL: './matcher.js',
   sourceType: 'es',
+
+  resolveSourceType: (defaultType, {sourceType, resourceType, options}) => {
+    // console.log({defaultType, sourceType, resourceType});
+    if (resourceType === 'javascript' && !sourceType) return 'es';
+  },
 });
