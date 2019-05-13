@@ -131,6 +131,9 @@
   break-inside: avoid;
 
   --markup-soft-indent: calc(1em * var(--markup-soft-indent-tab-size));
+  --markup-text-indent: calc(-1 * var(--markup-soft-indent) + 1px);
+  --markup-inset-margin: calc(var(--markup-gutter, 0) + 1px);
+  --markup-inset-padding: calc(0.275em + var(--markup-soft-indent));
   /* --markup-line-height: calc(0.1px + 1em); */
 
   /* --markup-soft-indent: 1em; */
@@ -151,6 +154,10 @@
 
 .markup-line.no-reflow {
   --markup-soft-indent: 0.0001em;
+}
+
+.markup-line:not(.no-reflow) > .inset:first-of-type {
+  /* outline: 1px solid red; */
 }
 
 .markup-line .markup {
