@@ -119,8 +119,9 @@
   color: var(--markup-color, currentColor);
   line-height: 1.5em;
   tab-size: 4;
-  font-family: 'Iosevka Web', monospace;
-  font-variant-ligatures: contextual;
+  font-family: 'Iosevka Web', 'Iosevka', 'Input', 'SourceCode Pro', monospace;
+  font-kerning: auto;
+  /* font-variant-ligatures: contextual; */
   white-space: pre-wrap;
   /* display: flex; */
   /* position: relative; */

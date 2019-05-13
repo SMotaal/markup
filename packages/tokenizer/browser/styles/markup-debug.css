@@ -9,20 +9,13 @@
   }
   */
 
-  .markup-line .markup.comment,
-  .markup-line .markup.in-comment,
-  .markup-line .markup.whitespace {
-    --ring: var(--markup-whitespaces, var(--markup-neutral, #999));
-  }
-
   .markup-line {
     --widget-shadow: #00096;
     --widget-underlay: #6664;
     --widget-overlay: #ccc8;
-    /* user-select: text; */
-    /* -webkit-user-select: text; */
-    /* -moz-user-select: text; */
-    /* white-space: pre; */
+    --marked-line-number-color: var(--markup-contrast, inherit);
+    --marked-line-number-background-color: var(--widge, #9999996f);
+    cursor: text;
   }
 
   .dark-mode .markup-line {
@@ -32,18 +25,50 @@
   }
 
   .markup-line > .markup {
-    --padding: 1px;
+    /* --padding: 1px; */
     --debug: var(--color, var(--markup-neutral, #999));
     --ring: var(--debug, var(--markup-neutral, #999));
     --bezel: var(--markup-contrast, white);
-    margin: calc(-1 * var(--padding, 2px)) calc(-2 * var(--padding, 2px));
     border-radius: 1ch;
-    border: calc(2 * var(--padding, 2px)) solid transparent;
-    cursor: text;
+    margin: -2px;
+    border: 2px solid transparent;
     position: relative;
+
     -webkit-box-decoration-break: clone;
     box-decoration-break: clone;
-    /* contain: layout; */
+
+    /* box-sizing: border-box; */
+  }
+
+  .marked > .markup-line > .markup.marked,
+  :not(.marked) > .markup-line > .markup:hover {
+    /* position: relative; */
+    /* contain: size; */
+    background-color: var(--bezel, white);
+    box-shadow: 0 0 0 2px var(--bezel, white), 0 3px 10px -2px #0006;
+    z-index: 2;
+  }
+
+  .marked > .markup-line > [data-hint].markup.marked::after,
+  .markup-wrapper:not(.marked) > .markup-line > [data-hint].markup:hover::after {
+    content: attr(data-hint);
+    display: block;
+    position: absolute;
+
+    left: 50%;
+    will-change: transform;
+    transform: translateX(-50%);
+    width: max-content;
+    min-width: min-content;
+    max-width: -webkit-fill-available;
+    max-width: fill-available;
+    bottom: calc(100% + 0.5ch + -2 * var(--padding, 2px));
+  }
+
+  .markup-line > .markup.comment,
+  .markup-line > .markup.in-comment,
+  .markup-line > .markup.whitespace {
+    --ring: var(--markup-whitespaces, var(--markup-neutral, #999));
   }
 
   .markup-line > .markup.fault {
@@ -51,90 +76,81 @@
     --debug: var(--markup-faults-background, #f21);
   }
 
-  .markup-line.marked {
-    background: #9991;
-    outline: 1px solid #9993;
-    outline-offset: -1px;
-  }
+  .markup-line > [data-hint].markup::after {
+    display: none;
 
-  .marked > .markup-line.marked::before,
-  .markup-line-numbers .markup-wrapper:not(.marked) > .markup-line:hover::before {
-    outline: 1px solid #9996;
-    outline-offset: -1px;
-    background-color: var(--widge, #9996);
-    color: var(--markup-contrast);
-    opacity: 0.825;
+    --padding: 1.75px;
+    --underlay-color: var(--widget-underlay, #0006);
+    --overlay-color-1: var(--widget-overlay, #fff3);
+    --overlay-color-2: var(--ring, currentColor);
+
+    line-height: initial;
+    font: initial;
+    font-style: initial;
+    font-family: inherit;
+
+    pointer-events: none;
+    font-weight: 400;
+    font-size: 75%;
+    /* white-space: normal; */
+    background: radial-gradient(var(--overlay-color-1) 0%, var(--overlay-color-2) 100%) center / 500%,
+      radial-gradient(var(--overlay-color-2) 0%, var(--overlay-color-1) 100%) center / 500%, var(--underlay-color);
+    background-blend-mode: screen;
+    color: var(--markup-shadow, white);
+    text-shadow: 0 1px 1px var(--markup-color, black);
+    text-align: center;
+    text-indent: 0;
+    box-shadow: inset 0 -1px 3px #0001, inset 0 0 25px var(--widget-underlay, #0006),
+      0 0 5px -2.5px var(--widget-shadow, #0009);
+    border-radius: 1ch;
+    /* border: none; */
+    border-bottom: 1ch solid var(--ring, currentColor);
+    padding: calc(3 * var(--padding, 2px)) calc(6 * var(--padding, 2px));
+    /* will-change: transform transition; */
+    z-index: 1;
     user-select: none;
     -webkit-user-select: none;
     -moz-user-select: none;
   }
 
   .markup-line:hover::before {
-    outline: 1px solid #9996;
-    outline-offset: -1px;
+    --markup-line-number-background-color: var(--widge, #9999991f);
   }
 
-  .marked > .markup-line > .markup.marked,
-  .markup-wrapper:not(.marked) > .markup-line > .markup:hover {
-    background-color: var(--bezel, white);
-    box-shadow: 0 0 0 2px var(--bezel, white), 0 3px 10px -2px #0006;
-    z-index: 2;
+  .markup-line.marked {
+    --markup-line-background-color: #99999910;
+    --markup-line-outline: 1px solid #9999993f;
+    --markup-line-outline-offset: -1px;
   }
 
-  .marked > .markup-line > .markup.marked::after,
-  .markup-wrapper:not(.marked) > .markup-line > .markup:hover::after {
-    --padding: 1.75px;
-    position: absolute;
-    pointer-events: none;
-    content: attr(data-hint);
-    /* content: attr(class); */
-    line-height: initial;
-    font-weight: 400;
-    font-style: initial;
-    font: initial;
-    font-size: 75%;
-    font-family: inherit;
-    white-space: normal;
-    --underlay-color: var(--widget-underlay, #0006);
-    --overlay-color-1: var(--widget-overlay, #fff3);
-    --overlay-color-2: var(--ring, currentColor);
-    background: radial-gradient(var(--overlay-color-1) 0%, var(--overlay-color-2) 100%) center / 500%,
-      radial-gradient(var(--overlay-color-2) 0%, var(--overlay-color-1) 100%) center / 500%, var(--underlay-color);
-    background-blend-mode: screen;
-    color: var(--markup-shadow, white);
-    text-shadow: 0 1px 1px var(--markup-color, black);
-    box-shadow: inset 0 -1px 3px #0001, inset 0 0 25px var(--widget-underlay, #0006),
-      0 0 5px -2.5px var(--widget-shadow, #0009);
-    border-radius: 1ch;
-    border: none;
-    border-bottom: 1ch solid var(--ring, currentColor);
-    padding: calc(3 * var(--padding, 2px)) calc(6 * var(--padding, 2px));
-    left: 50%;
-    will-change: transform transition;
-    transform: translateX(-50%);
-    text-align: center;
-    text-indent: 0;
-    width: max-content;
-    min-width: min-content;
-    max-width: -webkit-fill-available;
-    max-width: fill-available;
-    bottom: calc(100% + 0.5ch + -2 * var(--padding, 2px));
-    user-select: none;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    z-index: 1;
-    /* visibility: visible; */
+  .markup-wrapper:not(.marked) > .markup-line:hover {
+    --markup-line-background-color: #9999991f;
+  }
+
+  .markup-line.marked::before {
+    opacity: 0.825;
+    --markup-line-number-color: var(--marked-line-number-color);
+    --markup-line-number-background-color: var(--marked-line-number-background-color);
+  }
+
+  .markup-line.marked:hover {
+    --markup-line-background-color: #9999991f;
+  }
+
+  .markup-line.marked:hover::before {
+    opacity: 1;
   }
 
   .markup-line > .markup.break:last-child {
     display: inline-block;
     line-height: 100%;
     /* outline: 1px solid greenyellow; */
-    margin: 0;
-    padding: 0;
+    /* margin: 0; */
+    /* padding: 0; */
     margin-inline-end: -100%;
     pointer-events: none;
     width: 0;
+    height: 0;
     overflow: visible;
   }
 
