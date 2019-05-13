@@ -111,8 +111,8 @@ export default bootstrap(matcher, {
       breaks && (previousToken.breaks += breaks);
     } else {
       /* Token Creation */
-      columnNumber = offset - (lineOffset || -1);
-      lineNumber = lineIndex + 1;
+      columnNumber = 1 + (offset - lineOffset || 0);
+      lineNumber = 1 + (lineIndex || 0);
       hint = `${(delimiter ? type : goalType && `in-${goalType}`) || ''} [${goalName ||
         rootGoalName}:${lineNumber}:${columnNumber}]`;
       // fold || nextGoal !== StringGoal || nextGoal !== CommentGoal || (fold = true);
