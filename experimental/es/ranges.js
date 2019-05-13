@@ -1,10 +1,48 @@
-﻿export const ranges = ((
+﻿const RegExpRange = ((
+  {RegExp, String: {raw}, Symbol: {replace: ReplaceSymbol}, Object: {defineProperty}},
+  {RegExpClass},
+) =>
+  class RegExpRange extends RegExp {
+    constructor(source, flags) {
+      let range;
+      range =
+        source && typeof source === 'object' && source instanceof RegExp
+          ? (flags === undefined && (flags = source.flags), source.source)
+          : (typeof source === 'string' ? source : (source = `${source || ''}`)).trim() &&
+            (source = RegExpClass[ReplaceSymbol](source, '[$1]'));
+
+      if (!range || !RegExpClass.test(range)) {
+        throw TypeError(`Invalid Regular Expression class range: ${range}`);
+      }
+
+      typeof flags === 'string' || (flags = `${flags || ''}` || '');
+
+      flags.includes('u') || !(source.includes('\\p{') || source.includes('\\u')) || (flags += 'u');
+      super(source, flags);
+      defineProperty(this, 'range', {value: range.slice(1, -1), enumerable: true, writable: false});
+    }
+
+    toString() {
+      return this.range;
+    }
+
+    static range(strings, ...values) {
+      return new (this || RegExpRange)(raw(strings, ...values));
+    }
+  })({String, RegExp, Symbol, Object}, {RegExpClass: /^(?:\[(?=.*?\]$)|)((?:\\.|[^\\\n\[\]]*)*)\]?$/});
+
+export const ranges = ((
   factories,
-  range = ((raw, RegExp) => (strings, ...values) => {
+  // range = ((raw, RegExp) => (strings, ...values) => {
+  //   try {
+  //     return RegExp(`[${raw(strings, ...values)}]`, 'u').source.slice(1, -1);
+  //   } catch (exception) {}
+  // })(String.raw, RegExp),
+  safeRange = (strings, ...values) => {
     try {
-      return RegExp(`[${raw(strings, ...values)}]`, 'u').source.slice(1, -1);
+      return RegExpRange.range(strings, ...values).source.slice(1, -1);
     } catch (exception) {}
-  })(String.raw, RegExp),
+  },
   /** @type {Record<keyof factories, string>} */
   map = {},
   proxy = new Proxy(factories, {
@@ -12,7 +50,7 @@
       property in map
         ? map[property]
         : property in factories
-        ? (map[property] = factories[property](range, proxy))
+        ? (map[property] = factories[property](safeRange, proxy))
         : undefined,
   }),
   ranges = ({...proxy}, map),
