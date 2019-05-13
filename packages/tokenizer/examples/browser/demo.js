@@ -336,7 +336,7 @@ export default (markup, overrides) => {
         if (element === slot || element.matches('.markup.marked')) {
           // slot.tokenNumber = void columnMarker.remove();
           // slot.lineNumber = void lineMarker.remove();
-          slot.anchor = undefined = slot.tokenNumber = slot.lineNumber = slot.clearMark();
+          slot.anchor = slot.tokenNumber = slot.lineNumber = void slot.clearMark();
           slot.classList.remove('marked');
         } else if (line) {
           slot.clearMark();
