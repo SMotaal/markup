@@ -103,8 +103,8 @@ class MarkupRenderer {
     const {renderers, reflows} = this;
     let renderedLine, LineInset, lineInset, lineText, lineBreak, insetHint;
     const createLine = reflows
-      ? () => (renderedLine = renderers.line('', 'no-reflow'))
-      : () => (renderedLine = renderers.line());
+      ? () => (renderedLine = renderers.line())
+      : () => (renderedLine = renderers.line('', 'no-reflow'));
     const emit = (renderer, text, type, hint) => {
       (renderedLine || createLine()).appendChild((renderedLine.lastChild = renderer(text, hint || type)));
     };
