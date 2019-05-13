@@ -1,10 +1,10 @@
-import {Resolvers, Hash, resolve, rewrite, frame, timeout} from './helpers.js';
+import {Resolvers, Hash, resolveURL, rewrite, frame, timeout} from './helpers.js';
 import {darkMode} from './dark-mode.js';
 
 const Examples = ({
   ['es']: ES = local('./dist/tokenizer.experimental.js'),
   ['html']: HTML = rewrite.tail(location.href),
-  ['css']: CSS = resolve('./markup.css', import.meta.url),
+  ['css']: CSS = resolveURL('./markup.css', import.meta.url),
   ['md']: MD = local('./README.md'),
 } = {}) => ({
   ['html']: {url: HTML, mode: 'html'},
@@ -30,9 +30,9 @@ const Examples = ({
 });
 
 const resolvers = Resolvers({
-  ['~']: resolve('../../', import.meta.url),
-  ['unpkg']: resolve(`https://unpkg.com/`),
-  ['cdnjs']: resolve(`https://cdnjs.cloudflare.com/ajax/libs/`),
+  ['~']: resolveURL('../../', import.meta.url),
+  ['unpkg']: resolveURL(`https://unpkg.com/`),
+  ['cdnjs']: resolveURL(`https://cdnjs.cloudflare.com/ajax/libs/`),
 });
 const {['~']: local, unpkg, cdnjs} = resolvers;
 
@@ -43,7 +43,7 @@ const defaults = {
   variant: 1,
   repeats: 1,
   iterations: 1,
-  sourceURL: resolve('../samples/complex.html', import.meta.url),
+  sourceURL: resolveURL('../samples/complex.html', import.meta.url),
   sourceType: undefined,
   element: 'pre#source-code',
   headerTemplate: 'template#source-header',
@@ -56,7 +56,7 @@ const defaults = {
 };
 
 export default (markup, overrides) => {
-  const {examples = Examples(), ...options} = {
+  const {examples = Examples(), resolveSourceType, ...options} = {
     ...(defaults || undefined),
     ...(overrides || undefined),
     fetch: {
@@ -369,11 +369,12 @@ export default (markup, overrides) => {
       const {
         result: {sourceText, response},
       } = await time('source', () => loadFromURL(specifier));
-      sourceType =
-        sourceType ||
-        `${response.headers.get('Content-Type')}`.replace(/^(?:.*?\/)?(\w+).*$/, '$1').toLowerCase() ||
-        options.sourceType;
-      sourceType = sourceType.toLowerCase();
+
+      const resourceType = `${response.headers.get('Content-Type')}`.replace(/^(?:.*?\/)?(\w+).*$/, '$1').toLowerCase();
+      const defaultType = `${sourceType || resourceType || options.sourceType || ''}`.toLowerCase();
+      const resolvedType =
+        typeof resolveSourceType === 'function' && resolveSourceType(defaultType, {sourceType, resourceType, options});
+      sourceType = (resolvedType && `${resolvedType}`.trim().toLowerCase()) || defaultType;
       const variant = options.variant > 0 ? options.variant : defaults.variant;
       const markupOptions = {sourceType, variant};
       header.status('source', sourceName, `${specifier}`);
@@ -493,6 +494,10 @@ export default (markup, overrides) => {
   window.addEventListener('hashchange', () => renderFromHash());
 
   setTimeout(() => requestAnimationFrame(() => renderFromHash()), 100);
+  // typeof requestIdleCallback === 'function'
+  //   ? requestIdleCallback(() => renderFromHash())
+  //   : setTimeout(() => requestAnimationFrame(() => renderFromHash()), 100);
+  // requestAnimationFrame(() => renderFromHash());
 };
 
 Header: {
