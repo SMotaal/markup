@@ -582,8 +582,8 @@ const markup = (function (exports, experimentalES) {
       const {renderers, reflows} = this;
       let renderedLine, LineInset, lineInset, lineText, lineBreak, insetHint;
       const createLine = reflows
-        ? () => (renderedLine = renderers.line('', 'no-reflow'))
-        : () => (renderedLine = renderers.line());
+        ? () => (renderedLine = renderers.line())
+        : () => (renderedLine = renderers.line('', 'no-reflow'));
       const emit = (renderer, text, type, hint) => {
         (renderedLine || createLine()).appendChild((renderedLine.lastChild = renderer(text, hint || type)));
       };
@@ -1255,7 +1255,9 @@ const markup = (function (exports, experimentalES) {
 
       const {[MAPPINGS]: mappings, [MODES]: modes} = this;
       const factory = typeof mode === 'function' && mode;
-      const {syntax, aliases = (options.aliases = [])} = ({syntax: options.syntax = mode.syntax} = options = {
+      const {syntax, aliases = (options.aliases = []), preregister} = ({
+        syntax: options.syntax = mode.syntax,
+      } = options = {
         syntax: undefined,
         ...factory.defaults,
         ...options,
@@ -1265,26 +1267,38 @@ const markup = (function (exports, experimentalES) {
         throw TypeError(`Cannot register "${syntax}" since it not valid string'`);
       }
 
+      if (preregister) {
+        preregister(this);
+      }
+
       if (mappings[syntax]) {
         if (factory ? factory === mappings[syntax].factory : mode === modes[syntax]) return;
         throw ReferenceError(`Cannot register "${syntax}" since it is already registered`);
       }
 
+      const ids = [syntax];
+
       if (aliases && aliases.length > 0) {
         for (const alias of aliases) {
+          const mapping = mappings[alias];
           if (!alias || typeof alias !== 'string')
             throw TypeError(`Cannot register "${syntax}" since it's alias "${alias}" not valid string'`);
-          else if (mappings[alias])
-            throw ReferenceError(`Cannot register "${syntax}" since it's alias "${alias}" is already registered`);
+          else if (mapping && !(alias in modes)) {
+            if (mapping.syntax === alias || mapping.syntax[0] === alias[0]) continue;
+            Object.defineProperty(mappings, alias, {writable: true, configurable: true});
+            delete mappings[alias];
+            ids.push(alias);
+            // throw ReferenceError(`Cannot register "${syntax}" since it's alias "${alias}" is already registered`);
+          } else {
+            ids.push(alias);
+          }
         }
       }
 
       const mapping = factory ? {syntax, factory, options} : {syntax, mode, options};
       const descriptor = {value: mapping, writable: false, configurable: true};
 
-      for (const id of [syntax, ...aliases]) {
-        Object.defineProperty(mappings, id, descriptor);
-      }
+      for (const id of ids) Object.defineProperty(mappings, id, descriptor);
     }
 
     unregister(id) {
@@ -2130,7 +2144,7 @@ const markup = (function (exports, experimentalES) {
 
   Definitions: {
     Defaults: {
-      javascript.DEFAULTS = {syntax: 'javascript', aliases: ['javascript', 'es', 'js', 'ecmascript']};
+      javascript.DEFAULTS = {syntax: 'javascript', aliases: ['js', 'es', 'ecmascript']};
       // javascript.DEFAULTS = {syntax: 'javascript', aliases: ['js']};
     }
 
@@ -2387,7 +2401,7 @@ const markup = (function (exports, experimentalES) {
     }),
   };
 
-  console.log({experimentalES, experimentalExtendedAPI});
+  // console.log({experimentalES, experimentalExtendedAPI});
   experimentalES(experimentalExtendedAPI);
 
   exports.default = experimentalExtendedAPI;
