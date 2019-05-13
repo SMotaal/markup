@@ -588,6 +588,7 @@ const markup = (function (exports) {
       const emitInset = (text, hint) => emit(renderers.inset, text, 'inset', hint);
       const emitBreak = hint => emit(renderers.break, '\n', 'break', hint);
       const Lines = /^/gm;
+
       for (const token of tokens) {
         if (!token || !token.text) continue;
 
@@ -617,8 +618,11 @@ const markup = (function (exports) {
               lineBreak && (emitBreak(), (renderedLine = void (yield renderedLine))));
           }
         } else {
+          // TODO: See if pseudom children can be optimized for WBR/BR clones
           emit(renderer, text, type, hint);
-          type === 'break' && (renderedLine = void (yield renderedLine));
+          type !== 'break'
+            ? (renderedLine = void (yield renderedLine))
+            : type === 'whitespace' || renderedLine.appendChild(Element$2('wbr'));
         }
       }
       renderedLine && (yield renderedLine);
