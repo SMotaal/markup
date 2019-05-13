@@ -1,6 +1,5 @@
 ﻿/// <reference path="./types.d.ts" />
 
-import {Parser, TOKENIZERS} from '/markup/packages/tokenizer/lib/parser.js';
 import {createTokenFromMatch, createMatcherInstance, createString} from './helpers.js';
 
 /**
@@ -48,9 +47,6 @@ const createTokenizer = (() => {
             next && (yield next),
             (next = token))
           );
-
-          // setTimeout(() => console.log(state.contexts));
-          // next && (yield next);
         }
       }.prototype,
     ),
@@ -102,11 +98,7 @@ export default //
       options.preregister && options.preregister(parser);
 
       parser.register(mode, options);
-      parser[TOKENIZERS].set(mode, tokenizer);
       console.log(parser);
-
-      // console.log({matcher, overrides, parser});
-      // markup.parsers.splice(0, markup.parsers.length, parser);
       return {...overrides};
     }
   );

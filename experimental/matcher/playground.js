@@ -1,5 +1,5 @@
 ﻿import bootstrap from './matcher.js';
-import {Matcher} from '/modules/matcher/matcher.js';
+import {Matcher} from '../../../modules/matcher/matcher.js';
 
 const definitions = {
   default: () => [

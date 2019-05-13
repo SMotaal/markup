@@ -2,7 +2,6 @@ export * from './helpers.js';
 import experimentalExtendedParser from '../tokenizer.experimental.extended.js';
 import {TokenizerAPI} from '../lib/api.js';
 import markupDOM from '../extensions/dom.js';
-import experimentalES from '/markup/experimental/es/playground.js';
 
 /** @type {{experimentalExtendedAPI: import('../lib/api').API}} */
 const {
@@ -24,9 +23,6 @@ const {
     },
   }),
 };
-
-// console.log({experimentalES, experimentalExtendedAPI});
-experimentalES(experimentalExtendedAPI);
 
 export default experimentalExtendedAPI;
 export {parsers, tokenize, render, warmup};

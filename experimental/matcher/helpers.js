@@ -77,32 +77,3 @@ export const {createTokenFromMatch, createMatcherInstance, createString, countLi
 
   return {createTokenFromMatch, createMatcherInstance, createString, countLineBreaks};
 })();
-
-// /** @typedef {string | symbol} identity */
-
-// /**
-//  * @template {{}} T
-//  * @typedef {T & {type: string, text: string, offset: number, breaks: number, inset?: text, hint?: string, capture?: MatchCapture}} Token
-//  */
-
-// /**
-//  * @template {RegExp} T
-//  * @template {{}} U
-//  * @typedef {{matcher: T, sourceText?: string, lastToken?: Token<U>, previousToken?: Token<U>}} TokenizerState
-//  */
-// /**
-//  * @template {RegExp} T
-//  * @template {{}} U
-//  * @typedef {{createToken?<M extends MatchArray, T extends {}>(init: MatchResult<M>) => Token<T>, lastToken?: Token<U>, previousToken?: Token<U>}} Tokenizer
-//  */
-
-// /**
-//  * @template {RegExp} T
-//  * @template {{}} U
-//  * @typedef {Matcher & {state: TokenizerState<this, U>}} TokenMatcher
-//  */
-
-// /** @typedef {RegExpMatchArray | RegExpExecArray} MatchArray */
-// /** @typedef {import('/modules/matcher/matcher.js').Matcher} Matcher */
-// /** @typedef {import('/modules/matcher/matcher.js').Matcher.Capture} MatchCapture */
-// /** @template {MatchArray} T @typedef {import('/modules/matcher/matcher.js').Matcher.MatchResult<T>} MatchResult */
