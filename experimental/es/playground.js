@@ -1,17 +1,18 @@
-﻿import bootstrap from '../matcher/matcher.js';
+﻿import {matcher} from './matcher.js';
+import {initializeContext} from './helpers.js';
+// import {FaultGoal, goals, symbols} from './definitions.js';
+import bootstrap from '../matcher/matcher.js';
 import {countLineBreaks} from '../matcher/helpers.js';
-import {matcher} from './matcher.js';
-import {FaultGoal, goals, symbols} from './definitions.js';
 
 const {goal: rootGoal} = matcher;
 const {name: rootGoalName} = rootGoal;
-const {
-  [symbols.ECMAScriptGoal]: ECMAScriptGoal,
-  [symbols.CommentGoal]: CommentGoal,
-  [symbols.RegExpGoal]: RegExpGoal,
-  [symbols.StringGoal]: StringGoal,
-  [symbols.TemplateLiteralGoal]: TemplateLiteralGoal,
-} = goals;
+// const {
+//   [symbols.ECMAScriptGoal]: ECMAScriptGoal,
+//   [symbols.CommentGoal]: CommentGoal,
+//   [symbols.RegExpGoal]: RegExpGoal,
+//   [symbols.StringGoal]: StringGoal,
+//   [symbols.TemplateLiteralGoal]: TemplateLiteralGoal,
+// } = goals;
 
 export default bootstrap(matcher, {
   syntax: 'ecmascript',
@@ -20,20 +21,21 @@ export default bootstrap(matcher, {
     (state.groups = []).closers = [];
     state.lineOffset = state.lineIndex = 0;
     state.lineFault = false;
-    (state.contexts = Array(100))[-1] = state.context = {
-      id: (state.contexts.count = 1),
+    const contexts = (state.contexts = Array(100));
+    const context = initializeContext({
+      id: `«${rootGoal.name}»`,
+      number: (contexts.count = 1),
       depth: 0,
       parent: undefined,
       goal: rootGoal,
       group: undefined,
       state,
-    };
+    });
+    contexts[-1] = state.context = context;
   },
   preregister: parser => {
     parser.unregister('es');
     parser.unregister('ecmascript');
-    // delete parser.mappings.ecmascript;
-    // delete parser.mappings.es;
   },
   createToken: (match, state) => {
     let currentGoal,
@@ -53,6 +55,8 @@ export default bootstrap(matcher, {
       fold,
       columnNumber,
       lineNumber,
+      tokenNumber,
+      captureNumber,
       hint;
 
     const {context, nextContext, lineIndex, lineOffset, nextOffset, previousToken} = state;
@@ -98,6 +102,8 @@ export default bootstrap(matcher, {
 
     flatten === false || flatten === true || (flatten = !delimiter && currentGoal.flatten === true);
 
+    captureNumber = ++context.captureCount;
+
     if (
       (fold = flatten) && // fold only if flatten is allowed
       previousToken != null &&
@@ -113,8 +119,10 @@ export default bootstrap(matcher, {
       /* Token Creation */
       columnNumber = 1 + (offset - lineOffset || 0);
       lineNumber = 1 + (lineIndex || 0);
-      hint = `${(delimiter ? type : goalType && `in-${goalType}`) || ''} [${goalName ||
-        rootGoalName}:${lineNumber}:${columnNumber}]`;
+      tokenNumber = ++context.tokenCount;
+
+      hint = `${(delimiter ? type : goalType && `in-${goalType}`) || ''}  ${goalName ||
+        rootGoalName}:${lineNumber}:${columnNumber} ${context.id} #${tokenNumber}`;
       // fold || nextGoal !== StringGoal || nextGoal !== CommentGoal || (fold = true);
       flatten = false;
       return (state.previousToken = state[whitespace || comment ? 'previousTrivia' : 'previousAtom'] = {
@@ -133,6 +141,9 @@ export default bootstrap(matcher, {
         whitespace,
         comment,
         hint,
+
+        captureNumber,
+        tokenNumber,
 
         context,
         lineIndex,
