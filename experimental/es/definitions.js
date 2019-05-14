@@ -72,7 +72,16 @@ const groups = {
 const keywords = {};
 
 {
-  const {freeze, entries, getOwnPropertySymbols, getOwnPropertyNames} = Object;
+  const {create, freeze, entries, getOwnPropertySymbols, getOwnPropertyNames, setPrototypeOf} = Object;
+
+  // const lookups = new Set();
+  // lookups.punctuators = new Set();
+  // lookups.openers = new Set();
+  // lookups.closers = new Set();
+
+  const punctuators = create(null);
+  // const openers = [];
+  // const closers = [];
 
   for (const opener of getOwnPropertyNames(groups)) {
     const {[opener]: group} = groups;
@@ -88,22 +97,35 @@ const keywords = {};
     goal.tokens = tokens[symbol] = {};
     goal.groups = [];
 
+    if (goal.punctuators) {
+      for (const punctuator of (goal.punctuators = [...goal.punctuators]))
+        punctuators[punctuator] = !(goal.punctuators[punctuator] = true);
+      freeze(setPrototypeOf(goal.punctuators, punctuators));
+    }
+
     if (goal.closers) {
-      freeze(goal.closers);
+      for (const closer of (goal.closers = [...goal.closers])) punctuators[closer] = !(goal.closers[closer] = true);
+      freeze(setPrototypeOf(goal.closers, punctuators));
     }
 
     if (goal.openers) {
-      for (const opener of freeze((goal.openers = [...goal.openers]))) {
+      for (const opener of (goal.openers = [...goal.openers])) {
         const group = (goal.groups[opener] = groups[opener]);
+        punctuators[opener] = !(goal.openers[opener] = true);
         GoalSpecificTokenRecord(goal, group.opener, 'opener', {group});
         GoalSpecificTokenRecord(goal, group.closer, 'closer', {group});
       }
+      freeze(setPrototypeOf(goal.openers, punctuators));
     }
 
     freeze(goal.groups);
     freeze(goal.tokens);
     freeze(goal);
   }
+
+  freeze(punctuators);
+  // freeze(closers);
+  // freeze(openers);
 
   freeze(goals);
   freeze(groups);
