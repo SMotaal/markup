@@ -164,7 +164,7 @@ class MarkupRenderer {
         const element = content != null ? Element(tag, properties, content) : Element(tag, properties);
         element &&
           (hint = typeof hint === 'string' && (element.className = `${element.className || ''} ${hint}`)) &&
-          (element.dataset = {hint: hint.slice(6)});
+          (element.dataset = {hint: hint.slice(6).trim()});
         return element;
       },
       {
