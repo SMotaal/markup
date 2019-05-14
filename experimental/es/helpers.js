@@ -1,20 +1,17 @@
 ﻿/** Creates a list from a Whitespace-separated string @type { (string) => string[] } */
 export const List = RegExp.prototype[Symbol.split].bind(/\s+/g);
 
-export const restack = (index, group, goal, state) => {
-  const contexts = state.contexts;
-  const context = contexts[index];
-  state.nextContext =
-    (context && context.group === group && context.goal === goal && context) ||
-    (contexts[index] = {
-      id: contexts.count++,
-      depth: index,
-      parent: contexts[index - 1],
-      goal: goal || (group && group.goal) || state.context.goal,
-      group,
-      state,
-    });
+const stats = {
+  captureCount: 0,
+  contextCount: 0,
+  tokenCount: 0,
+  totalCaptures: 0,
+  totalContexts: 0,
+  totalTokens: 0,
 };
+
+/** @template {{}} T @param {T} context @returns {T & stats} */
+export const initializeContext = context => Object.assign(context, stats);
 
 export const capture = (identity, match, text) => {
   match.capture[(match.identity = identity)] = text || match[0];
@@ -32,16 +29,32 @@ export const capture = (identity, match, text) => {
 export const open = (text, state) => {
   // const {goal: initialGoal, groups} = state;
   const {
-    context: {goal: initialGoal},
+    contexts,
+    context: parentContext,
+    context: {depth: index, goal: initialGoal},
     groups,
   } = state;
   const group = initialGoal.groups[text];
 
   if (!group) return initialGoal.type || 'sequence';
-
-  const index = groups.push(group) - 1;
+  groups.splice(index, groups.length, group);
   groups.closers.splice(index, groups.closers.length, group.closer);
-  restack(index, group, group.goal || initialGoal, state);
+
+  parentContext.contextCount++;
+
+  const goal = group.goal === undefined ? initialGoal : group.goal;
+
+  state.nextContext = contexts[index] = initializeContext({
+    id: `${parentContext.id} ${
+      goal !== initialGoal ? `«${goal.name} ${group.opener}…${group.closer}»` : `‹${group.opener}${group.closer}›`
+    }`,
+    number: contexts.count++,
+    depth: index + 1,
+    parentContext,
+    goal,
+    group,
+    state,
+  });
 };
 
 /**
@@ -54,16 +67,31 @@ export const open = (text, state) => {
 export const close = (text, state) => {
   // const {goal: initialGoal, group: initialGroup, groups} = state;
   const {
-    context: {goal: initialGoal, group: initialGroup},
+    contexts,
+    context: {
+      goal: initialGoal,
+      group: initialGroup,
+      parentContext,
+      captureCount,
+      contextCount,
+      tokenCount,
+      totalCaptures,
+      totalContexts,
+      totalTokens,
+    },
     groups,
   } = state;
   const index = groups.closers.lastIndexOf(text);
 
   if (index === -1 || index !== groups.length - 1) return fault(text, state);
 
+  parentContext.totalContexts += totalContexts + contextCount;
+  parentContext.totalCaptures += totalCaptures + captureCount;
+  parentContext.totalTokens += totalTokens + tokenCount;
+
   groups.closers.splice(index, groups.closers.length);
   groups.splice(index, groups.length);
-  restack(index - 1, groups[index - 1], initialGroup && initialGroup.parentGoal, state);
+  state.nextContext = parentContext;
 };
 
 export const forward = (search, match, state) => {
