@@ -15,6 +15,7 @@ const Examples = ({
   ['md']: {url: MD, mode: 'md'},
   ['json']: {url: local('./examples/samples/sample.json')},
   ['gfm']: {url: local('./examples/samples/gfm.md')},
+  ['es-matcher']: {url: resolveURL('/markup/experimental/es/matcher.js', import.meta.url), mode: 'es'},
   ['babel']: {url: unpkg('@babel/standalone')},
   ['sesm']: {url: unpkg('ses?module'), mode: 'es'},
   ['ses']: {url: unpkg('ses'), mode: 'es'},
