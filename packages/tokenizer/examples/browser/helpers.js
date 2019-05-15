@@ -3,54 +3,46 @@ export const Head = /^(?:.*?\/(?:\/[^\/]+|libs|packages|node_modules|examples)(?
 
 export const escape = RegExp.escape || (source => /[\\^$*+?.()|[\]{}]/g[Symbol.replace](source, '\\$&'));
 
-export const sequence = (...args) =>
-  Reflect.apply(String.raw, null, args.map((v = '') => v)).replace(/^\s+|\n\s*|\s+$/g, '');
-// .replace(/^\s+|\s+\/\/\s+.*$\n?|\n\s*|\s+$/gm, '');
+export const range = (...symbols) => [...new Set(symbols.join(''))].sort().join('');
+
+export const sequence = (strings, ...values) =>
+  /^\s+|\n\s*|\s+$/g[Symbol.replace](
+    Reflect.apply(String.raw, null, [strings, ...values.map(value => (value && escape(value)) || '')]),
+    '',
+  );
 
 export const Hash = (() => {
   const symbols = {HASH: '#', MODE: '!', ITERATIONS: '*', REPEATS: '**', VARIANT: '@', ANCHOR: '#', DEBUGGING: '!!'};
-
-  const Hash = (([HASH, MODE, ITERATIONS, REPEATS, VARIANT, ANCHOR, DEBUGGING, SYMBOL], /* ie Comment */ NOTE = '') =>
+  const Hash = ((
+    {HASH, MODE, ITERATIONS, REPEATS, VARIANT, ANCHOR, DEBUGGING} = symbols,
+    SYMBOLS = /* "#!*@" */ range(HASH, MODE, ITERATIONS, REPEATS, VARIANT, ANCHOR, DEBUGGING),
+    NOTE = /* Comment */ '',
+  ) =>
     new RegExp(
       sequence`
         ^(?:${HASH}
-          (
-
+          (${NOTE /* specifier */}
             (?:${NOTE /* prefix (optional protocol or scope) */}
-              https?:\/\/|[a-z]+:|[~]\/|[.]{0,2}\/
-            |)
-
-            (?:${NOTE /* entry (hard-wired alias, specifier or URL) */}
-
-              (?:${NOTE /* entry path part */}
-                [^\s${SYMBOL}\/]*
-                (?:
-                  @[-_a-z][-_.\w]+\/|
-                  [^\/]+\/|
-                  \/
-                )*
-              )?
-              ${NOTE /* entry name part */}
-              [^${SYMBOL}]*
+              https?:\/\/|[a-z]+:|[~]\/|[.]{0,2}\/|
             )
-
-          )
-          (?:${NOTE /* parameters (optional/unordered) */}
-
+            (?:${NOTE /* entry (hard-wired alias, specifier or URL) */}
+              (?:${NOTE /* entry path part */}
+                [^\s${SYMBOLS}\/]*(?:@[-_a-z][-_.\w]+\/|[^\/]+\/|\/)*
+              )?
+              (?:${NOTE /* entry name part */}[^${SYMBOLS}]*)
+            )
+          )(?:${NOTE /* parameters (optional/unordered) */}
             (?=.*?${MODE}([a-zA-Z]+)|)
             (?=.*?${ITERATIONS}(\d+)|)
             (?=.*?${REPEATS}(\d+)|)
             (?=.*?${VARIANT}(\d+)|)
-            (?=.*?${ANCHOR}([^\s${SYMBOL}]+)|)
+            (?=.*?${ANCHOR}([^\s${SYMBOLS}]+)|)
             (?=.*?(${DEBUGGING})|)
-
             (?:${MODE}\2|${ITERATIONS}\3|${REPEATS}\4|${VARIANT}\5|${ANCHOR}\6|\7)*
-
           |)
-
-        |)(.*?)$`,
+        |)(${NOTE /* invalid */}.*?)$`,
       'iu',
-    ))([...Object.values(symbols), [...new Set([...Object.values(symbols).join('')])].sort().join('')].map(escape));
+    ))(symbols);
 
   const parse = string => {
     let parsed, matched;
@@ -66,8 +58,8 @@ export const Hash = (() => {
 
       return (parsed = {hash, specifier, mode, iterations, repeats, variant, anchor, debugging, invalid});
     } finally {
-      parsed && (parsed[Symbol.toStringTag] = 'Details');
-      console.log('Hash ‹%o›  — %O', string, parsed); // , Hash
+      parsed && ((parsed[Symbol.toStringTag] = 'Details'), (parsed.matcher = Hash));
+      console.log('Hash ‹%o›  — %O', string, parsed);
     }
   };
 
