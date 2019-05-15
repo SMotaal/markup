@@ -100,5 +100,5 @@ export const createElement = (tag, properties, ...children) => {
 
 export const createText = (content = '') => new Text(content);
 export const encodeEntity = entity => `&#${entity.charCodeAt(0)};`;
-export const encodeEntities = string => string.replace(/[\u00A0-\u9999<>\&]/gim, encodeEntity);
+export const encodeEntities = string => string.replace(/[\u00A0-\u9999<>\&]/g, encodeEntity);
 export const createFragment = () => new DocumentFragment();
