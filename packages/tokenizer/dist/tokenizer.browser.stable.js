@@ -637,8 +637,8 @@ class MarkupRenderer {
         typeof content === 'string' && (content = Text$2(content));
         const element = content != null ? Element$2(tag, properties, content) : Element$2(tag, properties);
         element &&
-          (hint = typeof hint === 'string' && (element.className = `${element.className || ''} ${hint}`)) &&
-          (element.dataset = {hint: hint.slice(6)});
+          (hint = typeof hint === 'string' && `${element.className || ''} ${hint}`.trim()) &&
+          ((element.className = hint.split(/&#x[\da-f];/i, 1)[0]), (element.dataset = {hint: hint.slice(6).trim()}));
         return element;
       },
       {
