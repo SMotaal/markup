@@ -106,7 +106,7 @@
 
   const createText = (content = '') => new Text(content);
   const encodeEntity = entity => `&#${entity.charCodeAt(0)};`;
-  const encodeEntities = string => string.replace(/[\u00A0-\u9999<>\&]/gim, encodeEntity);
+  const encodeEntities = string => string.replace(/[\u00A0-\u9999<>\&]/g, encodeEntity);
   const createFragment = () => new DocumentFragment();
 
   const pseudo = /*#__PURE__*/Object.freeze({
