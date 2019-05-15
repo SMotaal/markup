@@ -188,7 +188,9 @@ const ECMAScriptGrammar = {
             // openers && (text in openers ? openers.text : (openers.text = openers.includes(text)))
             context.goal.punctuators && context.goal.punctuators[text] === true
               ? (match.punctuator = 'combinator')
-              : context.goal.openers && context.goal.openers[text] === true
+              : context.goal.openers &&
+                context.goal.openers[text] === true &&
+                (text !== '[' || context.goal !== RegExpGoal || context.group.opener !== '[')
               ? open(text, state) || 'opener'
               : ((match.flatten = true), context.goal.type || 'sequence'),
             match,
