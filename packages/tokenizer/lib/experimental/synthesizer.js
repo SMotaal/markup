@@ -1,4 +1,6 @@
-﻿export class TokenSynthesizer {
+﻿import {countLineBreaks} from '../core.js';
+
+export class TokenSynthesizer {
   constructor(context) {
     const {
       mode: {
@@ -57,13 +59,6 @@ Object.freeze(Object.freeze(TokenSynthesizer.prototype).constructor);
 const PUNCTUATOR = Symbol('[punctuator]');
 const AGGREGATOR = Symbol('[aggregator]');
 const SEGMENT = Symbol('[segment]');
-
-/** @param {string} text */
-const countLineBreaks = text => {
-  let breaks = 0;
-  for (let index = -1; (index = text.indexOf('\n', index + 1)) > -1; breaks++);
-  return breaks;
-};
 
 const createSegmenter = segments => {
   const sources = [];

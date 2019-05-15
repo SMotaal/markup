@@ -1,5 +1,5 @@
 import * as pseudom from '../../pseudom/pseudom.js';
-export {encodeEntity, encodeEntities} from '../../pseudom/pseudom.js';
+// export {encodeEntity, encodeEntities} from '../../pseudom/pseudom.js';
 import {each} from './helpers.js';
 
 /// RUNTIME

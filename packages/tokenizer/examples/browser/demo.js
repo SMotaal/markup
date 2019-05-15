@@ -4,7 +4,7 @@ import {darkMode} from './dark-mode.js';
 const Examples = ({
   ['es']: ES = local('./dist/tokenizer.experimental.js'),
   ['html']: HTML = rewrite.tail(location.href),
-  ['css']: CSS = resolveURL('./markup.css', import.meta.url),
+  ['css']: CSS = resolveURL('../../browser/styles/markup.css', import.meta.url),
   ['md']: MD = local('./README.md'),
 } = {}) => ({
   ['html']: {url: HTML, mode: 'html'},

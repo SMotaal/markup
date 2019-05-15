@@ -1,15 +1,7 @@
 ﻿import {Matcher} from '../../../modules/matcher/matcher.js';
-import {ranges} from './ranges.js';
+import {HexDigit, ControlLetter, GraveAccent, UnicodeIDStart, UnicodeIDContinue} from './ranges.js';
 import {keywords, goals, symbols, FaultGoal} from './definitions.js';
 import {capture, forward, fault, open, close} from './helpers.js';
-
-const {
-  [symbols.ECMAScriptGoal]: ECMAScriptGoal,
-  [symbols.CommentGoal]: CommentGoal,
-  [symbols.RegExpGoal]: RegExpGoal,
-  [symbols.StringGoal]: StringGoal,
-  [symbols.TemplateLiteralGoal]: TemplateLiteralGoal,
-} = goals;
 
 const dummy = async () => {
   /*
@@ -60,10 +52,19 @@ const dummy = async () => {
   }
 };
 
-const ECMAScriptGrammar = {
-  Break: ({lf = true, crlf = false} = {}) =>
-    Matcher.define(
-      entity => Matcher.sequence`(
+export const matcher = (() => {
+  const {
+    [symbols.ECMAScriptGoal]: ECMAScriptGoal,
+    [symbols.CommentGoal]: CommentGoal,
+    [symbols.RegExpGoal]: RegExpGoal,
+    [symbols.StringGoal]: StringGoal,
+    [symbols.TemplateLiteralGoal]: TemplateLiteralGoal,
+  } = goals;
+
+  const ECMAScriptGrammar = {
+    Break: ({lf = true, crlf = false} = {}) =>
+      Matcher.define(
+        entity => Matcher.sequence`(
         ${Matcher.join(lf && '\\n', crlf && '\\r\\n')}
         ${entity((text, entity, match, state) => {
           const group = state.context.group;
@@ -71,20 +72,20 @@ const ECMAScriptGrammar = {
           match.flatten = false;
         })}
       )`,
-    ),
-  Whitespace: () =>
-    Matcher.define(
-      entity => Matcher.sequence`(
+      ),
+    Whitespace: () =>
+      Matcher.define(
+        entity => Matcher.sequence`(
         \s+
         ${entity((text, entity, match, state) => {
           capture((match.flatten = state.lineOffset !== match.index) ? 'whitespace' : 'inset', match, text);
         })}
       )`,
-    ),
-  Escape: () =>
-    Matcher.define(
-      entity => Matcher.sequence`(
-        \\u[${ranges.HexDigit}][${ranges.HexDigit}][${ranges.HexDigit}][${ranges.HexDigit}]
+      ),
+    Escape: () =>
+      Matcher.define(
+        entity => Matcher.sequence`(
+        \\u[${HexDigit}][${HexDigit}][${HexDigit}][${HexDigit}]
         ${entity((text, entity, match, state) => {
           const context = state.context;
           capture(
@@ -104,15 +105,15 @@ const ECMAScriptGrammar = {
         ${entity((text, entity, match, state) => {
           capture(state.context.goal.type || 'escape', match, (match.capture[keywords[text]] = text));
         })}
-        \\f|\\n|\\r|\\t|\\v|\\c[${ranges.ControlLetter}]
-        |\\x[${ranges.HexDigit}][${ranges.HexDigit}]
-        |\\u\{[${ranges.HexDigit}]*\}
+        \\f|\\n|\\r|\\t|\\v|\\c[${ControlLetter}]
+        |\\x[${HexDigit}][${HexDigit}]
+        |\\u\{[${HexDigit}]*\}
         |\\.
       )`,
-    ),
-  Comment: () =>
-    Matcher.define(
-      entity => Matcher.sequence`(
+      ),
+    Comment: () =>
+      Matcher.define(
+        entity => Matcher.sequence`(
         \/\/|\/\*
         ${entity((text, entity, match, state) => {
           const context = state.context;
@@ -133,10 +134,10 @@ const ECMAScriptGrammar = {
           );
         })}
       )`,
-    ),
-  StringLiteral: () =>
-    Matcher.define(
-      entity => Matcher.sequence`(
+      ),
+    StringLiteral: () =>
+      Matcher.define(
+        entity => Matcher.sequence`(
         "|'
         ${entity((text, entity, match, state) => {
           const context = state.context;
@@ -156,11 +157,11 @@ const ECMAScriptGrammar = {
           );
         })}
       )`,
-    ),
-  TemplateLiteral: () =>
-    Matcher.define(
-      entity => Matcher.sequence`(
-        ${ranges.GraveAccent}
+      ),
+    TemplateLiteral: () =>
+      Matcher.define(
+        entity => Matcher.sequence`(
+        ${GraveAccent}
         ${entity((text, entity, match, state) => {
           // const {goal, group} = state.context;
           const context = state.context;
@@ -177,10 +178,10 @@ const ECMAScriptGrammar = {
           );
         })}
       )`,
-    ),
-  Opener: () =>
-    Matcher.define(
-      entity => Matcher.sequence`(
+      ),
+    Opener: () =>
+      Matcher.define(
+        entity => Matcher.sequence`(
         \$\{|\{|\(|\[
         ${entity((text, entity, match, state) => {
           const context = state.context;
@@ -198,10 +199,10 @@ const ECMAScriptGrammar = {
           );
         })}
       )`,
-    ),
-  Closer: () =>
-    Matcher.define(
-      entity => Matcher.sequence`(
+      ),
+    Closer: () =>
+      Matcher.define(
+        entity => Matcher.sequence`(
         \}|\)|\]
         ${entity((text, entity, match, state) => {
           const context = state.context;
@@ -220,10 +221,10 @@ const ECMAScriptGrammar = {
           );
         })}
       )`,
-    ),
-  Solidus: () =>
-    Matcher.define(
-      entity => Matcher.sequence`(
+      ),
+    Solidus: () =>
+      Matcher.define(
+        entity => Matcher.sequence`(
         \*\/|\/=|\/
         ${entity((text, entity, match, state) => {
           let previousAtom;
@@ -257,10 +258,10 @@ const ECMAScriptGrammar = {
           );
         })}
       )`,
-    ),
-  Operator: () =>
-    Matcher.define(
-      entity => Matcher.sequence`(
+      ),
+    Operator: () =>
+      Matcher.define(
+        entity => Matcher.sequence`(
         ${entity((text, entity, match, state) => {
           // TODO: Add conditional lookahead (or look behined)
           // const goal = state.context.goal;
@@ -283,11 +284,13 @@ const ECMAScriptGrammar = {
         |!==|!=|!|===|==|=
         |\+|-|\*\*|\*
       )`,
-    ),
-  Keyword: () =>
-    Matcher.define(
-      entity => Matcher.sequence`\b(
-        ${Object.keys(keywords).join('|')}
+      ),
+    Keyword: () =>
+      Matcher.define(
+        entity => Matcher.sequence`\b(
+        ${Object.keys(keywords)
+          .filter(Boolean)
+          .join('|')}
         ${entity((text, entity, match, state) => {
           let previousAtom, keywordSymbol;
           // const goal = state.context.goal;
@@ -307,11 +310,11 @@ const ECMAScriptGrammar = {
             (context[`${(match.capture[keywordSymbol] = text)}-keyword-index`] = match.index));
         })}
       )\b(?=[^\s$_:]|\s+[^:])`,
-    ),
-  Identifier: (RegExpFlags = /^[gimsuy]+$/) =>
-    Matcher.define(
-      entity => Matcher.sequence`(
-        [${ranges.UnicodeIDStart}][${ranges.UnicodeIDContinue}]*
+      ),
+    Identifier: (RegExpFlags = /^[gimsuy]+$/) =>
+      Matcher.define(
+        entity => Matcher.sequence`(
+        [${UnicodeIDStart}][${UnicodeIDContinue}]*
         ${entity((text, entity, match, state) => {
           let previousToken;
           const context = state.context;
@@ -329,31 +332,29 @@ const ECMAScriptGrammar = {
           );
         })}
       )`,
-      ECMAScriptIdentifierFlags,
-    ),
-  IdentifierStart: () =>
-    Matcher.define(
-      entity => Matcher.sequence`(
-        ${entity(symbols.UnicodeIDStart)}[${ranges.UnicodeIDStart}]
+        ECMAScriptIdentifierFlags,
+      ),
+    IdentifierStart: () =>
+      Matcher.define(
+        entity => Matcher.sequence`(
+        ${entity(symbols.UnicodeIDStart)}[${UnicodeIDStart}]
       )`,
-      ECMAScriptIdentifierFlags,
-    ),
-  IdentifierContinue: () =>
-    Matcher.define(
-      entity => Matcher.sequence`(
-        ${entity(symbols.UnicodeIDContinue)}[${ranges.UnicodeIDContinue}]+
+        ECMAScriptIdentifierFlags,
+      ),
+    IdentifierContinue: () =>
+      Matcher.define(
+        entity => Matcher.sequence`(
+        ${entity(symbols.UnicodeIDContinue)}[${UnicodeIDContinue}]+
       )`,
-      ECMAScriptIdentifierFlags,
-    ),
-};
+        ECMAScriptIdentifierFlags,
+      ),
+  };
 
-const ECMAScriptIdentifierFlags = `${ranges.UnicodeIDStart}${ranges.UnicodeIDContinue}`.includes('\\p{')
-  ? 'u'
-  : undefined;
-const ECMAScriptUnicodeIDContinue = RegExp(ECMAScriptGrammar.IdentifierContinue(), ECMAScriptIdentifierFlags);
+  const ECMAScriptIdentifierFlags = `${UnicodeIDStart}${UnicodeIDContinue}`.includes('\\p{') ? 'u' : undefined;
+  const ECMAScriptUnicodeIDContinue = RegExp(ECMAScriptGrammar.IdentifierContinue(), ECMAScriptIdentifierFlags);
 
-export const matcher = Matcher.define(
-  entity => Matcher.sequence`
+  const matcher = Matcher.define(
+    entity => Matcher.sequence`
     ${entity(ECMAScriptGrammar.Break())}
     |${entity(ECMAScriptGrammar.Whitespace())}
     |${entity(ECMAScriptGrammar.Escape())}
@@ -369,7 +370,10 @@ export const matcher = Matcher.define(
     |\d+
     |.
   `,
-  'gu',
-);
+    'gu',
+  );
 
-matcher.goal = ECMAScriptGoal;
+  matcher.goal = ECMAScriptGoal;
+
+  return matcher;
+})();

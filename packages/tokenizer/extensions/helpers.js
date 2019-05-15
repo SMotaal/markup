@@ -1,5 +1,5 @@
-export {patterns, entities} from '../../grammars/common/patterns.js';
-export * from '../../grammars/common/helpers.js';
+// export {patterns, entities} from '../../grammars/common/patterns.js';
+// export * from '../../grammars/common/helpers.js';
 
 /// <reference lib="esnext.asynciterable" />
 

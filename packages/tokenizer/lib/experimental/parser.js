@@ -1,7 +1,7 @@
 import {Tokenizer} from './tokenizer.js';
-import {createParser} from './core.js';
+import {createParser} from '../core.js';
 
-export {TOKENIZERS, MAPPINGS, MODES} from './core.js';
+export {TOKENIZERS, MAPPINGS, MODES} from '../core.js';
 
 export const Parser = createParser(Tokenizer);
 

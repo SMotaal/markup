@@ -1,7 +1,9 @@
 ﻿// / <reference path="../../../modules/matcher/types.d.ts" />
 /// <reference path="./types.d.ts" />
 
-export const {createTokenFromMatch, createMatcherInstance, createString, countLineBreaks} = (() => {
+import {countLineBreaks} from '../../packages/tokenizer/lib/core.js';
+
+export const {createTokenFromMatch, createMatcherInstance, createString} = (() => {
   const {
     RegExp,
     Object,
@@ -51,16 +53,6 @@ export const {createTokenFromMatch, createMatcherInstance, createString, countLi
   /** @type {(value: any) => string} */
   const createString = String;
 
-  /** @type {(string: string, sequence: string , index?: number) => number} */
-  const indexOf = Function.call.bind(String.prototype.indexOf);
-
-  /** @type {(string: string) => number} */
-  const countLineBreaks = text => {
-    let breaks = 0;
-    for (let index = -1; (index = indexOf(text, '\n', index + 1)) > -1; breaks++);
-    return breaks;
-  };
-
   /**
    * @type {<M extends MatchArray, T extends {}>(init: MatchResult<M>) => Token<T>}
    * @param {MatchResult<MatchArray>} param0
@@ -77,3 +69,5 @@ export const {createTokenFromMatch, createMatcherInstance, createString, countLi
 
   return {createTokenFromMatch, createMatcherInstance, createString, countLineBreaks};
 })();
+
+export {countLineBreaks};
