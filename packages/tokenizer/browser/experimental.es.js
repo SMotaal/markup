@@ -1,30 +1,21 @@
-export * from './helpers.js';
-
 import {createParser} from '../lib/core.js';
-import {Tokenizer} from '../lib/experimental/tokenizer.js';
 import {TokenizerAPI} from '../lib/api.js';
 import markupDOM from '../extensions/dom.js';
 import experimentalES from '../../../experimental/es/playground.js';
-import {modes} from '../extensions/extensions.js';
 
-export {modes};
-
-// export const Parser = createParser(Tokenizer);
-
-/** @type {{experimentalESExtendedAPI: import('../lib/api').API}} */
+/** @type {{experimentalESAPI: import('../lib/api').API}} */
 const {
-  experimentalESExtendedAPI: experimentalESExtendedAPI,
-  experimentalESExtendedAPI: {parsers, render, tokenize, warmup},
+  experimentalESAPI: experimentalESAPI,
+  experimentalESAPI: {parsers, render, tokenize, warmup},
 } = {
   //@ts-ignore
-  experimentalESExtendedAPI: new TokenizerAPI({
-    parsers: [new (createParser(Tokenizer))({url: import.meta.url, modes})],
+  experimentalESAPI: new TokenizerAPI({
+    parsers: [new (createParser())({url: import.meta.url})],
     render: (source, options, flags) => {
       const fragment = options && options.fragment;
       const debugging = flags && /\bdebug\b/i.test(typeof flags === 'string' ? flags : [...flags].join(' '));
 
-      debugging &&
-        console.info('render: %o', {api: experimentalESExtendedAPI, source, options, flags, fragment, debugging});
+      debugging && console.info('render: %o', {api: experimentalESAPI, source, options, flags, fragment, debugging});
       fragment && (fragment.logs = debugging ? [] : undefined);
 
       return markupDOM.render(tokenize(source, options, flags), fragment);
@@ -37,7 +28,7 @@ const {
 //   normal JavaScript intact for both "js" and its
 //   "javascript" alias.
 
-export const overrides = Object.freeze(experimentalES(experimentalESExtendedAPI));
+export const overrides = Object.freeze(experimentalES(experimentalESAPI));
 
-export default experimentalESExtendedAPI;
+export default experimentalESAPI;
 export {parsers, tokenize, render, warmup};

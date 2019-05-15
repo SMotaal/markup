@@ -1,7 +1,3 @@
-﻿import experimentalExtendedAPI from './tokenizer/tokenizer.browser.experimental.js';
-import experimentalES from '../experimental/es/playground.js';
-
-experimentalES(experimentalExtendedAPI);
-
-export default experimentalExtendedAPI;
-export {parsers, tokenize, render, warmup, entities, encodeEntities} from './tokenizer/tokenizer.browser.experimental.js';
+﻿// TODO: Swap to load from source vs. bundles
+export * from './tokenizer/tokenizer.browser.es.extended.js';
+// export * from '../packages/tokenizer/browser/experimental.es.extended.js';

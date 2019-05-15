@@ -23,7 +23,7 @@ const createTokenizer = (() => {
           /** @type {{createToken: typeof createTokenFromMatch, initializeState: <V>(state: V) => V & TokenizerState<T, U>}} */
           const createToken = (this && this.createToken) || createTokenFromMatch;
           /** @type {string} */
-          const string = createString(arguments[0]);
+          const string = createString(Object.keys({[arguments[0]]: 1})[0]);
           /** @type {TokenMatcher<U>} */
           const matcher = createMatcherInstance(this.matcher, assign(arguments[1] || {}, {sourceText: string}));
           /** @type {TokenizerState<T, U>} */
@@ -34,8 +34,8 @@ const createTokenizer = (() => {
           // console.log(this, {string, matcher, state}, [...arguments]);
           for (
             let match, token, next, index = 0;
-            // Abort on first failed match
-            (match = matcher.exec(string)) ||
+            // Abort on first failed/empty match
+            ((match = matcher.exec(string)) && match[0] !== '') ||
             //   but first yield a lastToken if present
             void (next && (yield next));
             // We hold back one grace token
