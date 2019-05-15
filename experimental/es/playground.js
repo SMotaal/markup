@@ -110,14 +110,13 @@ export default bootstrap(matcher, {
       previousToken != null &&
       previousToken.context === context && // never fold across contexts
       previousToken.fold === true &&
-      // (previousToken.type === type ||
-      //   ((currentGoal === StringGoal || currentGoal === CommentGoal) && (previousToken.type = currentGoal.type)))
       (previousToken.type === type || (currentGoal.fold === true && (previousToken.type = currentGoal.type)))
     ) {
       previousToken.text += text;
       breaks && (previousToken.breaks += breaks);
     } else {
       /* Token Creation */
+      flatten = false;
       columnNumber = 1 + (offset - lineOffset || 0);
       lineNumber = 1 + (lineIndex || 0);
       tokenNumber = ++context.tokenCount;

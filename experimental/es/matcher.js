@@ -23,7 +23,7 @@ const dummy = async () => {
                       /(div)/g.exec(c).map(d);
 
                       // ExpressionStart never divide
-    ( ([              /([(regexp)])/g ] )/ []);
+    ( ([              /([(regexp)])/g ] )/ [] );
     ( [] /( [         /([(regexp)])/g ] )/ [] );
     ( ([]) /( [       /([(regexp)])/g ] )/ [] );
     ( [] /* */ /( [   /([(regexp)])/g ] )/ [] );
@@ -302,10 +302,9 @@ const ECMAScriptGrammar = {
             match,
             text,
           );
-          keywordSymbol && (
-            context.keywords = (context.keywords || 0 ) + 1,
-            context[`${(match.capture[keywordSymbol] = text)}-keyword-index`] = match.index
-          );
+          keywordSymbol &&
+            ((context.keywords = (context.keywords || 0) + 1),
+            (context[`${(match.capture[keywordSymbol] = text)}-keyword-index`] = match.index));
         })}
       )\b(?=[^\s$_:]|\s+[^:])`,
     ),
