@@ -47,6 +47,8 @@ const createTokenizer = (() => {
             next && (yield next),
             (next = token))
           );
+
+          console.log({...state});
         }
       }.prototype,
     ),
