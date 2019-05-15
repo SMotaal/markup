@@ -45,9 +45,7 @@ export const open = (text, state) => {
   const goal = group.goal === undefined ? initialGoal : group.goal;
 
   state.nextContext = contexts[index] = initializeContext({
-    id: `${parentContext.id} ${
-      goal !== initialGoal ? `«${goal.name} ${group.opener}…${group.closer}»` : `‹${group.opener}${group.closer}›`
-    }`,
+    id: `${parentContext.id}${goal !== initialGoal ? ` ‹${group.opener}›&#x000A;«${goal.name}»` : ` ‹${group.opener}›`}`,
     number: contexts.count++,
     depth: index + 1,
     parentContext,

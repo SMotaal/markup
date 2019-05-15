@@ -92,7 +92,7 @@
     pointer-events: none;
     font-weight: 400;
     font-size: 75%;
-    white-space: pre-wrap;
+    white-space: pre;
     background: radial-gradient(var(--overlay-color-1) 0%, var(--overlay-color-2) 100%) center / 500%,
       radial-gradient(var(--overlay-color-2) 0%, var(--overlay-color-1) 100%) center / 500%, var(--underlay-color);
     background-blend-mode: screen;

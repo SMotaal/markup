@@ -41,6 +41,7 @@ export default bootstrap(matcher, {
     let currentGoal,
       goalName,
       goalType,
+      contextId,
       text,
       type,
       fault,
@@ -79,7 +80,7 @@ export default bootstrap(matcher, {
 
     nextContext && (state.nextContext = void (nextContext !== context && (state.context = nextContext)));
 
-    ({goal: currentGoal} = context);
+    ({id: contextId, goal: currentGoal} = context);
     ({name: goalName, type: goalType} = currentGoal);
 
     nextOffset &&
@@ -121,10 +122,9 @@ export default bootstrap(matcher, {
       lineNumber = 1 + (lineIndex || 0);
       tokenNumber = ++context.tokenCount;
 
-      hint = `${(delimiter ? type : goalType && `in-${goalType}`) || ''}  ${goalName ||
-        rootGoalName}:${lineNumber}:${columnNumber} ${context.id} #${tokenNumber}`;
-      // fold || nextGoal !== StringGoal || nextGoal !== CommentGoal || (fold = true);
-      flatten = false;
+      hint = `${(delimiter ? type : goalType && `in-${goalType}`) ||
+        ''}&#x000A;${contextId} #${tokenNumber}&#x000A;(${lineNumber}:${columnNumber})`;
+
       return (state.previousToken = state[whitespace || comment ? 'previousTrivia' : 'previousAtom'] = {
         type,
         text,
