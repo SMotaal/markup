@@ -487,6 +487,8 @@ export default (markup, overrides) => {
       ? flags.add('debug')
       : flags.delete('debug');
 
+    options.repeats !== 0 || options.iterations > 0 || (options.iterations = 1);
+
     renderFromURL(source, mode).catch(error =>
       console.warn('[renderFromHash]: %o\n\n%o', error, {parsed, source, mode, options}),
     );

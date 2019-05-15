@@ -10,14 +10,19 @@ export const sequence = (...args) =>
 export const Hash = (() => {
   const symbols = {HASH: '#', MODE: '!', ITERATIONS: '*', REPEATS: '**', VARIANT: '@', ANCHOR: '#', DEBUGGING: '!!'};
 
-  const Hash = ((HASH, MODE, ITERATIONS, REPEATS, VARIANT, ANCHOR, DEBUGGING, SYMBOL) =>
+  const Hash = (([HASH, MODE, ITERATIONS, REPEATS, VARIANT, ANCHOR, DEBUGGING, SYMBOL], /* ie Comment */ NOTE = '') =>
     new RegExp(
       sequence`
         ^(?:${HASH}
           (
-            (?:${void 'scope'}https?:\/\/|[a-z]+:|[~]\/|[.]{0,2}\/|)
-            (?:${void 'entry'}
-              (?:${void 'base'}
+
+            (?:${NOTE /* prefix (optional protocol or scope) */}
+              https?:\/\/|[a-z]+:|[~]\/|[.]{0,2}\/
+            |)
+
+            (?:${NOTE /* entry (hard-wired alias, specifier or URL) */}
+
+              (?:${NOTE /* entry path part */}
                 [^\s${SYMBOL}\/]*
                 (?:
                   @[-_a-z][-_.\w]+\/|
@@ -25,21 +30,27 @@ export const Hash = (() => {
                   \/
                 )*
               )?
+              ${NOTE /* entry name part */}
               [^${SYMBOL}]*
             )
+
           )
-          (?${/* parameters */ ':'}
-            (?=.*${MODE}([a-zA-Z]+)|)
-            (?=.*${ITERATIONS}(\d+)|)
-            (?=.*${REPEATS}(\d+)|)
-            (?=.*${VARIANT}(\d+)|)
-            (?=.*${ANCHOR}([^\s${SYMBOL}]+)|)
-            (?=.*(${DEBUGGING})|)
+          (?:${NOTE /* parameters (optional/unordered) */}
+
+            (?=.*?${MODE}([a-zA-Z]+)|)
+            (?=.*?${ITERATIONS}(\d+)|)
+            (?=.*?${REPEATS}(\d+)|)
+            (?=.*?${VARIANT}(\d+)|)
+            (?=.*?${ANCHOR}([^\s${SYMBOL}]+)|)
+            (?=.*?(${DEBUGGING})|)
+
             (?:${MODE}\2|${ITERATIONS}\3|${REPEATS}\4|${VARIANT}\5|${ANCHOR}\6|\7)*
+
           |)
+
         |)(.*?)$`,
       'iu',
-    ))(...[...Object.values(symbols), [...new Set([...Object.values(symbols).join('')])].sort().join('')].map(escape));
+    ))([...Object.values(symbols), [...new Set([...Object.values(symbols).join('')])].sort().join('')].map(escape));
 
   const parse = string => {
     let parsed, matched;
