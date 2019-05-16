@@ -118,7 +118,9 @@
   background-color: var(--markup-background, transparent);
   color: var(--markup-color, currentColor);
   line-height: 1.5em;
-  tab-size: 4;
+  -webkit-tab-size: var(--markup-tab-size, 2);
+  -moz-tab-size: var(--markup-tab-size, 2);
+  tab-size: var(--markup-tab-size, 2);
   font-family: 'Iosevka Web', 'Iosevka', 'Input', 'SourceCode Pro', monospace;
   font-kerning: auto;
   /* font-variant-ligatures: contextual; */
