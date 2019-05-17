@@ -27,8 +27,8 @@
   "workspaces": {
     "packages": [
       "../esm",
-      "packages/@smotaal/grammars",
-      "packages/@smotaal/tokenizer",
+      "packages/grammars",
+      "packages/tokenizer",
       "packages/pseudom"
     ],
     "nohoist": [

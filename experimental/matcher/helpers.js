@@ -1,21 +1,22 @@
-﻿// / <reference path="../../../modules/matcher/types.d.ts" />
-/// <reference path="./types.d.ts" />
+﻿/// <reference path="./types.d.ts" />
 
 import {countLineBreaks} from '../../packages/tokenizer/lib/core.js';
 
-export const {createTokenFromMatch, createMatcherInstance, createString} = (() => {
+export const {
+  createTokenFromMatch,
+  createMatcherInstance,
+  createString,
+  createMatcherTokenizer,
+  createMatcherMode,
+} = (() => {
   const {
     RegExp,
     Object,
-    Object: {create, assign, setPrototypeOf, defineProperty, defineProperties, getOwnPropertyDescriptors},
+    Object: {assign, create, freeze, defineProperty, defineProperties, getOwnPropertyNames, setPrototypeOf},
     String,
   } = globalThis;
 
   /** @typedef {RegExpConstructor['prototype']} Matcher */
-
-  /** @type {<T extends {}, U extends string | symbol, V>(target: T, property: U, value: V) => T & {readonly [property: U]: V }} */
-  const defineEnumerableConstant = (target, property, value) =>
-    defineProperty(target, property, {value, writable: false, configurable: false, enumerable: true});
 
   /**
    * @template {Matcher} T
@@ -26,9 +27,6 @@ export const {createTokenFromMatch, createMatcherInstance, createString} = (() =
    */
   const createMatcherInstance = (matcher, state) =>
     defineProperty(
-      // (matcher = (matcher instanceof RegExp && createMatcherClone(matcher)) || RegExp(matcher, 'g')),
-      // 'state',
-      // defineEnumerableConstant(state || create(null), 'matcher', matcher),
       ((state || (state = create(null))).matcher =
         (matcher && matcher instanceof RegExp && createMatcherClone(matcher)) || RegExp(matcher, 'g')),
       'state',
@@ -63,11 +61,86 @@ export const {createTokenFromMatch, createMatcherInstance, createString} = (() =
     breaks: countLineBreaks(text),
     inset: (capture && capture.inset) || '',
     offset: index,
-    // hint: getOwnPropertyNames(capture).join(' '),
-    // capture,
+    capture,
   });
 
-  return {createTokenFromMatch, createMatcherInstance, createString, countLineBreaks};
-})();
+  const tokenizerProperties = Object.getOwnPropertyDescriptors(
+    freeze(
+      class Tokenizer {
+        /**
+         * @template {Matcher} T
+         * @template {{}} U
+         */
+        *tokenize() {
+          'use strict';
+          /** @type {Token<U>} */
+          // let next;
+          /** @type {{createToken: typeof createTokenFromMatch, initializeState: <V>(state: V) => V & TokenizerState<T, U>}} */
+          const createToken = (this && this.createToken) || createTokenFromMatch;
+          /** @type {string} */
+          const string = createString(Object.keys({[arguments[0]]: 1})[0]);
+          /** @type {TokenMatcher<U>} */
+          const matcher = createMatcherInstance(this.matcher, assign(arguments[1] || {}, {sourceText: string}));
+          /** @type {TokenizerState<T, U>} */
+          const state = matcher.state;
+          this.initializeState && this.initializeState(state);
+          matcher.exec = matcher.exec; //.bind(matcher);
+          // freeze(matcher);
+          // console.log(this, {string, matcher, state}, [...arguments]);
+          for (
+            let match, token, next, index = 0;
+            // Abort on first failed/empty match
+            ((match = matcher.exec(string)) && match[0] !== '') ||
+            //   but first yield a lastToken if present
+            void (next && (yield next));
+            // We hold back one grace token
+            (token = createToken(match, state)) &&
+            //  until createToken(…) !== undefined (ie new token)
+            //  set the incremental token index for this lastToken
+            (((state.lastToken = token).index = index++),
+            //  and finally push the previous lastToken and yield
+            next && (yield next),
+            (next = token))
+          );
 
-export {countLineBreaks};
+          console.log({...state});
+        }
+      }.prototype,
+    ),
+  );
+
+  /**
+   * @type { {<T extends Matcher, U extends {} = {}>(sourceText: string, initialState?: Partial<TokenizerState<undefined, U>): IterableIterator<Token<U>>} }
+   */
+  const createMatcherTokenizer = instance => defineProperties(instance, tokenizerProperties);
+
+  /**
+   * @param {import('/modules/matcher/matcher.js').Matcher} matcher
+   * @param {any} [options]
+   */
+  const createMatcherMode = (matcher, options) => {
+    const tokenizer = createMatcherTokenizer({
+      createToken: createTokenFromMatch,
+      /** @type {(state: {}) =>  void} */
+      initializeState: undefined,
+      matcher: freeze(createMatcherInstance(matcher)),
+    });
+
+    const mode = {syntax: 'matcher', tokenizer};
+    options &&
+      ({
+        syntax: mode.syntax = mode.syntax,
+        aliases: mode.aliases,
+        preregister: mode.preregister,
+        createToken: tokenizer.createToken = tokenizer.createToken,
+        initializeState: tokenizer.initializeState,
+        ...mode.overrides
+      } = options);
+
+    freeze(tokenizer);
+
+    return mode;
+  };
+
+  return {createTokenFromMatch, createMatcherInstance, createString, createMatcherTokenizer, createMatcherMode};
+})();

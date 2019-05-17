@@ -780,7 +780,6 @@ const createBaselineTokenizer = () => {
   };
 };
 
-
 /** @param {typeof import('./tokenizer.js')['Tokenizer']} [Tokenizer] */
 const createParser = (Tokenizer = createBaselineTokenizer()) =>
   class Parser {
@@ -877,9 +876,7 @@ const createParser = (Tokenizer = createBaselineTokenizer()) =>
         throw TypeError(`Cannot register "${syntax}" since it not valid string'`);
       }
 
-      if (preregister) {
-        preregister(this);
-      }
+      if (preregister) preregister(this);
 
       if (mappings[syntax]) {
         if (factory ? factory === mappings[syntax].factory : mode === modes[syntax]) return;

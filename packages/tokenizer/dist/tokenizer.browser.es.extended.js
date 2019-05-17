@@ -501,7 +501,6 @@ const createBaselineTokenizer = () => {
   };
 };
 
-
 /** @param {typeof import('./tokenizer.js')['Tokenizer']} [Tokenizer] */
 const createParser = (Tokenizer = createBaselineTokenizer()) =>
   class Parser {
@@ -598,9 +597,7 @@ const createParser = (Tokenizer = createBaselineTokenizer()) =>
         throw TypeError(`Cannot register "${syntax}" since it not valid string'`);
       }
 
-      if (preregister) {
-        preregister(this);
-      }
+      if (preregister) preregister(this);
 
       if (mappings[syntax]) {
         if (factory ? factory === mappings[syntax].factory : mode === modes[syntax]) return;
@@ -2417,15 +2414,23 @@ const matcher = (() => {
   return matcher;
 })();
 
-// / <reference path="../../../modules/matcher/types.d.ts" />
+/// <reference path="./types.d.ts" />
 
-const {createTokenFromMatch, createMatcherInstance, createString} = (() => {
+const {
+  createTokenFromMatch,
+  createMatcherInstance,
+  createString,
+  createMatcherTokenizer,
+  createMatcherMode,
+} = (() => {
   const {
     RegExp,
     Object,
-    Object: {create, assign, setPrototypeOf, defineProperty, defineProperties, getOwnPropertyDescriptors},
+    Object: {assign, create, freeze, defineProperty, defineProperties, getOwnPropertyNames, setPrototypeOf},
     String,
   } = globalThis;
+
+  /** @typedef {RegExpConstructor['prototype']} Matcher */
 
   /**
    * @template {Matcher} T
@@ -2436,9 +2441,6 @@ const {createTokenFromMatch, createMatcherInstance, createString} = (() => {
    */
   const createMatcherInstance = (matcher, state) =>
     defineProperty(
-      // (matcher = (matcher instanceof RegExp && createMatcherClone(matcher)) || RegExp(matcher, 'g')),
-      // 'state',
-      // defineEnumerableConstant(state || create(null), 'matcher', matcher),
       ((state || (state = create(null))).matcher =
         (matcher && matcher instanceof RegExp && createMatcherClone(matcher)) || RegExp(matcher, 'g')),
       'state',
@@ -2473,23 +2475,10 @@ const {createTokenFromMatch, createMatcherInstance, createString} = (() => {
     breaks: countLineBreaks(text),
     inset: (capture && capture.inset) || '',
     offset: index,
-    // hint: getOwnPropertyNames(capture).join(' '),
-    // capture,
+    capture,
   });
 
-  return {createTokenFromMatch, createMatcherInstance, createString, countLineBreaks};
-})();
-
-/// <reference path="./types.d.ts" />
-
-/**
- * @type { {<T extends Matcher, U extends {} = {}>(sourceText: string, initialState?: Partial<TokenizerState<undefined, U>): IterableIterator<Token<U>>} }
- */
-const createTokenizer = (() => {
-  /** @type {ObjectConstructor} */
-  const Object = globalThis.Object;
-  const {freeze, assign, defineProperties} = Object;
-  const properties = Object.getOwnPropertyDescriptors(
+  const tokenizerProperties = Object.getOwnPropertyDescriptors(
     freeze(
       class Tokenizer {
         /**
@@ -2532,69 +2521,44 @@ const createTokenizer = (() => {
       }.prototype,
     ),
   );
-  return instance => defineProperties(instance, properties);
+
+  /**
+   * @type { {<T extends Matcher, U extends {} = {}>(sourceText: string, initialState?: Partial<TokenizerState<undefined, U>): IterableIterator<Token<U>>} }
+   */
+  const createMatcherTokenizer = instance => defineProperties(instance, tokenizerProperties);
+
+  /**
+   * @param {import('/modules/matcher/matcher.js').Matcher} matcher
+   * @param {any} [options]
+   */
+  const createMatcherMode = (matcher, options) => {
+    const tokenizer = createMatcherTokenizer({
+      createToken: createTokenFromMatch,
+      /** @type {(state: {}) =>  void} */
+      initializeState: undefined,
+      matcher: freeze(createMatcherInstance(matcher)),
+    });
+
+    const mode = {syntax: 'matcher', tokenizer};
+    options &&
+      ({
+        syntax: mode.syntax = mode.syntax,
+        aliases: mode.aliases,
+        preregister: mode.preregister,
+        createToken: tokenizer.createToken = tokenizer.createToken,
+        initializeState: tokenizer.initializeState,
+        ...mode.overrides
+      } = options);
+
+    freeze(tokenizer);
+
+    return mode;
+  };
+
+  return {createTokenFromMatch, createMatcherInstance, createString, createMatcherTokenizer, createMatcherMode};
 })();
 
-const bootstrap = //
-/**
- * @param {import('/modules/matcher/matcher.js').Matcher} matcher
- * @param {any} [overrides]
- */
-(matcher, overrides) => {
-  /** @type {ObjectConstructor} */
-  const {freeze} = globalThis.Object;
-
-  const tokenizer = createTokenizer({
-    createToken: createTokenFromMatch,
-    /** @type {(state: {}) =>  void} */
-    initializeState: undefined,
-    matcher: freeze(createMatcherInstance(matcher)),
-  });
-
-  // tokenizer.tokenize = createTokenizer.bind(tokenizer, matcherInstance);
-  const mode = {syntax: 'matcher', tokenizer};
-  const options = {};
-  overrides &&
-    ({
-      syntax: mode.syntax = mode.syntax,
-      syntax: options.syntax = mode.syntax,
-      aliases: options.aliases,
-      preregister: options.preregister,
-      createToken: tokenizer.createToken = tokenizer.createToken,
-      initializeState: tokenizer.initializeState,
-      // tokenizer: tokenizer.tokenize = createTokenizer.bind(tokenizer, matcherInstance),
-      ...overrides
-    } = overrides);
-  // const parser = new Parser({mode, tokenizer, url: import.meta.url});
-
-  freeze(tokenizer);
-
-  return (
-    /**
-     * @param {import('/markup/packages/tokenizer/lib/api').API} markup
-     */
-    async markup => {
-      const parser = markup.parsers[0];
-
-      options.preregister && options.preregister(parser);
-
-      parser.register(mode, options);
-      console.log(parser);
-      return {...overrides};
-    }
-  );
-};
-
-const {goal: rootGoal} = matcher;
-// const {
-//   [symbols.ECMAScriptGoal]: ECMAScriptGoal,
-//   [symbols.CommentGoal]: CommentGoal,
-//   [symbols.RegExpGoal]: RegExpGoal,
-//   [symbols.StringGoal]: StringGoal,
-//   [symbols.TemplateLiteralGoal]: TemplateLiteralGoal,
-// } = goals;
-
-const experimentalES = bootstrap(matcher, {
+const mode = createMatcherMode(matcher, {
   syntax: 'ecmascript',
   aliases: ['es', 'js', 'javascript'],
   initializeState: state => {
@@ -2603,11 +2567,11 @@ const experimentalES = bootstrap(matcher, {
     state.lineFault = false;
     const contexts = (state.contexts = Array(100));
     const context = initializeContext({
-      id: `«${rootGoal.name}»`,
+      id: `«${matcher.goal.name}»`,
       number: (contexts.count = 1),
       depth: 0,
       parent: undefined,
-      goal: rootGoal,
+      goal: matcher.goal,
       group: undefined,
       state,
     });
@@ -2730,14 +2694,22 @@ const experimentalES = bootstrap(matcher, {
       });
     }
   },
-  sourceURL: './matcher.js',
-  sourceType: 'es',
+});
 
-  resolveSourceType: (defaultType, {sourceType, resourceType, options}) => {
+/**
+ * @param {import('/markup/packages/tokenizer/lib/api').API} markup
+ */
+const experimentalES = ((
+  sourceURL = './matcher.js',
+  sourceType = 'es',
+  resolveSourceType = (defaultType, {sourceType, resourceType, options}) => {
     // console.log({defaultType, sourceType, resourceType});
     if (resourceType === 'javascript' && !sourceType) return 'es';
   },
-});
+) => async markup => {
+  markup.parsers[0].register(mode);
+  return {sourceURL, sourceType, resolveSourceType};
+})();
 
 const css = Object.defineProperties(
   ({syntax} = css.defaults) => ({
