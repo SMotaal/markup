@@ -1,24 +1,31 @@
-﻿import bootstrap from './matcher.js';
+﻿import {createMatcherMode} from './helpers.js';
 import {Matcher} from '../../../modules/matcher/matcher.js';
 
-const definitions = {
-  default: () => [
-    entity => Matcher.sequence`
-      (${entity('text')}\S+)|
-      (${entity('break')}\n)|
-      (${entity('whitespace')}[ \t]+)
+export default async markup => {
+  const parser = markup.parsers[0];
+  const mode = createMatcherMode(
+    Matcher.define(
+      entity => Matcher.sequence`
+      (
+        \S+
+        ${entity('text')}
+      )|(
+        \n
+        ${entity((text, entity, match, state) => {
+          state.lineOffset = match.index + text.length;
+          match.capture[(match.identity = 'break')] = text;
+        })}
+      )|(
+        \s+
+        ${entity((text, entity, match, state) => {
+          match.capture[(match.identity = state.lineOffset !== match.index ? 'whitespace' : 'inset')] = text;
+        })}
+      )
     `,
-    'gui',
-  ],
-  multiline: () => [
-    entity => Matcher.sequence`
-      ^(${entity('inset')}^(${entity('whitespace')}[ \t]+))|
-      (${entity('text')}\S+)|
-      (${entity('break')}\n)|
-      (${entity('whitespace')}[ \t]+)
-    `,
-    'mgui',
-  ],
+      'g',
+    ),
+  );
+  console.log(parser, mode);
+  parser.register(mode);
+  return {...mode.overrides};
 };
-
-export default bootstrap(Matcher.define(...definitions.default()));
