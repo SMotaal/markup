@@ -56,6 +56,7 @@
   --markup-dark-identifiers: lightgrey;
   --markup-dark-comments: var(--markup-neutral, #999);
   --markup-dark-whitespace: var(--markup-neutral-dark, #666);
+  --markup-dark-literals: cyan;
 
   /**/ /**/ /**/ /**/ /** PUNCTUATION **/ /**/ /**/ /**/ /**/
   --markup-light-punctuators: lightseagreen;
@@ -65,6 +66,7 @@
   --markup-light-quotes: cadetblue;
   --markup-light-closures: orange;
   --markup-light-spans: coral;
+  --markup-light-literals: darkcyan;
   --markup-light-patterns: grey;
 
   /**/ /**/ /**/ /**/ /** LIGHT THEME **/ /**/ /**/ /**/ /**/
@@ -87,6 +89,7 @@
   --markup-quotes: var(--markup-light-quotes);
   --markup-closures: var(--markup-light-closures);
   --markup-spans: var(--markup-light-spans);
+  --markup-literals: var(--markup-light-literals);
   --markup-patterns: var(--markup-light-patterns);
 
   --markup-comments: var(--markup-light-comments);
@@ -118,6 +121,7 @@
     --markup-quotes: var(--markup-dark-quotes, var(--markup-light-quotes));
     --markup-closures: var(--markup-dark-closures, var(--markup-light-closures));
     --markup-spans: var(--markup-dark-spans, var(--markup-light-spans));
+    --markup-literals: var(--markup-dark-literals, var(--markup-light-literals));
     --markup-patterns: var(--markup-dark-patterns, var(--markup-light-patterns));
 
     --markup-comments: var(--markup-dark-comments, var(--markup-light-comments));
@@ -234,6 +238,10 @@ pre.markup[line-numbers] .markup-line::before {
   --color: var(--markup-sequences, grey);
 }
 
+.markup.literal {
+  --color: var(--markup-literals, darkcyan);
+}
+
 .markup.identifier {
   --color: var(--markup-identifiers, darkslategrey);
   font-weight: 400;
@@ -282,6 +290,10 @@ pre.markup[line-numbers] .markup-line::before {
 .markup.regexp,
 .markup.pattern {
   --color: var(--markup-patterns, grey);
+}
+
+.markup.literal {
+  font-weight: 400;
 }
 
 .markup.punctuator {
