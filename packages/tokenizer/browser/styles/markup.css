@@ -145,9 +145,9 @@
   padding-inline-start: calc(0.275em + var(--markup-soft-indent));
 
   /* border: 0 solid transparent; */
-  width: -webkit-fill-available;
-  width: -moz-fill-available;
-  width: fill-available;
+  /* width: -webkit-fill-available; */
+  /* width: -moz-fill-available; */
+  /* width: fill-available; */
 
   outline: var(--markup-line-outline);
   outline-offset: var(--markup-line-outline-offset, -0.5px);
