@@ -1788,37 +1788,41 @@ const markup = (function (exports) {
         ...options,
       };
 
+      const PUNCTUATOR = `${CLASS} punctuator`;
+      const LITERAL = `${CLASS} literal`;
+
       this.renderers = {
         line: factory(LINE, {className: `${CLASS} ${CLASS}-line`}),
-        // indent: factory(SPAN, {className: `${CLASS} ${CLASS}-indent whitespace`}),
-        inset: factory(SPAN, {className: `${CLASS} inset whitespace`}),
-        break: factory(SPAN, {className: `${CLASS} break whitespace`}),
-        // break: Text,
-        // whitespace: factory(SPAN, {className: `${CLASS} whitespace`}),
-        whitespace: Text$2,
+
+        fault: factory(SPAN, {className: `${CLASS} fault`}),
         text: factory(SPAN, {className: CLASS}),
 
-        // variable: factory('var', {className: `${CLASS} variable`}),
-        fault: factory(SPAN, {className: `${CLASS} fault`}),
+        whitespace: Text$2,
+        inset: factory(SPAN, {className: `${CLASS} inset whitespace`}),
+        break: factory(SPAN, {className: `${CLASS} break whitespace`}),
+
+        comment: factory(SPAN, {className: `${CLASS} comment`}),
+
         keyword: factory(SPAN, {className: `${CLASS} keyword`}),
         identifier: factory(SPAN, {className: `${CLASS} identifier`}),
-        quote: factory(SPAN, {className: `${CLASS} quote`}),
 
-        operator: factory(SPAN, {className: `${CLASS} punctuator operator`}),
-        assigner: factory(SPAN, {className: `${CLASS} punctuator operator assigner`}),
-        combinator: factory(SPAN, {className: `${CLASS} punctuator operator combinator`}),
-        punctuation: factory(SPAN, {className: `${CLASS} punctuator punctuation`}),
-
-        breaker: factory(SPAN, {className: `${CLASS} punctuator breaker`}),
-        opener: factory(SPAN, {className: `${CLASS} punctuator opener`}),
-        closer: factory(SPAN, {className: `${CLASS} punctuator closer`}),
-        span: factory(SPAN, {className: `${CLASS} punctuator span`}),
-        pattern: factory(SPAN, {className: `${CLASS} pattern`}),
         sequence: factory(SPAN, {className: `${CLASS} sequence`}),
-        literal: factory(SPAN, {className: `${CLASS} literal`}),
-        // indent: factory(SPAN, {className: `${CLASS} sequence indent`}),
-        comment: factory(SPAN, {className: `${CLASS} comment`}),
-        // code: factory(SPAN, {className: `${CLASS}`}),
+
+        literal: factory(SPAN, {className: LITERAL}),
+        number: factory(SPAN, {className: `${LITERAL} number`}),
+        quote: factory(SPAN, {className: `${CLASS} quote`}),
+        pattern: factory(SPAN, {className: `${CLASS} pattern`}),
+
+        punctuator: factory(SPAN, {className: PUNCTUATOR}),
+        operator: factory(SPAN, {className: `${PUNCTUATOR} operator`}),
+        assigner: factory(SPAN, {className: `${PUNCTUATOR} operator assigner`}),
+        combinator: factory(SPAN, {className: `${PUNCTUATOR} operator combinator`}),
+        punctuation: factory(SPAN, {className: `${PUNCTUATOR} punctuation`}),
+
+        breaker: factory(SPAN, {className: `${PUNCTUATOR} breaker`}),
+        opener: factory(SPAN, {className: `${PUNCTUATOR} opener`}),
+        closer: factory(SPAN, {className: `${PUNCTUATOR} closer`}),
+        span: factory(SPAN, {className: `${PUNCTUATOR} span`}),
       };
 
       this.reflows = REFLOW;
@@ -1873,7 +1877,8 @@ const markup = (function (exports) {
 
         let {type = 'text', text, inset, punctuator, breaks, hint} = token;
         let renderer =
-          (punctuator && (renderers[punctuator] || (type && renderers[type]) || renderers.operator)) ||
+          (punctuator &&
+            (renderers[punctuator] || (type && renderers[type]) || renderers.punctuator || renderers.operator)) ||
           (type && renderers[type]) ||
           (type !== 'whitespace' && type !== 'break' && renderers.text) ||
           Text$2;

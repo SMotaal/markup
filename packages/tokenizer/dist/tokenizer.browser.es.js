@@ -536,37 +536,41 @@ class MarkupRenderer {
       ...options,
     };
 
+    const PUNCTUATOR = `${CLASS} punctuator`;
+    const LITERAL = `${CLASS} literal`;
+
     this.renderers = {
       line: factory(LINE, {className: `${CLASS} ${CLASS}-line`}),
-      // indent: factory(SPAN, {className: `${CLASS} ${CLASS}-indent whitespace`}),
-      inset: factory(SPAN, {className: `${CLASS} inset whitespace`}),
-      break: factory(SPAN, {className: `${CLASS} break whitespace`}),
-      // break: Text,
-      // whitespace: factory(SPAN, {className: `${CLASS} whitespace`}),
-      whitespace: Text$2,
+
+      fault: factory(SPAN, {className: `${CLASS} fault`}),
       text: factory(SPAN, {className: CLASS}),
 
-      // variable: factory('var', {className: `${CLASS} variable`}),
-      fault: factory(SPAN, {className: `${CLASS} fault`}),
+      whitespace: Text$2,
+      inset: factory(SPAN, {className: `${CLASS} inset whitespace`}),
+      break: factory(SPAN, {className: `${CLASS} break whitespace`}),
+
+      comment: factory(SPAN, {className: `${CLASS} comment`}),
+
       keyword: factory(SPAN, {className: `${CLASS} keyword`}),
       identifier: factory(SPAN, {className: `${CLASS} identifier`}),
-      quote: factory(SPAN, {className: `${CLASS} quote`}),
 
-      operator: factory(SPAN, {className: `${CLASS} punctuator operator`}),
-      assigner: factory(SPAN, {className: `${CLASS} punctuator operator assigner`}),
-      combinator: factory(SPAN, {className: `${CLASS} punctuator operator combinator`}),
-      punctuation: factory(SPAN, {className: `${CLASS} punctuator punctuation`}),
-
-      breaker: factory(SPAN, {className: `${CLASS} punctuator breaker`}),
-      opener: factory(SPAN, {className: `${CLASS} punctuator opener`}),
-      closer: factory(SPAN, {className: `${CLASS} punctuator closer`}),
-      span: factory(SPAN, {className: `${CLASS} punctuator span`}),
-      pattern: factory(SPAN, {className: `${CLASS} pattern`}),
       sequence: factory(SPAN, {className: `${CLASS} sequence`}),
-      literal: factory(SPAN, {className: `${CLASS} literal`}),
-      // indent: factory(SPAN, {className: `${CLASS} sequence indent`}),
-      comment: factory(SPAN, {className: `${CLASS} comment`}),
-      // code: factory(SPAN, {className: `${CLASS}`}),
+
+      literal: factory(SPAN, {className: LITERAL}),
+      number: factory(SPAN, {className: `${LITERAL} number`}),
+      quote: factory(SPAN, {className: `${CLASS} quote`}),
+      pattern: factory(SPAN, {className: `${CLASS} pattern`}),
+
+      punctuator: factory(SPAN, {className: PUNCTUATOR}),
+      operator: factory(SPAN, {className: `${PUNCTUATOR} operator`}),
+      assigner: factory(SPAN, {className: `${PUNCTUATOR} operator assigner`}),
+      combinator: factory(SPAN, {className: `${PUNCTUATOR} operator combinator`}),
+      punctuation: factory(SPAN, {className: `${PUNCTUATOR} punctuation`}),
+
+      breaker: factory(SPAN, {className: `${PUNCTUATOR} breaker`}),
+      opener: factory(SPAN, {className: `${PUNCTUATOR} opener`}),
+      closer: factory(SPAN, {className: `${PUNCTUATOR} closer`}),
+      span: factory(SPAN, {className: `${PUNCTUATOR} span`}),
     };
 
     this.reflows = REFLOW;
@@ -621,7 +625,8 @@ class MarkupRenderer {
 
       let {type = 'text', text, inset, punctuator, breaks, hint} = token;
       let renderer =
-        (punctuator && (renderers[punctuator] || (type && renderers[type]) || renderers.operator)) ||
+        (punctuator &&
+          (renderers[punctuator] || (type && renderers[type]) || renderers.punctuator || renderers.operator)) ||
         (type && renderers[type]) ||
         (type !== 'whitespace' && type !== 'break' && renderers.text) ||
         Text$2;
@@ -1311,288 +1316,296 @@ const matcher = (() => {
     Break: ({lf = true, crlf = false} = {}) =>
       Matcher.define(
         entity => Matcher.sequence`(
-        ${Matcher.join(lf && '\\n', crlf && '\\r\\n')}
-        ${entity((text, entity, match, state) => {
-          const group = state.context.group;
-          capture(group && group.closer === '\n' ? close(text, state) || 'closer' : 'break', match, text);
-          match.flatten = false;
-        })}
-      )`,
+          ${Matcher.join(lf && '\\n', crlf && '\\r\\n')}
+          ${entity((text, entity, match, state) => {
+            const group = state.context.group;
+            capture(group && group.closer === '\n' ? close(text, state) || 'closer' : 'break', match, text);
+            match.flatten = false;
+          })}
+        )`,
       ),
     Whitespace: () =>
       Matcher.define(
         entity => Matcher.sequence`(
-        \s+
-        ${entity((text, entity, match, state) => {
-          capture((match.flatten = state.lineOffset !== match.index) ? 'whitespace' : 'inset', match, text);
-        })}
-      )`,
+          \s+
+          ${entity((text, entity, match, state) => {
+            capture((match.flatten = state.lineOffset !== match.index) ? 'whitespace' : 'inset', match, text);
+          })}
+        )`,
       ),
     Escape: () =>
       Matcher.define(
         entity => Matcher.sequence`(
-        \\u[${HexDigit}][${HexDigit}][${HexDigit}][${HexDigit}]
-        ${entity((text, entity, match, state) => {
-          const context = state.context;
-          capture(
-            context.goal.type ||
-              ((match.flatten =
-                context.goal === ECMAScriptGoal &&
-                state.previousToken != null &&
-                state.previousToken.type === 'identifier' &&
-                ECMAScriptUnicodeIDContinue.test(String.fromCodePoint(parseInt(text.slice(2), 16))))
-                ? 'identifier' // `let i\u0032` -> identifier tokens
-                : 'escape'),
-            match,
-            text,
-          );
-        })})
-      |(
-        ${entity((text, entity, match, state) => {
-          capture(state.context.goal.type || 'escape', match, (match.capture[keywords[text]] = text));
-        })}
-        \\f|\\n|\\r|\\t|\\v|\\c[${ControlLetter}]
-        |\\x[${HexDigit}][${HexDigit}]
-        |\\u\{[${HexDigit}]*\}
-        |\\.
-      )`,
+          \\u[${HexDigit}][${HexDigit}][${HexDigit}][${HexDigit}]
+          ${entity((text, entity, match, state) => {
+            const context = state.context;
+            capture(
+              context.goal.type ||
+                ((match.flatten =
+                  context.goal === ECMAScriptGoal &&
+                  state.previousToken != null &&
+                  state.previousToken.type === 'identifier' &&
+                  ECMAScriptUnicodeIDContinue.test(String.fromCodePoint(parseInt(text.slice(2), 16))))
+                  ? 'identifier' // `let i\u0032` -> identifier tokens
+                  : 'escape'),
+              match,
+              text,
+            );
+          })}
+        )|(
+          \\f|\\n|\\r|\\t|\\v|\\c[${ControlLetter}]
+          |\\x[${HexDigit}][${HexDigit}]
+          |\\u\{[${HexDigit}]*\}
+          |\\.
+          ${entity((text, entity, match, state) => {
+            capture(state.context.goal.type || 'escape', match, (match.capture[keywords[text]] = text));
+          })}
+        )`,
       ),
     Comment: () =>
       Matcher.define(
         entity => Matcher.sequence`(
-        \/\/|\/\*
-        ${entity((text, entity, match, state) => {
-          const context = state.context;
-          capture(
-            context.goal === ECMAScriptGoal
-              ? open(text, state) ||
-                  // Safely fast skip to end of comment
-                  (forward(text === '//' ? '\n' : '*/', match, state),
-                  // No need to track delimiter
-                  CommentGoal.type)
-              : context.goal !== CommentGoal
-              ? context.goal.type || 'sequence'
-              : context.group.closer !== text
-              ? CommentGoal.type
-              : close(text, state) || (match.punctuator = CommentGoal.type),
-            match,
-            text,
-          );
-        })}
-      )`,
+          \/\/|\/\*
+          ${entity((text, entity, match, state) => {
+            const context = state.context;
+            capture(
+              context.goal === ECMAScriptGoal
+                ? open(text, state) ||
+                    // Safely fast skip to end of comment
+                    (forward(text === '//' ? '\n' : '*/', match, state),
+                    // No need to track delimiter
+                    CommentGoal.type)
+                : context.goal !== CommentGoal
+                ? context.goal.type || 'sequence'
+                : context.group.closer !== text
+                ? CommentGoal.type
+                : close(text, state) || (match.punctuator = CommentGoal.type),
+              match,
+              text,
+            );
+          })}
+        )`,
       ),
     StringLiteral: () =>
       Matcher.define(
         entity => Matcher.sequence`(
-        "|'
-        ${entity((text, entity, match, state) => {
-          const context = state.context;
-          capture(
-            context.goal === ECMAScriptGoal
-              ? open(text, state) ||
-                  // TODO: Investigate why regexp forward is slow
-                  // (void forward(text === '"' ? /(?:[^"\\\n]+?(?=\\.|")|\\.)*?"/g : /(?:[^'\\\n]+?(?=\\.|')|\\.)*?'/g, match, state)) ||
-                  ((match.punctuator = StringGoal.type), 'opener')
-              : context.goal !== StringGoal
-              ? context.goal.type || 'sequence'
-              : context.group.closer !== text
-              ? StringGoal.type
-              : ((match.flatten = false), close(text, state) || ((match.punctuator = StringGoal.type), 'closer')),
-            match,
-            text,
-          );
-        })}
-      )`,
+          "|'
+          ${entity((text, entity, match, state) => {
+            const context = state.context;
+            capture(
+              context.goal === ECMAScriptGoal
+                ? open(text, state) ||
+                    // TODO: Investigate why regexp forward is slow
+                    // (void forward(text === '"' ? /(?:[^"\\\n]+?(?=\\.|")|\\.)*?"/g : /(?:[^'\\\n]+?(?=\\.|')|\\.)*?'/g, match, state)) ||
+                    ((match.punctuator = StringGoal.type), 'opener')
+                : context.goal !== StringGoal
+                ? context.goal.type || 'sequence'
+                : context.group.closer !== text
+                ? StringGoal.type
+                : ((match.flatten = false), close(text, state) || ((match.punctuator = StringGoal.type), 'closer')),
+              match,
+              text,
+            );
+          })}
+        )`,
       ),
     TemplateLiteral: () =>
       Matcher.define(
         entity => Matcher.sequence`(
-        ${GraveAccent}
-        ${entity((text, entity, match, state) => {
-          // const {goal, group} = state.context;
-          const context = state.context;
-          capture(
-            context.goal === ECMAScriptGoal
-              ? open(text, state) || ((match.punctuator = TemplateLiteralGoal.type), 'opener')
-              : context.goal !== TemplateLiteralGoal
-              ? ((match.flatten = true), context.goal.type || 'sequence')
-              : context.group.closer !== text
-              ? TemplateLiteralGoal.type
-              : close(text, state) || ((match.punctuator = TemplateLiteralGoal.type), 'closer'),
-            match,
-            text,
-          );
-        })}
-      )`,
+          ${GraveAccent}
+          ${entity((text, entity, match, state) => {
+            // const {goal, group} = state.context;
+            const context = state.context;
+            capture(
+              context.goal === ECMAScriptGoal
+                ? open(text, state) || ((match.punctuator = TemplateLiteralGoal.type), 'opener')
+                : context.goal !== TemplateLiteralGoal
+                ? ((match.flatten = true), context.goal.type || 'sequence')
+                : context.group.closer !== text
+                ? TemplateLiteralGoal.type
+                : close(text, state) || ((match.punctuator = TemplateLiteralGoal.type), 'closer'),
+              match,
+              text,
+            );
+          })}
+        )`,
       ),
     Opener: () =>
       Matcher.define(
         entity => Matcher.sequence`(
-        \$\{|\{|\(|\[
-        ${entity((text, entity, match, state) => {
-          const context = state.context;
-          capture(
-            // openers && (text in openers ? openers.text : (openers.text = openers.includes(text)))
-            context.goal.punctuators && context.goal.punctuators[text] === true
-              ? (match.punctuator = 'combinator')
-              : context.goal.openers &&
-                context.goal.openers[text] === true &&
-                (text !== '[' || context.goal !== RegExpGoal || context.group.opener !== '[')
-              ? open(text, state) || 'opener'
-              : ((match.flatten = true), context.goal.type || 'sequence'),
-            match,
-            text,
-          );
-        })}
-      )`,
+          \$\{|\{|\(|\[
+          ${entity((text, entity, match, state) => {
+            const context = state.context;
+            capture(
+              // openers && (text in openers ? openers.text : (openers.text = openers.includes(text)))
+              context.goal.punctuators && context.goal.punctuators[text] === true
+                ? (match.punctuator = 'combinator')
+                : context.goal.openers &&
+                  context.goal.openers[text] === true &&
+                  (text !== '[' || context.goal !== RegExpGoal || context.group.opener !== '[')
+                ? open(text, state) || 'opener'
+                : ((match.flatten = true), context.goal.type || 'sequence'),
+              match,
+              text,
+            );
+          })}
+        )`,
       ),
     Closer: () =>
       Matcher.define(
         entity => Matcher.sequence`(
-        \}|\)|\]
-        ${entity((text, entity, match, state) => {
-          const context = state.context;
-          // const goal = state.context.goal;
-          // const {closers, punctuators, type} = state.context.goal;
-          // goal === ECMAScriptGoal || (goal.closers && goal.closers.includes(text))
-          // goal.punctuators && goal.punctuators.includes(text)
-          capture(
-            context.goal.punctuators && context.goal.punctuators[text] === true
-              ? (match.punctuator = 'combinator')
-              : context.goal.closers && context.goal.closers[text] === true
-              ? close(text, state) || 'closer'
-              : ((match.flatten = true), context.goal.type || 'sequence'),
-            match,
-            text,
-          );
-        })}
-      )`,
+          \}|\)|\]
+          ${entity((text, entity, match, state) => {
+            const context = state.context;
+            // const goal = state.context.goal;
+            // const {closers, punctuators, type} = state.context.goal;
+            // goal === ECMAScriptGoal || (goal.closers && goal.closers.includes(text))
+            // goal.punctuators && goal.punctuators.includes(text)
+            capture(
+              context.goal.punctuators && context.goal.punctuators[text] === true
+                ? (match.punctuator = 'combinator')
+                : context.goal.closers && context.goal.closers[text] === true
+                ? close(text, state) || 'closer'
+                : ((match.flatten = true), context.goal.type || 'sequence'),
+              match,
+              text,
+            );
+          })}
+        )`,
       ),
     Solidus: () =>
       Matcher.define(
         entity => Matcher.sequence`(
-        \*\/|\/=|\/
-        ${entity((text, entity, match, state) => {
-          let previousAtom;
-          const context = state.context;
-          capture(
-            context.goal === CommentGoal
-              ? (context.group.closer === text && close(text, state)) || (match.punctuator = context.goal.type)
-              : context.goal === RegExpGoal && context.group.closer !== ']' // ie /…*/ or /…/
-              ? close('/', state) || ((match.punctuator = context.goal.type), 'closer')
-              : context.goal !== ECMAScriptGoal
-              ? context.goal.type || 'sequence'
-              : text[0] === '*'
-              ? fault(text, state)
-              : // ECMAScriptGoal
-              /**
-               * TODO: Refine the necessary criteria for RegExp vs Div
-               * SEE: https://github.com/sweet-js/sweet-core/wiki/design
-               * SEE: https://inimino.org/~inimino/blog/javascript_semicolons
-               * SEE: https://github.com/guybedford/es-module-shims/blob/master/src/lexer.js
-               */
-              !(previousAtom = state.previousAtom) ||
-                (previousAtom.type === 'operator'
-                  ? previousAtom.text !== '++' && previousAtom.text !== '--'
-                  : previousAtom.type === 'closer'
-                  ? previousAtom.text === '}'
-                  : previousAtom.type === 'opener' || previousAtom.type === 'keyword')
-              ? open(text, state) || ((match.punctuator = 'pattern'), 'opener')
-              : (match.punctuator = 'operator'),
-            match,
-            text,
-          );
-        })}
-      )`,
+          \*\/|\/=|\/
+          ${entity((text, entity, match, state) => {
+            let previousAtom;
+            const context = state.context;
+            capture(
+              context.goal === CommentGoal
+                ? (context.group.closer === text && close(text, state)) || (match.punctuator = context.goal.type)
+                : context.goal === RegExpGoal && context.group.closer !== ']' // ie /…*/ or /…/
+                ? close('/', state) || ((match.punctuator = context.goal.type), 'closer')
+                : context.goal !== ECMAScriptGoal
+                ? context.goal.type || 'sequence'
+                : text[0] === '*'
+                ? fault(text, state)
+                : // ECMAScriptGoal
+                /**
+                 * TODO: Refine the necessary criteria for RegExp vs Div
+                 * SEE: https://github.com/sweet-js/sweet-core/wiki/design
+                 * SEE: https://inimino.org/~inimino/blog/javascript_semicolons
+                 * SEE: https://github.com/guybedford/es-module-shims/blob/master/src/lexer.js
+                 */
+                !(previousAtom = state.previousAtom) ||
+                  (previousAtom.type === 'operator'
+                    ? previousAtom.text !== '++' && previousAtom.text !== '--'
+                    : previousAtom.type === 'closer'
+                    ? previousAtom.text === '}'
+                    : previousAtom.type === 'opener' || previousAtom.type === 'keyword')
+                ? open(text, state) || ((match.punctuator = 'pattern'), 'opener')
+                : (match.punctuator = 'operator'),
+              match,
+              text,
+            );
+          })}
+        )`,
       ),
     Operator: () =>
       Matcher.define(
         entity => Matcher.sequence`(
-        ${entity((text, entity, match, state) => {
-          // TODO: Add conditional lookahead (or look behined)
-          // const goal = state.context.goal;
-          const context = state.context;
-          capture(
-            context.goal === ECMAScriptGoal
-              ? 'operator'
-              : context.goal.punctuators && context.goal.punctuators[text] === true
-              ? (match.punctuator = 'punctuation')
-              : ((match.flatten = true), context.goal.type || 'sequence'),
-            match,
-            text,
-          );
-        })}
-        ,|;|\.\.\.|\.|:|\?|=>
-        |\+\+|--
-        |\+=|-=|\*\*=|\*=
-        |&&|&=|&|\|\||\|=|\||%=|%|\^=|\^|~=|~
-        |<<=|<<|<=|<|>>>=|>>>|>>=|>>|>=|>
-        |!==|!=|!|===|==|=
-        |\+|-|\*\*|\*
-      )`,
+          ,|;|\.\.\.|\.|:|\?|=>
+          |\+\+|--
+          |\+=|-=|\*\*=|\*=
+          |&&|&=|&|\|\||\|=|\||%=|%|\^=|\^|~=|~
+          |<<=|<<|<=|<|>>>=|>>>|>>=|>>|>=|>
+          |!==|!=|!|===|==|=
+          |\+|-|\*\*|\*
+          ${entity((text, entity, match, state) => {
+            // const goal = state.context.goal;
+            const context = state.context;
+            capture(
+              context.goal === ECMAScriptGoal
+                ? 'operator'
+                : context.goal.punctuators && context.goal.punctuators[text] === true
+                ? (match.punctuator = 'punctuation')
+                : ((match.flatten = true), context.goal.type || 'sequence'),
+              match,
+              text,
+            );
+          })}
+        )`,
       ),
     Keyword: () =>
       Matcher.define(
         entity => Matcher.sequence`\b(
-        ${Object.keys(keywords)
-          .filter(Boolean)
-          .join('|')}
-        ${entity((text, entity, match, state) => {
-          let previousAtom, keywordSymbol;
-          // const goal = state.context.goal;
-          const context = state.context;
-          // TODO: Add conditional lookahead (or look behined)
-          capture(
-            (match.flatten = context.goal !== ECMAScriptGoal)
-              ? context.goal.type || 'sequence'
-              : ((keywordSymbol = keywords[text]), (previousAtom = state.previousAtom)) && previousAtom.text === '.'
-              ? 'identifier'
-              : 'keyword',
-            match,
-            text,
-          );
-          keywordSymbol &&
-            ((context.keywords = (context.keywords || 0) + 1),
-            (context[`${(match.capture[keywordSymbol] = text)}-keyword-index`] = match.index));
-        })}
-      )\b(?=[^\s$_:]|\s+[^:])`,
+          ${Matcher.join(...Object.keys(keywords))}
+          ${entity((text, entity, match, state) => {
+            let previousAtom, keywordSymbol;
+            const context = state.context;
+            capture(
+              (match.flatten = context.goal !== ECMAScriptGoal)
+                ? context.goal.type || 'sequence'
+                : ((keywordSymbol = keywords[text]), (previousAtom = state.previousAtom)) && previousAtom.text === '.'
+                ? 'identifier'
+                : 'keyword',
+              match,
+              text,
+            );
+            keywordSymbol &&
+              ((context.keywords = (context.keywords || 0) + 1),
+              (context[`${(match.capture[keywordSymbol] = text)}-keyword-index`] = match.index));
+          })}
+        )\b(?=[^\s$_:]|\s+[^:])`,
       ),
     Identifier: (RegExpFlags = /^[gimsuy]+$/) =>
       Matcher.define(
         entity => Matcher.sequence`(
-        [${UnicodeIDStart}][${UnicodeIDContinue}]*
-        ${entity((text, entity, match, state) => {
-          let previousToken;
-          const context = state.context;
-          // TODO: Add conditional lookahead (or look behined)
-          capture(
-            context.goal !== ECMAScriptGoal
-              ? context.goal.type || 'sequence'
-              : (previousToken = state.previousToken) &&
-                previousToken.punctuator === 'pattern' &&
-                RegExpFlags.test(text)
-              ? ((match.punctuator = RegExpGoal.type), 'closer')
-              : ((match.flatten = true), 'identifier'),
-            match,
-            text,
-          );
-        })}
-      )`,
+          [${UnicodeIDStart}][${UnicodeIDContinue}]*
+          ${entity((text, entity, match, state) => {
+            let previousToken;
+            const context = state.context;
+            capture(
+              context.goal !== ECMAScriptGoal
+                ? context.goal.type || 'sequence'
+                : (previousToken = state.previousToken) &&
+                  previousToken.punctuator === 'pattern' &&
+                  RegExpFlags.test(text)
+                ? ((match.punctuator = RegExpGoal.type), 'closer')
+                : ((match.flatten = true), 'identifier'),
+              match,
+              text,
+            );
+          })}
+        )`,
         ECMAScriptIdentifierFlags,
       ),
     IdentifierStart: () =>
       Matcher.define(
         entity => Matcher.sequence`(
-        ${entity(symbols.UnicodeIDStart)}[${UnicodeIDStart}]
-      )`,
+          ${entity(symbols.UnicodeIDStart)}[${UnicodeIDStart}]
+        )`,
         ECMAScriptIdentifierFlags,
       ),
     IdentifierContinue: () =>
       Matcher.define(
         entity => Matcher.sequence`(
-        ${entity(symbols.UnicodeIDContinue)}[${UnicodeIDContinue}]+
-      )`,
+          ${entity(symbols.UnicodeIDContinue)}[${UnicodeIDContinue}]+
+        )`,
         ECMAScriptIdentifierFlags,
+      ),
+    Number: () =>
+      Matcher.define(
+        entity => Matcher.sequence`\b(
+          0x\d+|\d+\.\d+[eE]\d+|\d+\.\d+|\d+[eE]\d+|\d+
+          ${entity((text, entity, match, state) => {
+            const context = state.context;
+            capture(
+              context.goal !== ECMAScriptGoal ? context.goal.type || 'sequence' : ((match.flatten = false), 'number'),
+              match,
+              text,
+            );
+          })}
+        )\b`,
       ),
   };
 
@@ -1601,23 +1614,26 @@ const matcher = (() => {
 
   const matcher = Matcher.define(
     entity => Matcher.sequence`
-    ${entity(ECMAScriptGrammar.Break())}
-    |${entity(ECMAScriptGrammar.Whitespace())}
-    |${entity(ECMAScriptGrammar.Escape())}
-    |${entity(ECMAScriptGrammar.Comment())}
-    |${entity(ECMAScriptGrammar.StringLiteral())}
-    |${entity(ECMAScriptGrammar.TemplateLiteral())}
-    |${entity(ECMAScriptGrammar.Opener())}
-    |${entity(ECMAScriptGrammar.Closer())}
-    |${entity(ECMAScriptGrammar.Solidus())}
-    |${entity(ECMAScriptGrammar.Operator())}
-    |${entity(ECMAScriptGrammar.Keyword())}
-    |${entity(ECMAScriptGrammar.Identifier())}
-    |\d+
-    |.
-  `,
+      ${entity(ECMAScriptGrammar.Break())}
+      |${entity(ECMAScriptGrammar.Whitespace())}
+      |${entity(ECMAScriptGrammar.Escape())}
+      |${entity(ECMAScriptGrammar.Comment())}
+      |${entity(ECMAScriptGrammar.StringLiteral())}
+      |${entity(ECMAScriptGrammar.TemplateLiteral())}
+      |${entity(ECMAScriptGrammar.Opener())}
+      |${entity(ECMAScriptGrammar.Closer())}
+      |${entity(ECMAScriptGrammar.Solidus())}
+      |${entity(ECMAScriptGrammar.Operator())}
+      |${entity(ECMAScriptGrammar.Keyword())}
+      |${entity(ECMAScriptGrammar.Number())}
+      |${entity(ECMAScriptGrammar.Identifier())}
+      |.
+    `,
     'gu',
   );
+
+  // |(?:0x|)\d+(?:\.\d+(?:e\d+|E\d+|)|)
+  //    |\d[\d_]*
 
   matcher.goal = ECMAScriptGoal;
 
