@@ -34,6 +34,10 @@ const bundles = {
     input: `${dirname}/packages/tokenizer/browser/experimental.es.js`,
     output: {exports: 'named', name: 'markup'},
   },
+  ['tokenizer:experimental:es:standalone']: {
+    input: `${dirname}/experimental/es/standalone.js`,
+    output: {exports: 'named', name: 'markup'},
+  },
 };
 
 // prettier-ignore //
@@ -94,6 +98,7 @@ const cjs = (name, naming = 'legacy/[name].cjs') => bundle(name, 'cjs', naming);
 const iife = (name, naming = '[name].js') => bundle(name, 'iife', `classic/${naming}`);
 
 export default [
+  esm(`tokenizer:experimental:es:standalone`, '[name].es.standalone.js'),
   esm(`tokenizer:browser:experimental:es:extended`, '[name].es.extended.js'),
   esm(`tokenizer:browser:experimental:es`, '[name].es.js'),
   esm(`tokenizer:${variant}:extended`),

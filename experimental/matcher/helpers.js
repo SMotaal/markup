@@ -103,7 +103,7 @@ export const {
             (next = token))
           );
 
-          console.log({...state});
+          // console.log({...state});
         }
       }.prototype,
     ),

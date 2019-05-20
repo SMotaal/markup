@@ -43,7 +43,14 @@ const goals = {
   [Symbolic('FaultGoal')]: {type: 'fault', groups: {}},
 };
 
-const {[symbols.FaultGoal]: FaultGoal} = goals;
+const {
+  [symbols.FaultGoal]: FaultGoal,
+  [symbols.ECMAScriptGoal]: ECMAScriptGoal,
+  [symbols.CommentGoal]: CommentGoal,
+  [symbols.RegExpGoal]: RegExpGoal,
+  [symbols.StringGoal]: StringGoal,
+  [symbols.TemplateLiteralGoal]: TemplateLiteralGoal,
+} = goals;
 
 const groups = {
   ['{']: {opener: '{', closer: '}'},
@@ -74,14 +81,7 @@ const keywords = {};
 {
   const {create, freeze, entries, getOwnPropertySymbols, getOwnPropertyNames, setPrototypeOf} = Object;
 
-  // const lookups = new Set();
-  // lookups.punctuators = new Set();
-  // lookups.openers = new Set();
-  // lookups.closers = new Set();
-
   const punctuators = create(null);
-  // const openers = [];
-  // const closers = [];
 
   for (const opener of getOwnPropertyNames(groups)) {
     const {[opener]: group} = groups;
@@ -124,9 +124,6 @@ const keywords = {};
   }
 
   freeze(punctuators);
-  // freeze(closers);
-  // freeze(openers);
-
   freeze(goals);
   freeze(groups);
   freeze(identities);
@@ -137,14 +134,28 @@ const keywords = {};
       'await break case catch class const continue debugger default delete do else export extends finally for function if import in instanceof let new return super switch this throw try typeof var void while with yield',
     [identities.RestrictedWord]: 'interface implements package private protected public',
     [identities.FutureReservedWord]: 'enum',
-    [identities.ContextualWord]: 'arguments async as from of static',
+    // NOTE: This is purposely not aligned with the spec
+    [identities.ContextualWord]: 'arguments async as from of static get set',
   })) {
     for (const keyword of list.split(/\s+/)) keywords[keyword] = identity;
   }
+  keywords[Symbol.iterator] = Array.prototype[Symbol.iterator].bind(Object.getOwnPropertyNames(keywords));
   freeze(keywords);
 }
 
-export {identities, goals, groups, symbols, keywords, FaultGoal};
+export {
+  identities,
+  goals,
+  groups,
+  symbols,
+  keywords,
+  FaultGoal,
+  ECMAScriptGoal,
+  CommentGoal,
+  RegExpGoal,
+  StringGoal,
+  TemplateLiteralGoal,
+};
 
 /**
  * Creates a symbolically mapped goal-specific token record

@@ -1,4 +1,4 @@
-export * from './helpers.js';
+export * from './lib/helpers.js';
 
 import {createParser} from '../lib/core.js';
 import {Tokenizer} from '../lib/experimental/tokenizer.js';

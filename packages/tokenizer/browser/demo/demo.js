@@ -1,11 +1,11 @@
-import {Resolvers, Hash, resolveURL, rewrite, frame, timeout} from './helpers.js';
+import {Resolvers, Hash, resolveURL as RELATIVE, rewrite, frame, timeout} from './helpers.js';
 import {darkMode} from './dark-mode.js';
 
 const Examples = ({
-  ['es']: ES = local('./dist/tokenizer.experimental.js'),
+  ['es']: ES = LOCAL('./dist/tokenizer.experimental.js'),
   ['html']: HTML = rewrite.tail(location.href),
-  ['css']: CSS = resolveURL('../../browser/styles/markup.css', import.meta.url),
-  ['md']: MD = local('./README.md'),
+  ['css']: CSS = LOCAL('./browser/styles/markup.css'),
+  ['md']: MD = LOCAL('./README.md'),
 } = {}) => ({
   ['html']: {url: HTML, mode: 'html'},
   ['es']: {url: ES, mode: 'es'},
@@ -13,29 +13,31 @@ const Examples = ({
   ['esm']: {url: ES, mode: 'esm'},
   ['cjs']: {url: ES, mode: 'cjs'},
   ['md']: {url: MD, mode: 'md'},
-  ['json']: {url: local('./examples/samples/sample.json')},
-  ['gfm']: {url: local('./examples/samples/gfm.md')},
-  ['es-matcher']: {url: resolveURL('/markup/experimental/es/matcher.js', import.meta.url), mode: 'es'},
-  ['babel']: {url: unpkg('@babel/standalone')},
-  ['sesm']: {url: unpkg('ses?module'), mode: 'es'},
-  ['ses']: {url: unpkg('ses'), mode: 'es'},
-  ['acorn-esm']: {url: unpkg('acorn?module'), mode: 'esm'},
-  ['acorn-cjs']: {url: unpkg('acorn'), mode: 'cjs'},
-  ['acorn-loose']: {url: cdnjs('acorn/5.7.3/acorn_loose.es.js')},
-  ['esprima']: {url: cdnjs('esprima/2.7.3/esprima.js')},
-  ['babel-core']: {url: cdnjs('babel-core/6.1.19/browser.js')},
-  ['babel-core-min']: {url: cdnjs('babel-core/6.1.19/browser.min.js')},
-  ['popper']: {url: cdnjs('popper.js/1.14.4/esm/popper.js')},
-  ['xregexp']: {url: cdnjs('xregexp/3.2.0/xregexp-all.js')},
-  ['xregexp-min']: {url: cdnjs('xregexp/3.2.0/xregexp-all.min.js')},
+  ['json']: {url: LOCAL('./examples/samples/sample.json')},
+  ['gfm']: {url: LOCAL('./examples/samples/gfm.md')},
+  ['es-matcher']: {url: RELATIVE('/markup/experimental/es/matcher.js', import.meta.url), mode: 'es'},
+  ['es-matcher-bundle']: {url: LOCAL('./dist/tokenizer.browser.es.js', import.meta.url), mode: 'es'},
+  ['babel']: {url: UNPKG('@babel/standalone')},
+  ['sesm']: {url: UNPKG('ses?module'), mode: 'es'},
+  ['ses']: {url: UNPKG('ses'), mode: 'es'},
+  ['acorn-esm']: {url: UNPKG('acorn?module'), mode: 'esm'},
+  ['acorn-cjs']: {url: UNPKG('acorn'), mode: 'cjs'},
+  ['acorn-loose']: {url: CDNJS('acorn/5.7.3/acorn_loose.es.js')},
+  ['esprima']: {url: CDNJS('esprima/2.7.3/esprima.js')},
+  ['babel-core']: {url: CDNJS('babel-core/6.1.19/browser.js')},
+  ['babel-core-min']: {url: CDNJS('babel-core/6.1.19/browser.min.js')},
+  ['popper']: {url: CDNJS('popper.js/1.14.4/esm/popper.js')},
+  ['xregexp']: {url: CDNJS('xregexp/3.2.0/xregexp-all.js')},
+  ['xregexp-min']: {url: CDNJS('xregexp/3.2.0/xregexp-all.min.js')},
 });
 
 const resolvers = Resolvers({
-  ['~']: resolveURL('../../', import.meta.url),
-  ['unpkg']: resolveURL(`https://unpkg.com/`),
-  ['cdnjs']: resolveURL(`https://cdnjs.cloudflare.com/ajax/libs/`),
+  ['~']: RELATIVE('../../', import.meta.url),
+  ['unpkg']: RELATIVE(`https://unpkg.com/`),
+  ['cdnjs']: RELATIVE(`https://cdnjs.cloudflare.com/ajax/libs/`),
 });
-const {['~']: local, unpkg, cdnjs} = resolvers;
+
+const {['~']: LOCAL, unpkg: UNPKG, cdnjs: CDNJS} = resolvers;
 
 const glyphs = {'@': '@', '#': '#', '*': '⁎', '**': '⁑', '!': '!', '!!': '!!'};
 const glyph = symbol => glyphs[symbol] || symbol || '';
@@ -44,7 +46,7 @@ const defaults = {
   variant: 1,
   repeats: 1,
   iterations: 1,
-  sourceURL: resolveURL('../samples/complex.html', import.meta.url),
+  sourceURL: LOCAL('./examples/samples/complex.html'),
   sourceType: undefined,
   element: 'pre#source-code',
   headerTemplate: 'template#source-header',
@@ -372,9 +374,10 @@ export default (markup, overrides) => {
       } = await time('source', () => loadFromURL(specifier));
 
       const resourceType = `${response.headers.get('Content-Type')}`.replace(/^(?:.*?\/)?(\w+).*$/, '$1').toLowerCase();
-      const defaultType = `${sourceType || resourceType || options.sourceType || ''}`.toLowerCase();
+      const defaultType = `${sourceType || options.sourceType || resourceType || ''}`.toLowerCase();
       const resolvedType =
         typeof resolveSourceType === 'function' && resolveSourceType(defaultType, {sourceType, resourceType, options});
+      // console.log({resourceType, defaultType, sourceType, resolvedType});
       sourceType = (resolvedType && `${resolvedType}`.trim().toLowerCase()) || defaultType;
       const variant = options.variant > 0 ? options.variant : defaults.variant;
       const markupOptions = {sourceType, variant};
@@ -476,7 +479,7 @@ export default (markup, overrides) => {
         : scope in resolvers
         ? (source = resolvers[scope]((specifier = specifier.slice(prefix.length))))
         : (source = specifier))) ||
-      ({sourceURL: source, sourceType: mode = mode} = options.defaults);
+      ((source = options.defaults.sourceURL), mode || (mode = options.defaults.sourceType));
 
     ({
       iterations: options.iterations = options.defaults.iterations,

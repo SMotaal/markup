@@ -134,9 +134,9 @@
   break-inside: avoid;
 
   --markup-soft-indent: calc(1em * var(--markup-soft-indent-tab-size));
-  --markup-text-indent: calc(-1 * var(--markup-soft-indent) + 1px);
+  --markup-text-indent: calc(-1 * var(--markup-soft-indent, 0.0001em) + 1px);
   --markup-inset-margin: calc(var(--markup-gutter, 0));
-  --markup-inset-padding: calc(0.275em + var(--markup-soft-indent));
+  --markup-inset-padding: calc(0.275em + var(--markup-soft-indent, 0.0001em));
 
   /* --markup-soft-indent: 1em; */
   /* --markup-soft-indent: 0; */
@@ -145,8 +145,8 @@
   padding: 0;
   margin: 0;
   margin-inline-start: calc(var(--markup-gutter, 0) + 1px);
-  text-indent: calc(-1 * var(--markup-soft-indent) + 1px);
-  padding-inline-start: calc(0.275em + var(--markup-soft-indent));
+  text-indent: calc(-1 * var(--markup-soft-indent, 0.0001em) + 1px);
+  padding-inline-start: calc(0.275em + var(--markup-soft-indent, 0.0001em));
 
   /* border: 0 solid transparent; */
   /* width: -webkit-fill-available; */
@@ -161,7 +161,7 @@
 }
 
 .markup-line.no-reflow {
-  --markup-soft-indent: 0.0001em;
+  /* --markup-soft-indent: 0.0001em; */
 }
 
 .markup-line .markup {

@@ -1,4 +1,4 @@
-export * from './helpers.js';
+export * from './lib/helpers.js';
 import experimentalExtendedParser from '../tokenizer.experimental.extended.js';
 import {TokenizerAPI} from '../lib/api.js';
 import markupDOM from '../extensions/dom.js';
