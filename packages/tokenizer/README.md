@@ -44,7 +44,7 @@ parser.tokenize('/* source */', {sourceType: 'javascript'});
 
 ## Demo
 
-You can see a [live demo](https://www.smotaal.io/markup/markup) or serve it locally from [examples/browser/index.html](./examples/browser/index.html).
+You can see a [live demo](https://www.smotaal.io/markup/markup) or serve it locally and navigate to [browser/demo/index.html](./browser/demo/index.html).
 
 <figure>
 
