@@ -6,16 +6,22 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline';" />
-  <script type="module" src="/markup/packages/tokenizer/browser/experimental.js"></script>
-  <script type="module" src="/markup/packages/tokenizer/examples/browser/demo.js"></script>
-  <link rel="stylesheet" href="/markup/packages/tokenizer/examples/browser/styles.css" />
+  <meta name="theme-color" content="#333f46">
+  <meta name="background-color" content="#999999">
+  <link rel="icon" sizes="72x72" href="/markup/assets/icon-72x72.png">
+  <link rel="icon" sizes="192x192" href="/markup/assets/icon-192x192.png">
+  <link rel="apple-touch-icon" href="/markup/assets/icon-192x192.png">
   <link rel="stylesheet" href="/fonts/iosevka.css" />
+  <link rel="manifest" href="./manifest.webmanifest">
+  <script type="module" src="/markup/packages/tokenizer/browser/experimental.js"></script>
+  <script type="module" src="/markup/packages/tokenizer/browser/demo/demo.js"></script>
+  <link rel="stylesheet" href="/markup/packages/tokenizer/browser/demo/demo.css" />
 </head>
 
 <body>
   <pre id="source-code" class="markup-container"></pre>
   <script type="module">
-    import demo from '/markup/packages/tokenizer/examples/browser/demo.js';
+    import demo from '/markup/packages/tokenizer/browser/demo/demo.js';
     import dynamicImport from '/browser/dynamicImport.js';
     // import markup from '/markup/packages/tokenizer/browser/experimental.js';
     import markup from '/markup/packages/tokenizer/browser/experimental.extended.js';

@@ -21,17 +21,18 @@ export const Hash = (() => {
     new RegExp(
       sequence`
         ^(?:${HASH}
-          (${NOTE /* specifier */}
-            (?:${NOTE /* prefix (optional protocol or scope) */}
-              https?:\/\/|[a-z]+:|[~]\/|[.]{0,2}\/|
-            )
-            (?:${NOTE /* entry (hard-wired alias, specifier or URL) */}
-              (?:${NOTE /* entry path part */}
-                [^\s${SYMBOLS}\/]*(?:@[-_a-z][-_.\w]+\/|[^\/]+\/|\/)*
-              )?
-              (?:${NOTE /* entry name part */}[^${SYMBOLS}]*)
-            )
-          )(?:${NOTE /* parameters (optional/unordered) */}
+          (?:(?=[^${SYMBOLS}])(
+            ${NOTE /* specifier (optional) */}
+              (?:${NOTE /* prefix (optional protocol or scope) */}
+                https?:\/\/|[a-z]+:|[~]\/|[.]{0,2}\/|
+              )
+              (?:${NOTE /* entry (hard-wired alias, specifier or URL) */}
+                (?:${NOTE /* entry path part */}
+                  [^\s${SYMBOLS}\/]*(?:@[-_a-z][-_.\w]+\/|[^\/]+\/|\/)*
+                )?
+                (?:${NOTE /* entry name part */}[^${SYMBOLS}]*)
+              )
+          )|)(?:${NOTE /* parameters (optional/unordered) */}
             (?=.*?${MODE}([a-zA-Z]+)|)
             (?=.*?${ITERATIONS}(\d+)|)
             (?=.*?${REPEATS}(\d+)|)

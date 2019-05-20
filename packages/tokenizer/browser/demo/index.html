@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>SMotaal's Tokenizer</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline';" />
+  <meta name="theme-color" content="#333f46">
+  <meta name="background-color" content="#999999">
+  <link rel="icon" sizes="72x72" href="./icon-72x72.png">
+  <link rel="icon" sizes="192x192" href="./icon-192x192.png">
+  <link rel="apple-touch-icon" href="./icon-192x192.png">
+  <script>
+    document.currentScript.after(Object.assign(document.createElement('link'), {
+      rel: 'stylesheet',
+      href: '/fonts/iosevka.css',
+      fallback: 'https://smotaal.io/fonts/iosevka.css',
+      onerror() {
+        this.href !== this.fallback && (this.href = this.fallback) ? this.previousSiblingElement.after(this) : this.remove()
+      }
+    }));
+  </script>
+  <link rel="stylesheet" href="./demo.css" />
+</head>
+
+<body>
+  <pre id="source-code" class="markup-container"></pre>
+  <script type="module">
+    // import * as markup from '../experimental.es.extended.js';
+    import * as markup from  '../../dist/tokenizer.browser.es.extended.js';
+    import demo from './demo.js';
+    demo(markup);
+  </script>
+</body>
+
+</html>

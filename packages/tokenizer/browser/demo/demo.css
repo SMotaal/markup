@@ -1,6 +1,5 @@
-/* @import '/fonts/iosevka.css'; */
-@import '../../browser/styles/markup.css';
-@import '../../browser/styles/markup-debug.css';
+@import '../styles/markup.css';
+@import '../styles/markup-debug.css';
 
 :host {
   --markup-neutral-light: var(--markup-neutral-light, #aaa);
@@ -114,6 +113,12 @@
 
 /** FLEX **/ /* @import '/pholio/styles/flex.css'; */
 
+@font-face {
+  font-family: markup;
+  font-display: swap;
+  src: local('Iosevka'), local('Fira Code'), local('Input'), local('Source Code Pro');
+}
+
 .markup-container {
   background-color: var(--markup-background, transparent);
   color: var(--markup-color, currentColor);
@@ -121,7 +126,7 @@
   -webkit-tab-size: var(--markup-tab-size, 2);
   -moz-tab-size: var(--markup-tab-size, 2);
   tab-size: var(--markup-tab-size, 2);
-  font-family: 'Iosevka Web', 'Iosevka', 'Input', 'SourceCode Pro', monospace;
+  font-family: Iosevka, 'Iosevka Web', markup, monospace;
   font-kerning: auto;
   /* font-variant-ligatures: contextual; */
   white-space: pre-wrap;

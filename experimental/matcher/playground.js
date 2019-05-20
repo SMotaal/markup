@@ -6,10 +6,7 @@ export default async markup => {
   const mode = createMatcherMode(
     Matcher.define(
       entity => Matcher.sequence`
-      (
-        \S+
-        ${entity('text')}
-      )|(
+      (\S+${entity('text')})|(
         \n
         ${entity((text, entity, match, state) => {
           state.lineOffset = match.index + text.length;

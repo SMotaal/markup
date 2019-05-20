@@ -27,25 +27,27 @@
         try {
           this.lastParser === (this.lastParser = parser) ||
             console.info('[tokenize‹parser›]: %o', parser.MODULE_URL || {parser});
-          return (returned = parser.tokenize(source, state));
+          return (returned = parser.tokenize((this.lastSource = source), (this.lastState = state)));
         } finally {
           returned !== UNSET || !state.flags.debug || console.info('[tokenize‹state›]: %o', state);
         }
       },
 
       warmup = (source, options, flags) => {
-        // Object.defineProperty(options, 'warmup', {value: true});
         const key = (options && JSON.stringify(options)) || '';
         let cache = (this.cache || (this.cache = new Map())).get(key);
         cache || this.cache.set(key, (cache = new Set()));
         if (!cache.has(source)) {
+          cache.add(source);
           flags = `warmup ${(flags &&
             (flags.length > 0 || flags.size > 0) &&
             (typeof flags === 'string' || flags instanceof String ? flags : [...flags].join(' '))) ||
             ''}`;
-          for (const item of tokenize(source, options, flags));
+          const tokens = tokenize(source, options, flags);
+          const snapshot = {...this};
+          for (const item of tokens);
+          console.log('[tokenize‹warmup›]: %o', snapshot);
         }
-        cache.add(source);
       },
 
       render,
