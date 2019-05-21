@@ -886,13 +886,13 @@
                 (next.hint = `${(hint && `${hint} `) || ''}${next.type}`)) ||
               (next.type = 'sequence');
           } else if (type === 'whitespace') {
-            next.breaks = text.match(LineEndings).length - 1;
+            next.lineBreaks = text.match(LineEndings).length - 1;
           } else if (forming && wording) {
             const word = text.trim();
             word &&
               ((keywords &&
                 keywords.includes(word) &&
-                (!last || last.punctuator !== 'nonbreaker' || (previous && previous.breaks > 0)) &&
+                (!last || last.punctuator !== 'nonbreaker' || (previous && previous.lineBreaks > 0)) &&
                 (next.type = 'keyword')) ||
                 (maybeIdentifier && maybeIdentifier.test(word) && (next.type = 'identifier')));
           } else {
@@ -966,9 +966,9 @@
   const indexOf = Function.call.bind(String.prototype.indexOf);
   /** @type {(string: string) => number} */
   const countLineBreaks = text => {
-    let breaks = 0;
-    for (let index = -1; (index = indexOf(text, '\n', index + 1)) > -1; breaks++);
-    return breaks;
+    let lineBreaks = 0;
+    for (let index = -1; (index = indexOf(text, '\n', index + 1)) > -1; lineBreaks++);
+    return lineBreaks;
   };
 
   const createBaselineTokenizer = () => {
@@ -983,8 +983,8 @@
           const {0: text, index} = match;
           const pre = lastIndex < index && string.slice(lastIndex, index);
           lastIndex = matcher.lastIndex;
-          pre && (yield {text: pre, breaks: countLineBreaks(pre)});
-          yield {text, breaks: countLineBreaks(text)};
+          pre && (yield {text: pre, lineBreaks: countLineBreaks(pre)});
+          yield {text, lineBreaks: countLineBreaks(text)};
         }
       }
     };
@@ -1845,8 +1845,9 @@
     }
 
     *renderer(tokens) {
+      let renderedLine, LineInset, normalizedLineInset, normalizedLineText, lineBreak, insetHint;
+      let type, text, punctuator, hint, lineInset, lineBreaks, renderer;
       const {renderers, reflows} = this;
-      let renderedLine, LineInset, lineInset, lineText, lineBreak, insetHint;
       const createLine = reflows
         ? () => (renderedLine = renderers.line())
         : () => (renderedLine = renderers.line('', 'no-reflow'));
@@ -1860,30 +1861,33 @@
       for (const token of tokens) {
         if (!token || !token.text) continue;
 
-        let {type = 'text', text, inset, punctuator, breaks, hint} = token;
-        let renderer =
+        ({type = 'text', text, punctuator, hint, lineInset, lineBreaks} = token);
+
+        renderer =
           (punctuator &&
             (renderers[punctuator] || (type && renderers[type]) || renderers.punctuator || renderers.operator)) ||
-          (type && renderers[type]) ||
-          (type !== 'whitespace' && type !== 'break' && renderers.text) ||
+          (type && (renderers[type] || (type !== 'whitespace' && type !== 'break' && renderers.text))) ||
           Text$2;
 
         // Normlize inset for { type != 'inset', inset = /\s+/ }
-        if (reflows && breaks && type !== 'break') {
-          LineInset = void (inset = inset || '');
+        if (reflows && lineBreaks && type !== 'break') {
+          LineInset = void (lineInset = lineInset || '');
           insetHint = `${hint || ''} in-${type || ''}`;
-          for (const line of text.split(Lines)) {
-            (lineInset = line.startsWith(inset)
-              ? line.slice(0, inset.length)
-              : line.match(LineInset || (LineInset = RegExp(`^${inset.replace(/./g, '$&?')}`)))[0]) &&
-              emitInset(lineInset, insetHint);
+          for (const normlizedline of text.split(Lines)) {
+            (normalizedLineInset = normlizedline.startsWith(lineInset)
+              ? normlizedline.slice(0, lineInset.length)
+              : normlizedline.match(LineInset || (LineInset = RegExp(`^${lineInset.replace(/./g, '$&?')}`)))[0]) &&
+              emitInset(normalizedLineInset, insetHint);
 
-            (lineText = lineInset ? line.slice(lineInset.length) : line) &&
-              ((lineText === '\n'
-                ? ((lineBreak = lineText), (lineText = ''))
-                : lineText.endsWith('\n')
-                ? ((lineBreak = '\n'), (lineText = lineText.slice(0, lineText.endsWith('\r\n') ? -2 : -1)))
-                : !(lineBreak = '')) && emit(renderer, lineText, type, hint),
+            (normalizedLineText = normalizedLineInset
+              ? normlizedline.slice(normalizedLineInset.length)
+              : normlizedline) &&
+              ((normalizedLineText === '\n'
+                ? ((lineBreak = normalizedLineText), (normalizedLineText = ''))
+                : normalizedLineText.endsWith('\n')
+                ? ((lineBreak = '\n'),
+                  (normalizedLineText = normalizedLineText.slice(0, normalizedLineText.endsWith('\r\n') ? -2 : -1)))
+                : !(lineBreak = '')) && emit(renderer, normalizedLineText, type, hint),
               lineBreak && (emitBreak(), (renderedLine = void (yield renderedLine))));
           }
         } else {
@@ -1910,7 +1914,13 @@
           const element = content != null ? Element$2(tag, properties, content) : Element$2(tag, properties);
           element &&
             (hint = typeof hint === 'string' && `${element.className || ''} ${hint}`.trim()) &&
-            ((element.className = hint.split(/&#x[\da-f];/i, 1)[0]), (element.dataset = {hint: hint.slice(6).trim()}));
+            ((element.className = hint.split(/* /&#x[\da-f];/i */ '\n', 1)[0]),
+            (element.dataset = {
+              hint: hint
+                .slice(6)
+                .replace(/\n/g, '&#x000A;')
+                .trim(),
+            }));
           return element;
         },
         {
