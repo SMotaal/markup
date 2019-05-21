@@ -5,9 +5,9 @@ const stats = {
   captureCount: 0,
   contextCount: 0,
   tokenCount: 0,
-  totalCaptures: 0,
-  totalContexts: 0,
-  totalTokens: 0,
+  nestedCaptureCount: 0,
+  nestedContextCount: 0,
+  nestedTokenCount: 0,
 };
 
 /** @template {{}} T @param {T} context @returns {T & stats} */
@@ -45,8 +45,8 @@ export const open = (text, state) => {
   const goal = group.goal === undefined ? initialGoal : group.goal;
 
   state.nextContext = contexts[index] = initializeContext({
-    id: `${parentContext.id}${goal !== initialGoal ? ` ‹${group.opener}›&#x000A;«${goal.name}»` : ` ‹${group.opener}›`}`,
-    number: contexts.count++,
+    id: `${parentContext.id}${goal !== initialGoal ? ` ‹${group.opener}›\n«${goal.name}»` : ` ‹${group.opener}›`}`,
+    number: ++contexts.count,
     depth: index + 1,
     parentContext,
     goal,
@@ -63,33 +63,15 @@ export const open = (text, state) => {
  * @returns {undefined | string} - String when context is **not** closed
  */
 export const close = (text, state) => {
-  // const {goal: initialGoal, group: initialGroup, groups} = state;
-  const {
-    contexts,
-    context: {
-      goal: initialGoal,
-      group: initialGroup,
-      parentContext,
-      captureCount,
-      contextCount,
-      tokenCount,
-      totalCaptures,
-      totalContexts,
-      totalTokens,
-    },
-    groups,
-  } = state;
+  const groups = state.groups;
   const index = groups.closers.lastIndexOf(text);
+
 
   if (index === -1 || index !== groups.length - 1) return fault(text, state);
 
-  parentContext.totalContexts += totalContexts + contextCount;
-  parentContext.totalCaptures += totalCaptures + captureCount;
-  parentContext.totalTokens += totalTokens + tokenCount;
-
   groups.closers.splice(index, groups.closers.length);
   groups.splice(index, groups.length);
-  state.nextContext = parentContext;
+  state.nextContext = state.context.parentContext;
 };
 
 export const forward = (search, match, state) => {

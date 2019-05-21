@@ -58,8 +58,8 @@ export const {
   const createTokenFromMatch = ({0: text, identity, capture, index}) => ({
     type: (identity && (identity.description || identity)) || 'text',
     text,
-    breaks: countLineBreaks(text),
-    inset: (capture && capture.inset) || '',
+    lineBreaks: countLineBreaks(text),
+    lineInset: (capture && capture.inset) || '',
     offset: index,
     capture,
   });
@@ -91,16 +91,18 @@ export const {
             let match, token, next, index = 0;
             // Abort on first failed/empty match
             ((match = matcher.exec(string)) && match[0] !== '') ||
-            //   but first yield a lastToken if present
-            void (next && (yield next));
+            //   but first yield a nextToken if present
+            (state.nextToken = void (next && (yield next)));
             // We hold back one grace token
             (token = createToken(match, state)) &&
             //  until createToken(…) !== undefined (ie new token)
-            //  set the incremental token index for this lastToken
-            (((state.lastToken = token).index = index++),
-            //  and finally push the previous lastToken and yield
+            //  set the incremental token index for this token
+            //  and keep it referenced directly on the state
+            (((state.nextToken = token).index = index++),
+            //  then yield the previously held token
             next && (yield next),
-            (next = token))
+            //  then finally clear the nextToken reference
+            (state.nextToken = void (next = token)))
           );
 
           // console.log({...state});

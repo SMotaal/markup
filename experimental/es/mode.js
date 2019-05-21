@@ -10,17 +10,18 @@ export const mode = createMatcherMode(matcher, {
     (state.groups = []).closers = [];
     state.lineOffset = state.lineIndex = 0;
     state.lineFault = false;
+    state.totalCaptureCount = state.totalTokenCount = 0;
     const contexts = (state.contexts = Array(100));
     const context = initializeContext({
       id: `«${matcher.goal.name}»`,
-      number: (contexts.count = 1),
+      number: (contexts.count = state.totalContextCount = 1),
       depth: 0,
-      parent: undefined,
+      parentContext: undefined,
       goal: matcher.goal,
       group: undefined,
       state,
     });
-    contexts[-1] = state.context = context;
+    state.tokenContext = void (contexts[-1] = state.context = state.lastContext = context);
   },
   preregister: parser => {
     parser.unregister('es');
@@ -28,19 +29,25 @@ export const mode = createMatcherMode(matcher, {
   },
   createToken: (match, state) => {
     let currentGoal,
-      goalName,
-      goalType,
+      // goalName,
+      currentGoalType,
       contextId,
+      contextNumber,
+      contextDepth,
+      contextGroup,
+      parentContext,
+      tokenReference,
+      nextToken,
       text,
       type,
       fault,
       punctuator,
       offset,
-      inset,
-      breaks,
-      delimiter,
-      comment,
-      whitespace,
+      lineInset,
+      lineBreaks,
+      isDelimiter,
+      isComment,
+      isWhitespace,
       flatten,
       fold,
       columnNumber,
@@ -49,13 +56,22 @@ export const mode = createMatcherMode(matcher, {
       captureNumber,
       hint;
 
-    const {context, nextContext, lineIndex, lineOffset, nextOffset, previousToken} = state;
+    const {
+      context: currentContext,
+      nextContext,
+      lineIndex,
+      lineOffset,
+      nextOffset,
+      lastToken,
+      lastTrivia,
+      lastAtom,
+    } = state;
 
     /* Capture */
 
     ({
       0: text,
-      capture: {inset},
+      capture: {inset: lineInset},
       identity: type,
       flatten,
       fault,
@@ -65,78 +81,112 @@ export const mode = createMatcherMode(matcher, {
 
     if (!text) return;
 
-    /* Context */
+    // try {
+    ({
+      id: contextId,
+      number: contextNumber,
+      depth: contextDepth,
+      goal: currentGoal,
+      group: contextGroup,
+      parentContext,
+    } = state.tokenContext = currentContext);
 
-    nextContext && (state.nextContext = void (nextContext !== context && (state.context = nextContext)));
-
-    ({id: contextId, goal: currentGoal} = context);
-    ({name: goalName, type: goalType} = currentGoal);
+    currentGoalType = currentGoal.type; // ({name: goalName, type: goalType} = currentGoal);
 
     nextOffset &&
       (state.nextOffset = void (nextOffset > offset && (text = match.input.slice(offset, nextOffset)),
       (state.matcher.lastIndex = nextOffset)));
 
-    breaks = (text === '\n' && 1) || countLineBreaks(text);
-    comment = type === 'comment' || punctuator === 'comment';
-    delimiter = type === 'closer' || type === 'opener';
-    whitespace = !delimiter && (type === 'whitespace' || type === 'break' || type === 'inset');
+    lineBreaks = (text === '\n' && 1) || countLineBreaks(text);
+    isComment = type === 'comment' || punctuator === 'comment';
+    isDelimiter = type === 'closer' || type === 'opener';
+    isWhitespace = !isDelimiter && (type === 'whitespace' || type === 'break' || type === 'inset');
 
-    type || (type = (!delimiter && !fault && goalType) || 'text');
+    type || (type = (!isDelimiter && !fault && currentGoalType) || 'text');
 
-    if (breaks) {
-      state.lineIndex += breaks;
+    if (lineBreaks) {
+      state.lineIndex += lineBreaks;
       state.lineOffset = offset + (text === '\n' ? 1 : text.lastIndexOf('\n'));
     }
 
     /* Flattening / Token Folding */
 
-    flatten === false || flatten === true || (flatten = !delimiter && currentGoal.flatten === true);
+    flatten === false || flatten === true || (flatten = !isDelimiter && currentGoal.flatten === true);
 
-    captureNumber = ++context.captureCount;
+    captureNumber = ++currentContext.captureCount;
+    state.totalCaptureCount++;
 
     if (
       (fold = flatten) && // fold only if flatten is allowed
-      previousToken != null &&
-      previousToken.context === context && // never fold across contexts
-      previousToken.fold === true &&
-      (previousToken.type === type || (currentGoal.fold === true && (previousToken.type = currentGoal.type)))
+      lastToken != null &&
+      lastToken.contextNumber === contextNumber && // never fold across contexts
+      lastToken.fold === true &&
+      (lastToken.type === type || (currentGoal.fold === true && (lastToken.type = currentGoalType)))
     ) {
-      previousToken.text += text;
-      breaks && (previousToken.breaks += breaks);
+      lastToken.captureCount++;
+      lastToken.text += text;
+      lineBreaks && (lastToken.lineBreaks += lineBreaks);
     } else {
       /* Token Creation */
       flatten = false;
       columnNumber = 1 + (offset - lineOffset || 0);
       lineNumber = 1 + (lineIndex || 0);
-      tokenNumber = ++context.tokenCount;
 
-      hint = `${(delimiter ? type : goalType && `in-${goalType}`) ||
-        ''}&#x000A;${contextId} #${tokenNumber}&#x000A;(${lineNumber}:${columnNumber})`;
+      tokenNumber = ++currentContext.tokenCount;
+      state.totalTokenCount++;
 
-      return (state.previousToken = state[whitespace || comment ? 'previousTrivia' : 'previousAtom'] = {
-        type,
+      hint = `${(isDelimiter ? type : currentGoalType && `in-${currentGoalType}`) ||
+        ''}\n${contextId} #${tokenNumber}\n(${lineNumber}:${columnNumber})`;
+
+      tokenReference = isWhitespace || isComment ? 'lastTrivia' : 'lastAtom';
+
+      nextToken = currentContext[tokenReference] = state[
+        tokenReference
+      ] = currentContext.lastToken = state.lastToken = {
         text,
+        type,
         offset,
-        breaks,
-        inset,
+        punctuator,
+        hint,
+        lineOffset,
+        lineBreaks,
+        lineInset,
         columnNumber,
         lineNumber,
-        punctuator,
+        captureNumber,
+        captureCount: 1,
+        tokenNumber,
+        contextNumber,
+        contextDepth,
+
+        isWhitespace, // whitespace:
+        isDelimiter, // delimiter:
+        isComment, // comment:
+
+        // FIXME: Nondescript
         fault,
         fold,
         flatten,
-        delimiter,
-        whitespace,
-        comment,
-        hint,
 
-        captureNumber,
-        tokenNumber,
-
-        context,
-        lineIndex,
-        lineOffset,
-      });
+        goal: currentGoal,
+        group: contextGroup,
+        state,
+      };
     }
+    /* Context */
+    !nextContext ||
+      ((state.nextContext = undefined), nextContext === currentContext) ||
+      ((state.lastContext = currentContext),
+      currentContext === nextContext.parentContext
+        ? (state.totalContextCount++,
+          (nextContext.precedingAtom = lastAtom),
+          (nextContext.precedingTrivia = lastTrivia),
+          (nextContext.precedingToken = lastToken))
+        : ((parentContext.nestedContextCount += currentContext.nestedContextCount + currentContext.contextCount),
+          (parentContext.nestedCaptureCount += currentContext.nestedCaptureCount + currentContext.captureCount),
+          (parentContext.nestedTokenCount += currentContext.nestedTokenCount + currentContext.tokenCount)),
+      (state.context = nextContext));
+
+    return nextToken;
   },
 });

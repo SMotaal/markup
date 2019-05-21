@@ -33,9 +33,9 @@ const EmptyTokenArray = (EmptyTokenArray =>
 export const indexOf = Function.call.bind(String.prototype.indexOf);
 /** @type {(string: string) => number} */
 export const countLineBreaks = text => {
-  let breaks = 0;
-  for (let index = -1; (index = indexOf(text, '\n', index + 1)) > -1; breaks++);
-  return breaks;
+  let lineBreaks = 0;
+  for (let index = -1; (index = indexOf(text, '\n', index + 1)) > -1; lineBreaks++);
+  return lineBreaks;
 };
 
 export const createBaselineTokenizer = () => {
@@ -50,8 +50,8 @@ export const createBaselineTokenizer = () => {
         const {0: text, index} = match;
         const pre = lastIndex < index && string.slice(lastIndex, index);
         lastIndex = matcher.lastIndex;
-        pre && (yield {text: pre, breaks: countLineBreaks(pre)});
-        yield {text, breaks: countLineBreaks(text)};
+        pre && (yield {text: pre, lineBreaks: countLineBreaks(pre)});
+        yield {text, lineBreaks: countLineBreaks(text)};
       }
     }
   };
