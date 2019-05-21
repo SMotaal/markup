@@ -104,7 +104,7 @@ class MarkupRenderer {
 
   *renderer(tokens) {
     const {renderers, flattens, reflows} = this;
-    let renderedLine, Inset, lineInset, lineText, lineBreak, insetHint;
+    let renderedLine, Inset, normalizedLineInset, normalizedLineText, lineBreak, insetHint;
     // let line, indent, trim, tabSpan;
     // const blank = renderers.line();
     const emit = (renderer, text, type, hint, flatten) => {
@@ -119,7 +119,7 @@ class MarkupRenderer {
     for (const token of tokens) {
       if (!token || !token.text) continue;
 
-      let {type = 'text', text, inset, punctuator, breaks, hint, flatten} = token;
+      let {type = 'text', text, lineInset, punctuator, lineBreaks, hint, flatten} = token;
       let renderer =
         (punctuator && (renderers[punctuator] || (type && renderers[type]) || renderers.operator)) ||
         // (punctuator && (renderers[punctuator] ? ((type = punctuator), renderers[punctuator]) : renderers.operator)) ||
@@ -136,23 +136,23 @@ class MarkupRenderer {
       // ({flatten = /fault|opener|closer|break|operator|combinator|whitespace|break|inset/.test(text)} = renderer);
 
       // Normlize inset for { type != 'inset', inset = /\s+/ }
-      if (breaks && type !== 'break') {
+      if (lineBreaks && type !== 'break') {
         // reflows &&
-        Inset = void (inset = inset || '');
+        Inset = void (lineInset = lineInset || '');
         insetHint = `${hint || ''} in-${type || ''}`;
         for (const line of text.split(Lines)) {
           renderedLine || (renderedLine = renderers.line());
-          (lineInset = line.startsWith(inset)
-            ? line.slice(0, inset.length)
-            : line.match(Inset || (Inset = RegExp(`^${inset.replace(/./g, '$&?')}`)))[0]) &&
-            emitInset(lineInset, insetHint);
+          (normalizedLineInset = line.startsWith(lineInset)
+            ? line.slice(0, lineInset.length)
+            : line.match(Inset || (Inset = RegExp(`^${lineInset.replace(/./g, '$&?')}`)))[0]) &&
+            emitInset(normalizedLineInset, insetHint);
 
-          (lineText = lineInset ? line.slice(lineInset.length) : line) &&
-            ((lineText === '\n'
-              ? ((lineBreak = lineText), (lineText = ''))
-              : lineText.endsWith('\n')
-              ? ((lineBreak = '\n'), (lineText = lineText.slice(0, lineText.endsWith('\r\n') ? -2 : -1)))
-              : !(lineBreak = '')) && emit(renderer, lineText, type, hint, flatten),
+          (normalizedLineText = normalizedLineInset ? line.slice(normalizedLineInset.length) : line) &&
+            ((normalizedLineText === '\n'
+              ? ((lineBreak = normalizedLineText), (normalizedLineText = ''))
+              : normalizedLineText.endsWith('\n')
+              ? ((lineBreak = '\n'), (normalizedLineText = normalizedLineText.slice(0, normalizedLineText.endsWith('\r\n') ? -2 : -1)))
+              : !(lineBreak = '')) && emit(renderer, normalizedLineText, type, hint, flatten),
             lineBreak &&
               (emit(renderers.break, lineBreak, type, hint, false), yield renderedLine, (renderedLine = null)));
         }
@@ -199,7 +199,7 @@ MarkupRenderer.defaults = Object.freeze({
   CLASS: 'markup',
   /** Enable renderer-side packing of similar { flatten = true } tokens */
   FLATTEN: false, // true,
-  /** Enable renderer-side unpacking { inset } || { breaks > 0 } tokens */
+  /** Enable renderer-side unpacking { inset } || { lineBreaks > 0 } tokens */
   REFLOW: true,
 });
 

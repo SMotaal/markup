@@ -36,13 +36,13 @@ export class TokenSynthesizer {
             (next.hint = `${(hint && `${hint} `) || ''}${next.type}`)) ||
           (next.type = 'sequence')
         : type === 'whitespace'
-        ? // ? (next.breaks = text.match(LineEndings).length - 1)
-          (next.breaks = countLineBreaks(text))
+        ? // ? (next.lineBreaks = text.match(LineEndings).length - 1)
+          (next.lineBreaks = countLineBreaks(text))
         : forming && wording
         ? text &&
           (((!maybeKeyword || maybeKeyword.test(text)) &&
             (keywords && keywords.includes(text)) &&
-            (!last || last.punctuator !== 'nonbreaker' || (previous && previous.breaks > 0)) &&
+            (!last || last.punctuator !== 'nonbreaker' || (previous && previous.lineBreaks > 0)) &&
             (next.type = 'keyword')) ||
             (maybeIdentifier && maybeIdentifier.test(text) && (next.type = 'identifier')))
         : (next.type = 'text');

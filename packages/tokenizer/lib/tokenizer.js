@@ -307,13 +307,13 @@ export class Tokenizer {
               (next.hint = `${(hint && `${hint} `) || ''}${next.type}`)) ||
             (next.type = 'sequence');
         } else if (type === 'whitespace') {
-          next.breaks = text.match(LineEndings).length - 1;
+          next.lineBreaks = text.match(LineEndings).length - 1;
         } else if (forming && wording) {
           const word = text.trim();
           word &&
             ((keywords &&
               keywords.includes(word) &&
-              (!last || last.punctuator !== 'nonbreaker' || (previous && previous.breaks > 0)) &&
+              (!last || last.punctuator !== 'nonbreaker' || (previous && previous.lineBreaks > 0)) &&
               (next.type = 'keyword')) ||
               (maybeIdentifier && maybeIdentifier.test(word) && (next.type = 'identifier')));
         } else {

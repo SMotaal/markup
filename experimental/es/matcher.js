@@ -121,8 +121,8 @@ export const matcher = (ECMAScript =>
           capture(
             context.goal.type ||
               (context.goal === ECMAScriptGoal &&
-              state.previousToken != null &&
-              state.previousToken.type === 'identifier' &&
+              state.lastToken != null &&
+              state.lastToken.type === 'identifier' &&
               ECMAScriptUnicodeIDContinue.test(String.fromCodePoint(parseInt(text.slice(2), 16)))
                 ? ((match.flatten = true), 'identifier')
                 : 'escape'),
@@ -271,7 +271,7 @@ export const matcher = (ECMAScript =>
               ? context.goal.type || 'sequence'
               : text[0] === '*'
               ? fault(text, state)
-              : !(previousAtom = state.previousAtom) ||
+              : !(previousAtom = state.lastAtom) ||
                 (previousAtom.type === 'operator'
                   ? previousAtom.text !== '++' && previousAtom.text !== '--'
                   : previousAtom.type === 'closer'
@@ -311,6 +311,8 @@ export const matcher = (ECMAScript =>
       )`,
     ),
   Keyword: () =>
+    // TODO: Handle contextual cases:
+    //  - { get() set() } as Identifiers
     Matcher.define(
       entity => Matcher.sequence`\b(
         ${Matcher.join(...keywords)}
@@ -321,15 +323,15 @@ export const matcher = (ECMAScript =>
           capture(
             (match.flatten = context.goal !== ECMAScriptGoal)
               ? context.goal.type || 'sequence'
-              : ((keywordSymbol = keywords[text]), (previousAtom = state.previousAtom)) && previousAtom.text === '.'
+              : ((keywordSymbol = keywords[text]), (previousAtom = state.lastAtom)) && previousAtom.text === '.'
               ? 'identifier'
               : 'keyword',
             match,
             text,
           );
-          keywordSymbol &&
-            ((context.keywords = (context.keywords || 0) + 1),
-            (context[`${(match.capture[keywordSymbol] = text)}-keyword-index`] = match.index));
+          // keywordSymbol &&
+          //   ((context.keywords = (context.keywords || 0) + 1),
+          //   (context[`${(match.capture[keywordSymbol] = text)}-keyword-index`] = match.index));
         })}
       )\b(?=[^\s$_:]|\s+[^:]|$)`,
     ),
@@ -343,9 +345,7 @@ export const matcher = (ECMAScript =>
           capture(
             state.context.goal !== ECMAScriptGoal
               ? state.context.goal.type || 'sequence'
-              : (previousToken = state.previousToken) &&
-                previousToken.punctuator === 'pattern' &&
-                RegExpFlags.test(text)
+              : (previousToken = state.lastToken) && previousToken.punctuator === 'pattern' && RegExpFlags.test(text)
               ? ((match.punctuator = RegExpGoal.type), 'closer')
               : ((match.flatten = true), 'identifier'),
             match,

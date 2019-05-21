@@ -104,8 +104,9 @@ class MarkupRenderer {
   }
 
   *renderer(tokens) {
+    let renderedLine, LineInset, normalizedLineInset, normalizedLineText, lineBreak, insetHint;
+    let type, text, punctuator, hint, lineInset, lineBreaks, renderer;
     const {renderers, reflows} = this;
-    let renderedLine, LineInset, lineInset, lineText, lineBreak, insetHint;
     const createLine = reflows
       ? () => (renderedLine = renderers.line())
       : () => (renderedLine = renderers.line('', 'no-reflow'));
@@ -119,30 +120,33 @@ class MarkupRenderer {
     for (const token of tokens) {
       if (!token || !token.text) continue;
 
-      let {type = 'text', text, inset, punctuator, breaks, hint} = token;
-      let renderer =
+      ({type = 'text', text, punctuator, hint, lineInset, lineBreaks} = token);
+
+      renderer =
         (punctuator &&
           (renderers[punctuator] || (type && renderers[type]) || renderers.punctuator || renderers.operator)) ||
-        (type && renderers[type]) ||
-        (type !== 'whitespace' && type !== 'break' && renderers.text) ||
+        (type && (renderers[type] || (type !== 'whitespace' && type !== 'break' && renderers.text))) ||
         Text;
 
       // Normlize inset for { type != 'inset', inset = /\s+/ }
-      if (reflows && breaks && type !== 'break') {
-        LineInset = void (inset = inset || '');
+      if (reflows && lineBreaks && type !== 'break') {
+        LineInset = void (lineInset = lineInset || '');
         insetHint = `${hint || ''} in-${type || ''}`;
-        for (const line of text.split(Lines)) {
-          (lineInset = line.startsWith(inset)
-            ? line.slice(0, inset.length)
-            : line.match(LineInset || (LineInset = RegExp(`^${inset.replace(/./g, '$&?')}`)))[0]) &&
-            emitInset(lineInset, insetHint);
+        for (const normlizedline of text.split(Lines)) {
+          (normalizedLineInset = normlizedline.startsWith(lineInset)
+            ? normlizedline.slice(0, lineInset.length)
+            : normlizedline.match(LineInset || (LineInset = RegExp(`^${lineInset.replace(/./g, '$&?')}`)))[0]) &&
+            emitInset(normalizedLineInset, insetHint);
 
-          (lineText = lineInset ? line.slice(lineInset.length) : line) &&
-            ((lineText === '\n'
-              ? ((lineBreak = lineText), (lineText = ''))
-              : lineText.endsWith('\n')
-              ? ((lineBreak = '\n'), (lineText = lineText.slice(0, lineText.endsWith('\r\n') ? -2 : -1)))
-              : !(lineBreak = '')) && emit(renderer, lineText, type, hint),
+          (normalizedLineText = normalizedLineInset
+            ? normlizedline.slice(normalizedLineInset.length)
+            : normlizedline) &&
+            ((normalizedLineText === '\n'
+              ? ((lineBreak = normalizedLineText), (normalizedLineText = ''))
+              : normalizedLineText.endsWith('\n')
+              ? ((lineBreak = '\n'),
+                (normalizedLineText = normalizedLineText.slice(0, normalizedLineText.endsWith('\r\n') ? -2 : -1)))
+              : !(lineBreak = '')) && emit(renderer, normalizedLineText, type, hint),
             lineBreak && (emitBreak(), (renderedLine = void (yield renderedLine))));
         }
       } else {
@@ -169,7 +173,13 @@ class MarkupRenderer {
         const element = content != null ? Element(tag, properties, content) : Element(tag, properties);
         element &&
           (hint = typeof hint === 'string' && `${element.className || ''} ${hint}`.trim()) &&
-          ((element.className = hint.split(/&#x[\da-f];/i, 1)[0]), (element.dataset = {hint: hint.slice(6).trim()}));
+          ((element.className = hint.split(/* /&#x[\da-f];/i */ '\n', 1)[0]),
+          (element.dataset = {
+            hint: hint
+              .slice(6)
+              .replace(/\n/g, '&#x000A;')
+              .trim(),
+          }));
         return element;
       },
       {
