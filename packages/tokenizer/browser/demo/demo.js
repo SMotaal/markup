@@ -413,7 +413,7 @@ export default (markup, overrides) => {
         header.stats({name: 'iterations', status: '', time: -1});
 
         if (iterations > 0) {
-          const delay = !(repeats > 0) && 2000;
+          const delay = !(repeats > 0) && 250;
 
           delay && (await timeout(delay));
 
