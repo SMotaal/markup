@@ -315,9 +315,9 @@ const tokenizer = (function (exports) {
   const indexOf = Function.call.bind(String.prototype.indexOf);
   /** @type {(string: string) => number} */
   const countLineBreaks = text => {
-    let breaks = 0;
-    for (let index = -1; (index = indexOf(text, '\n', index + 1)) > -1; breaks++);
-    return breaks;
+    let lineBreaks = 0;
+    for (let index = -1; (index = indexOf(text, '\n', index + 1)) > -1; lineBreaks++);
+    return lineBreaks;
   };
 
   const createBaselineTokenizer = () => {
@@ -332,8 +332,8 @@ const tokenizer = (function (exports) {
           const {0: text, index} = match;
           const pre = lastIndex < index && string.slice(lastIndex, index);
           lastIndex = matcher.lastIndex;
-          pre && (yield {text: pre, breaks: countLineBreaks(pre)});
-          yield {text, breaks: countLineBreaks(text)};
+          pre && (yield {text: pre, lineBreaks: countLineBreaks(pre)});
+          yield {text, lineBreaks: countLineBreaks(text)};
         }
       }
     };
@@ -537,13 +537,13 @@ const tokenizer = (function (exports) {
               (next.hint = `${(hint && `${hint} `) || ''}${next.type}`)) ||
             (next.type = 'sequence')
           : type === 'whitespace'
-          ? // ? (next.breaks = text.match(LineEndings).length - 1)
-            (next.breaks = countLineBreaks(text))
+          ? // ? (next.lineBreaks = text.match(LineEndings).length - 1)
+            (next.lineBreaks = countLineBreaks(text))
           : forming && wording
           ? text &&
             (((!maybeKeyword || maybeKeyword.test(text)) &&
               (keywords && keywords.includes(text)) &&
-              (!last || last.punctuator !== 'nonbreaker' || (previous && previous.breaks > 0)) &&
+              (!last || last.punctuator !== 'nonbreaker' || (previous && previous.lineBreaks > 0)) &&
               (next.type = 'keyword')) ||
               (maybeIdentifier && maybeIdentifier.test(text) && (next.type = 'identifier')))
           : (next.type = 'text');
