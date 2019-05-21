@@ -413,14 +413,23 @@ export default (markup, overrides) => {
         header.stats({name: 'iterations', status: '', time: -1});
 
         if (iterations > 0) {
+          const delay = !(repeats > 0) && 2000;
+
+          delay && (await timeout(delay));
+
           await frame(header.stats({name: 'iterations', status: `${iterations}`, time: true}));
+
           await timeout(100);
+
           await timed(
             `${iterations} iterations`,
             'iterations',
             async ƒ => void (await iterate(iterations)),
             iterations,
           );
+
+          delay && (await timeout(delay));
+
           await frame(header.status('iterations', `${iterations}`));
         }
 
