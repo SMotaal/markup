@@ -4,9 +4,7 @@ import {keywords, ECMAScriptGoal, CommentGoal, RegExpGoal, StringGoal, TemplateL
 import {capture, forward, fault, open, close} from './helpers.js';
 
 DUMMY: async () => {
-  /*
-  prettier-ignore
-  */ //                 // Make sure this block never lints
+  /* prettier-ignore */ // Make sure this block never lints
   {
     let i\u0032;
     this.new.target;
@@ -24,7 +22,7 @@ DUMMY: async () => {
                         // Literals always divide (never ASI)
       ( []              /([(div)])/g / [] );
       ( ([])            /([(div)])/g / [] );
-      ( [] /* */        /([(div)])/g / [] );
+      ( []/*/*//**//*/*//([(div)])/g / [] );
                         // FIXME: ObjectLiteral is "a literal"
       const x = {}      /(div)/g.exec(c).map(d);
 
@@ -62,6 +60,7 @@ DUMMY: async () => {
 
 export const matcher = (ECMAScript =>
   Matcher.define(
+    // Matcher generator for this matcher instance
     entity =>
       Matcher.join(
         entity(ECMAScript.Break()),
@@ -77,13 +76,33 @@ export const matcher = (ECMAScript =>
         entity(ECMAScript.Keyword()),
         entity(ECMAScript.Number()),
         entity(ECMAScript.Identifier()),
-        /* Fallthrough */ '.',
+
+        // Defines how to address non-entity character(s):
+        entity(
+          ECMAScript.Fallthrough({
+            // type: 'fault',
+          }),
+        ),
       ),
+    // RegExp flags for this matcher instance
     'gu',
+    // Property descriptors for this matcher instance
     {
       goal: {value: ECMAScriptGoal, enumerable: true, writable: false},
     },
   ))({
+  Fallthrough: ({fallthrough = '.', type, flatten} = {}) =>
+    Matcher.define(
+      (typeof fallthrough === 'string' || (fallthrough = '.'), type && typeof type === 'string')
+        ? entity => Matcher.sequence`(
+            ${fallthrough}
+            ${entity((text, entity, match, state) => {
+              capture(type === 'fault' ? fault(text, state) : type, match, text);
+              typeof flatten === 'boolean' && (match.flatten = flatten);
+            })}
+          )`
+        : entity => `${fallthrough}`,
+    ),
   Break: ({lf = true, crlf = false} = {}) =>
     Matcher.define(
       entity => Matcher.sequence`(
@@ -134,7 +153,7 @@ export const matcher = (ECMAScript =>
         \\f|\\n|\\r|\\t|\\v|\\c[${ControlLetter}]
         |\\x[${HexDigit}][${HexDigit}]
         |\\u\{[${HexDigit}]*\}
-        |\\.
+        |\\[^]
         ${entity((text, entity, match, state) => {
           capture(state.context.goal.type || 'escape', match, (match.capture[keywords[text]] = text));
         })}
@@ -153,7 +172,8 @@ export const matcher = (ECMAScript =>
                   // Safely fast skip to end of comment
                   (forward(text === '//' ? '\n' : '*/', match, state),
                   // No need to track delimiter
-                  CommentGoal.type)
+                  (match.punctuator = CommentGoal.type),
+                  'opener')
               : context.goal !== CommentGoal
               ? context.goal.type || 'sequence'
               : context.group.closer !== text
@@ -346,7 +366,7 @@ export const matcher = (ECMAScript =>
             state.context.goal !== ECMAScriptGoal
               ? state.context.goal.type || 'sequence'
               : (previousToken = state.lastToken) && previousToken.punctuator === 'pattern' && RegExpFlags.test(text)
-              ? ((match.punctuator = RegExpGoal.type), 'closer')
+              ? ((match.flatten = true), (match.punctuator = RegExpGoal.type), 'closer')
               : ((match.flatten = true), 'identifier'),
             match,
             text,
