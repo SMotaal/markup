@@ -16,6 +16,7 @@
     --marked-line-number-color: var(--markup-contrast, inherit);
     --marked-line-number-background-color: var(--widge, #9999996f);
     cursor: text;
+    /* text-shadow: 0 0 0.5px #9999; */
   }
 
   .dark-mode .markup-line {
