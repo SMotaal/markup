@@ -105,6 +105,8 @@ export const {
             (state.nextToken = void (next = token)))
           );
 
+          this.finalizeState && this.finalizeState(state);
+
           // console.log({...state});
         }
       }.prototype,
@@ -125,6 +127,7 @@ export const {
       createToken: createTokenFromMatch,
       /** @type {(state: {}) =>  void} */
       initializeState: undefined,
+      finalizeState: undefined,
       matcher: freeze(createMatcherInstance(matcher)),
     });
 
@@ -136,6 +139,7 @@ export const {
         preregister: mode.preregister,
         createToken: tokenizer.createToken = tokenizer.createToken,
         initializeState: tokenizer.initializeState,
+        finalizeState: tokenizer.finalizeState,
         ...mode.overrides
       } = options);
 

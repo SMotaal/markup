@@ -40,7 +40,7 @@ const goals = {
     fold: false,
     openers: ['${'],
   },
-  [Symbolic('FaultGoal')]: {type: 'fault', groups: {}},
+  [Symbolic('FaultGoal')]: {type: 'fault'}, // , groups: {}
 };
 
 const {
@@ -91,9 +91,11 @@ const keywords = {};
   }
 
   for (const symbol of getOwnPropertySymbols(goals)) {
+    // @ts-ignore
     const {[symbol]: goal} = goals;
 
     goal.name = (goal.symbol = symbol).description.replace(/Goal$/, '');
+    goal[Symbol.toStringTag] = `«${goal.name}»`;
     goal.tokens = tokens[symbol] = {};
     goal.groups = [];
 
@@ -110,10 +112,11 @@ const keywords = {};
 
     if (goal.openers) {
       for (const opener of (goal.openers = [...goal.openers])) {
-        const group = (goal.groups[opener] = groups[opener]);
+        const group = (goal.groups[opener] = {...groups[opener]});
         punctuators[opener] = !(goal.openers[opener] = true);
         GoalSpecificTokenRecord(goal, group.opener, 'opener', {group});
         GoalSpecificTokenRecord(goal, group.closer, 'closer', {group});
+        group[Symbol.toStringTag] = `‹${group.opener}›`;
       }
       freeze(setPrototypeOf(goal.openers, punctuators));
     }
