@@ -374,7 +374,11 @@ export default (markup, overrides) => {
       } = await time('source', () => loadFromURL(specifier));
 
       const resourceType = `${response.headers.get('Content-Type')}`.replace(/^(?:.*?\/)?(\w+).*$/, '$1').toLowerCase();
-      const defaultType = `${sourceType || options.sourceType || resourceType || ''}`.toLowerCase();
+      const defaultType = `${sourceType ||
+        resourceType ||
+        options.sourceType ||
+        options.defaults.sourceType ||
+        ''}`.toLowerCase();
       const resolvedType =
         typeof resolveSourceType === 'function' && resolveSourceType(defaultType, {sourceType, resourceType, options});
       // console.log({resourceType, defaultType, sourceType, resolvedType});
@@ -488,7 +492,7 @@ export default (markup, overrides) => {
         : scope in resolvers
         ? (source = resolvers[scope]((specifier = specifier.slice(prefix.length))))
         : (source = specifier))) ||
-      ((source = options.defaults.sourceURL), mode || (mode = options.defaults.sourceType));
+      ((source = options.defaults.sourceURL), mode || (mode = undefined));
 
     ({
       iterations: options.iterations = options.defaults.iterations,
