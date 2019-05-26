@@ -1320,46 +1320,46 @@ class MarkupRenderer {
     // TODO: Consider making Renderer a thing
     const {factory, defaults} = new.target;
 
-    const {SPAN = 'span', LINE = 'span', CLASS = 'markup', REFLOW = true} = {
+    const {SPAN = 'span', LINE = 'span', CLASS: classPrefix = 'markup', REFLOW = true} = {
       ...defaults,
       ...options,
     };
 
-    const PUNCTUATOR = `${CLASS} punctuator`;
-    const LITERAL = `${CLASS} literal`;
+    const PUNCTUATOR = `punctuator`;
+    const LITERAL = `literal`;
 
     this.renderers = {
-      line: factory(LINE, {className: `${CLASS} ${CLASS}-line`}),
+      line: factory(LINE, {markupHint: `${classPrefix}-line`, markupClass: classPrefix}),
 
-      fault: factory(SPAN, {className: `${CLASS} fault`}),
-      text: factory(SPAN, {className: CLASS}),
+      fault: factory(SPAN, {markupHint: `fault`, markupClass: classPrefix}),
+      text: factory(SPAN, {markupHint: classPrefix, markupClass: classPrefix}),
 
       whitespace: Text$2,
-      inset: factory(SPAN, {className: `${CLASS} inset whitespace`}),
-      break: factory(SPAN, {className: `${CLASS} break whitespace`}),
+      inset: factory(SPAN, {markupHint: `inset whitespace`, markupClass: classPrefix}),
+      break: factory(SPAN, {markupHint: `break whitespace`, markupClass: classPrefix}),
 
-      comment: factory(SPAN, {className: `${CLASS} comment`}),
+      comment: factory(SPAN, {markupHint: `comment`, markupClass: classPrefix}),
 
-      keyword: factory(SPAN, {className: `${CLASS} keyword`}),
-      identifier: factory(SPAN, {className: `${CLASS} identifier`}),
+      keyword: factory(SPAN, {markupHint: `keyword`, markupClass: classPrefix}),
+      identifier: factory(SPAN, {markupHint: `identifier`, markupClass: classPrefix}),
 
-      sequence: factory(SPAN, {className: `${CLASS} sequence`}),
+      sequence: factory(SPAN, {markupHint: `sequence`, markupClass: classPrefix}),
 
-      literal: factory(SPAN, {className: LITERAL}),
-      number: factory(SPAN, {className: `${LITERAL} number`}),
-      quote: factory(SPAN, {className: `${CLASS} quote`}),
-      pattern: factory(SPAN, {className: `${CLASS} pattern`}),
+      literal: factory(SPAN, {markupHint: LITERAL, markupClass: classPrefix}),
+      number: factory(SPAN, {markupHint: `${LITERAL} number`, markupClass: classPrefix}),
+      quote: factory(SPAN, {markupHint: `quote`, markupClass: classPrefix}),
+      pattern: factory(SPAN, {markupHint: `pattern`, markupClass: classPrefix}),
 
-      punctuator: factory(SPAN, {className: PUNCTUATOR}),
-      operator: factory(SPAN, {className: `${PUNCTUATOR} operator`}),
-      assigner: factory(SPAN, {className: `${PUNCTUATOR} operator assigner`}),
-      combinator: factory(SPAN, {className: `${PUNCTUATOR} operator combinator`}),
-      punctuation: factory(SPAN, {className: `${PUNCTUATOR} punctuation`}),
+      punctuator: factory(SPAN, {markupHint: PUNCTUATOR, markupClass: classPrefix}),
+      operator: factory(SPAN, {markupHint: `${PUNCTUATOR} operator`, markupClass: classPrefix}),
+      assigner: factory(SPAN, {markupHint: `${PUNCTUATOR} operator assigner`, markupClass: classPrefix}),
+      combinator: factory(SPAN, {markupHint: `${PUNCTUATOR} operator combinator`, markupClass: classPrefix}),
+      punctuation: factory(SPAN, {markupHint: `${PUNCTUATOR} punctuation`, markupClass: classPrefix}),
 
-      breaker: factory(SPAN, {className: `${PUNCTUATOR} breaker`}),
-      opener: factory(SPAN, {className: `${PUNCTUATOR} opener`}),
-      closer: factory(SPAN, {className: `${PUNCTUATOR} closer`}),
-      span: factory(SPAN, {className: `${PUNCTUATOR} span`}),
+      breaker: factory(SPAN, {markupHint: `${PUNCTUATOR} breaker`, markupClass: classPrefix}),
+      opener: factory(SPAN, {markupHint: `${PUNCTUATOR} opener`, markupClass: classPrefix}),
+      closer: factory(SPAN, {markupHint: `${PUNCTUATOR} closer`, markupClass: classPrefix}),
+      span: factory(SPAN, {markupHint: `${PUNCTUATOR} span`, markupClass: classPrefix}),
     };
 
     this.reflows = REFLOW;
@@ -1459,28 +1459,43 @@ class MarkupRenderer {
    * @param {boolean} [unflattened]
    */
   static factory(tagName, elementProperties) {
-    const [tag, properties] = arguments;
-    return Object.defineProperties(
-      (content, hint) => {
-        typeof content === 'string' && (content = Text$2(content));
-        const element = content != null ? Element$2(tag, properties, content) : Element$2(tag, properties);
-        element &&
-          (hint = typeof hint === 'string' && `${element.className || ''} ${hint}`.trim()) &&
-          ((element.className = hint.split(/* /&#x[\da-f];/i */ '\n', 1)[0]),
-          (element.dataset = {
-            hint: hint
-              .slice(6)
-              .replace(/\n/g, '&#x000A;')
-              .trim(),
-          }));
-        return element;
-      },
+    const [
+      tag,
       {
-        // flatten: {
-        //   value: !arguments[2] || (/\bunflatten\b/i.test(arguments[2]) ? false : /\bflatten\b/i.test(arguments[2])),
-        // },
-      },
-    );
+        defaults = (this || MarkupRenderer).defaults,
+        markupClass = defaults.CLASS || MarkupRenderer.defaults.CLASS || 'markup',
+        markupHint = '',
+        ...properties
+      } = {},
+    ] = arguments;
+    properties.className = markupHint ? `${markupClass} ${markupHint}` : markupClass;
+    Object.freeze(properties);
+
+    return Object.freeze((content, hint) => {
+      let element, hintSeparator;
+
+      element =
+        (typeof content === 'string' && (content = Text$2(content))) || content != null
+          ? Element$2(tag, properties, content)
+          : Element$2(tag, properties);
+
+      typeof hint === 'string' && hint !== '' && (hintSeparator = hint.indexOf('\n\n')) !== -1
+        ? ((element.dataset = {hint: `${markupHint}${hint.slice(hintSeparator).replace(/\n/g, '&#x000A;')}`}),
+          hintSeparator === 0 || (element.className = `${element.className} ${hint.slice(0, hintSeparator)}`))
+        : (hint && (element.className = `${element.className} ${hint}`),
+          (element.dataset = {hint: hint || markupHint || element.className}));
+
+      // (hint &&
+      //   (hint = hint) &&
+      //   ((element.className = `${element.className || ''} ${classHint || hint}`),
+      //   (element.dataset = {
+      //     // hint: (markupHint ? `${markupHint}\n\n${hint}` : hint).replace(/\n/g, '&#x000A;'),
+      //     hint: (markupHint ? `${markupHint}\n\n${hint}` : hint).replace(/\n/g, '&#x000A;'),
+      //   }))) ||
+      //   (element.className && (hint = element.className));
+
+      return element;
+    });
   }
 }
 
@@ -1863,7 +1878,7 @@ const goals = {
     fold: false,
     openers: ['${'],
   },
-  [Symbolic('FaultGoal')]: {type: 'fault', groups: {}},
+  [Symbolic('FaultGoal')]: {type: 'fault'}, // , groups: {}
 };
 
 const {
@@ -1914,9 +1929,11 @@ const keywords = {};
   }
 
   for (const symbol of getOwnPropertySymbols(goals)) {
+    // @ts-ignore
     const {[symbol]: goal} = goals;
 
     goal.name = (goal.symbol = symbol).description.replace(/Goal$/, '');
+    goal[Symbol.toStringTag] = `«${goal.name}»`;
     goal.tokens = tokens[symbol] = {};
     goal.groups = [];
 
@@ -1933,10 +1950,11 @@ const keywords = {};
 
     if (goal.openers) {
       for (const opener of (goal.openers = [...goal.openers])) {
-        const group = (goal.groups[opener] = groups[opener]);
+        const group = (goal.groups[opener] = {...groups[opener]});
         punctuators[opener] = !(goal.openers[opener] = true);
         GoalSpecificTokenRecord(goal, group.opener, 'opener', {group});
         GoalSpecificTokenRecord(goal, group.closer, 'closer', {group});
+        group[Symbol.toStringTag] = `‹${group.opener}›`;
       }
       freeze(setPrototypeOf(goal.openers, punctuators));
     }
@@ -1999,9 +2017,9 @@ function Symbolic(key, description = key) {
  * @typedef {Record<ECMAScript.Keyword|ECMAScript.RestrictedWord|ECMAScript.FutureReservedWord|ECMAScript.ContextualKeyword, symbol>} ECMAScript.Keywords
  */
 
-/** Creates a list from a Whitespace-separated string @type { (string) => string[] } */
-const List = RegExp.prototype[Symbol.split].bind(/\s+/g);
+//@ts-check
 
+/** @typedef {typeof stats} ContextStats */
 const stats = {
   captureCount: 0,
   contextCount: 0,
@@ -2011,7 +2029,237 @@ const stats = {
   nestedTokenCount: 0,
 };
 
-/** @template {{}} T @param {T} context @returns {T & stats} */
+/** @param {State} state */
+// TODO: Document initializeState
+const initializeState = state => {
+  /** @type {Groups} state */
+  (state.groups = []).closers = [];
+  state.lineOffset = state.lineIndex = 0;
+  state.totalCaptureCount = state.totalTokenCount = 0;
+
+  /** @type {Contexts} */
+  const contexts = (state.contexts = Array(100));
+  const context = initializeContext({
+    id: `«${state.matcher.goal.name}»`,
+    //@ts-ignore
+    number: (contexts.count = state.totalContextCount = 1),
+    depth: 0,
+    parentContext: undefined,
+    goal: state.matcher.goal,
+    group: undefined,
+    state,
+  });
+  state.lastTokenContext = void (state.firstTokenContext = state.nextTokenContext = contexts[
+    -1
+  ] = state.context = state.lastContext = context);
+};
+
+/** @param {State} state */
+// TODO: Document initializeState
+const finalizeState = state => {
+  const isValidState =
+    state.firstTokenContext === state.nextTokenContext &&
+    state.nextToken === undefined &&
+    state.nextOffset === undefined;
+
+  const {
+    flags: {debug = false} = {},
+    options: {console: {log = console.log, warn = console.warn} = console} = {},
+    error = (state.error = !isValidState ? 'Unexpected end of tokenizer state' : undefined),
+  } = state;
+
+  if (!debug && error) throw Error(error);
+
+  // Finalize latent token artifacts
+  state.nextTokenContext = void (state.lastTokenContext = state.nextTokenContext);
+
+  // Finalize tokenization artifacts
+  // NOTE: don't forget to uncomment after debugging
+  state.context = state.contexts = state.groups = undefined;
+
+  // Output to console when necessary
+  debug && (error ? warn : log)(`[tokenizer]: ${error || 'done'} — %O`, state);
+};
+
+/** @param {Match} match @param {State} state */
+const createToken = (match, state) => {
+  let currentGoal,
+    // goalName,
+    currentGoalType,
+    contextId,
+    contextNumber,
+    contextDepth,
+    contextGroup,
+    parentContext,
+    tokenReference,
+    tokenContext,
+    nextToken,
+    text,
+    type,
+    fault,
+    punctuator,
+    offset,
+    lineInset,
+    lineBreaks,
+    isDelimiter,
+    isComment,
+    isWhitespace,
+    flatten,
+    fold,
+    columnNumber,
+    lineNumber,
+    tokenNumber,
+    captureNumber,
+    hint;
+
+  const {
+    context: currentContext,
+    nextContext,
+    lineIndex,
+    lineOffset,
+    nextOffset,
+    lastToken,
+    lastTrivia,
+    lastAtom,
+  } = state;
+
+  /* Capture */
+  ({
+    0: text,
+    capture: {inset: lineInset},
+    identity: type,
+    flatten,
+    fault,
+    punctuator,
+    index: offset,
+  } = match);
+
+  if (!text) return;
+
+  ({
+    id: contextId,
+    number: contextNumber,
+    depth: contextDepth,
+    goal: currentGoal,
+    group: contextGroup,
+    parentContext,
+  } = tokenContext = (type === 'opener' && nextContext) || currentContext);
+
+  currentGoalType = currentGoal.type;
+
+  nextOffset &&
+    (state.nextOffset = void (nextOffset > offset && (text = match.input.slice(offset, nextOffset)),
+    (state.matcher.lastIndex = nextOffset)));
+
+  lineBreaks = (text === '\n' && 1) || countLineBreaks(text);
+  isDelimiter = type === 'closer' || type === 'opener';
+  isWhitespace = !isDelimiter && (type === 'whitespace' || type === 'break' || type === 'inset');
+
+  (isComment = type === 'comment' || punctuator === 'comment')
+    ? (type = 'comment')
+    : type || (type = (!isDelimiter && !fault && currentGoalType) || 'text');
+
+  if (lineBreaks) {
+    state.lineIndex += lineBreaks;
+    state.lineOffset = offset + (text === '\n' ? 1 : text.lastIndexOf('\n'));
+  }
+
+  /* Flattening / Token Folding */
+
+  flatten === false || flatten === true || (flatten = !isDelimiter && currentGoal.flatten === true);
+
+  captureNumber = ++tokenContext.captureCount;
+  state.totalCaptureCount++;
+
+  if (
+    (fold = flatten) && // fold only if flatten is allowed
+    lastToken != null &&
+    ((lastToken.contextNumber === contextNumber && lastToken.fold === true) ||
+      (type === 'closer' && flatten === true)) && // never fold across contexts
+    (lastToken.type === type || (currentGoal.fold === true && (lastToken.type = currentGoalType)))
+  ) {
+    lastToken.captureCount++;
+    lastToken.text += text;
+    lineBreaks && (lastToken.lineBreaks += lineBreaks);
+  } else {
+    // The generator retains this new as state.nextToken
+    //   which means tokenContext is state.nextTokenContext
+    //   and the fact that we are returning a token here will
+    //   yield the current state.nextToken so we need to also
+    //   set state.lastTokenContext to match
+    //
+    //   TODO: Add parity tests for tokenizer's token/context states
+    state.lastTokenContext = state.nextTokenContext;
+    state.nextTokenContext = tokenContext;
+
+    /* Token Creation */
+    flatten = false;
+    columnNumber = 1 + (offset - lineOffset || 0);
+    lineNumber = 1 + (lineIndex || 0);
+
+    tokenNumber = ++tokenContext.tokenCount;
+    state.totalTokenCount++;
+
+    // hint = `${(isDelimiter ? type : currentGoalType && `in-${currentGoalType}`) ||
+    hint = `${
+      isDelimiter ? type : currentGoalType ? `in-${currentGoalType}` : ''
+    }\n\n${contextId} #${tokenNumber}\n(${lineNumber}:${columnNumber})`;
+
+    tokenReference = isWhitespace || isComment ? 'lastTrivia' : 'lastAtom';
+
+    nextToken = tokenContext[tokenReference] = state[tokenReference] = tokenContext.lastToken = state.lastToken = {
+      text,
+      type,
+      offset,
+      punctuator,
+      hint,
+      lineOffset,
+      lineBreaks,
+      lineInset,
+      columnNumber,
+      lineNumber,
+      captureNumber,
+      captureCount: 1,
+      tokenNumber,
+      contextNumber,
+      contextDepth,
+
+      isWhitespace, // whitespace:
+      isDelimiter, // delimiter:
+      isComment, // comment:
+
+      // FIXME: Nondescript
+      fault,
+      fold,
+      flatten,
+
+      goal: currentGoal,
+      group: contextGroup,
+      state,
+    };
+  }
+  /* Context */
+  !nextContext ||
+    ((state.nextContext = undefined), nextContext === currentContext) ||
+    ((state.lastContext = currentContext),
+    currentContext === nextContext.parentContext
+      ? (state.totalContextCount++,
+        (nextContext.precedingAtom = lastAtom),
+        (nextContext.precedingTrivia = lastTrivia),
+        (nextContext.precedingToken = lastToken))
+      : ((parentContext.nestedContextCount += currentContext.nestedContextCount + currentContext.contextCount),
+        (parentContext.nestedCaptureCount += currentContext.nestedCaptureCount + currentContext.captureCount),
+        (parentContext.nestedTokenCount += currentContext.nestedTokenCount + currentContext.tokenCount)),
+    (state.context = nextContext));
+
+  return nextToken;
+};
+
+/**
+ * @param {Partial<Context>} context
+ * @returns {Context}
+ */
+//@ts-ignore
 const initializeContext = context => Object.assign(context, stats);
 
 const capture = (identity, match, text) => {
@@ -2023,8 +2271,8 @@ const capture = (identity, match, text) => {
 /**
  * Safely mutates matcher state to open a new context.
  *
- * @param {*} text - Text of the intended { type = "opener" } token
- * @param {*} state - Matcher state
+ * @param {string} text - Text of the intended { type = "opener" } token
+ * @param {State} state - Matcher state
  * @returns {undefined | string} - String when context is **not** open
  */
 const open = (text, state) => {
@@ -2046,7 +2294,9 @@ const open = (text, state) => {
   const goal = group.goal === undefined ? initialGoal : group.goal;
 
   state.nextContext = contexts[index] = initializeContext({
-    id: `${parentContext.id}${goal !== initialGoal ? ` ‹${group.opener}›\n«${goal.name}»` : ` ‹${group.opener}›`}`,
+    id: `${parentContext.id} ${
+      goal !== initialGoal ? `\n${goal[Symbol.toStringTag]} ${group[Symbol.toStringTag]}` : group[Symbol.toStringTag]
+    }`,
     number: ++contexts.count,
     depth: index + 1,
     parentContext,
@@ -2059,14 +2309,13 @@ const open = (text, state) => {
 /**
  * Safely mutates matcher state to close the current context.
  *
- * @param {*} text - Text of the intended { type = "closer" } token
- * @param {*} state - Matcher state
+ * @param {string} text - Text of the intended { type = "closer" } token
+ * @param {State} state - Matcher state
  * @returns {undefined | string} - String when context is **not** closed
  */
 const close = (text, state) => {
   const groups = state.groups;
   const index = groups.closers.lastIndexOf(text);
-
 
   if (index === -1 || index !== groups.length - 1) return fault(text, state);
 
@@ -2075,6 +2324,15 @@ const close = (text, state) => {
   state.nextContext = state.context.parentContext;
 };
 
+/**
+ * Safely mutates matcher state to skip ahead.
+ *
+ * TODO: Finish implementing forward helper
+ *
+ * @param {string | RegExp} search
+ * @param {Match} match
+ * @param {State} state
+ */
 const forward = (search, match, state) => {
   search &&
     (typeof search === 'object'
@@ -2090,8 +2348,15 @@ const fault = (text, state) => {
   return 'fault';
 };
 
+/** @typedef {import('./types').Match} Match */
+/** @typedef {import('./types').Groups} Groups */
+/** @typedef {import('./types').Context} Context */
+/** @typedef {import('./types').Contexts} Contexts */
+/** @typedef {import('./types').State} State */
+
 const matcher = (ECMAScript =>
   Matcher.define(
+    // Matcher generator for this matcher instance
     entity =>
       Matcher.join(
         entity(ECMAScript.Break()),
@@ -2107,13 +2372,33 @@ const matcher = (ECMAScript =>
         entity(ECMAScript.Keyword()),
         entity(ECMAScript.Number()),
         entity(ECMAScript.Identifier()),
-        /* Fallthrough */ '.',
+
+        // Defines how to address non-entity character(s):
+        entity(
+          ECMAScript.Fallthrough({
+            // type: 'fault',
+          }),
+        ),
       ),
+    // RegExp flags for this matcher instance
     'gu',
+    // Property descriptors for this matcher instance
     {
       goal: {value: ECMAScriptGoal, enumerable: true, writable: false},
     },
   ))({
+  Fallthrough: ({fallthrough = '.', type, flatten} = {}) =>
+    Matcher.define(
+      (typeof fallthrough === 'string' || (fallthrough = '.'), type && typeof type === 'string')
+        ? entity => Matcher.sequence`(
+            ${fallthrough}
+            ${entity((text, entity, match, state) => {
+              capture(type === 'fault' ? fault(text, state) : type, match, text);
+              typeof flatten === 'boolean' && (match.flatten = flatten);
+            })}
+          )`
+        : entity => `${fallthrough}`,
+    ),
   Break: ({lf = true, crlf = false} = {}) =>
     Matcher.define(
       entity => Matcher.sequence`(
@@ -2164,7 +2449,7 @@ const matcher = (ECMAScript =>
         \\f|\\n|\\r|\\t|\\v|\\c[${ControlLetter}]
         |\\x[${HexDigit}][${HexDigit}]
         |\\u\{[${HexDigit}]*\}
-        |\\.
+        |\\[^]
         ${entity((text, entity, match, state) => {
           capture(state.context.goal.type || 'escape', match, (match.capture[keywords[text]] = text));
         })}
@@ -2183,7 +2468,8 @@ const matcher = (ECMAScript =>
                   // Safely fast skip to end of comment
                   (forward(text === '//' ? '\n' : '*/', match, state),
                   // No need to track delimiter
-                  CommentGoal.type)
+                  (match.punctuator = CommentGoal.type),
+                  'opener')
               : context.goal !== CommentGoal
               ? context.goal.type || 'sequence'
               : context.group.closer !== text
@@ -2376,7 +2662,7 @@ const matcher = (ECMAScript =>
             state.context.goal !== ECMAScriptGoal
               ? state.context.goal.type || 'sequence'
               : (previousToken = state.lastToken) && previousToken.punctuator === 'pattern' && RegExpFlags.test(text)
-              ? ((match.punctuator = RegExpGoal.type), 'closer')
+              ? ((match.flatten = true), (match.punctuator = RegExpGoal.type), 'closer')
               : ((match.flatten = true), 'identifier'),
             match,
             text,
@@ -2515,6 +2801,8 @@ const {
             (state.nextToken = void (next = token)))
           );
 
+          this.finalizeState && this.finalizeState(state);
+
           // console.log({...state});
         }
       }.prototype,
@@ -2535,6 +2823,7 @@ const {
       createToken: createTokenFromMatch,
       /** @type {(state: {}) =>  void} */
       initializeState: undefined,
+      finalizeState: undefined,
       matcher: freeze(createMatcherInstance(matcher)),
     });
 
@@ -2546,6 +2835,7 @@ const {
         preregister: mode.preregister,
         createToken: tokenizer.createToken = tokenizer.createToken,
         initializeState: tokenizer.initializeState,
+        finalizeState: tokenizer.finalizeState,
         ...mode.overrides
       } = options);
 
@@ -2557,192 +2847,20 @@ const {
   return {createTokenFromMatch, createMatcherInstance, createString, createMatcherTokenizer, createMatcherMode};
 })();
 
+//@ts-check
+
 const mode = createMatcherMode(matcher, {
   syntax: 'ecmascript',
   aliases: ['es', 'js', 'javascript'],
-  initializeState: state => {
-    (state.groups = []).closers = [];
-    state.lineOffset = state.lineIndex = 0;
-    state.lineFault = false;
-    state.totalCaptureCount = state.totalTokenCount = 0;
-    const contexts = (state.contexts = Array(100));
-    const context = initializeContext({
-      id: `«${matcher.goal.name}»`,
-      number: (contexts.count = state.totalContextCount = 1),
-      depth: 0,
-      parentContext: undefined,
-      goal: matcher.goal,
-      group: undefined,
-      state,
-    });
-    state.tokenContext = void (contexts[-1] = state.context = state.lastContext = context);
-  },
+
   preregister: parser => {
     parser.unregister('es');
     parser.unregister('ecmascript');
   },
-  createToken: (match, state) => {
-    let currentGoal,
-      // goalName,
-      currentGoalType,
-      contextId,
-      contextNumber,
-      contextDepth,
-      contextGroup,
-      parentContext,
-      tokenReference,
-      nextToken,
-      text,
-      type,
-      fault,
-      punctuator,
-      offset,
-      lineInset,
-      lineBreaks,
-      isDelimiter,
-      isComment,
-      isWhitespace,
-      flatten,
-      fold,
-      columnNumber,
-      lineNumber,
-      tokenNumber,
-      captureNumber,
-      hint;
 
-    const {
-      context: currentContext,
-      nextContext,
-      lineIndex,
-      lineOffset,
-      nextOffset,
-      lastToken,
-      lastTrivia,
-      lastAtom,
-    } = state;
-
-    /* Capture */
-
-    ({
-      0: text,
-      capture: {inset: lineInset},
-      identity: type,
-      flatten,
-      fault,
-      punctuator,
-      index: offset,
-    } = match);
-
-    if (!text) return;
-
-    // try {
-    ({
-      id: contextId,
-      number: contextNumber,
-      depth: contextDepth,
-      goal: currentGoal,
-      group: contextGroup,
-      parentContext,
-    } = state.tokenContext = currentContext);
-
-    currentGoalType = currentGoal.type; // ({name: goalName, type: goalType} = currentGoal);
-
-    nextOffset &&
-      (state.nextOffset = void (nextOffset > offset && (text = match.input.slice(offset, nextOffset)),
-      (state.matcher.lastIndex = nextOffset)));
-
-    lineBreaks = (text === '\n' && 1) || countLineBreaks(text);
-    isComment = type === 'comment' || punctuator === 'comment';
-    isDelimiter = type === 'closer' || type === 'opener';
-    isWhitespace = !isDelimiter && (type === 'whitespace' || type === 'break' || type === 'inset');
-
-    type || (type = (!isDelimiter && !fault && currentGoalType) || 'text');
-
-    if (lineBreaks) {
-      state.lineIndex += lineBreaks;
-      state.lineOffset = offset + (text === '\n' ? 1 : text.lastIndexOf('\n'));
-    }
-
-    /* Flattening / Token Folding */
-
-    flatten === false || flatten === true || (flatten = !isDelimiter && currentGoal.flatten === true);
-
-    captureNumber = ++currentContext.captureCount;
-    state.totalCaptureCount++;
-
-    if (
-      (fold = flatten) && // fold only if flatten is allowed
-      lastToken != null &&
-      lastToken.contextNumber === contextNumber && // never fold across contexts
-      lastToken.fold === true &&
-      (lastToken.type === type || (currentGoal.fold === true && (lastToken.type = currentGoalType)))
-    ) {
-      lastToken.captureCount++;
-      lastToken.text += text;
-      lineBreaks && (lastToken.lineBreaks += lineBreaks);
-    } else {
-      /* Token Creation */
-      flatten = false;
-      columnNumber = 1 + (offset - lineOffset || 0);
-      lineNumber = 1 + (lineIndex || 0);
-
-      tokenNumber = ++currentContext.tokenCount;
-      state.totalTokenCount++;
-
-      hint = `${(isDelimiter ? type : currentGoalType && `in-${currentGoalType}`) ||
-        ''}\n${contextId} #${tokenNumber}\n(${lineNumber}:${columnNumber})`;
-
-      tokenReference = isWhitespace || isComment ? 'lastTrivia' : 'lastAtom';
-
-      nextToken = currentContext[tokenReference] = state[
-        tokenReference
-      ] = currentContext.lastToken = state.lastToken = {
-        text,
-        type,
-        offset,
-        punctuator,
-        hint,
-        lineOffset,
-        lineBreaks,
-        lineInset,
-        columnNumber,
-        lineNumber,
-        captureNumber,
-        captureCount: 1,
-        tokenNumber,
-        contextNumber,
-        contextDepth,
-
-        isWhitespace, // whitespace:
-        isDelimiter, // delimiter:
-        isComment, // comment:
-
-        // FIXME: Nondescript
-        fault,
-        fold,
-        flatten,
-
-        goal: currentGoal,
-        group: contextGroup,
-        state,
-      };
-    }
-    /* Context */
-    !nextContext ||
-      ((state.nextContext = undefined), nextContext === currentContext) ||
-      ((state.lastContext = currentContext),
-      currentContext === nextContext.parentContext
-        ? (state.totalContextCount++,
-          (nextContext.precedingAtom = lastAtom),
-          (nextContext.precedingTrivia = lastTrivia),
-          (nextContext.precedingToken = lastToken))
-        : ((parentContext.nestedContextCount += currentContext.nestedContextCount + currentContext.contextCount),
-          (parentContext.nestedCaptureCount += currentContext.nestedCaptureCount + currentContext.captureCount),
-          (parentContext.nestedTokenCount += currentContext.nestedTokenCount + currentContext.tokenCount)),
-      (state.context = nextContext));
-
-    return nextToken;
-  },
+  initializeState,
+  finalizeState,
+  createToken,
 });
 
 /**

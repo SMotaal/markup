@@ -1765,46 +1765,46 @@ const markup = (function (exports) {
       // TODO: Consider making Renderer a thing
       const {factory, defaults} = new.target;
 
-      const {SPAN = 'span', LINE = 'span', CLASS = 'markup', REFLOW = true} = {
+      const {SPAN = 'span', LINE = 'span', CLASS: classPrefix = 'markup', REFLOW = true} = {
         ...defaults,
         ...options,
       };
 
-      const PUNCTUATOR = `${CLASS} punctuator`;
-      const LITERAL = `${CLASS} literal`;
+      const PUNCTUATOR = `punctuator`;
+      const LITERAL = `literal`;
 
       this.renderers = {
-        line: factory(LINE, {className: `${CLASS} ${CLASS}-line`}),
+        line: factory(LINE, {markupHint: `${classPrefix}-line`, markupClass: classPrefix}),
 
-        fault: factory(SPAN, {className: `${CLASS} fault`}),
-        text: factory(SPAN, {className: CLASS}),
+        fault: factory(SPAN, {markupHint: `fault`, markupClass: classPrefix}),
+        text: factory(SPAN, {markupHint: classPrefix, markupClass: classPrefix}),
 
         whitespace: Text$2,
-        inset: factory(SPAN, {className: `${CLASS} inset whitespace`}),
-        break: factory(SPAN, {className: `${CLASS} break whitespace`}),
+        inset: factory(SPAN, {markupHint: `inset whitespace`, markupClass: classPrefix}),
+        break: factory(SPAN, {markupHint: `break whitespace`, markupClass: classPrefix}),
 
-        comment: factory(SPAN, {className: `${CLASS} comment`}),
+        comment: factory(SPAN, {markupHint: `comment`, markupClass: classPrefix}),
 
-        keyword: factory(SPAN, {className: `${CLASS} keyword`}),
-        identifier: factory(SPAN, {className: `${CLASS} identifier`}),
+        keyword: factory(SPAN, {markupHint: `keyword`, markupClass: classPrefix}),
+        identifier: factory(SPAN, {markupHint: `identifier`, markupClass: classPrefix}),
 
-        sequence: factory(SPAN, {className: `${CLASS} sequence`}),
+        sequence: factory(SPAN, {markupHint: `sequence`, markupClass: classPrefix}),
 
-        literal: factory(SPAN, {className: LITERAL}),
-        number: factory(SPAN, {className: `${LITERAL} number`}),
-        quote: factory(SPAN, {className: `${CLASS} quote`}),
-        pattern: factory(SPAN, {className: `${CLASS} pattern`}),
+        literal: factory(SPAN, {markupHint: LITERAL, markupClass: classPrefix}),
+        number: factory(SPAN, {markupHint: `${LITERAL} number`, markupClass: classPrefix}),
+        quote: factory(SPAN, {markupHint: `quote`, markupClass: classPrefix}),
+        pattern: factory(SPAN, {markupHint: `pattern`, markupClass: classPrefix}),
 
-        punctuator: factory(SPAN, {className: PUNCTUATOR}),
-        operator: factory(SPAN, {className: `${PUNCTUATOR} operator`}),
-        assigner: factory(SPAN, {className: `${PUNCTUATOR} operator assigner`}),
-        combinator: factory(SPAN, {className: `${PUNCTUATOR} operator combinator`}),
-        punctuation: factory(SPAN, {className: `${PUNCTUATOR} punctuation`}),
+        punctuator: factory(SPAN, {markupHint: PUNCTUATOR, markupClass: classPrefix}),
+        operator: factory(SPAN, {markupHint: `${PUNCTUATOR} operator`, markupClass: classPrefix}),
+        assigner: factory(SPAN, {markupHint: `${PUNCTUATOR} operator assigner`, markupClass: classPrefix}),
+        combinator: factory(SPAN, {markupHint: `${PUNCTUATOR} operator combinator`, markupClass: classPrefix}),
+        punctuation: factory(SPAN, {markupHint: `${PUNCTUATOR} punctuation`, markupClass: classPrefix}),
 
-        breaker: factory(SPAN, {className: `${PUNCTUATOR} breaker`}),
-        opener: factory(SPAN, {className: `${PUNCTUATOR} opener`}),
-        closer: factory(SPAN, {className: `${PUNCTUATOR} closer`}),
-        span: factory(SPAN, {className: `${PUNCTUATOR} span`}),
+        breaker: factory(SPAN, {markupHint: `${PUNCTUATOR} breaker`, markupClass: classPrefix}),
+        opener: factory(SPAN, {markupHint: `${PUNCTUATOR} opener`, markupClass: classPrefix}),
+        closer: factory(SPAN, {markupHint: `${PUNCTUATOR} closer`, markupClass: classPrefix}),
+        span: factory(SPAN, {markupHint: `${PUNCTUATOR} span`, markupClass: classPrefix}),
       };
 
       this.reflows = REFLOW;
@@ -1904,28 +1904,43 @@ const markup = (function (exports) {
      * @param {boolean} [unflattened]
      */
     static factory(tagName, elementProperties) {
-      const [tag, properties] = arguments;
-      return Object.defineProperties(
-        (content, hint) => {
-          typeof content === 'string' && (content = Text$2(content));
-          const element = content != null ? Element$2(tag, properties, content) : Element$2(tag, properties);
-          element &&
-            (hint = typeof hint === 'string' && `${element.className || ''} ${hint}`.trim()) &&
-            ((element.className = hint.split(/* /&#x[\da-f];/i */ '\n', 1)[0]),
-            (element.dataset = {
-              hint: hint
-                .slice(6)
-                .replace(/\n/g, '&#x000A;')
-                .trim(),
-            }));
-          return element;
-        },
+      const [
+        tag,
         {
-          // flatten: {
-          //   value: !arguments[2] || (/\bunflatten\b/i.test(arguments[2]) ? false : /\bflatten\b/i.test(arguments[2])),
-          // },
-        },
-      );
+          defaults = (this || MarkupRenderer).defaults,
+          markupClass = defaults.CLASS || MarkupRenderer.defaults.CLASS || 'markup',
+          markupHint = '',
+          ...properties
+        } = {},
+      ] = arguments;
+      properties.className = markupHint ? `${markupClass} ${markupHint}` : markupClass;
+      Object.freeze(properties);
+
+      return Object.freeze((content, hint) => {
+        let element, hintSeparator;
+
+        element =
+          (typeof content === 'string' && (content = Text$2(content))) || content != null
+            ? Element$2(tag, properties, content)
+            : Element$2(tag, properties);
+
+        typeof hint === 'string' && hint !== '' && (hintSeparator = hint.indexOf('\n\n')) !== -1
+          ? ((element.dataset = {hint: `${markupHint}${hint.slice(hintSeparator).replace(/\n/g, '&#x000A;')}`}),
+            hintSeparator === 0 || (element.className = `${element.className} ${hint.slice(0, hintSeparator)}`))
+          : (hint && (element.className = `${element.className} ${hint}`),
+            (element.dataset = {hint: hint || markupHint || element.className}));
+
+        // (hint &&
+        //   (hint = hint) &&
+        //   ((element.className = `${element.className || ''} ${classHint || hint}`),
+        //   (element.dataset = {
+        //     // hint: (markupHint ? `${markupHint}\n\n${hint}` : hint).replace(/\n/g, '&#x000A;'),
+        //     hint: (markupHint ? `${markupHint}\n\n${hint}` : hint).replace(/\n/g, '&#x000A;'),
+        //   }))) ||
+        //   (element.className && (hint = element.className));
+
+        return element;
+      });
     }
   }
 
