@@ -158,6 +158,7 @@
   opacity: var(--markup-line-opacity);
   color: var(--markup-line-color);
   background-color: var(--markup-line-background-color);
+  text-rendering: optimizeSpeed;
 }
 
 .markup-line.no-reflow {
