@@ -14,6 +14,7 @@ const Examples = ({
   ['cjs']: {url: ES, mode: 'cjs'},
   ['md']: {url: MD, mode: 'md'},
   ['json']: {url: LOCAL('./examples/samples/sample.json')},
+  ['complex']: {url: LOCAL('./examples/samples/complex.html')},
   ['gfm']: {url: LOCAL('./examples/samples/gfm.md')},
   ['es-matcher']: {url: RELATIVE('/markup/experimental/es/matcher.js', import.meta.url), mode: 'es'},
   ['es-matcher-bundle']: {url: LOCAL('./dist/tokenizer.browser.es.js', import.meta.url), mode: 'es'},
