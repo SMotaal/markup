@@ -14,10 +14,13 @@ DUMMY: async () => {
                         /(div)/g.exec(c).map(d);
 
                         // ExpressionStart never divide
-      ( ([              /([(regexp)])/g ] )/ [] );
-      ( [] /( [         /([(regexp)])/g ] )/ [] );
-      ( ([]) /( [       /([(regexp)])/g ] )/ [] );
-      ( [] /* */ /( [   /([(regexp)])/g ] )/ [] );
+      ( ([              /([(regexp)])/g / [] ] ) );
+      ( [] /( [         /([(regexp)])/g / [] ] ) );
+      ( ([]) /( [       /([(regexp)])/g / [] ] ) );
+      ( [] /* */ /( [   /([(regexp)])/g / [] ] ) );
+      ( []/( [/*/*//*/*//([(regexp)])/g / [] ] ) );
+                        // Declaration (ASI) then ExpressionStart
+      function ƒ () {}  /(regexp)/g.exec(c).map(d);
 
                         // Literals always divide (never ASI)
       ( []              /([(div)])/g / [] );
@@ -25,9 +28,6 @@ DUMMY: async () => {
       ( []/*/*//**//*/*//([(div)])/g / [] );
                         // FIXME: ObjectLiteral is "a literal"
       const x = {}      /(div)/g.exec(c).map(d);
-
-                        // Declaration (ASI) then ExpressionStart
-      function ƒ () {}  /(regexp)/g.exec(c).map(d);
 
                         // FIXME: Function/ClassExpression is "an expression"
       const y = function ƒ () {}
@@ -42,8 +42,10 @@ DUMMY: async () => {
     }
 
     Strings: {
+      '@@'            // FIXME: Not a fault
+
       '\
-      a\a'           // quote›‹punctuator, comment
+      a\a'            // quote›‹punctuator, comment
 
       "\
       \\n\\b"/**/     // quote›‹comment, comment
