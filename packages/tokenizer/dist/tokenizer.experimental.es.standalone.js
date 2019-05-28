@@ -886,7 +886,7 @@ const matcher = (ECMAScript =>
         // Defines how to address non-entity character(s):
         entity(
           ECMAScript.Fallthrough({
-            // type: 'fault',
+            type: 'fault',
           }),
         ),
       ),
@@ -903,7 +903,15 @@ const matcher = (ECMAScript =>
         ? entity => Matcher.sequence`(
             ${fallthrough}
             ${entity((text, entity, match, state) => {
-              capture(type === 'fault' ? fault(text, state) : type, match, text);
+              capture(
+                type !== 'fault'
+                  ? type || state.context.goal.type || 'sequence'
+                  : state.context.goal !== ECMAScriptGoal
+                  ? state.context.goal.type || 'sequence'
+                  : fault(text, state),
+                match,
+                text,
+              );
               typeof flatten === 'boolean' && (match.flatten = flatten);
             })}
           )`
@@ -1274,10 +1282,7 @@ const {
   const tokenizerProperties = Object.getOwnPropertyDescriptors(
     freeze(
       class Tokenizer {
-        /**
-         * @template {Matcher} T
-         * @template {{}} U
-         */
+        /** @template {Matcher} T @template {{}} U */
         *tokenize() {
           /** @type {Token<U>} */
           // let next;
@@ -1290,26 +1295,31 @@ const {
           /** @type {TokenizerState<T, U>} */
           const state = matcher.state;
           this.initializeState && this.initializeState(state);
-          matcher.exec = matcher.exec; //.bind(matcher);
-          // freeze(matcher);
-          // console.log(this, {string, matcher, state}, [...arguments]);
+          matcher.exec = matcher.exec;
+
           for (
-            let match, token, next, index = 0;
-            // Abort on first failed/empty match
-            ((match = matcher.exec(string)) && match[0] !== '') ||
-            //   but first yield a nextToken if present
-            (state.nextToken = void (next && (yield next)));
-            // We hold back one grace token
-            (token = createToken(match, state)) &&
-            //  until createToken(…) !== undefined (ie new token)
-            //  set the incremental token index for this token
-            //  and keep it referenced directly on the state
-            (((state.nextToken = token).index = index++),
-            //  then yield the previously held token
-            next && (yield next),
-            //  then finally clear the nextToken reference
-            (state.nextToken = void (next = token)))
-          );
+            let match, capturedToken, retainedToken, index = 0;
+            // BAIL on first failed/empty match
+            ((match = matcher.exec(string)) !== null && match[0] !== '') ||
+            //   BUT first yield a nextToken if present
+            (retainedToken !== undefined && (yield retainedToken), (state.nextToken = undefined));
+
+          ) {
+            if ((capturedToken = createToken(match, state)) === undefined) continue;
+
+            // HOLD back one grace token
+            //   until createToken(…) !== undefined (ie new token)
+            //   set the incremental token index for this token
+            //   and keep it referenced directly on the state
+            (state.nextToken = capturedToken).index = index++;
+
+            //   THEN yield a previously held token
+            if (retainedToken !== undefined) yield retainedToken;
+
+            //   THEN finally clear the nextToken reference
+            retainedToken = capturedToken;
+            state.nextToken = undefined;
+          }
 
           this.finalizeState && this.finalizeState(state);
 
