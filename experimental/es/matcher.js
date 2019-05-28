@@ -82,7 +82,7 @@ export const matcher = (ECMAScript =>
         // Defines how to address non-entity character(s):
         entity(
           ECMAScript.Fallthrough({
-            // type: 'fault',
+            type: 'fault',
           }),
         ),
       ),
@@ -99,7 +99,15 @@ export const matcher = (ECMAScript =>
         ? entity => Matcher.sequence`(
             ${fallthrough}
             ${entity((text, entity, match, state) => {
-              capture(type === 'fault' ? fault(text, state) : type, match, text);
+              capture(
+                type !== 'fault'
+                  ? type || state.context.goal.type || 'sequence'
+                  : state.context.goal !== ECMAScriptGoal
+                  ? state.context.goal.type || 'sequence'
+                  : fault(text, state),
+                match,
+                text,
+              );
               typeof flatten === 'boolean' && (match.flatten = flatten);
             })}
           )`
