@@ -123,6 +123,7 @@ export interface Token {
   goal: Goal;
   group: Group;
   state: State;
+  context?: Context;
 }
 
 // /** @typedef {import('./types').Match} Match */

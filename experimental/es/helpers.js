@@ -50,7 +50,7 @@ export const finalizeState = state => {
     error = (state.error = !isValidState ? 'Unexpected end of tokenizer state' : undefined),
   } = state;
 
-  if (!debug && error) throw Error(error);
+  // if (!debug && error) throw Error(error);
 
   // Finalize latent token artifacts
   state.nextTokenContext = void (state.lastTokenContext = state.nextTokenContext);
@@ -218,6 +218,7 @@ export const createToken = (match, state) => {
       goal: currentGoal,
       group: contextGroup,
       state,
+      context: tokenContext,
     };
   }
   /* Context */
@@ -319,7 +320,11 @@ export const forward = (search, match, state) => {
   search &&
     (typeof search === 'object'
       ? ((search.lastIndex = match.index + match[0].length), (state.nextOffset = match.input.search(search)))
-      : (state.nextOffset = match.input.indexOf(search, match.index + match[0].length)));
+      : (state.nextOffset = match.input.indexOf(search, match.index + match[0].length)) > match.index ||
+        (() => {
+          throw new Error('Parse Error: Unexpected end of stream');
+        })());
+  // state.nextOffset = match.input.length - 1
 };
 
 /**
