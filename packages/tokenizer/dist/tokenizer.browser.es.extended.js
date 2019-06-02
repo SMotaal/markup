@@ -1520,210 +1520,196 @@ const markupDOM = new MarkupRenderer();
 // const trace = /** @type {[function, any[]][]} */ [];
 
 class Matcher extends RegExp {
-	/**
-	 * @template T
-	 * @param {Matcher.Pattern} pattern
-	 * @param {Matcher.Flags} [flags]
-	 * @param {Matcher.Entities} [entities]
-	 * @param {T} [state]
-	 */
-	constructor(pattern, flags, entities, state) {
-		// trace.push([new.target, [...arguments]]);
-		//@ts-ignore
-		super(pattern, flags);
-		// Object.assign(this, RegExp.prototype, new.target.prototype);
-		(pattern &&
-			pattern.entities &&
-			Symbol.iterator in pattern.entities &&
-			((!entities && (entities = pattern.entities)) || entities === pattern.entities)) ||
-			Object.freeze((entities = (entities && Symbol.iterator in entities && [...entities]) || []));
-		/** @type {MatcherEntities} */
-		this.entities = entities;
-		/** @type {T} */
-		this.state = state;
-		this.capture = this.capture;
-		this.exec = this.exec;
-		// this.test = this.test;
-		({
-			// LOOKAHEAD: this.LOOKAHEAD = Matcher.LOOKAHEAD,
-			// INSET: this.INSET = Matcher.INSET,
-			// OUTSET: this.OUTSET = Matcher.OUTSET,
-			DELIMITER: this.DELIMITER = Matcher.DELIMITER,
-			UNKNOWN: this.UNKNOWN = Matcher.UNKNOWN,
-		} = new.target);
-	}
+  /**
+   * @template T
+   * @param {Matcher.Pattern} pattern
+   * @param {Matcher.Flags} [flags]
+   * @param {Matcher.Entities} [entities]
+   * @param {T} [state]
+   */
+  constructor(pattern, flags, entities, state) {
+    // trace.push([new.target, [...arguments]]);
+    //@ts-ignore
+    super(pattern, flags);
+    // Object.assign(this, RegExp.prototype, new.target.prototype);
+    (pattern &&
+      pattern.entities &&
+      Symbol.iterator in pattern.entities &&
+      ((!entities && (entities = pattern.entities)) || entities === pattern.entities)) ||
+      Object.freeze((entities = (entities && Symbol.iterator in entities && [...entities]) || []));
+    /** @type {MatcherEntities} */
+    this.entities = entities;
+    /** @type {T} */
+    this.state = state;
+    this.capture = this.capture;
+    this.exec = this.exec;
+    // this.test = this.test;
+    ({
+      // LOOKAHEAD: this.LOOKAHEAD = Matcher.LOOKAHEAD,
+      // INSET: this.INSET = Matcher.INSET,
+      // OUTSET: this.OUTSET = Matcher.OUTSET,
+      DELIMITER: this.DELIMITER = Matcher.DELIMITER,
+      UNKNOWN: this.UNKNOWN = Matcher.UNKNOWN,
+    } = new.target);
+  }
 
-	/**
-	 * @template {MatcherMatchResult} T
-	 * @param {string} text
-	 * @param {number} capture
-	 * @param {T} match
-	 * @returns {T}
-	 */
-	capture(text, capture, match) {
-		if (capture === 0) return void (match.capture = {});
-		if (text === undefined) return;
-		const index = capture - 1;
-		const {
-			entities: {[index]: entity},
-			state,
-		} = this;
-		typeof entity === 'function'
-			? ((match.entity = index), entity(text, capture, match, state))
-			: entity == null || //entity === INSET ||
-			  // entity === OUTSET ||
-			  // entity === DELIMITER ||
-			  // entity === LOOKAHEAD ||
-			  // entity === UNKNOWN ||
-			  (match.entity !== undefined || ((match.identity = entity), (match.entity = index)),
-			  (match.capture[entity] = text));
-	}
+  /**
+   * @param {string} source
+   * @returns {MatcherMatchResult}
+   */
+  exec(source) {
+    /** @type {MatcherMatchArray} */
+    const match = super.exec(source);
 
-	/**
-	 * @param {string} source
-	 * @returns {MatcherMatchResult}
-	 */
-	exec(source) {
-		// const tracing = trace.length;
-		// trace.push([this.exec, [...arguments]]);
-		/** @type {MatcherMatchArray} */
-		const match = super.exec(source);
-		// console.log(trace.slice(tracing, trace.length));
-		match &&
-			(match.forEach(this.capture || Matcher.prototype.capture, (match.matcher = this)),
-			match.identity || (match.capture[this.UNKNOWN || Matcher.UNKNOWN] = match[0]));
+    // @ts-ignore
+    if (match === null) return null;
 
-		// @ts-ignore
-		return match;
-	}
+    match.matcher = this;
+    match.capture = {};
 
-	/**
-	 * @param {Matcher.PatternFactory} factory
-	 * @param {Matcher.Flags} [flags]
-	 * @param {PropertyDescriptorMap} [properties]
-	 */
-	static define(factory, flags, properties) {
-		/** @type {MatcherEntities} */
-		const entities = [];
-		entities.flags = '';
-		// const pattern = factory(entity => void entities.push(((entity != null || undefined) && entity) || undefined));
-		const pattern = factory(entity => {
-			if (entity !== null && entity instanceof Matcher) {
-				entities.push(...entity.entities);
+    //@ts-ignore
+    for (
+      let i = 0, entity;
+      match[++i] === undefined ||
+      void (
+        (entity = this.entities[(match.entity = i - 1)]) == null ||
+        (typeof entity === 'function'
+          ? entity(match[0], i, match, this.state)
+          : (match.capture[(match.identity = entity)] = match[0]))
+      );
 
-				!entity.flags || (entities.flags = entities.flags ? Matcher.flags(entities.flags, entity.flags) : entity.flags);
+    );
+    // @ts-ignore
+    return match;
+  }
 
-				return entity.source;
-			} else {
-				entities.push(((entity != null || undefined) && entity) || undefined);
-			}
-		});
-		flags = Matcher.flags('g', flags == null ? pattern.flags : flags, entities.flags);
-		const matcher = new ((this && (this.prototype === Matcher.prototype || this.prototype instanceof RegExp) && this) ||
-			Matcher)(pattern, flags, entities);
+  /**
+   * @param {Matcher.PatternFactory} factory
+   * @param {Matcher.Flags} [flags]
+   * @param {PropertyDescriptorMap} [properties]
+   */
+  static define(factory, flags, properties) {
+    /** @type {MatcherEntities} */
+    const entities = [];
+    entities.flags = '';
+    // const pattern = factory(entity => void entities.push(((entity != null || undefined) && entity) || undefined));
+    const pattern = factory(entity => {
+      if (entity !== null && entity instanceof Matcher) {
+        entities.push(...entity.entities);
 
-		properties && Object.defineProperties(matcher, properties);
+        !entity.flags || (entities.flags = entities.flags ? Matcher.flags(entities.flags, entity.flags) : entity.flags);
 
-		return matcher;
-	}
+        return entity.source;
+      } else {
+        entities.push(((entity != null || undefined) && entity) || undefined);
+      }
+    });
+    flags = Matcher.flags('g', flags == null ? pattern.flags : flags, entities.flags);
+    const matcher = new ((this && (this.prototype === Matcher.prototype || this.prototype instanceof RegExp) && this) ||
+      Matcher)(pattern, flags, entities);
 
-	static flags(...sources) {
-		let flags = '',
-			iterative;
-		for (const source of sources) {
-			if (!source || (typeof source !== 'string' && typeof source.flags !== 'string')) continue;
-			for (const flag of source.flags || source)
-				(flag === 'g' || flag === 'y' ? iterative || !(iterative = true) : flags.includes(flag)) || (flags += flag);
-		}
-		// console.log('%o: ', flags, ...sources);
-		return flags;
-	}
+    properties && Object.defineProperties(matcher, properties);
 
-	static get sequence() {
-		const {raw} = String;
-		const {replace} = Symbol;
-		/**
-		 * @param {TemplateStringsArray} template
-		 * @param  {...any} spans
-		 * @returns {string}
-		 */
-		const sequence = (template, ...spans) =>
-			sequence.WHITESPACE[replace](raw(template, ...spans.map(sequence.span)), '');
-		/**
-		 * @param {any} value
-		 * @returns {string}
-		 */
-		sequence.span = value =>
-			(value &&
-				// TODO: Don't coerce to string here?
-				(typeof value !== 'symbol' && `${value}`)) ||
-			'';
+    return matcher;
+  }
 
-		sequence.WHITESPACE = /^\s+|\s*\n\s*|\s+$/g;
+  static flags(...sources) {
+    let flags = '',
+      iterative;
+    for (const source of sources) {
+      if (!source || (typeof source !== 'string' && typeof source.flags !== 'string')) continue;
+      for (const flag of source.flags || source)
+        (flag === 'g' || flag === 'y' ? iterative || !(iterative = true) : flags.includes(flag)) || (flags += flag);
+    }
+    // console.log('%o: ', flags, ...sources);
+    return flags;
+  }
 
-		Object.defineProperty(Matcher, 'sequence', {value: Object.freeze(sequence), enumerable: true, writable: false});
-		return sequence;
-	}
+  static get sequence() {
+    const {raw} = String;
+    const {replace} = Symbol;
+    /**
+     * @param {TemplateStringsArray} template
+     * @param  {...any} spans
+     * @returns {string}
+     */
+    const sequence = (template, ...spans) =>
+      sequence.WHITESPACE[replace](raw(template, ...spans.map(sequence.span)), '');
+    /**
+     * @param {any} value
+     * @returns {string}
+     */
+    sequence.span = value =>
+      (value &&
+        // TODO: Don't coerce to string here?
+        (typeof value !== 'symbol' && `${value}`)) ||
+      '';
 
-	static get join() {
-		const {sequence} = this;
+    sequence.WHITESPACE = /^\s+|\s*\n\s*|\s+$/g;
 
-		const join = (...values) =>
-			values
-				.map(sequence.span)
-				.filter(Boolean)
-				.join('|');
+    Object.defineProperty(Matcher, 'sequence', {value: Object.freeze(sequence), enumerable: true, writable: false});
+    return sequence;
+  }
 
-		Object.defineProperty(Matcher, 'join', {value: Object.freeze(join), enumerable: true, writable: false});
+  static get join() {
+    const {sequence} = this;
 
-		return join;
-	}
+    const join = (...values) =>
+      values
+        .map(sequence.span)
+        .filter(Boolean)
+        .join('|');
+
+    Object.defineProperty(Matcher, 'join', {value: Object.freeze(join), enumerable: true, writable: false});
+
+    return join;
+  }
 }
 
 const {
-	// INSET = (Matcher.INSET = /* Symbol.for */ 'INSET'),
-	// OUTSET = (Matcher.OUTSET = /* Symbol.for */ 'OUTSET'),
-	DELIMITER = (Matcher.DELIMITER = /* Symbol.for */ 'DELIMITER'),
-	UNKNOWN = (Matcher.UNKNOWN = /* Symbol.for */ 'UNKNOWN'),
-	// LOOKAHEAD = (Matcher.LOOKAHEAD = /* Symbol.for */ 'LOOKAHEAD'),
-	escape = (Matcher.escape = /** @type {<T>(source: T) => string} */ ((() => {
-		const {replace} = Symbol;
-		return source => /[\\^$*+?.()|[\]{}]/g[replace](source, '\\$&');
-	})())),
-	sequence: sequence$1,
-	matchAll = (Matcher.matchAll =
-		/**
-		 * @template {RegExp} T
-		 * @type {(string: Matcher.Text, matcher: T) => Matcher.Iterator<T> }
-		 */
-		//@ts-ignore
-		(() =>
-			Function.call.bind(
-				// String.prototype.matchAll || // TODO: Uncomment eventually
-				{
-					/**
-					 * @this {string}
-					 * @param {RegExp | string} pattern
-					 */
-					*matchAll() {
-						const matcher =
-							arguments[0] &&
-							(arguments[0] instanceof RegExp
-								? Object.setPrototypeOf(RegExp(arguments[0].source, arguments[0].flags || 'g'), arguments[0])
-								: RegExp(arguments[0], 'g'));
-						const string = String(this);
+  // INSET = (Matcher.INSET = /* Symbol.for */ 'INSET'),
+  // OUTSET = (Matcher.OUTSET = /* Symbol.for */ 'OUTSET'),
+  DELIMITER = (Matcher.DELIMITER = /* Symbol.for */ 'DELIMITER'),
+  UNKNOWN = (Matcher.UNKNOWN = /* Symbol.for */ 'UNKNOWN'),
+  // LOOKAHEAD = (Matcher.LOOKAHEAD = /* Symbol.for */ 'LOOKAHEAD'),
+  escape = (Matcher.escape = /** @type {<T>(source: T) => string} */ ((() => {
+    const {replace} = Symbol;
+    return source => /[\\^$*+?.()|[\]{}]/g[replace](source, '\\$&');
+  })())),
+  sequence: sequence$1,
+  matchAll = (Matcher.matchAll =
+    /**
+     * @template {RegExp} T
+     * @type {(string: Matcher.Text, matcher: T) => Matcher.Iterator<T> }
+     */
+    //@ts-ignore
+    (() =>
+      Function.call.bind(
+        // String.prototype.matchAll || // TODO: Uncomment eventually
+        {
+          /**
+           * @this {string}
+           * @param {RegExp | string} pattern
+           */
+          *matchAll() {
+            const matcher =
+              arguments[0] &&
+              (arguments[0] instanceof RegExp
+                ? Object.setPrototypeOf(RegExp(arguments[0].source, arguments[0].flags || 'g'), arguments[0])
+                : RegExp(arguments[0], 'g'));
+            const string = String(this);
 
-						if (!(matcher.flags.includes('g') || matcher.flags.includes('y'))) return void (yield matcher.exec(string));
+            if (!(matcher.flags.includes('g') || matcher.flags.includes('y'))) return void (yield matcher.exec(string));
 
-						for (
-							let match, lastIndex = -1;
-							lastIndex <
-							((match = matcher.exec(string)) ? (lastIndex = matcher.lastIndex + (match[0].length === 0)) : lastIndex);
-							yield match, matcher.lastIndex = lastIndex
-						);
-					},
-				}.matchAll,
-			))()),
+            for (
+              let match, lastIndex = -1;
+              lastIndex <
+              ((match = matcher.exec(string)) ? (lastIndex = matcher.lastIndex + (match[0].length === 0)) : lastIndex);
+              yield match, matcher.lastIndex = lastIndex
+            );
+          },
+        }.matchAll,
+      ))()),
 } = Matcher;
 
 const {
@@ -2068,7 +2054,7 @@ const finalizeState = state => {
     error = (state.error = !isValidState ? 'Unexpected end of tokenizer state' : undefined),
   } = state;
 
-  if (!debug && error) throw Error(error);
+  // if (!debug && error) throw Error(error);
 
   // Finalize latent token artifacts
   state.nextTokenContext = void (state.lastTokenContext = state.nextTokenContext);
@@ -2236,6 +2222,7 @@ const createToken = (match, state) => {
       goal: currentGoal,
       group: contextGroup,
       state,
+      context: tokenContext,
     };
   }
   /* Context */
@@ -2337,7 +2324,11 @@ const forward = (search, match, state) => {
   search &&
     (typeof search === 'object'
       ? ((search.lastIndex = match.index + match[0].length), (state.nextOffset = match.input.search(search)))
-      : (state.nextOffset = match.input.indexOf(search, match.index + match[0].length)));
+      : (state.nextOffset = match.input.indexOf(search, match.index + match[0].length)) > match.index ||
+        (() => {
+          throw new Error('Parse Error: Unexpected end of stream');
+        })());
+  // state.nextOffset = match.input.length - 1
 };
 
 /**
@@ -2353,6 +2344,8 @@ const fault = (text, state) => {
 /** @typedef {import('./types').Context} Context */
 /** @typedef {import('./types').Contexts} Contexts */
 /** @typedef {import('./types').State} State */
+
+// import {Matcher} from '../../../modules/matcher/matcher.js';
 
 const matcher = (ECMAScript =>
   Matcher.define(
@@ -2377,6 +2370,7 @@ const matcher = (ECMAScript =>
         entity(
           ECMAScript.Fallthrough({
             type: 'fault',
+            flatten: true,
           }),
         ),
       ),
@@ -2412,9 +2406,15 @@ const matcher = (ECMAScript =>
       entity => Matcher.sequence`(
         ${Matcher.join(lf && '\\n', crlf && '\\r\\n')}
         ${entity((text, entity, match, state) => {
-          const group = state.context.group;
+          // const group = state.context.group;
           match.format = 'whitespace';
-          capture(group && group.closer === '\n' ? close(text, state) || 'closer' : 'break', match, text);
+          capture(
+            state.context.group !== undefined && state.context.group.closer === '\n'
+              ? close(text, state) || 'closer'
+              : 'break',
+            match,
+            text,
+          );
           match.flatten = false;
         })}
       )`,
@@ -2439,11 +2439,11 @@ const matcher = (ECMAScript =>
       entity => Matcher.sequence`(
         \\u[${HexDigit}][${HexDigit}][${HexDigit}][${HexDigit}]
         ${entity((text, entity, match, state) => {
-          const context = state.context;
+          // const context = state.context;
           match.format = 'escape';
           capture(
-            context.goal.type ||
-              (context.goal === ECMAScriptGoal &&
+            state.context.goal.type ||
+              (state.context.goal === ECMAScriptGoal &&
               state.lastToken != null &&
               state.lastToken.type === 'identifier' &&
               ECMAScriptUnicodeIDContinue.test(String.fromCodePoint(parseInt(text.slice(2), 16)))
@@ -2468,19 +2468,19 @@ const matcher = (ECMAScript =>
       entity => Matcher.sequence`(
         \/\/|\/\*
         ${entity((text, entity, match, state) => {
-          const context = state.context;
+          // const context = state.context;
           match.format = 'punctuation';
           capture(
-            context.goal === ECMAScriptGoal
+            state.context.goal === ECMAScriptGoal
               ? open(text, state) ||
                   // Safely fast skip to end of comment
                   (forward(text === '//' ? '\n' : '*/', match, state),
                   // No need to track delimiter
                   (match.punctuator = CommentGoal.type),
                   'opener')
-              : context.goal !== CommentGoal
-              ? context.goal.type || 'sequence'
-              : context.group.closer !== text
+              : state.context.goal !== CommentGoal
+              ? state.context.goal.type || 'sequence'
+              : state.context.group.closer !== text
               ? CommentGoal.type
               : close(text, state) || (match.punctuator = CommentGoal.type),
             match,
@@ -2494,17 +2494,17 @@ const matcher = (ECMAScript =>
       entity => Matcher.sequence`(
         "|'
         ${entity((text, entity, match, state) => {
-          const context = state.context;
+          // const context = state.context;
           match.format = 'punctuation';
           capture(
-            context.goal === ECMAScriptGoal
+            state.context.goal === ECMAScriptGoal
               ? open(text, state) ||
                   // TODO: Investigate why regexp forward is slow
                   // (void forward(text === '"' ? /(?:[^"\\\n]+?(?=\\.|")|\\.)*?"/g : /(?:[^'\\\n]+?(?=\\.|')|\\.)*?'/g, match, state)) ||
                   ((match.punctuator = StringGoal.type), 'opener')
-              : context.goal !== StringGoal
-              ? context.goal.type || 'sequence'
-              : context.group.closer !== text
+              : state.context.goal !== StringGoal
+              ? state.context.goal.type || 'sequence'
+              : state.context.group.closer !== text
               ? StringGoal.type
               : ((match.flatten = false), close(text, state) || ((match.punctuator = StringGoal.type), 'closer')),
             match,
@@ -2518,14 +2518,14 @@ const matcher = (ECMAScript =>
       entity => Matcher.sequence`(
         ${'`'}
         ${entity((text, entity, match, state) => {
-          const context = state.context;
+          // const context = state.context;
           match.format = 'punctuation';
           capture(
-            context.goal === ECMAScriptGoal
+            state.context.goal === ECMAScriptGoal
               ? open(text, state) || ((match.punctuator = TemplateLiteralGoal.type), 'opener')
-              : context.goal !== TemplateLiteralGoal
-              ? context.goal.type || 'sequence'
-              : context.group.closer !== text
+              : state.context.goal !== TemplateLiteralGoal
+              ? state.context.goal.type || 'sequence'
+              : state.context.group.closer !== text
               ? TemplateLiteralGoal.type
               : close(text, state) || ((match.punctuator = TemplateLiteralGoal.type), 'closer'),
             match,
@@ -2539,16 +2539,16 @@ const matcher = (ECMAScript =>
       entity => Matcher.sequence`(
         \$\{|\{|\(|\[
         ${entity((text, entity, match, state) => {
-          const context = state.context;
+          // const context = state.context;
           match.format = 'punctuation';
           capture(
-            context.goal.punctuators && context.goal.punctuators[text] === true
+            state.context.goal.punctuators !== undefined && state.context.goal.punctuators[text] === true
               ? (match.punctuator = 'combinator')
-              : context.goal.openers &&
-                context.goal.openers[text] === true &&
-                (text !== '[' || context.goal !== RegExpGoal || context.group.opener !== '[')
+              : state.context.goal.openers &&
+                state.context.goal.openers[text] === true &&
+                (text !== '[' || state.context.goal !== RegExpGoal || state.context.group.opener !== '[')
               ? open(text, state) || 'opener'
-              : context.goal.type || 'sequence',
+              : state.context.goal.type || 'sequence',
             match,
             text,
           );
@@ -2560,14 +2560,14 @@ const matcher = (ECMAScript =>
       entity => Matcher.sequence`(
         \}|\)|\]
         ${entity((text, entity, match, state) => {
-          const context = state.context;
+          // const context = state.context;
           match.format = 'punctuation';
           capture(
-            context.goal.punctuators && context.goal.punctuators[text] === true
+            state.context.goal.punctuators && state.context.goal.punctuators[text] === true
               ? (match.punctuator = 'combinator')
-              : context.goal.closers && context.goal.closers[text] === true
+              : state.context.goal.closers && state.context.goal.closers[text] === true
               ? close(text, state) || 'closer'
-              : context.goal.type || 'sequence',
+              : state.context.goal.type || 'sequence',
             match,
             text,
           );
@@ -2583,24 +2583,30 @@ const matcher = (ECMAScript =>
       entity => Matcher.sequence`(
         \*\/|\/=|\/
         ${entity((text, entity, match, state) => {
-          let previousAtom;
-          const context = state.context;
+          // const context = state.context;
           match.format = 'punctuation';
           capture(
-            context.goal === CommentGoal
-              ? (context.group.closer === text && close(text, state)) || (match.punctuator = context.goal.type)
-              : context.goal === RegExpGoal && context.group.closer !== ']' // ie /…*/ or /…/
-              ? close('/', state) || ((match.punctuator = context.goal.type), 'closer')
-              : context.goal !== ECMAScriptGoal
-              ? context.goal.type || 'sequence'
+            state.context.goal === CommentGoal
+              ? (state.context.group.closer === text && close(text, state)) ||
+                  (match.punctuator = state.context.goal.type)
+              : state.context.goal === RegExpGoal && state.context.group.closer !== ']' // ie /…*/ or /…/
+              ? close('/', state) || ((match.punctuator = state.context.goal.type), 'closer')
+              : state.context.goal !== ECMAScriptGoal
+              ? state.context.goal.type || 'sequence'
               : text[0] === '*'
               ? fault(text, state)
-              : !(previousAtom = state.lastAtom) ||
-                (previousAtom.type === 'operator'
-                  ? previousAtom.text !== '++' && previousAtom.text !== '--'
-                  : previousAtom.type === 'closer'
-                  ? previousAtom.text === '}'
-                  : previousAtom.type === 'opener' || previousAtom.type === 'keyword')
+              : // : !(previousAtom = state.lastAtom) ||
+              //   (previousAtom.type === 'operator'
+              //     ? previousAtom.text !== '++' && previousAtom.text !== '--'
+              //     : previousAtom.type === 'closer'
+              //     ? previousAtom.text === '}'
+              //     : previousAtom.type === 'opener' || previousAtom.type === 'keyword')
+              state.lastAtom === undefined ||
+                (state.lastAtom.type === 'operator'
+                  ? state.lastAtom.text !== '++' && state.lastAtom.text !== '--'
+                  : state.lastAtom.type === 'closer'
+                  ? state.lastAtom.text === '}'
+                  : state.lastAtom.type === 'opener' || state.lastAtom.type === 'keyword')
               ? open(text, state) || ((match.punctuator = 'pattern'), 'opener')
               : (match.punctuator = 'operator'),
             match,
@@ -2620,14 +2626,14 @@ const matcher = (ECMAScript =>
         |!==|!=|!|===|==|=
         |\+|-|\*\*|\*
         ${entity((text, entity, match, state) => {
-          const context = state.context;
+          // const context = state.context;
           match.format = 'punctuation';
           capture(
-            context.goal === ECMAScriptGoal
+            state.context.goal === ECMAScriptGoal
               ? 'operator'
-              : context.goal.punctuators && context.goal.punctuators[text] === true
+              : state.context.goal.punctuators && state.context.goal.punctuators[text] === true
               ? (match.punctuator = 'punctuation')
-              : context.goal.type || 'sequence',
+              : state.context.goal.type || 'sequence',
             match,
             text,
           );
@@ -2641,13 +2647,13 @@ const matcher = (ECMAScript =>
       entity => Matcher.sequence`\b(
         ${Matcher.join(...keywords)}
         ${entity((text, entity, match, state) => {
-          let previousAtom;
-          const context = state.context;
+          // let previousAtom, keywordSymbol;
           match.format = 'identifier';
           capture(
-            (match.flatten = context.goal !== ECMAScriptGoal)
-              ? context.goal.type || 'sequence'
-              : ((previousAtom = state.lastAtom)) && previousAtom.text === '.'
+            (match.flatten = state.context.goal !== ECMAScriptGoal)
+              ? state.context.goal.type || 'sequence'
+              : // : ((keywordSymbol = keywords[text]), (previousAtom = state.lastAtom)) && previousAtom.text === '.'
+              state.lastAtom !== undefined && state.lastAtom.text === '.'
               ? 'identifier'
               : 'keyword',
             match,
@@ -2664,12 +2670,13 @@ const matcher = (ECMAScript =>
       entity => Matcher.sequence`(
         [${UnicodeIDStart}][${UnicodeIDContinue}]*
         ${entity((text, entity, match, state) => {
-          let previousToken;
+          // let previousToken;
           match.format = 'identifier';
           capture(
             state.context.goal !== ECMAScriptGoal
               ? state.context.goal.type || 'sequence'
-              : (previousToken = state.lastToken) && previousToken.punctuator === 'pattern' && RegExpFlags.test(text)
+              : // : (previousToken = state.lastToken) && previousToken.punctuator === 'pattern' && RegExpFlags.test(text)
+              state.lastToken !== undefined && state.lastToken.punctuator === 'pattern' && RegExpFlags.test(text)
               ? ((match.flatten = true), (match.punctuator = RegExpGoal.type), 'closer')
               : ((match.flatten = true), 'identifier'),
             match,
