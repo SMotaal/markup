@@ -1,24 +1,27 @@
 ﻿import {createMatcherMode} from './helpers.js';
-import {Matcher} from '../../../modules/matcher/matcher.js';
+import {Matcher} from './matcher.js';
 
 export default async markup => {
   const parser = markup.parsers[0];
   const mode = createMatcherMode(
     Matcher.define(
       entity => Matcher.sequence`
-      (\S+${entity('text')})|(
-        \n
-        ${entity((text, entity, match, state) => {
-          state.lineOffset = match.index + text.length;
-          match.capture[(match.identity = 'break')] = text;
-        })}
-      )|(
-        \s+
-        ${entity((text, entity, match, state) => {
-          match.capture[(match.identity = state.lineOffset !== match.index ? 'whitespace' : 'inset')] = text;
-        })}
-      )
-    `,
+        (
+          \S+
+          ${entity('text')}
+        )|(
+          \n
+          ${entity((text, entity, match, state) => {
+            state.lineOffset = match.index + text.length;
+            match.capture[(match.identity = 'break')] = text;
+          })}
+        )|(
+          \s+
+          ${entity((text, entity, match, state) => {
+            match.capture[(match.identity = state.lineOffset !== match.index ? 'whitespace' : 'inset')] = text;
+          })}
+        )
+      `,
       'g',
     ),
   );

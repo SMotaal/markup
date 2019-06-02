@@ -1,4 +1,4 @@
-﻿import {Matcher} from '../../../modules/matcher/matcher.js';
+import {Matcher} from '../matcher/matcher.js';
 import {HexDigit, DecimalDigit, BinaryDigit, ControlLetter, UnicodeIDStart, UnicodeIDContinue} from './ranges.js';
 import {keywords, ECMAScriptGoal, CommentGoal, RegExpGoal, StringGoal, TemplateLiteralGoal} from './definitions.js';
 import {capture, forward, fault, open, close} from './helpers.js';
