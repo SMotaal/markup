@@ -1,5 +1,14 @@
-﻿/** Symbol map @type {{ [key: string]: symbol }} */
-const symbols = {};
+﻿//@ts-check
+import {generateDefinitions, Keywords, Symbols} from './helpers.js';
+
+const symbols = Symbols(
+  'ECMAScriptGoal',
+  'CommentGoal',
+  'RegExpGoal',
+  'StringGoal',
+  'TemplateLiteralGoal',
+  'FaultGoal',
+);
 
 /** Unique token records @type {{[symbol: symbol]: }} */
 const tokens = {};
@@ -14,33 +23,39 @@ const identities = {
   RestrictedWord: 'ECMAScriptRestrictedWord',
   FutureReservedWord: 'ECMAScriptFutureReservedWord',
   Keyword: 'ECMAScriptKeyword',
+  // MetaProperty: 'ECMAScriptMetaProperty',
 };
 
 const goals = {
-  [Symbolic('ECMAScriptGoal')]: {
+  [symbols.ECMAScriptGoal]: {
     type: undefined,
     flatten: undefined,
     fold: undefined,
     openers: ['{', '(', '[', "'", '"', '`', '/', '/*', '//'],
     closers: ['}', ')', ']'],
   },
-  [Symbolic('CommentGoal')]: {type: 'comment', flatten: true, fold: true},
-  [Symbolic('RegExpGoal')]: {
+  [symbols.CommentGoal]: {type: 'comment', flatten: true, fold: true},
+  [symbols.RegExpGoal]: {
     type: 'pattern',
     flatten: undefined,
     fold: undefined,
-    openers: ['['],
-    closers: [']'],
-    punctuators: ['+', '*', '?', '|', '^', '{', '}', '(', ')'],
+    openers: ['[', '(', '{'],
+    closers: [']', ')', '}'],
+    opener: '/',
+    closer: '/',
+    // punctuators: ['+', '*', '?', '|', '^', '{', '}', '(', ')'],
+    punctuators: ['+', '*', '?', '|', '^'],
   },
-  [Symbolic('StringGoal')]: {type: 'quote', flatten: true, fold: true},
-  [Symbolic('TemplateLiteralGoal')]: {
+  [symbols.StringGoal]: {type: 'quote', flatten: true, fold: true},
+  [symbols.TemplateLiteralGoal]: {
     type: 'quote',
     flatten: true,
     fold: false,
     openers: ['${'],
+    opener: '`',
+    closer: '`',
   },
-  [Symbolic('FaultGoal')]: {type: 'fault'}, // , groups: {}
+  [symbols.FaultGoal]: {type: 'fault'}, // , groups: {}
 };
 
 const {
@@ -75,76 +90,124 @@ const groups = {
   },
 };
 
-/**  @type {ECMAScript.Keywords} */
-const keywords = {};
+/** @type {ECMAScript.Keywords} */
+// @ts-ignore
+const keywords = Keywords({
+  // TODO: Let's make those constructs (this.new.target borks)
+  // [identities.MetaProperty]: 'new.target import.meta',
+  [identities.Keyword]: [
+    ...['await', 'break', 'case', 'catch', 'class', 'const', 'continue'],
+    ...['debugger', 'default', 'delete', 'do', 'else', 'export', 'extends'],
+    ...['finally', 'for', 'function', 'if', 'import', 'in', 'instanceof'],
+    ...['let', 'new', 'return', 'super', 'switch', 'this', 'throw', 'try'],
+    ...['typeof', 'var', 'void', 'while', 'with', 'yield'],
+  ],
+  [identities.RestrictedWord]: ['interface', 'implements', 'package', 'private', 'protected', 'public'],
+  [identities.FutureReservedWord]: ['enum'],
+  // NOTE: This is purposely not aligned with the spec
+  [identities.ContextualWord]: ['arguments', 'async', 'as', 'from', 'of', 'static', 'get', 'set'],
+});
 
 {
-  const {create, freeze, entries, getOwnPropertySymbols, getOwnPropertyNames, setPrototypeOf} = Object;
+  const operativeKeywords = new Set('await delete typeof void yield'.split(' '));
+  const declarativeKeywords = new Set('export import default async function class const let var'.split(' '));
+  const constructiveKeywords = new Set('await async function class await delete typeof void yield this new'.split(' '));
 
-  const punctuators = create(null);
-
-  for (const opener of getOwnPropertyNames(groups)) {
-    const {[opener]: group} = groups;
-    'goal' in group && (group.goal = goals[group.goal] || FaultGoal);
-    'parentGoal' in group && (group.parentGoal = goals[group.parentGoal] || FaultGoal);
-    freeze(group);
-  }
-
-  for (const symbol of getOwnPropertySymbols(goals)) {
-    // @ts-ignore
-    const {[symbol]: goal} = goals;
-
-    goal.name = (goal.symbol = symbol).description.replace(/Goal$/, '');
-    goal[Symbol.toStringTag] = `«${goal.name}»`;
-    goal.tokens = tokens[symbol] = {};
-    goal.groups = [];
-
-    if (goal.punctuators) {
-      for (const punctuator of (goal.punctuators = [...goal.punctuators]))
-        punctuators[punctuator] = !(goal.punctuators[punctuator] = true);
-      freeze(setPrototypeOf(goal.punctuators, punctuators));
+  /**
+   * Determines if the capture is a valid keyword, identifier or undefined
+   * based on matcher state (ie lastAtom, context, intent) and subset
+   * of ECMAScript keyword rules of significant.
+   *
+   * TODO: Refactor or extensively test captureKeyword
+   * TODO: Document subset of ECMAScript keyword rules of significant
+   *
+   * @param {string} text - Matched by /\b(‹text›)\b(?=[^\s$_:]|\s+[^:]|$)
+   * @param {State} state
+   * @param {string} [intent]
+   */
+  const captureKeyword = (text, {lastAtom: pre, lineIndex, context}, intent) => {
+    //                              (a) WILL BE ‹fault› UNLESS  …
+    switch (intent || (intent = context.intent)) {
+      //  DESTRUCTURING INTENT  (ie Variable/Class/Function declarations)
+      case 'destructuring':
+      //  DECLARATION INTENT  (ie Variable/Class/Function declarations)
+      case 'declaration':
+        return (
+          //                        (b)   WILL BE ‹idenfitier›
+          //                              AFTER ‹.›  (as ‹operator›)
+          (pre !== undefined && pre.text === '.' && 'identifier') ||
+          //                        (c)   WILL BE ‹keyword›
+          //                              IF DECLARATIVE AND …
+          (declarativeKeywords.has(text) &&
+            //                      (c1)  NOT AFTER ‹keyword› …
+            (pre === undefined ||
+              pre.type !== 'keyword' ||
+              //                          UNLESS IS DIFFERENT
+              (pre.text !== text &&
+                //                        AND NOT ‹export› NOR ‹import›
+                !(text === 'export' || text === 'import') &&
+                //                  (c2)  FOLLOWS ‹export› OR ‹default›
+                (pre.text === 'export' ||
+                  pre.text === 'default' ||
+                  //                (c3)  IS ‹function› AFTER ‹async›
+                  (pre.text === 'async' && text === 'function')))) &&
+            'keyword')
+        );
+      default:
+        return (
+          //                        (b)   WILL BE ‹idenfitier› …
+          (((pre !== undefined &&
+            //                      (b1)  AFTER ‹.›  (as ‹operator›)
+            pre.text === '.') ||
+            //                      (b2)  OR ‹await› (not as ‹keyword›)
+            (text === 'await' && context.awaits === false) ||
+            //                      (b3)  OR ‹yield› (not as ‹keyword›)
+            (text === 'yield' && context.yields === false)) &&
+            'identifier') ||
+          //                        (c)   WILL BE ‹keyword› …
+          ((pre === undefined ||
+            //                      (c1)  NOT AFTER ‹keyword›
+            pre.type !== 'keyword' ||
+            //                      (c2)  UNLESS OPERATIVE
+            operativeKeywords.has(pre.text) ||
+            //                      (c3)  OR ‹if› AFTER ‹else›
+            (text === 'if' && pre.text === 'else') ||
+            //                      (c4)  OR ‹default› AFTER ‹export›
+            (text === 'default' && pre.text === 'export') ||
+            //                      (c5)  NOT AFTER ‹async›
+            //                            EXCEPT ‹function›
+            ((pre.text !== 'async' || text === 'function') &&
+              //                    (c6)  AND NOT AFTER ‹class›
+              //                          EXCEPT ‹extends›
+              (pre.text !== 'class' || text === 'extends') &&
+              //                    (c7)  AND NOT AFTER ‹for›
+              //                          EXCEPT ‹await› (as ‹keyword›)
+              (pre.text !== 'for' || text === 'await') &&
+              //                    (c6)  NOT AFTER ‹return›
+              //                          AND IS DIFFERENT
+              //                          AND IS NOT ‹return›
+              (pre.text !== 'return'
+                ? pre.text !== text
+                : text !== 'return'
+                ? //                (c7)  OR AFTER ‹return›
+                  //                      AND IS CONSTRUCTIVE
+                  constructiveKeywords.has(text)
+                : //                (c8)  OR AFTER ‹return›
+                  //                      AND IS ‹return›
+                  //                      WHEN ON NEXT LINE
+                  pre.lineNumber < 1 + lineIndex))) &&
+            'keyword')
+        );
     }
+  };
 
-    if (goal.closers) {
-      for (const closer of (goal.closers = [...goal.closers])) punctuators[closer] = !(goal.closers[closer] = true);
-      freeze(setPrototypeOf(goal.closers, punctuators));
-    }
-
-    if (goal.openers) {
-      for (const opener of (goal.openers = [...goal.openers])) {
-        const group = (goal.groups[opener] = {...groups[opener]});
-        punctuators[opener] = !(goal.openers[opener] = true);
-        GoalSpecificTokenRecord(goal, group.opener, 'opener', {group});
-        GoalSpecificTokenRecord(goal, group.closer, 'closer', {group});
-        group[Symbol.toStringTag] = `‹${group.opener}›`;
-      }
-      freeze(setPrototypeOf(goal.openers, punctuators));
-    }
-
-    freeze(goal.groups);
-    freeze(goal.tokens);
-    freeze(goal);
-  }
-
-  freeze(punctuators);
-  freeze(goals);
-  freeze(groups);
-  freeze(identities);
-  freeze(symbols);
-
-  for (const [identity, list] of entries({
-    [identities.Keyword]:
-      'await break case catch class const continue debugger default delete do else export extends finally for function if import in instanceof let new return super switch this throw try typeof var void while with yield',
-    [identities.RestrictedWord]: 'interface implements package private protected public',
-    [identities.FutureReservedWord]: 'enum',
-    // NOTE: This is purposely not aligned with the spec
-    [identities.ContextualWord]: 'arguments async as from of static get set',
-  })) {
-    for (const keyword of list.split(/\s+/)) keywords[keyword] = identity;
-  }
-  keywords[Symbol.iterator] = Array.prototype[Symbol.iterator].bind(Object.getOwnPropertyNames(keywords));
-  freeze(keywords);
+  /** @param {Context} context */
+  goals[symbols.ECMAScriptGoal].initializeContext = context => {
+    Object.assign(context, {captureKeyword});
+  };
 }
+
+generateDefinitions({groups, goals, identities, symbols, keywords, tokens});
 
 export {
   identities,
@@ -160,30 +223,8 @@ export {
   TemplateLiteralGoal,
 };
 
-/**
- * Creates a symbolically mapped goal-specific token record
- *
- * @template {{}} T
- * @param {goal} goal
- * @param {string} text
- * @param {type} type
- * @param {T} properties
- */
-function GoalSpecificTokenRecord(goal, text, type, properties) {
-  const symbol = Symbol(`‹${goal.name} ${text}›`);
-  return (goal.tokens[text] = goal.tokens[symbol] = tokens[symbol] = {symbol, text, type, goal, ...properties});
-}
-
-function Symbolic(key, description = key) {
-  return (symbols[key] = Symbol(description));
-}
-
-/** @typedef {typeof goals} goals */
-/** @typedef {goals[keyof goals]} goal */
-/** @typedef {goal['type']} type */
-/** @typedef {{symbol: symbol, text: string, type: type, goal?: goal, group?: group}} token */
-/** @typedef {typeof groups} groups */
-/** @typedef {groups[keyof groups]} group */
+/** @typedef {import('./types').State} State */
+/** @typedef {import('./types').Context} Context */
 
 /**
  * @typedef {'await'|'break'|'case'|'catch'|'class'|'const'|'continue'|'debugger'|'default'|'delete'|'do'|'else'|'export'|'extends'|'finally'|'for'|'function'|'if'|'import'|'in'|'instanceof'|'new'|'return'|'super'|'switch'|'this'|'throw'|'try'|'typeof'|'var'|'void'|'while'|'with'|'yield'} ECMAScript.Keyword
@@ -192,3 +233,10 @@ function Symbolic(key, description = key) {
  * @typedef {'arguments'|'async'|'as'|'from'|'of'|'static'} ECMAScript.ContextualKeyword
  * @typedef {Record<ECMAScript.Keyword|ECMAScript.RestrictedWord|ECMAScript.FutureReservedWord|ECMAScript.ContextualKeyword, symbol>} ECMAScript.Keywords
  */
+
+// //@ts-ignore
+// const keywords = {};
+
+// function Symbolic(key, description = key) {
+//   return (symbols[key] = Symbol(description));
+// }

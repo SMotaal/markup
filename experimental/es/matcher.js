@@ -7,26 +7,41 @@ import {capture, forward, fault, open, close} from './helpers.js';
 DUMMY: async () => {
   /* prettier-ignore */ // Make sure this block never lints
   {
-    let i\u0032;
-    this.new.target;
+    Identifiers: {
+      $\u0032; \u0024\u0032; this.new.target;
+    }
 
     Solidus: {
-      a = b             // Identifiers always divide (never ASI)
-                        /(div)/g.exec(c).map(d);
-
                         // ExpressionStart never divide
       ( ([              /([(regexp)])/g / [] ] ) );
       ( [] /( [         /([(regexp)])/g / [] ] ) );
       ( ([]) /( [       /([(regexp)])/g / [] ] ) );
       ( [] /* */ /( [   /([(regexp)])/g / [] ] ) );
       ( []/( [/*/*//*/*//([(regexp)])/g / [] ] ) );
-                        // Declaration (ASI) then ExpressionStart
-      function ƒ () {}  /(regexp)/g.exec(c).map(d);
 
                         // Literals always divide (never ASI)
       ( []              /([(div)])/g / [] );
       ( ([])            /([(div)])/g / [] );
       ( []/*/*//**//*/*//([(div)])/g / [] );
+
+      a = b             // Identifiers always divide (never ASI)
+                        /(div)/g.exec(c).map(d);
+
+                        // Declaration (ASI) then ExpressionStart
+      function ƒ () {}  /(regexp)/g.exec(c).map(d);
+
+
+      async () => {}    // Curly+LineBreak is ASI
+                        /(regexp)/g.exec(c).map(d);
+      async () => {}
+                        /(regexp)/g.exec(c).map(d);
+
+      async () => ({})  //
+                        /(div)/g.exec(c).map(d);
+
+                        // Function calls always in Expression
+      async ()          /(div)/g.exec(c).map(d);
+
                         // FIXME: ObjectLiteral is "a literal"
       const x = {}      /(div)/g.exec(c).map(d);
 
@@ -36,6 +51,28 @@ DUMMY: async () => {
 
                         // Keyword always regexp (regardless of ASI)
       return await/*/\*//(regexp)/g.exec(c).map(d);
+
+      (async function* () {
+
+                        // Recursively operative Keywords
+                        yield   yield
+                        void    void
+                        typeof  typeof
+                        delete  delete
+                        await   await
+                        ('')
+
+                        await   new     class {}
+                        return  new     class {}
+                        yield   async   function () {}
+                        return
+                        return
+                        return  async   function () {}
+
+                        // FIXME: Non-Keywords
+                        async
+                        async   ('')
+      });
 
       // Matt Austin's
       Function("arg=`", "/*body`){});({x: this/**/");
@@ -124,7 +161,7 @@ export const matcher = (ECMAScript =>
           match.format = 'whitespace';
           capture(
             state.context.group !== undefined && state.context.group.closer === '\n'
-              ? close(text, state) || 'closer'
+              ? close(text, state) || (state.context.goal === CommentGoal ? 'break' : 'closer')
               : 'break',
             match,
             text,
@@ -144,6 +181,10 @@ export const matcher = (ECMAScript =>
       )`,
     ),
   Escape: ({
+    ECMAScriptUnicodeIDStart = RegExp(
+      Matcher.sequence`[${UnicodeIDStart}]+`,
+      UnicodeIDContinue.includes('\\p{') ? 'u' : '',
+    ),
     ECMAScriptUnicodeIDContinue = RegExp(
       Matcher.sequence`[${UnicodeIDContinue}]+`,
       UnicodeIDContinue.includes('\\p{') ? 'u' : '',
@@ -154,13 +195,15 @@ export const matcher = (ECMAScript =>
         \\u[${HexDigit}][${HexDigit}][${HexDigit}][${HexDigit}]
         ${entity((text, entity, match, state) => {
           // const context = state.context;
+          let character;
           match.format = 'escape';
           capture(
             state.context.goal.type ||
               (state.context.goal === ECMAScriptGoal &&
               state.lastToken != null &&
-              state.lastToken.type === 'identifier' &&
-              ECMAScriptUnicodeIDContinue.test(String.fromCodePoint(parseInt(text.slice(2), 16)))
+              (state.lastToken.type === 'identifier'
+                ? ECMAScriptUnicodeIDContinue.test(String.fromCodePoint(parseInt(text.slice(2), 16)))
+                : ECMAScriptUnicodeIDStart.test(String.fromCodePoint(parseInt(text.slice(2), 16))))
                 ? ((match.flatten = true), 'identifier')
                 : 'escape'),
             match,
@@ -253,14 +296,14 @@ export const matcher = (ECMAScript =>
       entity => Matcher.sequence`(
         \$\{|\{|\(|\[
         ${entity((text, entity, match, state) => {
-          // const context = state.context;
           match.format = 'punctuation';
           capture(
             state.context.goal.punctuators !== undefined && state.context.goal.punctuators[text] === true
               ? (match.punctuator = 'combinator')
               : state.context.goal.openers &&
                 state.context.goal.openers[text] === true &&
-                (text !== '[' || state.context.goal !== RegExpGoal || state.context.group.opener !== '[')
+                // (text !== '[' || state.context.goal !== RegExpGoal || state.context.group.opener !== '[')
+                (state.context.goal !== RegExpGoal || state.context.group.opener !== '[')
               ? open(text, state) || 'opener'
               : state.context.goal.type || 'sequence',
             match,
@@ -274,12 +317,14 @@ export const matcher = (ECMAScript =>
       entity => Matcher.sequence`(
         \}|\)|\]
         ${entity((text, entity, match, state) => {
-          // const context = state.context;
           match.format = 'punctuation';
           capture(
             state.context.goal.punctuators && state.context.goal.punctuators[text] === true
               ? (match.punctuator = 'combinator')
-              : state.context.goal.closers && state.context.goal.closers[text] === true
+              : state.context.goal.closers &&
+                state.context.goal.closers[text] === true &&
+                (state.context.goal !== RegExpGoal ||
+                  (state.context.group.opener !== '[' || text === state.context.group.closer))
               ? close(text, state) || 'closer'
               : state.context.goal.type || 'sequence',
             match,
@@ -310,13 +355,7 @@ export const matcher = (ECMAScript =>
               ? state.context.goal.type || 'sequence'
               : text[0] === '*'
               ? fault(text, state)
-              : // : !(previousAtom = state.lastAtom) ||
-              //   (previousAtom.type === 'operator'
-              //     ? previousAtom.text !== '++' && previousAtom.text !== '--'
-              //     : previousAtom.type === 'closer'
-              //     ? previousAtom.text === '}'
-              //     : previousAtom.type === 'opener' || previousAtom.type === 'keyword')
-              state.lastAtom === undefined ||
+              : state.lastAtom === undefined ||
                 (state.lastAtom.type === 'operator'
                   ? state.lastAtom.text !== '++' && state.lastAtom.text !== '--'
                   : state.lastAtom.type === 'closer'
@@ -360,20 +399,22 @@ export const matcher = (ECMAScript =>
     //  - { get() set() } as Identifiers
     Matcher.define(
       entity => Matcher.sequence`\b(
-        ${Matcher.join(...keywords)}
+        ${Matcher.join(...keywords).replace(/\./g, '\\.')}
         ${entity((text, entity, match, state) => {
-          // let previousAtom, keywordSymbol;
           match.format = 'identifier';
           capture(
             (match.flatten = state.context.goal !== ECMAScriptGoal)
               ? state.context.goal.type || 'sequence'
-              : // : ((keywordSymbol = keywords[text]), (previousAtom = state.lastAtom)) && previousAtom.text === '.'
-              state.lastAtom !== undefined && state.lastAtom.text === '.'
+              : state.lastAtom !== undefined && state.lastAtom.text === '.'
               ? 'identifier'
-              : 'keyword',
+              : state.context.captureKeyword === undefined
+              ? 'keyword'
+              : state.context.captureKeyword(text, state) || fault(text, state),
             match,
             text,
           );
+
+          // : ((keywordSymbol = keywords[text]), (previousAtom = state.lastAtom)) && previousAtom.text === '.'
           // keywordSymbol &&
           //   ((context.keywords = (context.keywords || 0) + 1),
           //   (context[`${(match.capture[keywordSymbol] = text)}-keyword-index`] = match.index));
