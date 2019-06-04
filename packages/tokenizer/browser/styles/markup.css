@@ -269,6 +269,8 @@ pre.markup[line-numbers] .markup-line::before {
   --color: var(--markup-operators, limegreen);
 }
 
+.markup.in-pattern.opener,
+.markup.in-pattern.closer,
 .markup.combinator {
   --color: var(--markup-combinators, cornflowerblue);
 }

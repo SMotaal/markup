@@ -33,13 +33,22 @@ export interface Goal {
   punctuators: Punctuators;
   openers: delimiters;
   closers: delimiters;
+  opener: string;
+  closer: string;
   groups: Group[];
+  initializeContext: (context: Context) => void;
+  tokens?: {[symbol: symbol]: MutableState & {symbol: symbol; text: string; type: string; goal: Goal}};
 }
 
-export interface Context extends ContextStats {
+export interface MutableState {
+  [name: string]: unknown;
+}
+
+export interface Context extends ContextStats, Partial<MutableState> {
   id: string;
   number: number;
   depth: number;
+  intent: string;
 
   parentContext: Context;
   goal: Goal;

@@ -184,7 +184,13 @@ export const createToken = (match, state) => {
 
     // hint = `${(isDelimiter ? type : currentGoalType && `in-${currentGoalType}`) ||
     hint = `${
-      isDelimiter ? type : currentGoalType ? `in-${currentGoalType}` : ''
+      currentGoalType
+        ? isDelimiter && currentGoal.opener === text
+          ? `${type}`
+          : `in-${currentGoalType}`
+        : isDelimiter
+        ? type
+        : ''
     }\n\n${contextId} #${tokenNumber}\n(${lineNumber}:${columnNumber})`;
 
     tokenReference = isWhitespace || isComment ? 'lastTrivia' : 'lastAtom';
@@ -239,11 +245,19 @@ export const createToken = (match, state) => {
 };
 
 /**
+ * @template {{}} T
  * @param {Partial<Context>} context
- * @returns {Context}
+ * @param {T} [properties]
+ * @returns {Context & T}
  */
 //@ts-ignore
-export const initializeContext = context => Object.assign(context, stats);
+export const initializeContext = (context, properties) => {
+  Object.assign(context, stats, properties);
+  //@ts-ignore
+  context.goal && context.goal.initializeContext && context.goal.initializeContext(context);
+  //@ts-ignore
+  return context;
+};
 
 export const capture = (identity, match, text) => {
   match.capture[(match.identity = identity)] = text || match[0];
@@ -254,11 +268,13 @@ export const capture = (identity, match, text) => {
 /**
  * Safely mutates matcher state to open a new context.
  *
+ * @template {{}} T
  * @param {string} text - Text of the intended { type = "opener" } token
  * @param {State} state - Matcher state
+ * @param {T} [properties]
  * @returns {undefined | string} - String when context is **not** open
  */
-export const open = (text, state) => {
+export const open = (text, state, properties) => {
   // const {goal: initialGoal, groups} = state;
   const {
     contexts,
@@ -335,8 +351,119 @@ export const fault = (text, state) => {
   return 'fault';
 };
 
+/** @param {string[]} keys */
+export const Symbols = (...keys) => {
+  const symbols = {};
+  for (const key of keys) symbols[key] = Symbol(key);
+  return symbols;
+};
+
+export const generateDefinitions = ({groups, goals, identities, symbols, keywords, tokens}) => {
+  const {[symbols.FaultGoal]: FaultGoal} = goals;
+
+  const {create, freeze, entries, getOwnPropertySymbols, getOwnPropertyNames, setPrototypeOf} = Object;
+
+  const punctuators = create(null);
+
+  for (const opener of getOwnPropertyNames(groups)) {
+    const {[opener]: group} = groups;
+    'goal' in group && (group.goal = goals[group.goal] || FaultGoal);
+    'parentGoal' in group && (group.parentGoal = goals[group.parentGoal] || FaultGoal);
+    freeze(group);
+  }
+
+  for (const symbol of getOwnPropertySymbols(goals)) {
+    // @ts-ignore
+    const {[symbol]: goal} = goals;
+
+    goal.name = (goal.symbol = symbol).description.replace(/Goal$/, '');
+    goal[Symbol.toStringTag] = `«${goal.name}»`;
+    goal.tokens = tokens[symbol] = {};
+    goal.groups = [];
+
+    if (goal.punctuators) {
+      for (const punctuator of (goal.punctuators = [...goal.punctuators]))
+        punctuators[punctuator] = !(goal.punctuators[punctuator] = true);
+      freeze(setPrototypeOf(goal.punctuators, punctuators));
+    }
+
+    if (goal.closers) {
+      for (const closer of (goal.closers = [...goal.closers])) punctuators[closer] = !(goal.closers[closer] = true);
+      freeze(setPrototypeOf(goal.closers, punctuators));
+    }
+
+    if (goal.openers) {
+      for (const opener of (goal.openers = [...goal.openers])) {
+        const group = (goal.groups[opener] = {...groups[opener]});
+        punctuators[opener] = !(goal.openers[opener] = true);
+        GoalSpecificTokenRecord(goal, group.opener, 'opener', {group});
+        GoalSpecificTokenRecord(goal, group.closer, 'closer', {group});
+        group[Symbol.toStringTag] = `‹${group.opener}›`;
+      }
+      freeze(setPrototypeOf(goal.openers, punctuators));
+    }
+
+    freeze(goal.groups);
+    freeze(goal.tokens);
+    freeze(goal);
+  }
+
+  freeze(punctuators);
+  freeze(goals);
+  freeze(groups);
+  freeze(identities);
+  freeze(symbols);
+
+  for (const [identity, list] of entries({})) {
+    for (const keyword of list.split(/\s+/)) keywords[keyword] = identity;
+  }
+  keywords[Symbol.iterator] = Array.prototype[Symbol.iterator].bind(Object.getOwnPropertyNames(keywords));
+  freeze(keywords);
+
+  /**
+   * Creates a symbolically mapped goal-specific token record
+   *
+   * @template {{}} T
+   * @param {Goal} goal
+   * @param {string} text
+   * @param {type} type
+   * @param {T} properties
+   */
+  function GoalSpecificTokenRecord(goal, text, type, properties) {
+    const symbol = Symbol(`‹${goal.name} ${text}›`);
+    return (goal.tokens[text] = goal.tokens[symbol] = tokens[symbol] = {symbol, text, type, goal, ...properties});
+  }
+};
+
+/**
+ * @template {string} K
+ * @template {string} I
+ * @param {{[i in I]: K[]}} mappings
+ */
+export const Keywords = mappings => {
+  /** @type {{[k in K]: I}} */
+  //@ts-ignore
+  const keywords = {};
+
+  for (const identity in mappings) {
+    for (const keyword of mappings[identity]) {
+      keywords[keyword] = identity;
+    }
+  }
+  return keywords;
+};
+
 /** @typedef {import('./types').Match} Match */
 /** @typedef {import('./types').Groups} Groups */
+/** @typedef {import('./types').Group} Group */
+/** @typedef {import('./types').Goal} Goal */
 /** @typedef {import('./types').Context} Context */
 /** @typedef {import('./types').Contexts} Contexts */
 /** @typedef {import('./types').State} State */
+
+// /** @typedef {typeof goals} goals */
+// /** @typedef {goals[keyof goals]} Goal */
+/** @typedef {Goal['type']} type */
+/** @typedef {{symbol: symbol, text: string, type: type, goal?: Goal, group?: Group}} token */
+// /** @typedef {typeof groups} groups */
+// /** @typedef {groups[keyof groups]} Group */
