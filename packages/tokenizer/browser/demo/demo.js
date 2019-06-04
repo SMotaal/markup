@@ -126,19 +126,9 @@ export default (markup, overrides) => {
       const {'rerender-button': renderButton, 'contrast-button': contrastButton} = header.elements;
       renderButton && (renderButton.onclick = rerender);
       if (contrastButton) {
-        let timeout, resetting;
-        contrastButton.onmousedown = () => {
-          clearTimeout(timeout);
-          timeout = setTimeout(() => {
-            darkMode.toggle('auto');
-            resetting = true;
-            console.log('Reset dark mode!');
-          }, 2000);
-        };
-        contrastButton.onmouseup = () => {
-          timeout = clearTimeout(timeout);
-          resetting === true ? (resetting = false) : darkMode.toggle();
-        };
+        contrastButton.onmousedown = darkMode.toggler.onmousedown;
+        contrastButton.onmouseup = darkMode.toggler.onmouseup;
+        darkMode.toggler.hide();
       }
     }
 

@@ -33,10 +33,60 @@ export const darkMode = (document => {
 
 	const disable = auto => toggle(false, auto);
 
+	const timeout = Symbol('toggler.timeout');
+	const resetting = Symbol('toggler.resetting');
+
+	const toggler = Object.assign(document.createElement('a'), {
+		id: 'dark-mode-toggler',
+		innerHTML: `<i icon>&#x${'☽'.codePointAt(0).toString(16)}</i>`,
+		title: 'Toggle Dark/Light Mode\n\nNote: Hold for 2 seconds to switch to auto where supported.',
+		onmousedown() {
+			clearTimeout(this[timeout]);
+			this[timeout] = setTimeout(() => {
+				toggle('auto');
+				this[resetting] = true;
+				console.log('Reset dark mode!');
+			}, 2000);
+		},
+		onmouseup() {
+			this[timeout] = clearTimeout(this[timeout]);
+			this[resetting] === true ? (this[resetting] = false) : toggle();
+		},
+		style: `
+			border: 1px solid #999;
+			background-color: #999;
+			color: #000;
+			mix-blend-mode: exclusion;
+			font-family: system-ui;
+			border-radius: 1em;
+		`,
+	});
+
+	const togglerSpan = Object.assign(document.createElement('div'), {
+		style: `
+      all: initial;
+			display: grid;
+			position: fixed;
+			left: 0px;
+			top: 0px;
+			z-index: 100;
+			opacity: 0.25;
+		`,
+	});
+
+	toggler.hide = () => {
+		toggler.remove(), togglerSpan.remove();
+	};
+	toggler.show = () => {
+		document.body.appendChild(togglerSpan).appendChild(toggler);
+	};
+
+	// toggler.show();
+
 	const darkMode = create(null, {
 		state: {writable: true},
 		prefers: {writable: true},
-		...getOwnPropertyDescriptors(freeze({enable, disable, toggle})),
+		...getOwnPropertyDescriptors(freeze({enable, disable, toggle, toggler})),
 	});
 
 	((prefersDarkMode, prefersLightMode) => {
