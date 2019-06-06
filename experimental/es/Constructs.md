@@ -86,7 +86,7 @@ Noteworthy aspects for `Expression` things:
 
 - The counterpart to this are places where you leave the current `Expression` context and immediately enter into another **nested** `Expression` of a respective [LeftHandSideExpression denomination`(( $ ))`][ecma-script-left-hand-side-expression].
 
-- Another unique aspect of an `Expression` context is that it can have no declarations, and as such in places (not omitted above) where you would expect a [Binding Identifier `$$`][ecma-script-binding-identifier], they will _always be optional_ and _may never_ take a [`Computed`][ecma-script-computed-property-name] form or any wrapped `Expression`form.
+- Another unique aspect of an `Expression` context is that it can have no declarations, and as such in places (not omitted above) where you would expect a [Binding Identifier `$$`][ecma-script-binding-identifier], they will _always be optional_ and _may never_ take a [Computed Property `[( $ )]`][ecma-script-computed-property-name] form or any wrapped `Expression`form.
 
 - To further articulate on the above point, it would specifically exclude omitted forms of arrow functions having a single unwrapped argument, ie the `$$ =>` form, which while not presenated are still like many undeniably `Expression` things per the spec, just not significantly relevant to the matter at hand.
 
