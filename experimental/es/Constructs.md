@@ -11,9 +11,9 @@ ECMAScript grammar can be divided into two primary planes:
 
 Throughout this document we're using two parallel notations for both clarity and brevity.
 
-For instance, the symbolic notations `((…))` and `{{…}}` seen above both meant to convey things (ie `…`) that belonging inside of the respective closures — where incidentally they can validly expressed in indefinitely wrapped forms of their respective delimiters.
+For instance, the symbolic notations `((…))` and `{{…}}` seen above both meant to convey things (ie `…`) that belonging inside of the respective closures — where incidentally they can validly be wrapped indefinitely with their respective delimiters, and once at the very least.
 
-However, when those aspects are represented in an abstract syntax blocks, they will be denoted instead using a metaphorical notation that is also valid ECMAScript syntax for the intended effect.
+However, when those aspects are represented in as abstract syntax, they will instead be denoted using a metaphorical notation that is also valid ECMAScript syntax for the intended effect.
 
 </details>
 </blockquote>
