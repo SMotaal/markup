@@ -1,6 +1,6 @@
 ﻿# ECMAScript Constructs
 
-<blockquote align=center border:=none><details><summary>Attributions</summary>
+<blockquote align=center border:=none><details><summary>Attribution</summary>
 
 The work is the result of a lot of input and inspiration from many [SES Strategy](https://groups.google.com/group/ses-strategy) members, with special gratitude to M. S. Miller, J. D. Dalton, M. Fig, R. Gibson, and, as well to T. Disney, who indirectly contributed, through his exceptional work where he pioneered intuitive ways to accurately reason about the fine-grained aspects of ECMAScript grammar.
 
