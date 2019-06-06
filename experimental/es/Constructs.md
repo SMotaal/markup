@@ -1,6 +1,6 @@
 ﻿# ECMAScript Constructs
 
-<blockquote align=center border:=none><details><summary>Attribution</summary>
+<blockquote align=center border:=none><details open><summary>Attribution</summary>
 
 The work is the result of a lot of input and inspiration from many [SES Strategy](https://groups.google.com/group/ses-strategy) members, with special gratitude to M. S. Miller, J. D. Dalton, M. Fig, R. Gibson, and, as well to T. Disney, who indirectly contributed, through his exceptional work where he pioneered intuitive ways to accurately reason about the fine-grained aspects of ECMAScript grammar.
 
@@ -19,7 +19,7 @@ ECMAScript grammar can be divided into two primary planes:
 - `((…))` [Expression][ecma-script-expression-statement] stuff
 - `{{…}}` [Statements][ecma-script-statements] stuff
 
-<blockquote align=center border:=none><details><summary>Notation</summary>
+<blockquote align=center border:=none><details open><summary>Notation</summary>
 
 Throughout this document we're using two parallel notations for both clarity and brevity.
 
