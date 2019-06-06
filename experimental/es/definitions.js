@@ -1,5 +1,8 @@
 ﻿//@ts-check
-import {generateDefinitions, Keywords, Symbols} from './helpers.js';
+import {generateDefinitions, Keywords, Symbols, Construct} from './helpers.js';
+
+const // Flags
+  DEBUG_CONSTRUCTS = false;
 
 const symbols = Symbols(
   'ECMAScriptGoal',
@@ -71,22 +74,54 @@ const groups = {
   ['{']: {opener: '{', closer: '}'},
   ['(']: {opener: '(', closer: ')'},
   ['[']: {opener: '[', closer: ']'},
-  ['//']: {opener: '//', closer: '\n', goal: symbols.CommentGoal, parentGoal: symbols.ECMAScriptGoal},
-  ['/*']: {opener: '/*', closer: '*/', goal: symbols.CommentGoal, parentGoal: symbols.ECMAScriptGoal},
-  ['/']: {opener: '/', closer: '/', goal: symbols.RegExpGoal, parentGoal: symbols.ECMAScriptGoal},
-  ["'"]: {opener: "'", closer: "'", goal: symbols.StringGoal, parentGoal: symbols.ECMAScriptGoal},
-  ['"']: {opener: '"', closer: '"', goal: symbols.StringGoal, parentGoal: symbols.ECMAScriptGoal},
+  ['//']: {
+    opener: '//',
+    closer: '\n',
+    goal: symbols.CommentGoal,
+    parentGoal: symbols.ECMAScriptGoal,
+    description: '‹comment›',
+  },
+  ['/*']: {
+    opener: '/*',
+    closer: '*/',
+    goal: symbols.CommentGoal,
+    parentGoal: symbols.ECMAScriptGoal,
+    description: '‹comment›',
+  },
+  ['/']: {
+    opener: '/',
+    closer: '/',
+    goal: symbols.RegExpGoal,
+    parentGoal: symbols.ECMAScriptGoal,
+    description: '‹pattern›',
+  },
+  ["'"]: {
+    opener: "'",
+    closer: "'",
+    goal: symbols.StringGoal,
+    parentGoal: symbols.ECMAScriptGoal,
+    description: '‹string›',
+  },
+  ['"']: {
+    opener: '"',
+    closer: '"',
+    goal: symbols.StringGoal,
+    parentGoal: symbols.ECMAScriptGoal,
+    description: '‹string›',
+  },
   ['`']: {
     opener: '`',
     closer: '`',
     goal: symbols.TemplateLiteralGoal,
     parentGoal: symbols.ECMAScriptGoal,
+    description: '‹template›',
   },
   ['${']: {
     opener: '${',
     closer: '}',
     goal: symbols.ECMAScriptGoal,
     parentGoal: symbols.TemplateLiteralGoal,
+    description: '‹span›',
   },
 };
 
@@ -201,9 +236,27 @@ const keywords = Keywords({
     }
   };
 
+  const EmptyConstruct = Object.freeze(new Construct());
+  const initializeContext = context => {
+    if (context.state['USE_CONSTRUCTS'] !== true) return;
+    context.parentContext == null || context.parentContext.currentConstruct == null
+      ? (context.currentConstruct == null && (context.currentConstruct = EmptyConstruct),
+        (context.parentConstruct = context.openingConstruct = EmptyConstruct))
+      : (context.currentConstruct == null && (context.currentConstruct = new Construct()),
+        (context.parentConstruct = context.parentContext.currentConstruct),
+        context.parentContext.goal === ECMAScriptGoal && context.parentConstruct.add(context.group.description),
+        (context.openingConstruct = context.parentConstruct.clone()),
+        DEBUG_CONSTRUCTS === true && console.log(context));
+  };
+
+  goals[symbols.RegExpGoal].initializeContext = goals[symbols.StringGoal].initializeContext = goals[
+    symbols.TemplateLiteralGoal
+  ].initializeContext = initializeContext;
+
   /** @param {Context} context */
   goals[symbols.ECMAScriptGoal].initializeContext = context => {
-    Object.assign(context, {captureKeyword});
+    context.captureKeyword = captureKeyword;
+    context.state['USE_CONSTRUCTS'] === true && initializeContext(context);
   };
 }
 
