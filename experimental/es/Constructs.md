@@ -96,7 +96,7 @@ Noteworthy aspects for `Expression` things:
 
   In most cases, you such keywords are operative in nature, and they can in fact repeat indefinitely, like `yield yield $` and so fourth.
 
-  Ones that will not work that way include `this`, `import`, `instanceof`, and `new`, but each for different reasons, and some of those are more of tehcnical impracticality than absolutes.
+  Ones that will not work that way include `this`, `import`, `instanceof`, and `new`, but each for different reasons, and some of those are more of technical impracticality than absolutes.
 
   Please consult the spec for any additional details relating to the specific set of keywords presented here not addressed in this short summary.
 
