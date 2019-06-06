@@ -212,6 +212,6 @@ To be continued.
 [ecma-script-class-body]: http://www.ecma-international.org/ecma-262/#prod-ClassBody
 [ecma-script-object]: http://www.ecma-international.org/ecma-262/#prod-ObjectLiteral
 [ecma-script-array]: http://www.ecma-international.org/ecma-262/#prod-ArrayLiteral
-[ecma-script-regular-expression-literal]: http://www.ecma-international.org/ecma-262/#prod-RegularExpressionLiteral
+[ecma-script-regular-expression]: http://www.ecma-international.org/ecma-262/#prod-RegularExpressionLiteral
 [ecma-script-method-definition]: http://www.ecma-international.org/ecma-262/#prod-MethodDefinition
 [ecma-script-arguments-list]: http://www.ecma-international.org/ecma-262/#prod-ArgumentList
