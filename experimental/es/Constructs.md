@@ -23,24 +23,24 @@ ECMAScript grammar can be divided into two primary planes:
 
 Throughout this document we're using two parallel notations for both clarity and brevity.
 
-For instance, the symbolic notations `((…))` and `{{…}}` shown here both meant to convey things (ie `…`) that belonging inside of the respective closures — where incidentally they can validly be wrapped indefinitely with their respective delimiters, and once at the very least.
+For instance, the symbolic notations `((…))` and `{{…}}` shown here both meant to convey the `…` things that belonging inside of the respective closures — where incidentally they can validly be wrapped indefinitely with their respective delimiters, and once at the very least to achieve the intended effect where allowed and not prescribed by the syntax (eg `= …` not needing to be wrapped).
 
-However, when those aspects are represented in as abstract syntax, they will instead be denoted using a metaphorical notation that is also valid ECMAScript syntax for the intended effect.
+However, when those aspects are represented in abstract syntax forms, they will instead be denoted using a metaphorical notation that is also valid ECMAScript syntax for the intended effect.
 
 </details></blockquote>
 
-While this is an extremely shallow view of things, and is not the complete view of this, it is the most fundamental distinction to keep in mind working the ECMAScript grammar as viewed by this work.
+While this is an extremely shallow view of the ECMAScript grammar, they only serve as the most fundamental building blocks of distinction to keep in mind as we move forward.
 
 And absolutely, `Expression` is what the spec calls `ExpressionStatement` (mostly) and, yes, an `Expression` is a thing of the `Statements` stuff, yet as will be shown, it is special enough of a thing that you can neither resist nor should you want to treat it as such.
 
-There is at least a few more aspect of stuff that we did not touch upon yet, and that is because, like everything else, they are considered secondary stuff, they are the stuff of the stuff, or more accurately any number of the things that belong there. That applies to all ECMAScript grammar to date aside from some "very significant and magical planes".
+There is at least a few more stuff that we did not touch upon yet, and that is because, like everything else, they are considered secondary stuff, they are mostly things that happens around the primary stuff, some of which are also important to get into in more depth.
 
 The list of "significant and magical planes" includes:
 
 - `…{…}…` [Module](ecma-script-module-item)
 - `⟨...⟩` [Destructuring][ecma-script-destructuring-patterns]
 
-A working assumption here is that aside from the above everything else in the ECMAScript grammar will always be a thing that belongs to exactly one of those planes, except where `Module` overlaps with `Statements`.
+A working assumption here is that aside from the above everything else in the ECMAScript grammar will always be a thing that belongs to exactly one of those planes — except where `Module` overlaps with `Statements` as will be shown later on.
 
 Let's explore all four planes in more detail to see if this actually holds up, and to identify where other complex planes like literals actually fall in place in the body of this work.
 
@@ -171,13 +171,13 @@ ExportDeclaration:              export {/***/} from 'ModuleSpecifier';
 
 Noteworthy aspects for `Module` things:
 
-- `Module` stuff being [that][ecma-script-module-item] it stands out because it seems to have all the things of `Statements` along with [`Imports`][ecma-script-import-declaration] and [`Exports`][ecma-script-export-declaration].
+- `Module` stuff being [that][ecma-script-module-item], it stands out because it seems to have all the things of `Statements` along with [`Imports`][ecma-script-import-declaration] and [`Exports`][ecma-script-export-declaration].
 
-- One important thing to note is that what follows an `export default` is also an `Expression` and never `Module` so any `function` or `class` forms here are strictly `Expression` forms.
+- The same rules for `function` and `class` in `Statements` also apply to `Module` (ie top-level code), where they will always be declarations, exported or otherwise.
 
-- Otherwise, the same rules for `function` and `class` in `Statements` also apply to `Module` (ie top-level code), where they will always be declarations, exported or otherwise.
+- Additionally important to note here is that what follows an `export default` is also `Expression` and never `Module` and so here too any `function` or `class` forms are strictly `Expression` things.
 
-- The given fact mentioned just for completeness here is that any `{{ ; }}` in the current `Module` context begins a `Statements` context, and that's not reciprocative in that you cannot per the spec today have **nested** `Module` contexts, they are either the top-level or otherwise lexically irrelevant.
+- A given fact mentioned for completeness, is that any `{{ ; }}` in the current `Module` context begins a `Statements` context, and that's not reciprocative in that you cannot per the spec today have **nested** `Module` contexts, they are either the top-level or otherwise lexically irrelevant.
 
 ### `⟨...⟩` Destructruing Plane
 
