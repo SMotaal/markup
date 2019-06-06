@@ -115,7 +115,7 @@ ControlStatements:                {{              for (/***/) {{ ; }} }};
 
 <!--prettier-ignore-end-->
 
-Noteworthy aspects `Statements` things:
+Noteworthy aspects for `Statements` things:
 
 - The `for` statement is odd because it includes very unique `(/***/)` things which fall closer to being `Statements` than `Expression` things.
 
@@ -155,7 +155,7 @@ ExportDeclaration:              export {/***/} from 'ModuleSpecifier';
 
 <!--prettier-ignore-end-->
 
-Noteworthy aspects `Module` things:
+Noteworthy aspects for `Module` things:
 
 - `Module` stuff being [that][ecma-script-module-item] it stands out because it seems to have all the things of `Statements` along with [`Imports`][ecma-script-import-declaration] and [`Exports`][ecma-script-export-declaration].
 
@@ -177,7 +177,7 @@ In destructuring, you do `Destructruing` things:
 
 <!--prettier-ignore-end-->
 
-Noteworthy aspects `Destructruing` things:
+Noteworthy aspects for `Destructruing` things:
 
 - Compared to all things we've seen so far `Destructuring` stands out because it is actually both a `Statements` and `Expression` thing, where in both cases they are meant to make deeply nested references that will initialize or simply assign against binding identifiers available in scope.
 
