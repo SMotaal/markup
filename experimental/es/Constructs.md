@@ -11,7 +11,7 @@ ECMAScript grammar can be divided into two primary planes:
 
 Throughout this document we're using two parallel notations for both clarity and brevity.
 
-For instance, the symbolic notations `((…))` and `{{…}}` seen above is meant to both convey a meaning where `…` reflects things that belong inside of the respective distinguished forms of the closures that would be validly expressed by infinitly nested forms of their delimiters.
+For instance, the symbolic notations `((…))` and `{{…}}` seen above both meant to convey things (ie `…`) that belonging inside of the respective closures — where incidentally they can validly expressed in indefinitely wrapped forms of their respective delimiters.
 
 However, when those aspects are represented in an abstract syntax blocks, they will be denoted instead using a metaphorical notation that is also valid ECMAScript syntax for the intended effect.
 
@@ -125,7 +125,7 @@ Noteworthy aspects `Statements` things:
 
 - In fact, when you write an unwrapped expression thing (per the previous section), don't think of it as `Statements` because it is a metaphorically wrapped `Expression` and that will always be identical to the same physically wrapped `(( $ ))`.
 
-- Last thing to note, from the perspective of this work, is that any form of SourceText that is not a Module is considered to be `Statements`.
+- Last thing to note, from the perspective of this work, is that any form of SourceText that is not a `Module` is considered to be `Statements`.
 
 ### `…{…}…` Module Plane
 
