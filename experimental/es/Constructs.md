@@ -94,9 +94,13 @@ Noteworthy aspects for `Expression` things:
 
 - The non-spec thing introduced here (ie `SpecialExpression`) is simply to present `Expression` context forms for the set of keywords that are applicable in that context.
 
-  In most cases, you such keywords are operative in nature, and they can in fact repeat indefinitely, like `yield yield $` and so fourth.
+  In most cases, such keywords are of an operative, and they can in fact repeat indefinitely, like `yield yield $` and so fourth.
 
-  Ones that will not work that way include `this`, `import`, `instanceof`, and `new`, but each for different reasons, and some of those are more of technical impracticality than absolutes.
+  Keywords that will not work that way include `this`, `import`, `instanceof`, and `new`, but each for different reasons, and some of those are more of technical impracticality than absolutes.
+
+  Also worth noting is that the contextually-sensitive keyword `super` which is omitted from this presentation and is closer in nature to `this`, ie are contextually bound identifiers relative to where they are used and nothing else.
+
+  So in that regard, it is fair to also point out that `this (( $ ))` is actually omitting forms like `this[(( $ ))]` or `this.$`… etc., which will be addressed later on along with meta-properties that are applicable to `new` and `import`.
 
   Please consult the spec for any additional details relating to the specific set of keywords presented here not addressed in this short summary.
 
