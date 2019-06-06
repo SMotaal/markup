@@ -1,5 +1,7 @@
 ﻿//@ts-check
 
+import {Construct} from './helpers';
+
 export interface Match extends RegExpExecArray {
   entity: number;
   identity: string;
@@ -18,6 +20,8 @@ export interface Group {
   closer: string;
   goal: Goal | symbol;
   parentGoal: Goal | symbol;
+  description: string;
+  construct: string;
   [Symbol.toStringTag]: string;
 }
 
@@ -61,6 +65,10 @@ export interface Context extends ContextStats, Partial<MutableState> {
   precedingTrivia: Token;
   lastToken: Token;
   precedingToken: Token;
+
+  currentConstruct?: Construct;
+  parentConstruct?: Construct;
+  openingConstruct?: Construct;
 }
 
 export type ContextStats = import('./helpers').ContextStats;
@@ -133,6 +141,7 @@ export interface Token {
   group: Group;
   state: State;
   context?: Context;
+  construct?: string;
 }
 
 // /** @typedef {import('./types').Match} Match */

@@ -30,6 +30,7 @@ export const initializeState = state => {
     goal: state.matcher.goal,
     group: undefined,
     state,
+    ...(state['USE_CONSTRUCTS'] === true ? {currentConstruct: new Construct()} : {}),
   });
   state.lastTokenContext = void (state.firstTokenContext = state.nextTokenContext = contexts[
     -1
@@ -63,7 +64,7 @@ export const finalizeState = state => {
   debug && (error ? warn : log)(`[tokenizer]: ${error || 'done'} — %O`, state);
 };
 
-/** @param {Match} match @param {State} state */
+/** @param {Match} match @param {State} state @returns {Token}*/
 export const createToken = (match, state) => {
   let currentGoal,
     // goalName,
@@ -331,23 +332,25 @@ export const close = (text, state) => {
  * @param {string | RegExp} search
  * @param {Match} match
  * @param {State} state
+ * @param {number} [delta]
  */
-export const forward = (search, match, state) => {
-  search &&
-    (typeof search === 'object'
-      ? ((search.lastIndex = match.index + match[0].length), (state.nextOffset = match.input.search(search)))
-      : (state.nextOffset = match.input.indexOf(search, match.index + match[0].length)) > match.index ||
-        (() => {
-          throw new Error('Parse Error: Unexpected end of stream');
-        })());
-  // state.nextOffset = match.input.length - 1
+export const forward = (search, match, state, delta) => {
+  if (typeof search === 'string' && search.length) {
+    state.nextOffset = match.input.indexOf(search, match.index + match[0].length) + (0 + delta || 0);
+  } else if (search != null && typeof search === 'object') {
+    search.lastIndex = match.index + match[0].length;
+    search.exec(match.input);
+    state.nextOffset = search.lastIndex + (0 + delta || 0);
+  } else {
+    throw new TypeError(`forward invoked with an invalid search argument`);
+  }
 };
 
 /**
  * @returns {'fault'}
  */
 export const fault = (text, state) => {
-  console.warn(text, {...state});
+  // console.warn(text, {...state});
   return 'fault';
 };
 
@@ -398,6 +401,7 @@ export const generateDefinitions = ({groups, goals, identities, symbols, keyword
         punctuators[opener] = !(goal.openers[opener] = true);
         GoalSpecificTokenRecord(goal, group.opener, 'opener', {group});
         GoalSpecificTokenRecord(goal, group.closer, 'closer', {group});
+        group.description || (group.description = `${group.opener}…${group.closer}`);
         group[Symbol.toStringTag] = `‹${group.opener}›`;
       }
       freeze(setPrototypeOf(goal.openers, punctuators));
@@ -453,6 +457,33 @@ export const Keywords = mappings => {
   return keywords;
 };
 
+export const Construct = class Construct extends Array {
+  constructor() {
+    super(...arguments);
+    this.text = arguments.length ? this.join(' ') : '';
+    this.last = arguments.length ? this[this.length - 1] : '';
+  }
+
+  add(text) {
+    this.length === 0 ? (this.text = text) : (this.text += ` ${text}`);
+    super.push((this.last = text));
+  }
+  set(text) {
+    this.previousText = this.text;
+    text === '' || text == null
+      ? ((this.last = this.text = ''), this.length === 0 || super.splice(0, this.length))
+      : this.length === 0
+      ? super.push((this.last = this.text = text))
+      : super.splice(0, this.length, (this.last = this.text = text));
+  }
+  clone() {
+    const clone = new Construct(...this);
+    clone.text = this.text;
+    clone.last = this.last;
+    return clone;
+  }
+};
+
 /** @typedef {import('./types').Match} Match */
 /** @typedef {import('./types').Groups} Groups */
 /** @typedef {import('./types').Group} Group */
@@ -460,6 +491,7 @@ export const Keywords = mappings => {
 /** @typedef {import('./types').Context} Context */
 /** @typedef {import('./types').Contexts} Contexts */
 /** @typedef {import('./types').State} State */
+/** @typedef {import('./types').Token} Token */
 
 // /** @typedef {typeof goals} goals */
 // /** @typedef {goals[keyof goals]} Goal */
