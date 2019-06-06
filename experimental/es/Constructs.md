@@ -1,5 +1,17 @@
 ﻿# ECMAScript Constructs
 
+<blockquote align=center border:=none><details><summary>Attributions</summary>
+
+The work is the result of a lot of input and inspiration from many [SES Strategy](https://groups.google.com/group/ses-strategy) members, with special gratitude to M. S. Miller, J. D. Dalton, M. Fig, R. Gibson, and, as well to T. Disney, who indirectly contributed, through his exceptional work where he pioneered intuitive ways to accurately reason about the fine-grained aspects of ECMAScript grammar.
+
+</details></blockquote>
+
+This document addresses the underlying theory behind an experimental ECMAScript tokenizer that is designed from the ground up to meet the challenges of working with source text at runtime.
+
+The main contribution of this work is that it aims to make it possible to minimize on expansive operations that conventionally relied on full AST generation to instead rely on conceptual abstractions, ie constructs and planes, designed to mimic a partial AST approach.
+
+A lot of experimental work is also incorporated in this effort, [demonstrated here](https://smotaal.io/markup/experimental/es) and [maintained here](https://github.com/SMotaal/markup/tree/master/experimental/es).
+
 ## Constructional Planes
 
 ECMAScript grammar can be divided into two primary planes:
@@ -7,16 +19,15 @@ ECMAScript grammar can be divided into two primary planes:
 - `((…))` [Expression][ecma-script-expression-statement] stuff
 - `{{…}}` [Statements][ecma-script-statements] stuff
 
-<blockquote><details><summary>Symbolic and Metaphoric notation</summary>
+<blockquote align=center border:=none><details><summary>Notation</summary>
 
 Throughout this document we're using two parallel notations for both clarity and brevity.
 
-For instance, the symbolic notations `((…))` and `{{…}}` seen above both meant to convey things (ie `…`) that belonging inside of the respective closures — where incidentally they can validly be wrapped indefinitely with their respective delimiters, and once at the very least.
+For instance, the symbolic notations `((…))` and `{{…}}` shown here both meant to convey things (ie `…`) that belonging inside of the respective closures — where incidentally they can validly be wrapped indefinitely with their respective delimiters, and once at the very least.
 
 However, when those aspects are represented in as abstract syntax, they will instead be denoted using a metaphorical notation that is also valid ECMAScript syntax for the intended effect.
 
-</details>
-</blockquote>
+</details></blockquote>
 
 While this is an extremely shallow view of things, and is not the complete view of this, it is the most fundamental distinction to keep in mind working the ECMAScript grammar as viewed by this work.
 
