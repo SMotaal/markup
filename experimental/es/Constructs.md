@@ -33,7 +33,7 @@ A working assumption here is that aside from the above everything else in the EC
 
 Let's explore all four planes in more detail to see if this actually holds up, and to identify where other complex planes like literals actually fall in place in the body of this work.
 
-### `((…))` Expression Plain
+### `((…))` Expression Plane
 
 In an expression, you do `Expression` things:
 
@@ -71,7 +71,7 @@ Noteworthy aspects for `Expression` things:
 
 - Every expression is metaphorically wrapped `(( … ));` to signify that it is an `Expression` and that is completely separate from others, hence the `;`.
 
-- There is only one place where you can leave the current `Expression` context and immediately enter into a **nested** `Statements` context is for [Function Body `{{ ; }}`][ecma-script-function-body] which are the same thing as the symbolic `{{…}}` notation used in related constructs which will also extend to things like [Methods][ecma-script-method-definition].
+- There is only one place where you can leave the current `Expression` context and immediately enter into a **nested** `Statements` context, which per specs today is always some form of a [Function Body `{{ ; }}`][ecma-script-function-body] other than [Methods][ecma-script-method-definition] as those are always nested further down somewhere.
 
 - The counterpart to this are places where you leave the current `Expression` context and immediately enter into another **nested** `Expression` of a respective [LeftHandSideExpression denomination`(( $ ))`][ecma-script-left-hand-side-expression].
 
