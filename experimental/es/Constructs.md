@@ -107,8 +107,9 @@ VariableDeclaration:              {{                 var $$ = (( $ )) }};
                                   {{             var { $$ } = (( $ )) }};
 ControlStatements:                {{              for (/***/) {{ ; }} }};
                                   {{            while (( $ )) {{ ; }} }};
-                                  {{  if (( $ )) {{ ; }} else {{ ; }} }};
                                   {{         do {{ ; }} while (( $ )) }};
+                                  {{           switch (( $ )) {/***/} }};
+                                  {{  if (( $ )) {{ ; }} else {{ ; }} }};
                                   {{   try {{ ; }} catch ($$) {{ ; }} }};
                                   {{      try {{ ; }} finally {{ ; }} }};
 ```
@@ -118,6 +119,8 @@ ControlStatements:                {{              for (/***/) {{ ; }} }};
 Noteworthy aspects for `Statements` things:
 
 - The `for` statement is odd because it includes very unique `(/***/)` things which fall closer to being `Statements` than `Expression` things.
+
+- While things are far less distorted in a `switch` block, it is far enough from `Statements` due to the special clauses for `case (( $ )):` and `default:` which must precede any `Statements` stuff where `continue` and related keywords are of certain significance.
 
 - The rules for `function` and `class` that is directly in `Statements` are always declarations not expressions, so if they fall in an `AssignmentExpression` position, we can think of them as being implicitly `(( $ ))` wrapped from a constructional standpoint, and this way they remain strictly speaking `Expression` things in comparison.
 
