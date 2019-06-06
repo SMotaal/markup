@@ -100,7 +100,7 @@ Noteworthy aspects for `Expression` things:
 
   Also worth noting is that the contextually-sensitive keyword `super` which is omitted from this presentation and is closer in nature to `this`, ie are contextually bound identifiers relative to where they are used and nothing else.
 
-  So in that regard, it is fair to also point out that `this (( $ ))` is actually omitting forms like `this[(( $ ))]` or `this.$`… etc., which will be addressed later on along with meta-properties that are applicable to `new` and `import`.
+  So in that regard, it is fair to also point out that `this (( $ ))` is actually omitting forms like `this[( $ )]` or `this.$`… etc., which will be addressed later on along with meta-properties that are applicable to `new` and `import`.
 
   Please consult the spec for any additional details relating to the specific set of keywords presented here not addressed in this short summary.
 
