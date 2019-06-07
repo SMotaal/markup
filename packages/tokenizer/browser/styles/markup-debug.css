@@ -26,7 +26,6 @@
   }
 
   .markup-line > .markup {
-    /* --padding: 1px; */
     --debug: var(--color, var(--markup-neutral, #999));
     --ring: var(--debug, var(--markup-neutral, #999));
     --bezel: var(--markup-contrast, white);
@@ -34,17 +33,13 @@
     margin: -2px;
     border: 2px solid transparent;
     position: relative;
-
     -webkit-box-decoration-break: clone;
     box-decoration-break: clone;
-
     /* box-sizing: border-box; */
   }
 
   .marked > .markup-line > .markup.marked,
   :not(.marked) > .markup-line > .markup:hover {
-    /* position: relative; */
-    /* contain: size; */
     background-color: var(--bezel, white);
     box-shadow: 0 0 0 2px var(--bezel, white), 0 3px 10px -2px #0006;
     z-index: 2;
