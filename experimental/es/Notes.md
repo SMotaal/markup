@@ -54,6 +54,10 @@ There are three basic rules of semicolon insertion:
 - https://github.com/tc39/test262-parser-tests
 - https://github.com/standard-things/esm/blob/master/test/compiler-tests.mjs#L562-L665
 
+- https://inimino.org/~inimino/blog/javascript_semicolons
+- https://github.com/guybedford/es-module-shims/blob/master/src/lexer.js
+- https://github.com/sweet-js/sweet-core/wiki/design
+
 <!--
 
 / is reg ex
