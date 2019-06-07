@@ -116,22 +116,22 @@ In statements, you do `Statements` things:
 
 ```js  markup-mode=es
 
-FunctionExpression:               {{       function  $$ (...$$) {{ ; }} }};
-AsyncFunctionExpression:          {{ async function  $$ (...$$) {{ ; }} }};
-GeneratorFunctionExpression:      {{       function* $$ (...$$) {{ ; }} }};
-AsyncGeneratorFunctionExpression: {{ async function* $$ (...$$) {{ ; }} }};
-ClassExpression:                  {{                   class $$ {/***/} }};
-                                  {{   class $$ extends (( $ )) {/***/} }};
-VariableDeclaration:              {{                   var $$ = (( $ )) }};
-                                  {{               var { $$ } = (( $ )) }};
-ControlStatements:                {{                for (/***/) {{ ; }} }};
-                                  {{              while (( $ )) {{ ; }} }};
-                                  {{           do {{ ; }} while (( $ )) }};
-                                  {{             switch (( $ )) {/***/} }};
-                                  {{    if (( $ )) {{ ; }} else {{ ; }} }};
-                                  {{     try {{ ; }} catch ($$) {{ ; }} }};
-                                  {{        try {{ ; }} finally {{ ; }} }};
-BindingStatements:                {{               with (( $ )) {{ ; }} }};
+FunctionDeclaration:                {{       function  $$ (...$$) {{ ; }} }};
+AsyncFunctionDeclaration:           {{ async function  $$ (...$$) {{ ; }} }};
+GeneratorFunctionDeclaration:       {{       function* $$ (...$$) {{ ; }} }};
+AsyncGeneratorFunctionDeclaration:  {{ async function* $$ (...$$) {{ ; }} }};
+ClassDeclaration:                   {{                   class $$ {/***/} }};
+                                    {{   class $$ extends (( $ )) {/***/} }};
+VariableDeclaration:                {{                   var $$ = (( $ )) }};
+                                    {{               var { $$ } = (( $ )) }};
+ControlStatements:                  {{                for (/***/) {{ ; }} }};
+                                    {{              while (( $ )) {{ ; }} }};
+                                    {{           do {{ ; }} while (( $ )) }};
+                                    {{             switch (( $ )) {/***/} }};
+                                    {{    if (( $ )) {{ ; }} else {{ ; }} }};
+                                    {{     try {{ ; }} catch ($$) {{ ; }} }};
+                                    {{        try {{ ; }} finally {{ ; }} }};
+BindingStatements:                  {{               with (( $ )) {{ ; }} }};
 ```
 
 <!--prettier-ignore-end-->
