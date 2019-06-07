@@ -159,6 +159,10 @@
   color: var(--markup-line-color);
   background-color: var(--markup-line-background-color);
   text-rendering: optimizeSpeed;
+
+  font-synthesis: weight;
+  font-variant-ligatures: common-ligatures discretionary-ligatures contextual historical-ligatures;
+  font-weight: 300;
 }
 
 .markup-line.no-reflow {
@@ -170,10 +174,7 @@
   hyphens: none;
   word-break: initial;
   line-break: loose;
-  font-synthesis: weight;
-  font-variant-ligatures: common-ligatures discretionary-ligatures contextual historical-ligatures;
-
-  font-weight: 300;
+  /* text-rendering: geometricPrecision; */
 }
 
 .markup-line-numbers pre,
@@ -229,12 +230,6 @@ pre.markup[line-numbers] .markup-line::before {
   background-color: var(--markup-line-number-background-color, transparent);
 }
 
-@media only print {
-  .markup-line-numbers .markup-line::before {
-    color: black;
-  }
-}
-
 .markup.sequence {
   --color: var(--markup-sequences, grey);
 }
@@ -258,6 +253,7 @@ pre.markup[line-numbers] .markup-line::before {
 .markup.pattern.closer,
 .markup.punctuator {
   --color: var(--markup-punctuators, lightseagreen);
+  text-rendering: geometricPrecision;
 }
 
 .markup.opener,
@@ -267,12 +263,14 @@ pre.markup[line-numbers] .markup-line::before {
 
 .markup.operator {
   --color: var(--markup-operators, limegreen);
+  text-rendering: geometricPrecision;
 }
 
 .markup.in-pattern.opener,
 .markup.in-pattern.closer,
 .markup.combinator {
   --color: var(--markup-combinators, cornflowerblue);
+  text-rendering: geometricPrecision;
 }
 
 .markup.breaker {
@@ -334,4 +332,10 @@ pre.markup[line-numbers] .markup-line::before {
 .markup.closer {
   font-weight: 500;
   font-variant-ligatures: none;
+}
+
+@media only print {
+  .markup-line-numbers .markup-line::before {
+    color: black;
+  }
 }
