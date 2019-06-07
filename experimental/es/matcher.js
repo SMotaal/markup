@@ -145,7 +145,7 @@ export const matcher = (ECMAScript =>
                   ? state.context.goal.type || 'sequence'
                   : fault(text, state),
                 match,
-                text,
+                // text,
               );
               typeof flatten === 'boolean' && (match.flatten = flatten);
             })}
@@ -163,7 +163,7 @@ export const matcher = (ECMAScript =>
               ? close(text, state) || (state.context.goal === CommentGoal ? 'break' : 'closer')
               : 'break',
             match,
-            text,
+            // text,
           );
           match.flatten = false;
         })}
@@ -175,7 +175,7 @@ export const matcher = (ECMAScript =>
         \s+
         ${entity((text, entity, match, state) => {
           match.format = 'whitespace';
-          capture((match.flatten = state.lineOffset !== match.index) ? 'whitespace' : 'inset', match, text);
+          capture((match.flatten = state.lineOffset !== match.index) ? 'whitespace' : 'inset', match); // , text
         })}
       )`,
     ),
@@ -202,7 +202,7 @@ export const matcher = (ECMAScript =>
                 ? ((match.flatten = true), 'identifier')
                 : 'escape'),
             match,
-            text,
+            // text,
           );
         })}
       )|(
@@ -211,7 +211,8 @@ export const matcher = (ECMAScript =>
         |\\u\{[${HexDigit}]*\}
         |\\[^]
         ${entity((text, entity, match, state) => {
-          capture(state.context.goal.type || 'escape', match, (match.capture[keywords[text]] = text));
+          capture(state.context.goal.type || 'escape', match);
+          match.capture[keywords[text]] = text;
         })}
       )`,
     ),
@@ -234,7 +235,7 @@ export const matcher = (ECMAScript =>
               ? CommentGoal.type
               : close(text, state) || (match.punctuator = CommentGoal.type),
             match,
-            text,
+            // text,
           );
         })}
       )`,
@@ -260,11 +261,12 @@ export const matcher = (ECMAScript =>
               ? state.context.goal.type || 'sequence'
               : state.context.group.closer !== text
               ? StringGoal.type
-              : close(text, state) || ((match.punctuator = StringGoal.type),
-              // (match.flatten = true),
-               'closer'),
+              : close(text, state) ||
+                ((match.punctuator = StringGoal.type),
+                // (match.flatten = true),
+                'closer'),
             match,
-            text,
+            // text,
           );
         })}
       )`,
@@ -286,7 +288,7 @@ export const matcher = (ECMAScript =>
               ? TemplateLiteralGoal.type
               : close(text, state) || ((match.punctuator = TemplateLiteralGoal.type), 'closer'),
             match,
-            text,
+            // text,
           );
         })}
       )`,
@@ -306,7 +308,7 @@ export const matcher = (ECMAScript =>
               ? open(text, state) || 'opener'
               : state.context.goal.type || 'sequence',
             match,
-            text,
+            // text,
           );
         })}
       )`,
@@ -327,28 +329,24 @@ export const matcher = (ECMAScript =>
               ? close(text, state) || 'closer'
               : state.context.goal.type || 'sequence',
             match,
-            text,
+            // text,
           );
         })}
       )`,
     ),
   Solidus: () =>
     // TODO: Refine the necessary criteria for RegExp vs Div
-    // SEE: https://github.com/sweet-js/sweet-core/wiki/design
-    // SEE: https://inimino.org/~inimino/blog/javascript_semicolons
-    // SEE: https://github.com/guybedford/es-module-shims/blob/master/src/lexer.js
     // TEST: [eval('var g;class x {}/1/g'), eval('var g=class x {}/1/g')]
     Matcher.define(
       entity => Matcher.sequence`(
         \*\/|\/=|\/
         ${entity((text, entity, match, state) => {
-          let previousAtom;
           match.format = 'punctuation';
           capture(
             state.context.goal === CommentGoal
               ? (state.context.group.closer === text && close(text, state)) ||
                   (match.punctuator = state.context.goal.type)
-              : state.context.goal === RegExpGoal && state.context.group.closer !== ']' // ie /…*/ or /…/
+              : state.context.goal === RegExpGoal && state.context.group.closer !== ']'
               ? close('/', state) || ((match.punctuator = state.context.goal.type), 'closer')
               : state.context.goal !== ECMAScriptGoal
               ? state.context.goal.type || 'sequence'
@@ -363,7 +361,7 @@ export const matcher = (ECMAScript =>
               ? open(text, state) || ((match.punctuator = 'pattern'), 'opener')
               : (match.punctuator = 'operator'),
             match,
-            text,
+            // text,
           );
         })}
       )`,
@@ -387,7 +385,7 @@ export const matcher = (ECMAScript =>
               ? (match.punctuator = 'punctuation')
               : state.context.goal.type || 'sequence',
             match,
-            text,
+            // text,
           );
         })}
       )`,
@@ -407,7 +405,7 @@ export const matcher = (ECMAScript =>
               ? 'keyword'
               : state.context.captureKeyword(text, state) || fault(text, state),
             match,
-            text,
+            // text,
           );
         })}
       )\b(?=[^\s$_:]|\s+[^:]|$)`,
@@ -425,7 +423,7 @@ export const matcher = (ECMAScript =>
               ? ((match.flatten = true), (match.punctuator = RegExpGoal.type), 'closer')
               : ((match.flatten = true), 'identifier'),
             match,
-            text,
+            // text,
           );
         })}
       )`,
@@ -451,7 +449,7 @@ export const matcher = (ECMAScript =>
         |${DecimalDigits}
         ${entity((text, entity, match, state) => {
           match.format = 'number';
-          capture(state.context.goal.type || 'number', match, text);
+          capture(state.context.goal.type || 'number', match); // , text
         })}
       )\b`,
     ),

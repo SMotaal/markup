@@ -23,7 +23,6 @@ export const initializeState = state => {
   const contexts = (state.contexts = Array(100));
   const context = initializeContext({
     id: `«${state.matcher.goal.name}»`,
-    //@ts-ignore
     number: (contexts.count = state.totalContextCount = 1),
     depth: 0,
     parentContext: undefined,
@@ -32,13 +31,12 @@ export const initializeState = state => {
     state,
     ...(state.USE_CONSTRUCTS === true ? {currentConstruct: new Construct()} : {}),
   });
-  state.lastTokenContext = void (state.firstTokenContext = state.nextTokenContext = contexts[
-    -1
-  ] = state.context = state.lastContext = context);
+  state.firstTokenContext = state.nextTokenContext = state.lastContext = state.context = contexts[-1] = context;
+  state.lastTokenContext = undefined;
 };
 
 /** @param {State} state */
-// TODO: Document initializeState
+// TODO: Document finalizeState
 export const finalizeState = state => {
   const isValidState =
     state.firstTokenContext === state.nextTokenContext &&
@@ -245,23 +243,28 @@ export const createToken = (match, state) => {
   return nextToken;
 };
 
-/**
- * @template {{}} T
- * @param {Partial<Context>} context
- * @param {T} [properties]
- * @returns {Context & T}
- */
-//@ts-ignore
-export const initializeContext = (context, properties) => {
-  Object.assign(context, stats, properties);
-  //@ts-ignore
-  context.goal && context.goal.initializeContext && context.goal.initializeContext(context);
-  //@ts-ignore
-  return context;
-};
+export const initializeContext = (assign =>
+  /**
+   * @template {Partial<Context>} T
+   * @template {{}} U
+   * @param {T | Context} context
+   * @param {U} [properties]
+   * @returns {Context & T & U}
+   */
+  (context, properties) => {
+    //@ts-ignore
+    return (
+      assign(context, stats, properties),
+      context.goal &&
+        context.goal.initializeContext &&
+        //@ts-ignore
+        context.goal.initializeContext(context),
+      context
+    );
+  })(Object.assign);
 
 export const capture = (identity, match, text) => {
-  match.capture[(match.identity = identity)] = text || match[0];
+  match.capture[(match.identity = identity)] = match[0];
   (match.fault = identity === 'fault') && (match.flatten = false);
   return match;
 };
@@ -269,14 +272,11 @@ export const capture = (identity, match, text) => {
 /**
  * Safely mutates matcher state to open a new context.
  *
- * @template {{}} T
  * @param {string} text - Text of the intended { type = "opener" } token
  * @param {State} state - Matcher state
- * @param {T} [properties]
  * @returns {undefined | string} - String when context is **not** open
  */
-export const open = (text, state, properties) => {
-  // const {goal: initialGoal, groups} = state;
+export const open = (text, state) => {
   const {
     contexts,
     context: parentContext,
@@ -419,8 +419,11 @@ export const generateDefinitions = ({groups, goals, identities, symbols, keyword
   freeze(symbols);
 
   for (const [identity, list] of entries({})) {
-    for (const keyword of list.split(/\s+/)) keywords[keyword] = identity;
+    for (const keyword of list.split(/\s+/)) {
+      keywords[keyword] = identity;
+    }
   }
+
   keywords[Symbol.iterator] = Array.prototype[Symbol.iterator].bind(Object.getOwnPropertyNames(keywords));
   freeze(keywords);
 
@@ -492,10 +495,5 @@ export const Construct = class Construct extends Array {
 /** @typedef {import('./types').Contexts} Contexts */
 /** @typedef {import('./types').State} State */
 /** @typedef {import('./types').Token} Token */
-
-// /** @typedef {typeof goals} goals */
-// /** @typedef {goals[keyof goals]} Goal */
 /** @typedef {Goal['type']} type */
 /** @typedef {{symbol: symbol, text: string, type: type, goal?: Goal, group?: Group}} token */
-// /** @typedef {typeof groups} groups */
-// /** @typedef {groups[keyof groups]} Group */
