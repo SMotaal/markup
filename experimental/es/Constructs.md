@@ -82,7 +82,7 @@ In an expression, you do `Expression` things:
 
 #### Noteworthy aspects for `Expression` things:
 
-- Every expression is metaphorically wrapped `(…);` to signify that it is an `Expression` (ie `((…))`) and that is completely separate from others, hence the `;`.
+- Every expression is metaphorically wrapped `(…);` to signify that it is an `Expression` (ie `((…))`) and that it is completely separate from others, hence the `;`.
 
 - There is only one place where you can leave the current `Expression` context and immediately enter into a **nested** `Statements` context, which per specs today is always some form of a [Function Body `{{ ; }}`][ecma-script-function-body] other than [Methods][ecma-script-method-definition] as those are always nested further down somewhere.
 
@@ -140,7 +140,7 @@ AsyncGeneratorFunctionDeclaration: {  async function* $$ (...$$) {{ ; }}   };
 
 #### Noteworthy aspects for `Statements` things:
 
-- Every expression is metaphorically wrapped `{…};` to signify that it is an `Statements` (ie `{{…}}`) and that is completely separate from others, hence the `;`.
+- Every expression is metaphorically wrapped `{…};` to signify that it is an `Statements` (ie `{{…}}`) and that it is completely separate from others, hence the `;`.
 
 - The `for` statement is odd because it includes very unique `(/***/)` things which fall closer to being `Statements` than `Expression` things.
 
