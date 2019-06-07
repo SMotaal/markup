@@ -3,9 +3,6 @@
 type identity = string | symbol;
 
 type Matcher = import('/modules/matcher/matcher.js').Matcher;
-type Matcher = import('/modules/matcher/matcher.js').Matcher;
-type Matcher = import('/modules/matcher/matcher.js').Matcher;
-type Matcher = import('/modules/matcher/matcher.js').Matcher;
 
 type MatchArray = RegExpMatchArray | RegExpExecArray;
 type MatchCapture = import('/modules/matcher/matcher.js').Matcher.Capture;
