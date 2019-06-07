@@ -78,7 +78,7 @@ SpecialExpression:                ((                      await (( $ ))   ));
 
 <!--prettier-ignore-end-->
 
-Noteworthy aspects for `Expression` things:
+#### Noteworthy aspects for `Expression` things:
 
 - Every expression is metaphorically wrapped `(( … ));` to signify that it is an `Expression` and that is completely separate from others, hence the `;`.
 
@@ -92,17 +92,21 @@ Noteworthy aspects for `Expression` things:
 
 - The remaining cases where you leave the current `Expression` context and enter into **nested** contexts of a clear intent include things like [Literal Object `{...$$}`][ecma-script-object], [Literal Array `[...$$]`][ecma-script-array], [Literal Pattern `/[{*}]/`][ecma-script-regular-expression], [Class Body `{/***/}`][ecma-script-class-body], and [Arguments `(...$$)`][ecma-script-arguments-list] which specifically excludes omitted forms of arrow functions with a single unwrapped argument.
 
-- The non-spec thing introduced here (ie `SpecialExpression`) is simply to present `Expression` context forms for the set of keywords that are applicable in that context.
+- The non-spec thing introduced here (ie `SpecialExpression`) is simply to present `Expression` context forms for the set of keywords that are applicable in that context:
 
-  In most cases, such keywords are of an operative, and they can in fact repeat indefinitely, like `yield yield $` and so fourth.
+  <blockquote>
 
-  Keywords that will not work that way include `this`, `import`, `instanceof`, and `new`, but each for different reasons, and some of those are more of technical impracticality than absolutes.
+  **Note**: Please consult the spec for any additional details relating to the specific set of keywords presented here not addressed in this summary.
 
-  Also worth noting is that the contextually-sensitive keyword `super` which is omitted from this presentation and is closer in nature to `this`, ie are contextually bound identifiers relative to where they are used and nothing else.
+  </blockquote>
 
-  So in that regard, it is fair to also point out that `this (( $ ))` is actually omitting forms like `this[( $ )]` or `this.$`… etc., which will be addressed later on along with meta-properties that are applicable to `new` and `import`.
+  - In most cases, such keywords are of an operative, and they can in fact repeat indefinitely, like `yield yield $` and so fourth.
 
-  Please consult the spec for any additional details relating to the specific set of keywords presented here not addressed in this short summary.
+  - Keywords that will not work that way include `this`, `import`, `instanceof`, and `new`, but each for different reasons, and some of those are more of technical impracticality than absolutes.
+
+  - Also worth noting is that the contextually-sensitive keyword `super` which is omitted from this presentation and is closer in nature to `this`, ie are contextually bound identifiers relative to where they are used and nothing else.
+
+  - So in that regard, it is fair to also point out that `this (( $ ))` is actually omitting forms like `this[( $ )]` or `this.$`… etc., which will be addressed later on along with meta-properties that are applicable to `new` and `import`.
 
 ### `{{…}}` Statements Plane
 
@@ -127,15 +131,18 @@ ControlStatements:                {{                for (/***/) {{ ; }} }};
                                   {{    if (( $ )) {{ ; }} else {{ ; }} }};
                                   {{     try {{ ; }} catch ($$) {{ ; }} }};
                                   {{        try {{ ; }} finally {{ ; }} }};
+BindingStatements:                {{               with (( $ )) {{ ; }} }};
 ```
 
 <!--prettier-ignore-end-->
 
-Noteworthy aspects for `Statements` things:
+#### Noteworthy aspects for `Statements` things:
 
 - The `for` statement is odd because it includes very unique `(/***/)` things which fall closer to being `Statements` than `Expression` things.
 
-- While things are far less distorted in a `switch` block, it is far enough from `Statements` due to the special clauses for `case (( $ )):` and `default:` which must precede any `Statements` stuff where `continue` and related keywords are of certain significance.
+- While things are far less distorted in a `switch` block, it is far enough from `Statements` due to the special clauses for `case (( $ )):` and `default:` which must precede any `Statements` stuff that is also not just `Statements`.
+
+- To further elaborate on the above point, `Statements` stuff in `switch` blocks along with `for`, `do`, and `while`, all introduce and/or affect the contextual significance of certain keywords like `continue`, not only in their immediate scope, but further down into other `ControlStatements`, where those keywords may or may not be expected normally, and are often also closely relate to [Label `$:…`][ecma-script-labelled-statement] things of `Statements` omitted here.
 
 - The rules for `function` and `class` that is directly in `Statements` are always declarations not expressions, so if they fall in an `AssignmentExpression` position, we can think of them as being implicitly `(( $ ))` wrapped from a constructional standpoint, and this way they remain strictly speaking `Expression` things in comparison.
 
@@ -173,7 +180,7 @@ ExportDeclaration:              export {/***/} from 'ModuleSpecifier';
 
 <!--prettier-ignore-end-->
 
-Noteworthy aspects for `Module` things:
+#### Noteworthy aspects for `Module` things:
 
 - `Module` stuff being [that][ecma-script-module-item], it stands out because it seems to have all the things of `Statements` along with [`Imports`][ecma-script-import-declaration] and [`Exports`][ecma-script-export-declaration].
 
@@ -195,7 +202,7 @@ In destructuring, you do `Destructruing` things:
 
 <!--prettier-ignore-end-->
 
-Noteworthy aspects for `Destructruing` things:
+#### Noteworthy aspects for `Destructruing` things:
 
 - Compared to all things we've seen so far `Destructuring` stands out because it is actually both a `Statements` and `Expression` thing, where in both cases they are meant to make deeply nested references that will initialize or simply assign against binding identifiers available in scope.
 
@@ -219,3 +226,4 @@ To be continued.
 [ecma-script-regular-expression]: http://www.ecma-international.org/ecma-262/#prod-RegularExpressionLiteral
 [ecma-script-method-definition]: http://www.ecma-international.org/ecma-262/#prod-MethodDefinition
 [ecma-script-arguments-list]: http://www.ecma-international.org/ecma-262/#prod-ArgumentList
+[ecma-script-labelled-statement]: http://www.ecma-international.org/ecma-262/#prod-LabelledStatement
