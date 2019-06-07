@@ -78,7 +78,7 @@ export interface Contexts extends Array<Context> {
   count?: number;
 }
 
-export interface State {
+export interface State extends MutableState {
   matcher: RegExp & {goal: Goal};
   sourceText: string;
   contexts: Contexts;
@@ -112,6 +112,42 @@ export interface State {
   };
 
   error: string;
+
+  // /**
+  //  * Safely mutates matcher state to close the current context.
+  //  *
+  //  * @param text Text of the intended { type = "closer" } token
+  //  * @returns String when context is **not** closed
+  //  */
+  // close(text: string): string | undefined;
+  // /**
+  //  * Safely mutates matcher state to open a new context.
+  //  *
+  //  * @param text Text of the intended { type = "opener" } token
+  //  * @returns String when context is **not** open
+  //  */
+  // open(text: string): string | undefined;
+
+  // /**
+  //  * Safely mutates matcher state when entity capture is fault.
+  //  *
+  //  * @param text Text of the intended { type = "closer" } token
+  //  * @returns Always returns "fault"
+  //  */
+  // fault(text): 'fault';
+
+  // /**
+  //  * Safely mutates matcher state to skip ahead following capture.
+  //  */
+  // forward(search: string | RegExp, match: Match, delta?: number): void;
+
+  // /**
+  //  * Updates match relative to the specified identity.
+  //  */
+  // capture<T extends Match, U extends string>(
+  //   identity: U,
+  //   match: T,
+  // ): T & {[identity: U]: T[0]; flatten: U extends 'fault' ? false : T['flatten']};
 }
 
 export interface Token {
