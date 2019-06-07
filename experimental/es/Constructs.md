@@ -23,7 +23,9 @@ ECMAScript grammar can be divided into two primary planes:
 
 Throughout this document we're using two parallel notations for both clarity and brevity.
 
-For instance, the symbolic notations `((…))` and `{{…}}` shown here both meant to convey the `…` things that belonging inside of the respective closures — where incidentally they can validly be wrapped indefinitely with their respective delimiters, and once at the very least to achieve the intended effect where allowed and not prescribed by the syntax (eg `= …` not needing to be wrapped).
+For instance, the symbolic notations `((…))` and `{{…}}` shown here both meant to convey things (ie `…`) belonging inside of a valid construction of the respective closures — where incidentally such things can wrapped indefinitely inside the respective delimiters.
+
+The thing to keep in mind that such delimiters are sometimes implied by the grammar, or allowed optionally introduced to achieve the intended effect — for instance where `= …` normally does not needing to be wrapped but can optionally be wrapped `= (…)` for effect.
 
 However, when those aspects are represented in abstract syntax forms, they will instead be denoted using a metaphorical notation that is also valid ECMAScript syntax for the intended effect.
 
@@ -37,8 +39,8 @@ There is at least a few more stuff that we did not touch upon yet, and that is b
 
 The list of "significant and magical planes" includes:
 
-- `…{…}…` [Module](ecma-script-module-item)
-- `⟨...⟩` [Destructuring][ecma-script-destructuring-patterns]
+- `…{…}…` [Module](ecma-script-module-item) things
+- `⟨...⟩` [Destructuring][ecma-script-destructuring-patterns] things
 
 A working assumption here is that aside from the above everything else in the ECMAScript grammar will always be a thing that belongs to exactly one of those planes — except where `Module` overlaps with `Statements` as will be shown later on.
 
@@ -51,40 +53,40 @@ In an expression, you do `Expression` things:
 <!--prettier-ignore-start-->
 
 ```js markup-mode=es
-ObjectLiteral:                    ((                            {...$$}   ));
-ArrayLiteral:                     ((                            [...$$]   ));
-RegExpLiteral:                    ((                            /[{*}]/   ));
-ArrowFunctionExpression:          ((                 (...$$) => {{ ; }}   ));
-                                  ((                 (...$$) => (( $ ))   ));
-AsyncArrowFunctionExpression:     ((           async (...$$) => {{ ; }}   ));
-                                  ((           async (...$$) => (( $ ))   ));
-FunctionExpression:               ((       function  $$ (...$$) {{ ; }}   ));
-AsyncFunctionExpression:          (( async function  $$ (...$$) {{ ; }}   ));
-GeneratorFunctionExpression:      ((       function* $$ (...$$) {{ ; }}   ));
-AsyncGeneratorFunctionExpression: (( async function* $$ (...$$) {{ ; }}   ));
-ClassExpression:                  ((                   class $$ {/***/}   ));
-                                  ((   class $$ extends (( $ )) {/***/}   ));
-SpecialExpression:                ((                      await (( $ ))   ));
-                                  ((                     delete (( $ ))   ));
-                                  ((                   import ( (( $ )) ) ));
-                                  ((         (( $ )) instanceof (( $ ))   ));
-                                  ((                        new (( $ ))   ));
-                                  ((                       this (( $ ))   ));
-                                  ((                     typeof (( $ ))   ));
-                                  ((                      yield (( $ ))   ));
-                                  ((                     yield* (( $ ))   ));
-                                  ((                       void (( $ ))   ));
+                     ObjectLiteral: (                            {...$$}   );
+                      ArrayLiteral: (                            [...$$]   );
+                     RegExpLiteral: (                            /[{*}]/   );
+           ArrowFunctionExpression: (                 (...$$) => {{ ; }}   );
+                                    (                 (...$$) => (( $ ))   );
+      AsyncArrowFunctionExpression: (           async (...$$) => {{ ; }}   );
+                                    (           async (...$$) => (( $ ))   );
+                FunctionExpression: (       function  $$ (...$$) {{ ; }}   );
+           AsyncFunctionExpression: ( async function  $$ (...$$) {{ ; }}   );
+       GeneratorFunctionExpression: (       function* $$ (...$$) {{ ; }}   );
+  AsyncGeneratorFunctionExpression: ( async function* $$ (...$$) {{ ; }}   );
+                   ClassExpression: (                   class $$ {/***/}   );
+                                    (   class $$ extends (( $ )) {/***/}   );
+                 SpecialExpression: (                      await (( $ ))   );
+                                    (                     delete (( $ ))   );
+                                    (                   import ( (( $ )) ) );
+                                    (         (( $ )) instanceof (( $ ))   );
+                                    (                        new (( $ ))   );
+                                    (                        this[( $ )]   );
+                                    (                     typeof (( $ ))   );
+                                    (                      yield (( $ ))   );
+                                    (                     yield* (( $ ))   );
+                                    (                       void (( $ ))   );
 ```
 
 <!--prettier-ignore-end-->
 
 #### Noteworthy aspects for `Expression` things:
 
-- Every expression is metaphorically wrapped `(( … ));` to signify that it is an `Expression` and that is completely separate from others, hence the `;`.
+- Every expression is metaphorically wrapped `(…);` to signify that it is an `Expression` (ie `((…))`) and that is completely separate from others, hence the `;`.
 
 - There is only one place where you can leave the current `Expression` context and immediately enter into a **nested** `Statements` context, which per specs today is always some form of a [Function Body `{{ ; }}`][ecma-script-function-body] other than [Methods][ecma-script-method-definition] as those are always nested further down somewhere.
 
-- The counterpart to this are places where you leave the current `Expression` context and immediately enter into another **nested** `Expression` of a respective [LeftHandSideExpression denomination`(( $ ))`][ecma-script-left-hand-side-expression].
+- The counterpart to this are places where you leave the current `Expression` context and immediately enter into another **nested** `Expression` of a respective [LeftHandSideExpression denomination `(( $ ))`][ecma-script-left-hand-side-expression].
 
 - Another unique aspect of an `Expression` context is that it can have no declarations, and as such in places (not omitted above) where you would expect a [Binding Identifier `$$`][ecma-script-binding-identifier], they will _always be optional_ and _may never_ take a [Computed Property `[( $ )]`][ecma-script-computed-property-name] form or any wrapped `Expression`form.
 
@@ -106,7 +108,7 @@ SpecialExpression:                ((                      await (( $ ))   ));
 
   - Also worth noting is that the contextually-sensitive keyword `super` which is omitted from this presentation and is closer in nature to `this`, ie are contextually bound identifiers relative to where they are used and nothing else.
 
-  - So in that regard, it is fair to also point out that `this (( $ ))` is actually omitting forms like `this[( $ )]` or `this.$`… etc., which will be addressed later on along with meta-properties that are applicable to `new` and `import`.
+  - So in that regard, it is fair to also point out that `this[( $ )]` is actually omitting forms like `this(...$)` or `this.$`… etc., which will be addressed later on along with meta-properties that are applicable to `new` and `import`.
 
 ### `{{…}}` Statements Plane
 
@@ -116,27 +118,29 @@ In statements, you do `Statements` things:
 
 ```js  markup-mode=es
 
-FunctionDeclaration:                {{       function  $$ (...$$) {{ ; }} }};
-AsyncFunctionDeclaration:           {{ async function  $$ (...$$) {{ ; }} }};
-GeneratorFunctionDeclaration:       {{       function* $$ (...$$) {{ ; }} }};
-AsyncGeneratorFunctionDeclaration:  {{ async function* $$ (...$$) {{ ; }} }};
-ClassDeclaration:                   {{                   class $$ {/***/} }};
-                                    {{   class $$ extends (( $ )) {/***/} }};
-VariableDeclaration:                {{                   var $$ = (( $ )) }};
-                                    {{               var { $$ } = (( $ )) }};
-ControlStatements:                  {{                for (/***/) {{ ; }} }};
-                                    {{              while (( $ )) {{ ; }} }};
-                                    {{           do {{ ; }} while (( $ )) }};
-                                    {{             switch (( $ )) {/***/} }};
-                                    {{    if (( $ )) {{ ; }} else {{ ; }} }};
-                                    {{     try {{ ; }} catch ($$) {{ ; }} }};
-                                    {{        try {{ ; }} finally {{ ; }} }};
-BindingStatements:                  {{               with (( $ )) {{ ; }} }};
+              FunctionDeclaration: {        function  $$ (...$$) {{ ; }}   };
+         AsyncFunctionDeclaration: {  async function  $$ (...$$) {{ ; }}   };
+     GeneratorFunctionDeclaration: {        function* $$ (...$$) {{ ; }}   };
+AsyncGeneratorFunctionDeclaration: {  async function* $$ (...$$) {{ ; }}   };
+                 ClassDeclaration: {                    class $$ {/***/}   };
+                                   {    class $$ extends (( $ )) {/***/}   };
+              VariableDeclaration: {                    var $$ = (( $ ))   };
+                                   {                var { $$ } = (( $ ))   };
+                ControlStatements: {                 for (/***/) {{ ; }}   };
+                                   {           while ( (( $ )) ) {{ ; }}   };
+                                   {          do {{ ; }} while ( (( $ )) ) };
+                                   {          switch ( (( $ )) ) {/***/}   };
+                                   { if ( (( $ )) ) {{ ; }} else {{ ; }}   };
+                                   {      try {{ ; }} catch ($$) {{ ; }}   };
+                                   {         try {{ ; }} finally {{ ; }}   };
+                BindingStatements: {                with (( $ )) {{ ; }}   };
 ```
 
 <!--prettier-ignore-end-->
 
 #### Noteworthy aspects for `Statements` things:
+
+- Every expression is metaphorically wrapped `{…};` to signify that it is an `Statements` (ie `{{…}}`) and that is completely separate from others, hence the `;`.
 
 - The `for` statement is odd because it includes very unique `(/***/)` things which fall closer to being `Statements` than `Expression` things.
 
@@ -159,23 +163,23 @@ In a module you, you do `Module` things:
 <!--prettier-ignore-start-->
 
 ```js  markup-mode=es
-ImportDeclaration:                           import 'ModuleSpecifier';
-                                     import $$ from 'ModuleSpecifier';
-                            import $$, {/***/} from 'ModuleSpecifier';
-                                import {/***/} from 'ModuleSpecifier';
-ExportDeclaration:              export {/***/} from 'ModuleSpecifier';
-                                export * as $$ from 'ModuleSpecifier';
-                                                       export {/***/};
-                                               export default (( $ ));
-                                              export var $$ = (( $ ));
-                                          export var { $$ } = (( $ ));
-                                              export class $$ {/***/};
-                              export class $$ extends (( $ )) {/***/};
-                                   export function  $$(...$$) {{ ; }};
-                                   export function  $$(...$$) {{ ; }};
-                             export async function  $$(...$$) {{ ; }};
-                                   export function* $$(...$$) {{ ; }};
-                             export async function* $$(...$$) {{ ; }};
+            ImportDeclaration:                        import 'ModuleSpecifier';
+                                              import $$ from 'ModuleSpecifier';
+                                     import $$, {/***/} from 'ModuleSpecifier';
+                                         import {/***/} from 'ModuleSpecifier';
+            ExportDeclaration:           export {/***/} from 'ModuleSpecifier';
+                                         export * as $$ from 'ModuleSpecifier';
+                                                                export {/***/};
+                                                        export default (( $ ));
+                                                       export var $$ = (( $ ));
+                                                   export var { $$ } = (( $ ));
+                                                       export class $$ {/***/};
+                                       export class $$ extends (( $ )) {/***/};
+                                            export function  $$(...$$) {{ ; }};
+                                            export function  $$(...$$) {{ ; }};
+                                      export async function  $$(...$$) {{ ; }};
+                                            export function* $$(...$$) {{ ; }};
+                                      export async function* $$(...$$) {{ ; }};
 ```
 
 <!--prettier-ignore-end-->
