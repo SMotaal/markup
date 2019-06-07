@@ -1,13 +1,12 @@
 ﻿//@ts-check
 
 import {matcher} from './matcher.js';
-import {initializeState, finalizeState, createToken, Construct} from './helpers.js';
+import {initializeState, finalizeState, createToken} from './helpers.js';
 import {createMatcherMode} from '../matcher/helpers.js';
 
-/** @type {boolean} */
-const USE_CONSTRUCTS = true;
-
 export const mode = createMatcherMode(matcher, {
+  USE_CONSTRUCTS: false,
+
   syntax: 'ecmascript',
   aliases: ['es', 'js', 'javascript'],
 
@@ -17,15 +16,18 @@ export const mode = createMatcherMode(matcher, {
   },
 
   initializeState: state => {
-    state['USE_CONSTRUCTS'] = USE_CONSTRUCTS;
+    state.USE_CONSTRUCTS = mode.USE_CONSTRUCTS === true;
     initializeState(state);
   },
-  finalizeState,
+
+  finalizeState: state => {
+    finalizeState(state);
+  },
+
   createToken: (match, state) => {
-    // USE_CONSTRUCTS !== true ? createToken : (match, state) => {
     const token = createToken(match, state);
 
-    if (state['USE_CONSTRUCTS'] === true && token !== undefined) {
+    if (state.USE_CONSTRUCTS === true && token !== undefined) {
       const {type, text, context} = token;
       if (token.goal === matcher.goal) {
         switch (type) {
@@ -46,19 +48,14 @@ export const mode = createMatcherMode(matcher, {
                 break;
               case '?':
               case '=':
-                // default:
                 context.currentConstruct.set(text);
                 break;
-              // case ':':
-              // case '.':
-              // case '=>':
               default:
                 context.currentConstruct.add(text);
                 break;
             }
             break;
           case 'break':
-            // (context.currentConstruct.last === 'async' || context.currentConstruct.last === '{…}') &&
             context.currentConstruct.last !== undefined &&
               (context.currentConstruct.last === 'return' ||
                 context.currentConstruct.last === 'throw' ||
@@ -77,26 +74,6 @@ export const mode = createMatcherMode(matcher, {
               case 'with':
                 context.currentConstruct.set(text);
                 break;
-              // // case 'try':
-              // // case 'catch':
-              // // case 'finally':
-              // case 'void':
-              // case 'typeof':
-              // case 'instanceof':
-              // case 'in':
-              // case 'of':
-              // case 'from':
-              // case 'import':
-              // case 'export':
-              // case 'default':
-              // case 'const':
-              // case 'var':
-              // case 'let':
-              // case 'class':
-              // case 'async':
-              // case 'function':
-              // case '*':
-              // case 'extends':
               default:
                 context.currentConstruct.add(text);
             }
@@ -112,9 +89,9 @@ export const mode = createMatcherMode(matcher, {
         ? (token.hint = `${token.hint}\n\n${context.currentConstruct.text}`)
         : context.currentConstruct.previousText &&
           (token.hint = `${token.hint}\n\n${context.currentConstruct.previousText}\n…`);
-
-      // ${token.group.description}
     }
     return token;
   },
 });
+
+/** @typedef {import('./types').State} State */

@@ -2,6 +2,10 @@
 
 import {Construct} from './helpers';
 
+export interface MutableState {
+  [name: string]: unknown;
+}
+
 export interface Match extends RegExpExecArray {
   entity: number;
   identity: string;
@@ -42,10 +46,6 @@ export interface Goal {
   groups: Group[];
   initializeContext: (context: Context) => void;
   tokens?: {[symbol: symbol]: MutableState & {symbol: symbol; text: string; type: string; goal: Goal}};
-}
-
-export interface MutableState {
-  [name: string]: unknown;
 }
 
 export interface Context extends ContextStats, Partial<MutableState> {

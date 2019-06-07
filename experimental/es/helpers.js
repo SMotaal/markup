@@ -30,7 +30,7 @@ export const initializeState = state => {
     goal: state.matcher.goal,
     group: undefined,
     state,
-    ...(state['USE_CONSTRUCTS'] === true ? {currentConstruct: new Construct()} : {}),
+    ...(state.USE_CONSTRUCTS === true ? {currentConstruct: new Construct()} : {}),
   });
   state.lastTokenContext = void (state.firstTokenContext = state.nextTokenContext = contexts[
     -1

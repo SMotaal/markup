@@ -1,5 +1,7 @@
 ﻿import {mode} from './mode.js';
 
+mode.USE_CONSTRUCTS = true;
+
 /**
  * @param {import('/markup/packages/tokenizer/lib/api').API} markup
  */
