@@ -1,6 +1,6 @@
 ﻿// import {Matcher} from '../../../modules/matcher/matcher.js';
 import {Matcher} from '../matcher/matcher.js';
-import {HexDigit, DecimalDigit, BinaryDigit, ControlLetter, UnicodeIDStart, UnicodeIDContinue} from './ranges.js';
+import {HexDigit, DecimalDigit, BinaryDigit, ControlLetter, IdentifierStart, IdentifierPart} from './ranges.js';
 import {keywords, ECMAScriptGoal, CommentGoal, RegExpGoal, StringGoal, TemplateLiteralGoal} from './definitions.js';
 import {capture, forward, fault, open, close} from './helpers.js';
 
@@ -180,16 +180,12 @@ export const matcher = (ECMAScript =>
       )`,
     ),
   Escape: ({
-    ECMAScriptUnicodeIDStart = RegExp(
-      Matcher.sequence`[${UnicodeIDStart}]+`,
-      UnicodeIDContinue.includes('\\p{') ? 'u' : '',
+    IdentifierStartCharacter = RegExp(
+      Matcher.sequence`[${IdentifierStart}]`,
+      IdentifierPart.includes('\\p{') ? 'u' : '',
     ),
-    ECMAScriptUnicodeIDContinue = RegExp(
-      Matcher.sequence`[${UnicodeIDContinue}]+`,
-      UnicodeIDContinue.includes('\\p{') ? 'u' : '',
-    ),
-    fromCodePoint = String.fromCodePoint,
-    fromUnicodeEscape = text => fromCodePoint(parseInt(text.slice(2), 16)),
+    IdentifierPartSequence = RegExp(Matcher.sequence`[${IdentifierPart}]+`, IdentifierPart.includes('\\p{') ? 'u' : ''),
+    fromUnicodeEscape = (fromCodePoint => text => fromCodePoint(parseInt(text.slice(2), 16)))(String.fromCodePoint),
   } = {}) =>
     Matcher.define(
       entity => Matcher.sequence`(
@@ -201,8 +197,8 @@ export const matcher = (ECMAScript =>
               (state.context.goal === ECMAScriptGoal &&
               state.lastToken != null &&
               (state.lastToken.type === 'identifier'
-                ? ECMAScriptUnicodeIDContinue.test(fromUnicodeEscape(text))
-                : ECMAScriptUnicodeIDStart.test(fromUnicodeEscape(text)))
+                ? IdentifierPartSequence.test(fromUnicodeEscape(text))
+                : IdentifierStartCharacter.test(fromUnicodeEscape(text)))
                 ? ((match.flatten = true), 'identifier')
                 : 'escape'),
             match,
@@ -419,7 +415,7 @@ export const matcher = (ECMAScript =>
   Identifier: ({RegExpFlags = /^[gimsuy]+$/} = {}) =>
     Matcher.define(
       entity => Matcher.sequence`(
-        [${UnicodeIDStart}][${UnicodeIDContinue}]*
+        [${IdentifierStart}][${IdentifierPart}]*
         ${entity((text, entity, match, state) => {
           match.format = 'identifier';
           capture(
@@ -433,7 +429,7 @@ export const matcher = (ECMAScript =>
           );
         })}
       )`,
-      `${UnicodeIDStart}${UnicodeIDContinue}`.includes('\\p{') ? 'u' : '',
+      `${IdentifierStart}${IdentifierPart}`.includes('\\p{') ? 'u' : '',
     ),
   Number: ({
     NumericSeparator,
