@@ -23,19 +23,19 @@ ECMAScript grammar can be divided into two primary planes:
 
 Throughout this document we're using two parallel notations for both clarity and brevity.
 
-For instance, the symbolic notations `((…))` and `{{…}}` shown here both meant to convey things (ie `…`) belonging inside of a valid construction of the respective closures — where incidentally such things can wrapped indefinitely inside the respective delimiters.
-
-The thing to keep in mind that such delimiters are sometimes implied by the grammar, or allowed optionally introduced to achieve the intended effect — for instance where `= …` normally does not needing to be wrapped but can optionally be wrapped `= (…)` for effect.
+For instance, the symbolic notations `((…))` and `{{…}}` shown here, both meant to convey things (ie `…`) belonging inside of a valid construction of the respective closures — where incidentally such things can wrap indefinitely in the respective delimiters.
 
 However, when those aspects are represented in abstract syntax forms, they will instead be denoted using a metaphorical notation that is also valid ECMAScript syntax for the intended effect.
 
 </details></blockquote>
 
-While this is an extremely shallow view of the ECMAScript grammar, they only serve as the most fundamental building blocks of distinction to keep in mind as we move forward.
+While this is an extremely shallow view of the ECMAScript grammar, it only serve as the most fundamental building blocks of distinction to keep in mind as we move forward.
 
 And absolutely, `Expression` is what the spec calls `ExpressionStatement` (mostly) and, yes, an `Expression` is a thing of the `Statements` stuff, yet as will be shown, it is special enough of a thing that you can neither resist nor should you want to treat it as such.
 
-There is at least a few more stuff that we did not touch upon yet, and that is because, like everything else, they are considered secondary stuff, they are mostly things that happens around the primary stuff, some of which are also important to get into in more depth.
+One important aspect to in mind is that such delimiters are sometimes forced or implied by the grammar, and in some cases, where they would be allowed, will be optionally introduced for style or effect — for instance where `= …` normally does not need to be wrapped, one might opt for `= (…);` which would wrap the entire expression aspect merely for stylistic reasons or `= (…, …);` which is not stylistic and is for effect.
+
+There is at least a few more stuff that we did not touch upon yet, and that is because, like everything else, they are considered secondary stuff, they are mostly things that happens around the primary stuff, some of which are also important to outline here, while others will fall in place as we move forward.
 
 The list of "significant and magical planes" includes:
 
@@ -60,8 +60,8 @@ In an expression, you do `Expression` things:
                                     (                 (...$$) => (( $ ))   );
       AsyncArrowFunctionExpression: (           async (...$$) => {{ ; }}   );
                                     (           async (...$$) => (( $ ))   );
-                FunctionExpression: (       function  $$ (...$$) {{ ; }}   );
-           AsyncFunctionExpression: ( async function  $$ (...$$) {{ ; }}   );
+                FunctionExpression: (        function $$ (...$$) {{ ; }}   );
+           AsyncFunctionExpression: (  async function $$ (...$$) {{ ; }}   );
        GeneratorFunctionExpression: (       function* $$ (...$$) {{ ; }}   );
   AsyncGeneratorFunctionExpression: ( async function* $$ (...$$) {{ ; }}   );
                    ClassExpression: (                   class $$ {/***/}   );
@@ -71,6 +71,7 @@ In an expression, you do `Expression` things:
                                     (                   import ( (( $ )) ) );
                                     (         (( $ )) instanceof (( $ ))   );
                                     (                        new (( $ ))   );
+                                    (              new (( $ )) ( (( $ )) ) );
                                     (                        this[( $ )]   );
                                     (                     typeof (( $ ))   );
                                     (                      yield (( $ ))   );
@@ -118,8 +119,8 @@ In statements, you do `Statements` things:
 
 ```js  markup-mode=es
 
-              FunctionDeclaration: {        function  $$ (...$$) {{ ; }}   };
-         AsyncFunctionDeclaration: {  async function  $$ (...$$) {{ ; }}   };
+              FunctionDeclaration: {         function $$ (...$$) {{ ; }}   };
+         AsyncFunctionDeclaration: {   async function $$ (...$$) {{ ; }}   };
      GeneratorFunctionDeclaration: {        function* $$ (...$$) {{ ; }}   };
 AsyncGeneratorFunctionDeclaration: {  async function* $$ (...$$) {{ ; }}   };
                  ClassDeclaration: {                    class $$ {/***/}   };
