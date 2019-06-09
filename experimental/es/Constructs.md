@@ -134,7 +134,7 @@ AsyncGeneratorFunctionDeclaration: {  async function* $$ (...$$) {{ ; }}   };
                                    { if ( (( $ )) ) {{ ; }} else {{ ; }}   };
                                    {      try {{ ; }} catch ($$) {{ ; }}   };
                                    {         try {{ ; }} finally {{ ; }}   };
-                BindingStatements: {                with (( $ )) {{ ; }}   };
+                BindingStatements: {            with ( (( $ )) ) {{ ; }}   };
 ```
 
 <!--prettier-ignore-end-->
