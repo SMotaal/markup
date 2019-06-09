@@ -354,13 +354,6 @@ export const fault = (text, state) => {
   return 'fault';
 };
 
-/** @param {string[]} keys */
-export const Symbols = (...keys) => {
-  const symbols = {};
-  for (const key of keys) symbols[key] = Symbol(key);
-  return symbols;
-};
-
 export const generateDefinitions = ({groups, goals, identities, symbols, keywords, tokens}) => {
   const {[symbols.FaultGoal]: FaultGoal} = goals;
 
