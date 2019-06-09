@@ -119,14 +119,14 @@ In statements, you do `Statements` things:
 
 ```js  markup-mode=es
 
-              FunctionDeclaration: {         function $$ (...$$) {{ ; }}   };
-         AsyncFunctionDeclaration: {   async function $$ (...$$) {{ ; }}   };
-     GeneratorFunctionDeclaration: {        function* $$ (...$$) {{ ; }}   };
-AsyncGeneratorFunctionDeclaration: {  async function* $$ (...$$) {{ ; }}   };
+              FunctionDeclaration: {        function $$$ (...$$) {{ ; }}   };
+         AsyncFunctionDeclaration: {  async function $$$ (...$$) {{ ; }}   };
+     GeneratorFunctionDeclaration: {       function* $$$ (...$$) {{ ; }}   };
+AsyncGeneratorFunctionDeclaration: { async function* $$$ (...$$) {{ ; }}   };
                  ClassDeclaration: {                    class $$ {/***/}   };
                                    {    class $$ extends (( $ )) {/***/}   };
-              VariableDeclaration: {                    var $$ = (( $ ))   };
-                                   {                var { $$ } = (( $ ))   };
+              VariableDeclaration: {                   var $$$ = (( $ ))   };
+                                   {               var [{$$$}] = (( $ ))   };
                 ControlStatements: {                 for (/***/) {{ ; }}   };
                                    {           while ( (( $ )) ) {{ ; }}   };
                                    {          do {{ ; }} while ( (( $ )) ) };
@@ -142,6 +142,8 @@ AsyncGeneratorFunctionDeclaration: {  async function* $$ (...$$) {{ ; }}   };
 #### Noteworthy aspects for `Statements` things:
 
 - Every expression is metaphorically wrapped `{…};` to signify that it is an `Statements` (ie `{{…}}`) and that it is completely separate from others, hence the `;`.
+
+- A new `$$$` binding identifier is used to indicate potential effects beyond the scope of a block, where applicable by the with the spec (aka hoisting). _TBD_
 
 - The `for` statement is odd because it includes very unique `(/***/)` things which fall closer to being `Statements` than `Expression` things.
 
