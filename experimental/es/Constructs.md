@@ -167,7 +167,7 @@ AsyncGeneratorFunctionDeclaration: { async function* $$$ (...$$) {{ ; }}   };
 
 ### `…{…}…` Module Plane
 
-In a module you, you do `Module` things:
+In a module, you do `Module` things:
 
 <!--prettier-ignore-start-->
 
@@ -236,20 +236,20 @@ This section explores various contextually relevance of constructs of the gramma
 
 To be continued.
 
-[ecma-script-expression-statement]: http://www.ecma-international.org/ecma-262/#sec-expression-statement
-[ecma-script-statements]: http://www.ecma-international.org/ecma-262/#sec-expression-statement
-[ecma-script-module-item]: http://www.ecma-international.org/ecma-262/#prod-ModuleItem
-[ecma-script-import-declaration]: http://www.ecma-international.org/ecma-262/#prod-ImportDeclaration
-[ecma-script-export-declaration]: http://www.ecma-international.org/ecma-262/#prod-ExportDeclaration
-[ecma-script-destructuring-patterns]: http://www.ecma-international.org/ecma-262/#sec-destructuring-binding-patterns
-[ecma-script-left-hand-side-expression]: http://www.ecma-international.org/ecma-262/#prod-LeftHandSideExpression
-[ecma-script-binding-identifier]: http://www.ecma-international.org/ecma-262/#prod-BindingIdentifier
-[ecma-script-computed-property-name]: http://www.ecma-international.org/ecma-262/#prod-ComputedPropertyName
-[ecma-script-function-body]: http://www.ecma-international.org/ecma-262/#prod-FunctionBody
-[ecma-script-class-body]: http://www.ecma-international.org/ecma-262/#prod-ClassBody
-[ecma-script-object]: http://www.ecma-international.org/ecma-262/#prod-ObjectLiteral
-[ecma-script-array]: http://www.ecma-international.org/ecma-262/#prod-ArrayLiteral
-[ecma-script-regular-expression]: http://www.ecma-international.org/ecma-262/#prod-RegularExpressionLiteral
-[ecma-script-method-definition]: http://www.ecma-international.org/ecma-262/#prod-MethodDefinition
-[ecma-script-arguments-list]: http://www.ecma-international.org/ecma-262/#prod-ArgumentList
-[ecma-script-labelled-statement]: http://www.ecma-international.org/ecma-262/#prod-LabelledStatement
+[ecma-script-expression-statement]: https://tc39.es/ecma262/#sec-expression-statement
+[ecma-script-statements]: https://tc39.es/ecma262/#sec-expression-statement
+[ecma-script-module-item]: https://tc39.es/ecma262/#prod-ModuleItem
+[ecma-script-import-declaration]: https://tc39.es/ecma262/#prod-ImportDeclaration
+[ecma-script-export-declaration]: https://tc39.es/ecma262/#prod-ExportDeclaration
+[ecma-script-destructuring-patterns]: https://tc39.es/ecma262/#sec-destructuring-binding-patterns
+[ecma-script-left-hand-side-expression]: https://tc39.es/ecma262/#prod-LeftHandSideExpression
+[ecma-script-binding-identifier]: https://tc39.es/ecma262/#prod-BindingIdentifier
+[ecma-script-computed-property-name]: https://tc39.es/ecma262/#prod-ComputedPropertyName
+[ecma-script-function-body]: https://tc39.es/ecma262/#prod-FunctionBody
+[ecma-script-class-body]: https://tc39.es/ecma262/#prod-ClassBody
+[ecma-script-object]: https://tc39.es/ecma262/#prod-ObjectLiteral
+[ecma-script-array]: https://tc39.es/ecma262/#prod-ArrayLiteral
+[ecma-script-regular-expression]: https://tc39.es/ecma262/#prod-RegularExpressionLiteral
+[ecma-script-method-definition]: https://tc39.es/ecma262/#prod-MethodDefinition
+[ecma-script-arguments-list]: https://tc39.es/ecma262/#prod-ArgumentList
+[ecma-script-labelled-statement]: https://tc39.es/ecma262/#prod-LabelledStatement
