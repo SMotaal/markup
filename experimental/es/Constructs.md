@@ -37,7 +37,7 @@ However, when those aspects are represented in abstract syntax forms, they will 
 
 While this is an extremely shallow view of the ECMAScript grammar, it only serve as the most fundamental building blocks of distinction to keep in mind as we move forward.
 
-And absolutely, `Expression` is what the spec calls `ExpressionStatement` (mostly) and, yes, an `Expression` is a thing of the `Statements` stuff, yet as will be shown, it is special enough of a thing that you can neither resist nor should you want to treat it as anything less.
+And absolutely, `Expression` is what the spec calls `ExpressionStatement` (mostly) and, yes, an `Expression` is a thing of the `Statements` stuff, yet as will be shown, it is special enough of a thing that you can neither resist nor should you want to treat it as anything less than stuff.
 
 One important aspect to in mind is that such delimiters are sometimes forced or implied by the grammar, and in some cases, where they would be allowed, will be optionally introduced for style or effect — for instance where `= …` normally does not need to be wrapped, one might opt for `= (…);` which would wrap the entire expression aspect merely for stylistic reasons or `= (…, …);` which is not stylistic and is for effect.
 
