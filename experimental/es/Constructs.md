@@ -14,6 +14,12 @@ A lot of experimental work is also incorporated in this effort, [demonstrated he
 
 ## Constructional Planes
 
+This section takes a constructional perspective of the ECMAScript grammar which, when compared to the hierarchical perspective of AST, considers a closure of prescribed delimiters and semantics to be a balanced and cohesive flat node representative of the infinite set of possible token nodes (things) that would be contained within it.
+
+This notion of flat node or fat token is also referred to as a constructional plane and is signified by a single `…` denoting its things.
+
+### Primary and Secondary Planes
+
 ECMAScript grammar can be divided into two primary planes:
 
 - `((…))` [Expression][ecma-script-expression-statement] stuff
@@ -214,6 +220,19 @@ In destructuring, you do `Destructruing` things:
 - Compared to all things we've seen so far `Destructuring` stands out because it is actually both a `Statements` and `Expression` thing, where in both cases they are meant to make deeply nested references that will initialize or simply assign against binding identifiers available in scope.
 
 ## Constructs
+
+This section explores various contextually relevance of constructs of the grammar in an effort to formalize the necessary rules to effectively define effective constructs (work in progress).
+
+### Modules
+
+- [ ] Import Constructs
+- [ ] Export Constructs
+- [ ] Declaration Constructs
+
+### SES
+
+- [ ] In/Direct Eval Constructs
+- [ ] Assignments of Eval Constructs
 
 To be continued.
 
