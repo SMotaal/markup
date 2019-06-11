@@ -16,7 +16,7 @@ That was the initial concern, which left me with TypeScript, and here I should m
 
 I decided to explore what it takes to tokenize the web trifecta (JS, HTML, and CSS) just to see where this leads. It was clear to me that there is a lot of myths out there, especially about performance.
 
-After completing this chore, I decided to put it to work, creating a client-side GitHub pages renderer all with experimental code that has zero-external dependencies. At the same time, I was working on a ECMAScript modules shim which I used mainly to better understand the intent of my peers in the Node.js Modules team, and decided to use it as another battle testing ground for my theories.
+After completing this chore, I decided to put it to work, creating a client-side GitHub pages renderer all with experimental code with a strict zero-dep policy (aside from http-server, rollup and TypeScript dev side). At the same time, I was working on a ECMAScript modules shim which I used mainly to better understand the intent of my peers in the Node.js Modules team, and decided to use it as another battle testing ground for my theories.
 
 While all my efforts elude to someone looking to shim modules or render markdown, and while those may be true as well, the fundamental goal of all of this is to have enough moving parts on my canvas to make sense of a broad range of things often too hard for a single individual to observe when everything happens in small specialized package teams.
 
