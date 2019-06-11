@@ -28,7 +28,7 @@ In both worlds, I more inlined to focused on `eval` and `import` because of the 
 
 So my intuition tells me that the runtime parsing solution needed:
 
-- Should leverage platform features (like DOMParser) behind interfaces that equal them to more minimalistic implementations which will be safe and highly focused fallbacks on any platform, not unlike mine, geared exactly for what they deliver and nothing more, but not experimental.
+- Should leverage platform features (like DOMParser) behind interfaces that equal them to more minimalistic implementations which will be safe and highly focused fallbacks on any platform, geared exactly for what they deliver and nothing more, not unlike mine just not merely experimental.
 
 - Should avoid taking for granted the fact they work under the right conditions, and to look closer at how fragile those conditions are, ie how little it takes to get it wrong, and how often end users actually do.
 
