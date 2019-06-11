@@ -38,7 +38,7 @@ So my intuition tells me that the runtime parsing solution needed:
 
   This in an ecosystem starting to pay attention to wide gaps left unchecked which are no longer absent of the clear and visible opportunity but at the same time relatively void of tools and awareness to handle the growing potential for illintent.
 
-- Is doable from my own experimental work and based on other battleested work which carefully minimize the footprint of their architectural façades by leveraging negelected builtins like RegExp, template literals... etc.
+- Is doable from my own experimental work and based on other battletested work which carefully minimize the footprint of their architectural façades by leveraging negelected builtins like RegExp, template literals... etc.
 
   And while builtins come with catching up burdens that can delay the more ideal outcomes, they however come with the more clear cut benefit of already committed parties answering to well trained pressures which have been proven reliable to force corrections when necessary.
 
@@ -46,7 +46,7 @@ I have been very fortunate to meet with far more experienced folks along the way
 
 <!--
 
-Stuff I don't mind sharing and later realize that other might should go here…
+Stuff I don't mind sharing but also realize that other might…
 
 - Sure, I missed working with others, and very desprately too, and even technically all the same, because I was not as experienced as most people I connected with on a weekly or bi-weekly basis. The benefit of the relatively more ample time, depth of field, and unilaterality afforded me a lot of room to stay on task (which for someone like me is an oxymoron).
 
