@@ -147,7 +147,7 @@ AsyncGeneratorFunctionDeclaration: { async function* $$$ (...$$) {{ ; }}   };
 
 #### Noteworthy aspects for `Statements` things:
 
-- Every expression is metaphorically wrapped `{…};` to signify that it is an `Statements` (ie `{{…}}`) and that it is completely separate from others, hence the `;`.
+- Every statement is metaphorically wrapped `{…};` to signify that it is a `Statements` (ie `{{…}}`) and that it is completely separate from others, hence the `;`.
 
 - A new `$$$` binding identifier is used to indicate potential effects beyond the scope of a block, where applicable by the with the spec (aka hoisting). _TBD_
 
