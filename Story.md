@@ -30,11 +30,13 @@ So my intuition tells me that the runtime parsing solution needed:
 
 - Should leverage platform features (like DOMParser) behind interfaces that equal them to more minimalistic implementations which will be safe and highly focused fallbacks on any platform, not unlike mine, geared exactly for what they deliver and nothing more, but not experimental.
 
-- Is doable, and that RegExp (which only needs minor catching up by few) makes it possible to cut down a lot of architectural façade needed in current solutions known to work under the right conditions.
-
 - Should avoid taking for granted the fact they work under the right conditions, and to look closer at how fragile those conditions are, ie how little it takes to get it wrong, and how often end users actually do.
 
   This in an ecosystem starting to pay attention to wide gaps left unchecked which are no longer absent of the clear and visible opportunity but void of the tools and awareness to handle this growing potential for illintent.
+
+- Is doable from my own experimental work and other battle tested work which carefully minimizes the footprint of their architectural façade by leveraging negelected builtins like RegExp.
+
+  And while builtins come with catching up burdens that can delay the more ideal outcomes, they however come with the more clear cut benefit of already committed parties answering to well trained pressures proven reliable to force corrections (no need to state this by example).
 
 I have been very fortunate to meet with far more experienced folks along the way who clearly have what it takes to affect what I think is necessary change. I remain excited to any part I can play in such an endeavour that is clearly big enough to warrant more than one can do on their own.
 
