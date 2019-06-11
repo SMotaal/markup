@@ -12,37 +12,37 @@ Once you do, you can not not feel that something like `is-XXXX@x.x.x` is offensi
 
 You can't remain blissfull to the ecosystem wide opportunities in all those bleak micro packages being maintined by a few 10k and counting fame-seekers or their drones, and of when such packages eventually outgrow their noteworthy incentives that elicited an initial pride for vigilance.
 
-That was the initial concern, which left me with TypeScript, and here I should mention that I was, albeit completely separate from matters here, already pulling away from it being the aspiring superset of JavaScript that now seemed to exponentially pickup. But for me, I was maybe more privy to my long-formed opinions regarding obvious prioritization and politics conflicts that were getting in the way of spec things, all the fashion of those who think it their privilege to an accountability-free entitlement all at the expense of the open-source community they are hardly intrested in actually seeing grow, unless for pay.
+That was the initial concern, which left me with TypeScript, and here I should mention that I was, albeit completely separate from matters here, already pulling away from it being the aspiring superset of JavaScript that now seemed to exponentially pickup everywhere else. But for me, I was maybe more privy to my long-formed opinions regarding obvious prioritization and politics conflicts that were getting in the way of spec things, all the fashion of those who think it their privilege to an accountability-free entitlement all at the expense of the open-source community they are hardly intrested in actually seeing grow, unless for pay.
 
 I decided to explore what it takes to tokenize the web trifecta (JS, HTML, and CSS) just to see where this leads. It was clear to me that there is a lot of myths out there, especially about performance.
 
 After completing this chore, I decided to put it to work, creating a client-side GitHub pages renderer all with experimental code with a strict zero-dep policy — aside from http-server, rollup and TypeScript dev side for my own sanity.
 
-At the same time, I was working on a ECMAScript modules shim which I used mainly to better understand the intent of my peers in the Node.js Modules team, and decided to use it as another battle testing ground for my theories.
+At the same time, I was working on a ECMAScript modules shim which I used mainly to better understand the intent of my peers in the Node.js Modules team, and decided to use it as another battletesting ground for my theories.
 
 While all my efforts elude to someone looking to shim modules or render markdown, and while those may be true as well, the fundamental goal of all of this is to have enough moving parts on my canvas to make sense of a broad range of things often too hard for a single individual to observe when everything happens in small specialized package-oriented teams.
 
 This being as real as the saying having a unique perspective actually goes in the real world, I am trying to use this to affect change that is in my opinion necessary.
 
-My opinion for any module loader or extension, you cannot rely on the current infrastructure without hitting the snag where your deps claim something is unsupported when it actually is by the runtime. And certainly, you don't want, in the first place, to be addressing such surgical and targetted runtime parsing tasks with all-and-any tools like those, litered with configs, helper libs and conditional mojo chunks meant to polyfill the unknown runtime that might not have native (module or otherwise) support — those are costs that are simply not relevant to the problem and which introduce too wide a range of possible points of failure in turn.
+My opinion for any module loader or its extension, you cannot rely on the current infrastructure without hitting the snag where your deps claim something is unsupported when it actually is by the runtime. And certainly, you don't want, in the first place, to be addressing such surgical and targetted runtime parsing tasks with all-and-any tools like those, litered with configs, helper libs and conditional mojo chunks meant to polyfill the unknown runtime that might not have native (module or otherwise) support — those are costs that are simply not relevant to the problem and which introduce too wide a range of possible points of failure in turn.
 
 My opinion for SES, is that cases for `eval` and `import` which may be deemed not safe for the shim work, are the unexplored territory that leaves open a wide range of unforeseen outcomes. While it is a very sound intent to defer parse-related aspects until implementation is native in production uses of such shims, there are few reasonable places where one might in hindsight feel they would've maybe considered exploring it a little closer. And not to mention that once native support is here, we historically know it will likely fail to apply in some places that will still need to be covered.
 
-In both worlds, I more inlined to focused on `eval` and `import` because of the drawback potential they can have if they ever end up being deemed hazardous in native implementations. So I am slowly trying to work on this safe parse that will allow us to retain the full semantics of those aspects. Because even if this risk is deemed avoidable in proposal staged polyfills, it is good to look ahead and consider future scenarios where decisions seem to have a more unilateral taste for implementers, historically.
+In both worlds, I'm more inclined to focused on `eval` and `import` because of the drawback potential they can have if they ever end up being deemed hazardous in native implementations. So I am slowly trying to work on this safe parse that will allow us to retain the full semantics of those aspects. Because even if this risk is deemed avoidable in proposal staged polyfills, it is good to look ahead and consider future scenarios where decisions seem to have had a more unilateral taste for implementers, historically.
 
 So my intuition tells me that the runtime parsing solution needed:
 
 - Should leverage platform features (like DOMParser) behind interfaces that equal them to more minimalistic implementations which will be safe and highly focused fallbacks on any platform, geared exactly for what they deliver and nothing more, not unlike mine just not merely experimental.
 
-- Should avoid taking for granted the fact they work under the right conditions, and to look closer at how fragile those conditions are, ie how little it takes to get it wrong, and how often end users actually do.
+- Should avoid taking for granted the fact that they work very well under the right conditions, and look closer at how fragile those conditions are, ie how little it takes to get it wrong, and how often endusers actually do.
 
-  This in an ecosystem starting to pay attention to wide gaps left unchecked which are no longer absent of the clear and visible opportunity but void of the tools and awareness to handle this growing potential for illintent.
+  This in an ecosystem starting to pay attention to wide gaps left unchecked which are no longer absent of the clear and visible opportunity but at the same time relatively void of tools and awareness to handle the growing potential for illintent.
 
-- Is doable from my own experimental work and other battle tested work which carefully minimizes the footprint of their architectural façade by leveraging negelected builtins like RegExp.
+- Is doable from my own experimental work and based on other battleested work which carefully minimize the footprint of their architectural façades by leveraging negelected builtins like RegExp, template literals... etc.
 
-  And while builtins come with catching up burdens that can delay the more ideal outcomes, they however come with the more clear cut benefit of already committed parties answering to well trained pressures proven reliable to force corrections (no need to state this by example).
+  And while builtins come with catching up burdens that can delay the more ideal outcomes, they however come with the more clear cut benefit of already committed parties answering to well trained pressures which have been proven reliable to force corrections when necessary.
 
-I have been very fortunate to meet with far more experienced folks along the way who clearly have what it takes to affect what I think is necessary change. I remain excited to any part I can play in such an endeavour that is clearly big enough to warrant more than one can do on their own.
+I have been very fortunate to meet with far more experienced folks along the way who clearly have what it takes to affect what I think is necessary change. I remain excited to any part I can play in such an endeavour that is clearly big enough to warrant more than anyone can set out to do on their own.
 
 <!--
 
