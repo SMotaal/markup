@@ -20,7 +20,7 @@ After completing this chore, I decided to put it to work, creating a client-side
 
 At the same time, I was working on a ECMAScript modules shim which I used mainly to better understand the intent of my peers in the Node.js Modules team, and decided to use it as another battle testing ground for my theories.
 
-While all my efforts elude to someone looking to shim modules or render markdown, and while those may be true as well, the fundamental goal of all of this is to have enough moving parts on my canvas to make sense of a broad range of things often too hard for a single individual to observe when everything happens in small specialized package teams.
+While all my efforts elude to someone looking to shim modules or render markdown, and while those may be true as well, the fundamental goal of all of this is to have enough moving parts on my canvas to make sense of a broad range of things often too hard for a single individual to observe when everything happens in small specialized package-oriented teams.
 
 This being as real as the saying having a unique perspective actually goes in the real world, I am trying to use this to affect change that is in my opinion necessary.
 
