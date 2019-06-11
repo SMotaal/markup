@@ -8,7 +8,7 @@ Userland solutions today are mostly Acorn, Babel, and TypeScript, for JavaScript
 
 Because, initially, at face value, my issues were never with ASTs (that comes much later), but with all but TypeScript indulging so poorly in those decisions, so they all come with packages you never expected — as someone with foresight must have felt when they politely urged us to start taking notice.
 
-Once you do, you can not feel that something like `is-XXXX@x.x.x` is offensive to your sense as a JavaScript developer, and not just because people seasoned enough to be of this calipar decision and employ thought it warrented deping out and many other deping it on. But because here we all have one or two packages of wide demand in all decent development tools everywhere in the ecosystem, and they will come with not-too-well-minded dependencies, let alone very-well-minded ones of a much deeper intent.
+Once you do, you can not not feel that something like `is-XXXX@x.x.x` is offensive to your sense as a JavaScript developer, and not just because people seasoned enough to be of this caliber for decision and employ thought it warrented deping out, and many other deping it on. But because here we all have one or two packages of wide demand in all decent development tools everywhere in the ecosystem, and they will come with not-too-well-minded dependencies, let alone very-well-minded ones of a much deeper intent.
 
 You can't remain blissfull to the ecosystem wide opportunities in all those bleak micro packages being maintined by a few 10k and counting fame-seekers or their drones, and of when such packages eventually outgrow their noteworthy incentives that elicited an initial pride for vigilance.
 
