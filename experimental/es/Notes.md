@@ -2,6 +2,17 @@
 
 ### Solidus
 
+<details><summary>Tim Disney's Take</summary>
+
+```
+𝑡 ∈ Token     ∷=   𝑥 | Punctuator | Keyword
+               | /𝑟/ | (𝑇̲) | {𝑇̲}
+𝑟 ∈ RegexPat  ∷=   𝑥 | { | } | ( | )
+𝑇, 𝑃           ∈ Token*
+```
+
+</details>
+
 <details><summary>Example (from the spec)</summary>
 
 <blockquote>
