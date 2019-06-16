@@ -513,7 +513,13 @@ async function each(iterable, ƒ) {
   }
 }
 
+/// RUNTIME
+
+/** Uses lightweight proxy objects that can be serialized into HTML text */
+const HTML_MODE = true;
+
 const supported = !!native;
+const native$1 = !HTML_MODE;
 const implementation = pseudo;
 const {createElement: Element$2, createText: Text$2, createFragment: Fragment} = implementation;
 const Template = template =>
@@ -585,7 +591,7 @@ class MarkupRenderer {
       elements = this.renderer(tokens);
       if ((first = await elements.next()) && 'value' in first) {
         template = Template();
-        if (template && 'textContent' in fragment) {
+        if (!native$1 && template && 'textContent' in fragment) {
           logs && logs.push(`render method = 'text' in template`);
           const body = [first.value];
           first.done || (await each(elements, element => body.push(element)));
@@ -1352,7 +1358,7 @@ const close = (text, state) => {
   const groups = state.groups;
   const index = groups.closers.lastIndexOf(text);
 
-  if (index === -1 || index !== groups.length - 1) return fault(text, state);
+  if (index === -1 || index !== groups.length - 1) return fault();
 
   groups.closers.splice(index, groups.closers.length);
   groups.splice(index, groups.length);
@@ -1387,13 +1393,6 @@ const forward = (search, match, state, delta) => {
 const fault = (text, state) => {
   // console.warn(text, {...state});
   return 'fault';
-};
-
-/** @param {string[]} keys */
-const Symbols = (...keys) => {
-  const symbols = {};
-  for (const key of keys) symbols[key] = Symbol(key);
-  return symbols;
 };
 
 const generateDefinitions = ({groups, goals, identities, symbols, keywords, tokens}) => {
@@ -1535,20 +1534,115 @@ const Construct = class Construct extends Array {
 
 //@ts-check
 
-const // Flags
-  DEBUG_CONSTRUCTS = false;
+const DEBUG_CONSTRUCTS = Boolean(false);
 
-const symbols = Symbols(
-  'ECMAScriptGoal',
-  'CommentGoal',
-  'RegExpGoal',
-  'StringGoal',
-  'TemplateLiteralGoal',
-  'FaultGoal',
-);
+const ECMAScriptGoalSymbol = Symbol('ECMAScriptGoal');
+const CommentGoalSymbol = Symbol('CommentGoal');
+const RegExpGoalSymbol = Symbol('RegExpGoal');
+const StringGoalSymbol = Symbol('StringGoal');
+const TemplateLiteralGoalSymbol = Symbol('TemplateLiteralGoal');
+const FaultGoalSymbol = Symbol('FaultGoal');
 
-/** Unique token records @type {{[symbol: symbol]: }} */
-const tokens = {};
+const goals = {};
+
+goals[ECMAScriptGoalSymbol] = {
+  type: undefined,
+  flatten: undefined,
+  fold: undefined,
+  openers: ['{', '(', '[', "'", '"', '`', '/', '/*', '//'],
+  closers: ['}', ')', ']'],
+};
+
+goals[CommentGoalSymbol] = {type: 'comment', flatten: true, fold: true};
+
+goals[RegExpGoalSymbol] = {
+  type: 'pattern',
+  flatten: undefined,
+  fold: undefined,
+  openers: ['[', '(', '{'],
+  closers: [']', ')', '}'],
+  opener: '/',
+  closer: '/',
+  // punctuators: ['+', '*', '?', '|', '^', '{', '}', '(', ')'],
+  punctuators: ['+', '*', '?', '|', '^'],
+};
+
+goals[StringGoalSymbol] = {type: 'quote', flatten: true, fold: true};
+
+goals[TemplateLiteralGoalSymbol] = {
+  type: 'quote',
+  flatten: true,
+  fold: false,
+  openers: ['${'],
+  opener: '`',
+  closer: '`',
+};
+
+goals[FaultGoalSymbol] = {type: 'fault'}; // , groups: {}
+
+const {
+  [FaultGoalSymbol]: FaultGoal,
+  [ECMAScriptGoalSymbol]: ECMAScriptGoal,
+  [CommentGoalSymbol]: CommentGoal,
+  [RegExpGoalSymbol]: RegExpGoal,
+  [StringGoalSymbol]: StringGoal,
+  [TemplateLiteralGoalSymbol]: TemplateLiteralGoal,
+} = goals;
+
+const groups = {
+  ['{']: {opener: '{', closer: '}'},
+  ['(']: {opener: '(', closer: ')'},
+  ['[']: {opener: '[', closer: ']'},
+  ['//']: {
+    opener: '//',
+    closer: '\n',
+    goal: CommentGoalSymbol,
+    parentGoal: ECMAScriptGoalSymbol,
+    description: '‹comment›',
+  },
+  ['/*']: {
+    opener: '/*',
+    closer: '*/',
+    goal: CommentGoalSymbol,
+    parentGoal: ECMAScriptGoalSymbol,
+    description: '‹comment›',
+  },
+  ['/']: {
+    opener: '/',
+    closer: '/',
+    goal: RegExpGoalSymbol,
+    parentGoal: ECMAScriptGoalSymbol,
+    description: '‹pattern›',
+  },
+  ["'"]: {
+    opener: "'",
+    closer: "'",
+    goal: StringGoalSymbol,
+    parentGoal: ECMAScriptGoalSymbol,
+    description: '‹string›',
+  },
+  ['"']: {
+    opener: '"',
+    closer: '"',
+    goal: StringGoalSymbol,
+    parentGoal: ECMAScriptGoalSymbol,
+    description: '‹string›',
+  },
+  ['`']: {
+    opener: '`',
+    closer: '`',
+    goal: TemplateLiteralGoalSymbol,
+    parentGoal: ECMAScriptGoalSymbol,
+    description: '‹template›',
+  },
+  ['${']: {
+    opener: '${',
+    closer: '}',
+    goal: ECMAScriptGoalSymbol,
+    parentGoal: TemplateLiteralGoalSymbol,
+    description: '‹span›',
+  },
+};
 
 const identities = {
   UnicodeIDStart: 'ECMAScriptUnicodeIDStart',
@@ -1561,102 +1655,6 @@ const identities = {
   FutureReservedWord: 'ECMAScriptFutureReservedWord',
   Keyword: 'ECMAScriptKeyword',
   // MetaProperty: 'ECMAScriptMetaProperty',
-};
-
-const goals = {
-  [symbols.ECMAScriptGoal]: {
-    type: undefined,
-    flatten: undefined,
-    fold: undefined,
-    openers: ['{', '(', '[', "'", '"', '`', '/', '/*', '//'],
-    closers: ['}', ')', ']'],
-  },
-  [symbols.CommentGoal]: {type: 'comment', flatten: true, fold: true},
-  [symbols.RegExpGoal]: {
-    type: 'pattern',
-    flatten: undefined,
-    fold: undefined,
-    openers: ['[', '(', '{'],
-    closers: [']', ')', '}'],
-    opener: '/',
-    closer: '/',
-    // punctuators: ['+', '*', '?', '|', '^', '{', '}', '(', ')'],
-    punctuators: ['+', '*', '?', '|', '^'],
-  },
-  [symbols.StringGoal]: {type: 'quote', flatten: true, fold: true},
-  [symbols.TemplateLiteralGoal]: {
-    type: 'quote',
-    flatten: true,
-    fold: false,
-    openers: ['${'],
-    opener: '`',
-    closer: '`',
-  },
-  [symbols.FaultGoal]: {type: 'fault'}, // , groups: {}
-};
-
-const {
-  [symbols.FaultGoal]: FaultGoal,
-  [symbols.ECMAScriptGoal]: ECMAScriptGoal,
-  [symbols.CommentGoal]: CommentGoal,
-  [symbols.RegExpGoal]: RegExpGoal,
-  [symbols.StringGoal]: StringGoal,
-  [symbols.TemplateLiteralGoal]: TemplateLiteralGoal,
-} = goals;
-
-const groups = {
-  ['{']: {opener: '{', closer: '}'},
-  ['(']: {opener: '(', closer: ')'},
-  ['[']: {opener: '[', closer: ']'},
-  ['//']: {
-    opener: '//',
-    closer: '\n',
-    goal: symbols.CommentGoal,
-    parentGoal: symbols.ECMAScriptGoal,
-    description: '‹comment›',
-  },
-  ['/*']: {
-    opener: '/*',
-    closer: '*/',
-    goal: symbols.CommentGoal,
-    parentGoal: symbols.ECMAScriptGoal,
-    description: '‹comment›',
-  },
-  ['/']: {
-    opener: '/',
-    closer: '/',
-    goal: symbols.RegExpGoal,
-    parentGoal: symbols.ECMAScriptGoal,
-    description: '‹pattern›',
-  },
-  ["'"]: {
-    opener: "'",
-    closer: "'",
-    goal: symbols.StringGoal,
-    parentGoal: symbols.ECMAScriptGoal,
-    description: '‹string›',
-  },
-  ['"']: {
-    opener: '"',
-    closer: '"',
-    goal: symbols.StringGoal,
-    parentGoal: symbols.ECMAScriptGoal,
-    description: '‹string›',
-  },
-  ['`']: {
-    opener: '`',
-    closer: '`',
-    goal: symbols.TemplateLiteralGoal,
-    parentGoal: symbols.ECMAScriptGoal,
-    description: '‹template›',
-  },
-  ['${']: {
-    opener: '${',
-    closer: '}',
-    goal: symbols.ECMAScriptGoal,
-    parentGoal: symbols.TemplateLiteralGoal,
-    description: '‹span›',
-  },
 };
 
 /** @type {ECMAScript.Keywords} */
@@ -1783,16 +1781,28 @@ const keywords = Keywords({
         DEBUG_CONSTRUCTS === true && console.log(context));
   };
 
-  goals[symbols.RegExpGoal].initializeContext = goals[symbols.StringGoal].initializeContext = goals[
-    symbols.TemplateLiteralGoal
+  goals[RegExpGoalSymbol].initializeContext = goals[StringGoalSymbol].initializeContext = goals[
+    TemplateLiteralGoalSymbol
   ].initializeContext = initializeContext;
 
   /** @param {Context} context */
-  goals[symbols.ECMAScriptGoal].initializeContext = context => {
+  goals[ECMAScriptGoalSymbol].initializeContext = context => {
     context.captureKeyword = captureKeyword;
     context.state['USE_CONSTRUCTS'] === true && initializeContext(context);
   };
 }
+
+const symbols = {
+  ECMAScriptGoal: ECMAScriptGoalSymbol,
+  CommentGoal: CommentGoalSymbol,
+  RegExpGoal: RegExpGoalSymbol,
+  StringGoal: StringGoalSymbol,
+  TemplateLiteralGoal: TemplateLiteralGoalSymbol,
+  FaultGoal: FaultGoalSymbol,
+};
+
+/** Unique token records @type {{[symbol: symbol]: }} */
+const tokens = {};
 
 generateDefinitions({groups, goals, identities, symbols, keywords, tokens});
 
@@ -1861,7 +1871,7 @@ const matcher = (ECMAScript =>
                   ? type || state.context.goal.type || 'sequence'
                   : state.context.goal !== ECMAScriptGoal
                   ? state.context.goal.type || 'sequence'
-                  : fault(text, state),
+                  : fault(),
                 match,
                 // text,
               );
@@ -2069,7 +2079,7 @@ const matcher = (ECMAScript =>
               : state.context.goal !== ECMAScriptGoal
               ? state.context.goal.type || 'sequence'
               : text[0] === '*'
-              ? fault(text, state)
+              ? fault()
               : state.lastAtom === undefined ||
                 (state.lastAtom.type === 'operator'
                   ? state.lastAtom.text !== '++' && state.lastAtom.text !== '--'
@@ -2121,7 +2131,7 @@ const matcher = (ECMAScript =>
               ? 'identifier'
               : state.context.captureKeyword === undefined
               ? 'keyword'
-              : state.context.captureKeyword(text, state) || fault(text, state),
+              : state.context.captureKeyword(text, state) || fault(),
             match,
             // text,
           );

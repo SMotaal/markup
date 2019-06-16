@@ -855,6 +855,8 @@
 
     [InspectSymbol](depth, {stylize = String, compact = false} = {}) {
       try {
+        const depth = arguments[0] + 1;
+        const options = arguments[1];
         return `${(this && this.constructor && this.constructor.name) || 'Closure'} ‹${Closures.inspect(this)}›`;
       } catch (exception) {
         return `${this}`;
@@ -1224,7 +1226,8 @@
     markdown.TYPOGRAPHS = /\B[\–](?=\ )|"|'|=/;
     markdown.TAGS = /\/>|<%|%>|<!--|-->|<[\/\!]?(?=[a-z]+\:?[a-z\-]*[a-z]|[a-z]+)/;
     markdown.BRACKETS = /<|>|\(|\)|\[|\]/;
-    markdown.INLINES = /\b([*~_])(?:\3\b(?=[^\n]*[^\n\s\\]\3\3)|\b(?=[^\n]*[^\n\s\\]\3))|(?:\b|\b\B|\B)([*~_])\4?/;
+    // markdown.INLINES = /\b([*~_])(?:\3\b(?=[^\n]*[^\n\s\\]\3\3)|\b(?=[^\n]*[^\n\s\\]\3))|(?:\b|\b\B|\B)([*~_])\4?/;
+    markdown.INLINES = /\b([*~]|_\B)(?:\3(?=[^\n]*[^\n\s\\]\3\3)|\b(?=[^\n]*[^\n\s\\]\3))|(?:\b|\b\B|\B)([*~_])\4?/;
     markdown.SPANS = /(``?(?![`\n]))[^\n]*?[^\\`\n]\5/;
     markdown.INDICIES = /\b(?:[\da-zA-Z]+\.)+[\da-zA-Z]+\.?/;
     markdown.DECIMAL = /[+\-]?\d+(?:,\d{3})*(?:\.\d+)?|[+\-]?\d*\.\d+/;

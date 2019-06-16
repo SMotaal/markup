@@ -273,6 +273,8 @@ const markup = (function (exports) {
 
     [InspectSymbol](depth, {stylize = String, compact = false} = {}) {
       try {
+        const depth = arguments[0] + 1;
+        const options = arguments[1];
         return `${(this && this.constructor && this.constructor.name) || 'Closure'} ‹${Closures.inspect(this)}›`;
       } catch (exception) {
         return `${this}`;
@@ -1431,7 +1433,8 @@ const markup = (function (exports) {
     markdown.TYPOGRAPHS = /\B[\–](?=\ )|"|'|=/;
     markdown.TAGS = /\/>|<%|%>|<!--|-->|<[\/\!]?(?=[a-z]+\:?[a-z\-]*[a-z]|[a-z]+)/;
     markdown.BRACKETS = /<|>|\(|\)|\[|\]/;
-    markdown.INLINES = /\b([*~_])(?:\3\b(?=[^\n]*[^\n\s\\]\3\3)|\b(?=[^\n]*[^\n\s\\]\3))|(?:\b|\b\B|\B)([*~_])\4?/;
+    // markdown.INLINES = /\b([*~_])(?:\3\b(?=[^\n]*[^\n\s\\]\3\3)|\b(?=[^\n]*[^\n\s\\]\3))|(?:\b|\b\B|\B)([*~_])\4?/;
+    markdown.INLINES = /\b([*~]|_\B)(?:\3(?=[^\n]*[^\n\s\\]\3\3)|\b(?=[^\n]*[^\n\s\\]\3))|(?:\b|\b\B|\B)([*~_])\4?/;
     markdown.SPANS = /(``?(?![`\n]))[^\n]*?[^\\`\n]\5/;
     markdown.INDICIES = /\b(?:[\da-zA-Z]+\.)+[\da-zA-Z]+\.?/;
     markdown.DECIMAL = /[+\-]?\d+(?:,\d{3})*(?:\.\d+)?|[+\-]?\d*\.\d+/;
@@ -1763,7 +1766,13 @@ const markup = (function (exports) {
     }
   }
 
+  /// RUNTIME
+
+  /** Uses lightweight proxy objects that can be serialized into HTML text */
+  const HTML_MODE = true;
+
   const supported = !!native;
+  const native$1 = !HTML_MODE;
   const implementation = pseudo;
   const {createElement: Element$2, createText: Text$2, createFragment: Fragment} = implementation;
   const Template = template =>
@@ -1835,7 +1844,7 @@ const markup = (function (exports) {
         elements = this.renderer(tokens);
         if ((first = await elements.next()) && 'value' in first) {
           template = Template();
-          if (template && 'textContent' in fragment) {
+          if (!native$1 && template && 'textContent' in fragment) {
             logs && logs.push(`render method = 'text' in template`);
             const body = [first.value];
             first.done || (await each(elements, element => body.push(element)));
