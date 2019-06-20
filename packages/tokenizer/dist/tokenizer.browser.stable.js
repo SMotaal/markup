@@ -165,6 +165,13 @@ const RegExpFlags = /^\/((?:g(?=[^g]*$)|i(?=[^i]*$)|m(?=[^m]*$)|s(?=[^s]*$)|u(?=
 
 class SequenceExpression extends RegExp {}
 
+const {
+  escape = (SequenceExpression.escape = /** @type {<T>(source: T) => string} */ ((() => {
+    const {replace} = Symbol;
+    return source => /[\\^$*+?.()|[\]{}]/g[replace](source, '\\$&');
+  })())),
+} = SequenceExpression;
+
 /**
  * Create a sequence match expression from patterns.
  *
@@ -1259,52 +1266,14 @@ const html = Object.defineProperties(
 
 const markdown = Object.defineProperties(
   ({syntax} = defaults, {html}) => {
-    const matcher = ((...matchers) => {
-      let matcher = matchers[matchers.length - 1];
-      try {
-        matchers.push(
-          (matcher = sequence`${all(
-            sequence`(${markdown.WHITESPACE})`,
-            sequence`(${all(
-              markdown.ESCAPES,
-              markdown.ENTITIES,
-              markdown.RULES,
-              markdown.BLOCKS,
-              markdown.INLINES,
-              markdown.TYPOGRAPHS,
-              markdown.TAGS,
-              markdown.BRACKETS,
-              markdown.FENCES,
-              markdown.SPANS,
-            )})`,
-            markdown.INDICIES,
-            markdown.DECIMAL,
-            markdown.EXPONENTIAL,
-            markdown.FRAGMENTS,
-          )}${'/gim'}`),
-        );
-        return matcher;
-      } catch (exception) {
-        matchers.push(exception.message.replace(/.*Invalid regular expression: /, ''));
-        console.warn(exception);
-      }
-      matcher.matchers = matchers;
-      return matcher;
-    })(
-      /(^\s+|\n)|(&#x?[a-f0-9]+;|&[a-z]+;|(?:```+|\~\~\~+|(?:--+|==+)(?=\s*$)|(?:\#{1,6}|\-|\b\d+\.|\b[a-z]\.|\b[ivx]+\.)(?=\s+\S*))|–|—|"|'|=|\/>|<%|%>|<!--|-->|<[\/\!]?(?=[a-z]+\:?[a-z\-]*[a-z]|[a-z]+)|<|>|\(|\)|\[|\]|__?|([*~`])\3?\b|(?:\b|\b\B|\B)([*~`])\4?)|\b[^\n\s\[\]\(\)\<\>&]*[^\n\s\[\]\(\)\<\>&_]\b|[^\n\s\[\]\(\)\<\>&]+(?=__?\b)|\\./gim,
-      sequence`(${markdown.WHITESPACE})|(${markdown.ENTITIES}|(?:${markdown.FENCES}|(?:${markdown.RULES})(?=\s*$)|(?:${
-        markdown.BLOCKS
-      })(?=\s+\S*))|${markdown.TYPOGRAPHS}|${markdown.TAGS}|${markdown.BRACKETS}|${markdown.INLINES})|${
-        markdown.FRAGMENTS
-      }|${markdown.ESCAPES}${'/gim'}`,
-    );
+    const matcher = new RegExp(markdown.MATCHER.source, markdown.MATCHER.flags);
 
     const mode = {
       syntax,
       comments: Closures.from('<!--…-->'),
       quotes: [],
+      operators: markdown.OPERATORS,
       closures: Closures.from(html.closures, markdown.CLOSURES),
-      operators: html.operators,
       matcher: matcher,
       spans: Closures.from('``…`` `…`'),
       matchers: {comment: /(\n)|(-->)/g},
@@ -1371,7 +1340,7 @@ const markdown = Object.defineProperties(
 
         if (tokens.length) {
           const last = tokens[tokens.length - 1];
-          if (!last.text) tokens.pop();
+          last.text || tokens.pop();
           return tokens;
         }
       }
@@ -1402,24 +1371,43 @@ Definitions: {
   }
 
   markdown.BLOCK = '```…``` ~~~…~~~';
-  markdown.INLINE = '[…] (…) *…* **…** _…_ __…__ ~…~ ~~…~~';
+  markdown.INLINE = '[…] (…)'; // *…* **…** _…_ __…__ ~…~ ~~…~~
   markdown.CLOSURES = `${markdown.BLOCK} ${markdown.INLINE}`;
-  markdown.WHITESPACE = /^\s+|\s+$|\n+/;
-  markdown.ESCAPES = /\\./;
-  markdown.ENTITIES = /&#x?[a-f0-9]+;|&[a-z]+;/;
-  markdown.FENCES = /(?:\x60{3,}|\x7E{3,})(?=\b| |$)/;
-  markdown.RULES = /(?:[\-]{2,}|[=]{2,})(?=\s*$)/;
-  markdown.BLOCKS = /(?:\#{1,6}|\-|\b\d+\.|\b[a-z]\.|\b[ivx]+\.)(?=\s+\S)/;
-  markdown.TYPOGRAPHS = /\B[\–](?=\ )|"|'|=/;
-  markdown.TAGS = /\/>|<%|%>|<!--|-->|<[\/\!]?(?=[a-z]+\:?[a-z\-]*[a-z]|[a-z]+)/;
-  markdown.BRACKETS = /<|>|\(|\)|\[|\]/;
-  // markdown.INLINES = /\b([*~_])(?:\3\b(?=[^\n]*[^\n\s\\]\3\3)|\b(?=[^\n]*[^\n\s\\]\3))|(?:\b|\b\B|\B)([*~_])\4?/;
-  markdown.INLINES = /\b([*~]|_\B)(?:\3(?=[^\n]*[^\n\s\\]\3\3)|\b(?=[^\n]*[^\n\s\\]\3))|(?:\b|\b\B|\B)([*~_])\4?/;
-  markdown.SPANS = /(``?(?![`\n]))[^\n]*?[^\\`\n]\5/;
-  markdown.INDICIES = /\b(?:[\da-zA-Z]+\.)+[\da-zA-Z]+\.?/;
-  markdown.DECIMAL = /[+\-]?\d+(?:,\d{3})*(?:\.\d+)?|[+\-]?\d*\.\d+/;
-  markdown.EXPONENTIAL = /\d+[eE]\-?\d+|\d+\.\d+[eE]\-?\d+/;
-  markdown.FRAGMENTS = /\b[^\n\s\[\]\(\)\<\>&`"]*[^\n\s\[\]\(\)\<\>&_`"]\b|[^\n\s\[\]\(\)\<\>&`"]+(?=__?\b)/;
+
+  // Partials are first character used in production forms (like `###`)
+  //   which need to be properly typed by the tokenizer
+  markdown.PARTIALS = Symbols.from(raw`< # >`);
+
+  // Punctuation is used to define both ESCAPES and OPERATORS which
+  //   requires the fine-grained intersection that excludes partials.
+  markdown.PUNCTUATION = Symbols.from(raw`< # > ! " $ % & ' ( ) * + , - . / : ; = ? @ [ \ ] ^ _ ${'`'} { | } ~`);
+
+  // Operators are productions and their escaped forms.
+  markdown.OPERATORS = Symbols.from(
+    raw`** * ~~ ~  __ _ ###### ##### #### ### ## # [ ] ( ) ${[...markdown.PUNCTUATION].map(s => `\\${s.repeat(2)} ${s.repeat(2)} \\${s}`).join(' ')}`,
+  );
+
+  markdown.MATCHER = sequence`${all(
+    sequence`(${(markdown.WHITESPACE = /^\s+|\s+$|\n+/)})`,
+    sequence`(${all(
+      (markdown.ESCAPES = sequence`${all(
+        ...[...markdown.PUNCTUATION].map(s => raw`\\${escape(s).repeat(2)}|\\${escape(s)}`),
+      )}|\\.${'/gu'}`),
+      (markdown.ENTITIES = /&#x?[a-f0-9]+;|&[a-z]+;/u),
+      (markdown.INLINES = /((?:\b|\B)[*~]{1,2}|[*~]{1,2}(?:\b|\B)|\b_{1,2}|_{1,2}\b)/u),
+      (markdown.RULES = /(?:[-]{2,}|[=]{2,})(?=\s*$)/u),
+      (markdown.BLOCKS = /(?:\B#{1,6}|-|\b\d+\.|\b[a-z]\.|\b[ivx]+\.)(?=\s+\S)/u),
+      (markdown.TYPOGRAPHS = /\B–(?= )|"|'|=/u),
+      (markdown.TAGS = /\/>|<%|%>|<!--|-->|<[/!]?(?=[a-z]+:?[-a-z]*[a-z]|[a-z]+)/u),
+      (markdown.BRACKETS = /<|>|\(|\)|\[|\]/u),
+      (markdown.FENCES = /(?:\x60{3,}|\x7E{3,})(?=\b| |$)/u),
+      (markdown.SPANS = /(``?(?![`\n]))[^\n]*?[^\\`\n]\4/),
+    )})`,
+    (markdown.INDICIES = /\b(?:[\da-zA-Z]+\.)+[\da-zA-Z]+\.?/u),
+    (markdown.DECIMAL = /[-+]?\d+(?:,\d{3})*(?:\.\d+)?|[-+]?\d*\.\d+/u),
+    (markdown.EXPONENTIAL = /\d+[eE]-?\d+|\d+\.\d+[eE]-?\d+/u),
+    (markdown.FRAGMENTS = /\b[^\\\n\s\][)(><&`"*~]*[^\\\n\s\][)(><&`"*~_]\b|[^\\\n\s\][)(><&`"*~]+?(?=__?\b)/),
+  )}${'/guim'}`;
 }
 
 const javascript = Object.defineProperties(

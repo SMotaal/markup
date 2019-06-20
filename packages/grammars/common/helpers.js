@@ -9,6 +9,13 @@ export const RegExpFlags = /^\/((?:g(?=[^g]*$)|i(?=[^i]*$)|m(?=[^m]*$)|s(?=[^s]*
 
 class SequenceExpression extends RegExp {}
 
+export const {
+  escape = (SequenceExpression.escape = /** @type {<T>(source: T) => string} */ ((() => {
+    const {replace} = Symbol;
+    return source => /[\\^$*+?.()|[\]{}]/g[replace](source, '\\$&');
+  })())),
+} = SequenceExpression;
+
 /**
  * Create a sequence match expression from patterns.
  *
