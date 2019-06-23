@@ -15,6 +15,12 @@
   --markup-background: var(--markup-background, var(--markup-neutral-fade));
 }
 
+:root {
+  /**/ /**/ /**/ /**/ /** DEFAULTS **/ /**/ /**/ /**/ /**/
+  --markup-tab-size: 4;
+  --markup-soft-indent-tab-size: 2;
+}
+
 :root,
 :host {
   /**/ /**/ /**/ /**/ /** NEUTRALS **/ /**/ /**/ /**/ /**/
@@ -29,9 +35,6 @@
   --markup-dark-text: #eee;
   --markup-dark: #333f46;
   --markup-dark-fade: #333f4633;
-
-  --markup-tab-size: 4;
-  --markup-soft-indent-tab-size: 2;
 
   /**/ /**/ /**/ /**/ /** PRIMARIES **/ /**/ /**/ /**/ /**/
   --markup-light-background: var(--markup-light, #f9f9f9);
@@ -100,8 +103,8 @@
 @media screen {
   /* TODO: Add support for @media (prefers-dark-mode) when it lands */
   pre.dark-mode,
-  html.dark-mode pre,
-  :host(.dark-mode) pre {
+  html.dark-mode,
+  :host(.dark-mode) {
     /**/ /**/ /**/ /**/ /** DARK THEME **/ /**/ /**/ /**/ /**/
     --markup-background: var(--markup-dark-background, var(--markup-light-background));
     --markup-faults-background: var(--markup-dark-faults-background, var(--markup-light-faults-background));
