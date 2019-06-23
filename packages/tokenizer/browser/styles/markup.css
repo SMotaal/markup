@@ -15,7 +15,8 @@
   --markup-background: var(--markup-background, var(--markup-neutral-fade));
 }
 
-:root {
+:root,
+:host {
   /**/ /**/ /**/ /**/ /** NEUTRALS **/ /**/ /**/ /**/ /**/
   --markup-neutral-light: #aaa;
   --markup-neutral: #999;
@@ -98,9 +99,9 @@
 
 @media screen {
   /* TODO: Add support for @media (prefers-dark-mode) when it lands */
-  .dark-mode,
-  html.dark-mode,
-  :host(.dark-mode) {
+  pre.dark-mode,
+  html.dark-mode pre,
+  :host(.dark-mode) pre {
     /**/ /**/ /**/ /**/ /** DARK THEME **/ /**/ /**/ /**/ /**/
     --markup-background: var(--markup-dark-background, var(--markup-light-background));
     --markup-faults-background: var(--markup-dark-faults-background, var(--markup-light-faults-background));
