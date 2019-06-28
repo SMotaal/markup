@@ -519,8 +519,8 @@ async function each(iterable, ƒ) {
 const HTML_MODE = true;
 
 const supported = !!native;
-const native$1 = !HTML_MODE;
-const implementation = pseudo;
+const native$1 = !HTML_MODE ;
+const implementation =  pseudo;
 const {createElement: Element$2, createText: Text$2, createFragment: Fragment} = implementation;
 const Template = template =>
   !supported || Template.supported === false
