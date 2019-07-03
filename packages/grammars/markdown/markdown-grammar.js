@@ -139,7 +139,7 @@ Definitions: {
       (markdown.RULES = /(?:[-]{2,}|[=]{2,})(?=\s*$)/u),
       (markdown.BLOCKS = /(?:\B#{1,6}|-|\b\d+\.|\b[a-z]\.|\b[ivx]+\.)(?=\s+\S)/u),
       (markdown.TYPOGRAPHS = /\B–(?= )|"|'|=/u),
-      (markdown.TAGS = /\/>|<%|%>|<!--|-->|<[/!]?(?=[a-z]+:?[-a-z]*[a-z]|[a-z]+)/u),
+      (markdown.TAGS = /\/>|<\?|\?>|<!--|-->|<[/!]?(?=[a-z]+:?[-a-z]*[a-z]|[a-z]+)/u),
       (markdown.BRACKETS = /<|>|\(|\)|\[|\]/u),
       (markdown.FENCES = /(?:\x60{3,}|\x7E{3,})(?=\b| |$)/u),
       (markdown.SPANS = /(``?(?![`\n]))[^\n]*?[^\\`\n]\4/),
