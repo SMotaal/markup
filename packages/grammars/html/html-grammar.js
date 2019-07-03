@@ -6,14 +6,14 @@ export const html = Object.defineProperties(
       syntax,
       keywords: Symbols.from('DOCTYPE doctype'),
       comments: Closures.from('<!--…-->'),
-      closures: Closures.from('<%…%> <!…> <…/> </…> <…>'),
+      closures: Closures.from('<?…?> <!…> <…/> </…> <…>'),
       quotes: [],
       patterns: {
         maybeKeyword: /^[a-z](\w*)$/i,
         closeTag: /<\/\w[^<>{}]*?>/g,
         // maybeIdentifier: /^(?:(?:[a-z][\-a-z]*)?[a-z]+\:)?(?:[a-z][\-a-z]*)?[a-z]+$/,
       },
-      matcher: /(\n|\s+)|("|'|=|&#x?[a-f0-9]+;|&[a-z]+;|\/?>|<%|%>|<!--|-->|<[\/\!]?(?=[a-z]+\:?[a-z\-]*[a-z]|[a-z]+))/gi,
+      matcher: /(\n|\s+)|("|'|=|&#x?[a-f0-9]+;|&[a-z]+;|\/?>|<\?|\?>|<!--|-->|<[\/\!]?(?=[a-z]+\:?[a-z\-]*[a-z]|[a-z]+))/gi,
       matchers: {
         quote: /(\n)|(\\(?:(?:\\\\)*\\|[^\\\s])|"|')/g,
         comment: /(\n)|(-->)/g,
