@@ -180,6 +180,24 @@ export interface Token {
   construct?: string;
 }
 
+// declare global {
+//   namespace symbol {
+//     interface KnownSymbol<K extends string> {
+//       readonly ['description']?: K;
+//     }
+//     // type known<K extends string> = unique symbol & KnownSymbol<K>;
+//     type known<K extends string = string> = symbol & KnownSymbol<K>
+//   }
+
+//   interface SymbolConstructor {
+//     <K extends string>(key: K): symbol.known<K>;
+//   }
+
+//   interface Symbol {
+//     description: string;
+//   }
+// }
+
 // /** @typedef {import('./types').Match} Match */
 // /** @typedef {import('./types').Capture} Capture */
 // /** @typedef {import('./types').Group} Group */

@@ -3,6 +3,8 @@ import {DecimalDigit} from '../es/ranges.js';
 import {ECMAScriptGoal, StringGoal} from '../es/definitions.js';
 import {capture, forward, fault, open, close} from '../es/helpers.js';
 
+/// SEE: https://cswr.github.io/JsonSchema/spec/grammar/
+
 export const matcher = (JSON =>
   Matcher.define(
     // Matcher generator for this matcher instance
