@@ -6,6 +6,7 @@
   "license": "MIT",
   "mode": "esm",
   "type": "module",
+  "types": "./types.d.ts",
   "publishConfig": {
     "access": "public"
   }
