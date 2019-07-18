@@ -12,7 +12,11 @@ export const sequence = (strings, ...values) =>
   );
 
 export const Hash = (() => {
+  // NOTE:
+  //   Special guards must be placed for symbols that are
+  //   also partially overlap with longer ones.
   const symbols = {HASH: '#', MODE: '!', ITERATIONS: '*', REPEATS: '**', VARIANT: '@', ANCHOR: '#', DEBUGGING: '!!'};
+
   const Hash = ((
     {HASH, MODE, ITERATIONS, REPEATS, VARIANT, ANCHOR, DEBUGGING} = symbols,
     SYMBOLS = /* "#!*@" */ range(HASH, MODE, ITERATIONS, REPEATS, VARIANT, ANCHOR, DEBUGGING),
@@ -33,8 +37,8 @@ export const Hash = (() => {
                 (?:${NOTE /* entry name part */}[^${SYMBOLS}]*)
               )
           )|)(?:${NOTE /* parameters (optional/unordered) */}
-            (?=.*?${MODE}([a-zA-Z]+)|)
-            (?=.*?${ITERATIONS}(\d+)|)
+            (?=(?:.*?[^${MODE[0]}]|)${MODE}([a-zA-Z]+)|)
+            (?=(?:.*?[^${ITERATIONS[0]}]|)${ITERATIONS}(\d+)|)
             (?=.*?${REPEATS}(\d+)|)
             (?=.*?${VARIANT}(\d+)|)
             (?=.*?${ANCHOR}([^\s${SYMBOLS}]+)|)
@@ -59,7 +63,8 @@ export const Hash = (() => {
 
       return (parsed = {hash, specifier, mode, iterations, repeats, variant, anchor, debugging, invalid});
     } finally {
-      parsed && ((parsed[Symbol.toStringTag] = 'Details'), (parsed.matcher = Hash));
+      parsed &&
+        ((parsed[Symbol.toStringTag] = 'Details'), ((parsed['(matcher)'] = Hash), (parsed['(match)'] = matched)));
       console.log('Hash ‹%o›  — %O', string, parsed);
     }
   };
