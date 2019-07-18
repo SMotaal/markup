@@ -3,13 +3,6 @@ const {defineProperty} = Object;
 const setProperty = (target, property, value, enumerable = true, configurable = true) =>
   defineProperty(target, property, {value, enumerable, configurable}) && value;
 
-/** @typedef {import('./types').Grouping} Grouping */
-/** @typedef {import('./types').Tokenizer} Tokenizer */
-/** @typedef {import('./types').Token} Token */
-/** @typedef {import('./types')['Tokenizer']} TokenizerClass */
-/** @typedef {{[name: string]: Grouping}} Groupers */
-/** @typedef {(TokenizerClass)['createGrouper']} createGrouper */
-
 export class Grouping {
   /**
    * @param {{syntax: string, groupers: Groupers, createGrouper: createGrouper}} options
@@ -135,3 +128,10 @@ export class Grouping {
     return {grouper, opened, parent, punctuator};
   }
 }
+
+/** @typedef {import('../types').Grouping} Grouping */
+/** @typedef {import('../types').Tokenizer} Tokenizer */
+/** @typedef {import('../types').Token} Token */
+/** @typedef {import('../types')['Tokenizer']} TokenizerClass */
+/** @typedef {{[name: string]: Grouping}} Groupers */
+/** @typedef {(TokenizerClass)['createGrouper']} createGrouper */
