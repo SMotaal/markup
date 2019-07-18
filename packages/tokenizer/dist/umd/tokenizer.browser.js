@@ -1629,6 +1629,8 @@
 
   const experimentalExtendedParser = (() => new Parser({url: (typeof document === 'undefined' ? new (require('u' + 'rl').URL)('file:' + __filename).href : (document.currentScript && document.currentScript.src || new URL('tokenizer.browser.js', document.baseURI).href)), modes}))();
 
+  //@ts-check
+
   class TokenizerAPI {
     /** @param {API.Options} [options] */
     constructor(options) {
@@ -1636,7 +1638,9 @@
       const {
         parsers = [],
         tokenize = (source, options = {}, flags) => {
+          /** @type {{[name: string]: any} & TokenizerAPI.State} */
           const state = new TokenizerAPI.State({options, flags: {}});
+          //@ts-ignore
           const variant = !options.variant ? 1 : parseInt(options.variant);
           const {[variant >= 1 && variant <= parsers.length ? variant - 1 : (options.variant = 0)]: parser} = parsers;
           this.lastVariant === (this.lastVariant = variant) ||
@@ -1705,8 +1709,8 @@
   const UNSET = Symbol('');
 
   /**
-   * @typedef {import('./parser.js').Parser & {MODULE_URL?: string}} Parser
-   * @typedef {Partial<{variant?: number, fragment?: Fragment, [name: string]: any}>} Parser.Options
+   * @typedef {import('./legacy/parser.js').Parser & {MODULE_URL?: string}} Parser
+   * @typedef {Partial<{variant?: number | string, fragment?: Fragment, [name: string]: any}>} Parser.Options
    */
 
   /**
