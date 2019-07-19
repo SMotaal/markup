@@ -112,6 +112,7 @@ class Matcher extends RegExp {
   static get sequence() {
     const {raw} = String;
     const {replace} = Symbol;
+
     /**
      * @param {TemplateStringsArray} template
      * @param  {...any} spans
@@ -119,6 +120,9 @@ class Matcher extends RegExp {
      */
     const sequence = (template, ...spans) =>
       sequence.WHITESPACE[replace](raw(template, ...spans.map(sequence.span)), '');
+    // const sequence = (template, ...spans) =>
+    //   sequence.WHITESPACE[replace](sequence.COMMENTS[replace](raw(template, ...spans.map(sequence.span)), ''), '');
+
     /**
      * @param {any} value
      * @returns {string}
@@ -130,6 +134,7 @@ class Matcher extends RegExp {
       '';
 
     sequence.WHITESPACE = /^\s+|\s*\n\s*|\s+$/g;
+    // sequence.COMMENTS = /(?:^|\n)\s*\/\/.*(?=\n)|\n\s*\/\/.*(?:\n\s*)*$/g;
 
     Object.defineProperty(Matcher, 'sequence', {value: Object.freeze(sequence), enumerable: true, writable: false});
     return sequence;
