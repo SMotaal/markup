@@ -1,11 +1,11 @@
-﻿/// <reference types="../../packages/matcher" />
+﻿/// <reference path="./types.d.ts" />
 
-import {countLineBreaks} from '../../packages/tokenizer/lib/core.js';
+import {countLineBreaks} from '../../tokenizer/lib/core.js';
 
 export const {
   createTokenFromMatch,
   createMatcherInstance,
-  createString,
+  // createString,
   createMatcherTokenizer,
   createMatcherMode,
 } = (() => {
@@ -16,7 +16,7 @@ export const {
     String,
   } = globalThis;
 
-  /** @typedef {RegExpConstructor['prototype']} Matcher */
+  // /** @typedef {RegExpConstructor['prototype']} Matcher */
 
   /**
    * @template {Matcher} T
@@ -120,7 +120,7 @@ export const {
   const createMatcherTokenizer = instance => defineProperties(instance, tokenizerProperties);
 
   /**
-   * @param {import('markup/packages/matcher/matcher').Matcher} matcher
+   * @param {Matcher} matcher
    * @param {any} [options]
    */
   const createMatcherMode = (matcher, options) => {
