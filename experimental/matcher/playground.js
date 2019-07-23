@@ -1,5 +1,5 @@
-﻿import {createMatcherMode} from './helpers.js';
-import {Matcher} from '../../packages/matcher.js';
+﻿import {createMatcherMode} from '../../packages/matcher/lib/tokenizer.js';
+import {Matcher} from '../../packages/matcher/matcher.js';
 
 export default async markup => {
   const parser = markup.parsers[0];

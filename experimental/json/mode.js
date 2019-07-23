@@ -2,7 +2,7 @@
 
 import {matcher} from './matcher.js';
 import {initializeContext, initializeState, finalizeState} from '../es/helpers.js';
-import {createMatcherMode} from '../matcher/helpers.js';
+import {createMatcherMode} from '../../packages/matcher/lib/tokenizer.js';
 import {countLineBreaks} from '../../packages/tokenizer/lib/core.js';
 
 export const mode = createMatcherMode(matcher, {

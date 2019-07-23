@@ -1,4 +1,6 @@
-﻿export const {
+﻿import {RegExpRange} from '../../packages/matcher/lib/range.js';
+
+export const {
   ranges,
   Null,
   BinaryDigit,
@@ -16,45 +18,12 @@
   UnicodeIDStart,
   UnicodeIDContinue,
 } = (factories => {
-  const {String, RegExp, Symbol, Object} = globalThis;
-  const {raw} = String;
-  const {replace: ReplaceSymbol} = Symbol;
+  /** @type {ObjectConstructor} */
   const {defineProperty, create} = Object;
-
-  const RegExpClass = /^(?:\[(?=.*?\]$)|)((?:\\.|[^\\\n\[\]]*)*)\]?$/;
-
-  class RegExpRange extends RegExp {
-    constructor(source, flags) {
-      let range;
-      range =
-        source && typeof source === 'object' && source instanceof RegExp
-          ? (flags === undefined && (flags = source.flags), source.source)
-          : (typeof source === 'string' ? source : (source = `${source || ''}`)).trim() &&
-            (source = RegExpClass[ReplaceSymbol](source, '[$1]'));
-
-      if (!range || !RegExpClass.test(range)) {
-        throw TypeError(`Invalid Regular Expression class range: ${range}`);
-      }
-
-      typeof flags === 'string' || (flags = `${flags || ''}` || '');
-
-      flags.includes('u') || !(source.includes('\\p{') || source.includes('\\u')) || (flags += 'u');
-      super(source, flags);
-      defineProperty(this, 'range', {value: range.slice(1, -1), enumerable: true, writable: false});
-    }
-
-    toString() {
-      return this.range;
-    }
-
-    static range(strings, ...values) {
-      return new (this || RegExpRange)(raw(strings, ...values));
-    }
-  }
 
   const safeRange = (strings, ...values) => {
     try {
-      return RegExpRange.range(strings, ...values).source.slice(1, -1);
+      return RegExpRange.define(strings, ...values).source.slice(1, -1);
     } catch (exception) {}
   };
 

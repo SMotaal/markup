@@ -2,7 +2,7 @@
 
 import {matcher} from './matcher.js';
 import {initializeState, finalizeState, createToken} from './helpers.js';
-import {createMatcherMode} from '../matcher/helpers.js';
+import {createMatcherMode} from '../../packages/matcher/lib/tokenizer.js';
 
 export const mode = createMatcherMode(matcher, {
   USE_CONSTRUCTS: false,
