@@ -1,8 +1,8 @@
 ﻿//@ts-check
 
 import {matcher} from './matcher.js';
-import {initializeContext, initializeState, finalizeState} from '../es/helpers.js';
-import {createMatcherMode} from '../../packages/matcher/lib/tokenizer.js';
+import {initializeState, finalizeState} from '../es/helpers.js';
+import {createMatcherMode} from '../../packages/matcher/lib/token-matcher.js';
 import {countLineBreaks} from '../../packages/tokenizer/lib/core.js';
 
 export const mode = createMatcherMode(matcher, {

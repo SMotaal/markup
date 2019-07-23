@@ -33,6 +33,7 @@ export const initializeState = state => {
   });
   state.firstTokenContext = state.nextTokenContext = state.lastContext = state.context = contexts[-1] = context;
   state.lastTokenContext = undefined;
+  state.initializeContext = initializeContext;
 };
 
 /** @param {State} state */
@@ -262,97 +263,6 @@ export const initializeContext = (assign =>
       context
     );
   })(Object.assign);
-
-export const capture = (identity, match, text) => {
-  match.capture[(match.identity = identity)] = match[0];
-  (match.fault = identity === 'fault') && (match.flatten = false);
-  return match;
-};
-
-/**
- * Safely mutates matcher state to open a new context.
- *
- * @param {string} text - Text of the intended { type = "opener" } token
- * @param {State} state - Matcher state
- * @returns {undefined | string} - String when context is **not** open
- */
-export const open = (text, state) => {
-  const {
-    contexts,
-    context: parentContext,
-    context: {depth: index, goal: initialGoal},
-    groups,
-  } = state;
-  const group = initialGoal.groups[text];
-
-  if (!group) return initialGoal.type || 'sequence';
-  groups.splice(index, groups.length, group);
-  groups.closers.splice(index, groups.closers.length, group.closer);
-
-  parentContext.contextCount++;
-
-  const goal = group.goal === undefined ? initialGoal : group.goal;
-
-  state.nextContext = contexts[index] = initializeContext({
-    id: `${parentContext.id} ${
-      goal !== initialGoal ? `\n${goal[Symbol.toStringTag]} ${group[Symbol.toStringTag]}` : group[Symbol.toStringTag]
-    }`,
-    number: ++contexts.count,
-    depth: index + 1,
-    parentContext,
-    goal,
-    group,
-    state,
-  });
-};
-
-/**
- * Safely mutates matcher state to close the current context.
- *
- * @param {string} text - Text of the intended { type = "closer" } token
- * @param {State} state - Matcher state
- * @returns {undefined | string} - String when context is **not** closed
- */
-export const close = (text, state) => {
-  const groups = state.groups;
-  const index = groups.closers.lastIndexOf(text);
-
-  if (index === -1 || index !== groups.length - 1) return fault(text, state);
-
-  groups.closers.splice(index, groups.closers.length);
-  groups.splice(index, groups.length);
-  state.nextContext = state.context.parentContext;
-};
-
-/**
- * Safely mutates matcher state to skip ahead.
- *
- * TODO: Finish implementing forward helper
- *
- * @param {string | RegExp} search
- * @param {Match} match
- * @param {State} state
- * @param {number} [delta]
- */
-export const forward = (search, match, state, delta) => {
-  if (typeof search === 'string' && search.length) {
-    state.nextOffset = match.input.indexOf(search, match.index + match[0].length) + (0 + delta || 0);
-  } else if (search != null && typeof search === 'object') {
-    search.lastIndex = match.index + match[0].length;
-    search.exec(match.input);
-    state.nextOffset = search.lastIndex + (0 + delta || 0);
-  } else {
-    throw new TypeError(`forward invoked with an invalid search argument`);
-  }
-};
-
-/**
- * @returns {'fault'}
- */
-export const fault = (text, state) => {
-  // console.warn(text, {...state});
-  return 'fault';
-};
 
 export const generateDefinitions = ({groups, goals, identities, symbols, keywords, tokens}) => {
   const {[symbols.FaultGoal]: FaultGoal} = goals;
