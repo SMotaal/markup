@@ -5,7 +5,7 @@ import {Matcher} from './matcher.js';
 export {DELIMITER, UNKNOWN} from './matcher.js';
 
 /** Segmenter for sub-match captures */
-export class Segmenter extends Matcher {
+export class SegmentMatcher extends Matcher {
   /**
    * @param {MatcherPattern} pattern
    * @param {MatcherFlags} [flags]
@@ -61,7 +61,7 @@ export class Segmenter extends Matcher {
     match.capture = {};
 
     match &&
-      (match.forEach(this.capture || Segmenter.prototype.capture, this),
+      (match.forEach(this.capture || SegmentMatcher.prototype.capture, this),
       match.identity || (match.capture[this.UNKNOWN || Matcher.UNKNOWN] = match[0]));
 
     return match;
@@ -70,7 +70,7 @@ export class Segmenter extends Matcher {
 
 export const {
   /** Identity for delimiter captures (like newlines) */
-  INSET = (Segmenter.INSET = 'INSET'),
+  INSET = (SegmentMatcher.INSET = 'INSET'),
   /** Identity for unknown captures */
-  LOOKAHEAD = (Segmenter.LOOKAHEAD = 'LOOKAHEAD'),
-} = Segmenter;
+  LOOKAHEAD = (SegmentMatcher.LOOKAHEAD = 'LOOKAHEAD'),
+} = SegmentMatcher;
