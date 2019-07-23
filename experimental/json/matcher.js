@@ -1,4 +1,4 @@
-﻿import {Matcher} from '../matcher/matcher.js';
+﻿import {Matcher} from '../../packages/matcher/matcher.js';
 import {DecimalDigit} from '../es/ranges.js';
 import {ECMAScriptGoal, StringGoal} from '../es/definitions.js';
 import {capture, forward, fault, open, close} from '../es/helpers.js';
