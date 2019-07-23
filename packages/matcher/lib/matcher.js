@@ -1,21 +1,17 @@
 ﻿//@ts-check
 /// <reference path="./types.d.ts" />
 
-// const trace = /** @type {[function, any[]][]} */ [];
-
-class Matcher extends RegExp {
+/** Matcher for composable matching */
+export class Matcher extends RegExp {
   /**
-   * @template T
-   * @param {Matcher.Pattern} pattern
-   * @param {Matcher.Flags} [flags]
-   * @param {Matcher.Entities} [entities]
-   * @param {T} [state]
+   * @param {MatcherPattern} pattern
+   * @param {MatcherFlags} [flags]
+   * @param {MatcherEntities} [entities]
+   * @param {{}} [state]
    */
   constructor(pattern, flags, entities, state) {
-    // trace.push([new.target, [...arguments]]);
     //@ts-ignore
     super(pattern, flags);
-    // Object.assign(this, RegExp.prototype, new.target.prototype);
     (pattern &&
       pattern.entities &&
       Symbol.iterator in pattern.entities &&
@@ -23,31 +19,25 @@ class Matcher extends RegExp {
       Object.freeze((entities = (entities && Symbol.iterator in entities && [...entities]) || []));
     /** @type {MatcherEntities} */
     this.entities = entities;
-    /** @type {T} */
     this.state = state;
-    this.capture = this.capture;
     this.exec = this.exec;
-    // this.test = this.test;
-    ({
-      // LOOKAHEAD: this.LOOKAHEAD = Matcher.LOOKAHEAD,
-      // INSET: this.INSET = Matcher.INSET,
-      // OUTSET: this.OUTSET = Matcher.OUTSET,
-      DELIMITER: this.DELIMITER = Matcher.DELIMITER,
-      UNKNOWN: this.UNKNOWN = Matcher.UNKNOWN,
-    } = new.target);
+    ({DELIMITER: this.DELIMITER = Matcher.DELIMITER, UNKNOWN: this.UNKNOWN = Matcher.UNKNOWN} = new.target);
   }
 
   /**
    * @param {string} source
-   * @returns {MatcherMatchResult}
    */
   exec(source) {
-    /** @type {MatcherMatchArray} */
-    const match = super.exec(source);
+    /** @type {MatcherExecArray} */
+    let match;
+
+    // @ts-ignore
+    match = super.exec(source);
 
     // @ts-ignore
     if (match === null) return null;
 
+    // @ts-ignore
     match.matcher = this;
     match.capture = {};
 
@@ -63,20 +53,19 @@ class Matcher extends RegExp {
       );
 
     );
-    // @ts-ignore
+
     return match;
   }
 
   /**
-   * @param {Matcher.PatternFactory} factory
-   * @param {Matcher.Flags} [flags]
+   * @param {MatcherPatternFactory} factory
+   * @param {MatcherFlags} [flags]
    * @param {PropertyDescriptorMap} [properties]
    */
   static define(factory, flags, properties) {
     /** @type {MatcherEntities} */
     const entities = [];
     entities.flags = '';
-    // const pattern = factory(entity => void entities.push(((entity != null || undefined) && entity) || undefined));
     const pattern = factory(entity => {
       if (entity !== null && entity instanceof Matcher) {
         entities.push(...entity.entities);
@@ -105,7 +94,6 @@ class Matcher extends RegExp {
       for (const flag of source.flags || source)
         (flag === 'g' || flag === 'y' ? iterative || !(iterative = true) : flags.includes(flag)) || (flags += flag);
     }
-    // console.log('%o: ', flags, ...sources);
     return flags;
   }
 
@@ -153,66 +141,60 @@ class Matcher extends RegExp {
 
     return join;
   }
-}
 
-export const {
-  // INSET = (Matcher.INSET = /* Symbol.for */ 'INSET'),
-  // OUTSET = (Matcher.OUTSET = /* Symbol.for */ 'OUTSET'),
-  DELIMITER = (Matcher.DELIMITER = /* Symbol.for */ 'DELIMITER'),
-  UNKNOWN = (Matcher.UNKNOWN = /* Symbol.for */ 'UNKNOWN'),
-  // LOOKAHEAD = (Matcher.LOOKAHEAD = /* Symbol.for */ 'LOOKAHEAD'),
-  escape = (Matcher.escape = /** @type {<T>(source: T) => string} */ ((() => {
-    const {replace} = Symbol;
-    return source => /[\\^$*+?.()|[\]{}]/g[replace](source, '\\$&');
-  })())),
-  sequence,
-  matchAll = (Matcher.matchAll =
+  static get matchAll() {
     /**
      * @template {RegExp} T
-     * @type {(string: Matcher.Text, matcher: T) => Matcher.Iterator<T> }
+     * @type {(string: MatcherText, matcher: T) => MatcherIterator<T> }
      */
-    //@ts-ignore
-    (() =>
-      Function.call.bind(
-        // String.prototype.matchAll || // TODO: Uncomment eventually
-        {
-          /**
-           * @this {string}
-           * @param {RegExp | string} pattern
-           */
-          *matchAll() {
-            const matcher =
-              arguments[0] &&
-              (arguments[0] instanceof RegExp
-                ? Object.setPrototypeOf(RegExp(arguments[0].source, arguments[0].flags || 'g'), arguments[0])
-                : RegExp(arguments[0], 'g'));
-            const string = String(this);
+    const matchAll =
+      //@ts-ignore
+      (() =>
+        Function.call.bind(
+          // String.prototype.matchAll || // TODO: Uncomment eventually
+          {
+            /**
+             * @this {string}
+             * @param {RegExp | string} pattern
+             */
+            *matchAll() {
+              const matcher =
+                arguments[0] &&
+                (arguments[0] instanceof RegExp
+                  ? Object.setPrototypeOf(RegExp(arguments[0].source, arguments[0].flags || 'g'), arguments[0])
+                  : RegExp(arguments[0], 'g'));
+              const string = String(this);
 
-            if (!(matcher.flags.includes('g') || matcher.flags.includes('y'))) return void (yield matcher.exec(string));
+              if (!(matcher.flags.includes('g') || matcher.flags.includes('y')))
+                return void (yield matcher.exec(string));
 
-            for (
-              let match, lastIndex = -1;
-              lastIndex <
-              ((match = matcher.exec(string)) ? (lastIndex = matcher.lastIndex + (match[0].length === 0)) : lastIndex);
-              yield match, matcher.lastIndex = lastIndex
-            );
-          },
-        }.matchAll,
-      ))()),
+              for (
+                let match, lastIndex = -1;
+                lastIndex <
+                ((match = matcher.exec(string))
+                  ? (lastIndex = matcher.lastIndex + (match[0].length === 0))
+                  : lastIndex);
+                yield match, matcher.lastIndex = lastIndex
+              );
+            },
+          }.matchAll,
+        ))();
+
+    Object.defineProperty(Matcher, 'matchAll', {value: Object.freeze(matchAll), enumerable: true, writable: false});
+
+    return matchAll;
+  }
+}
+
+// Well-known identities for meaningful debugging which are
+//   Strings but could possible be changed to Symbols
+//
+//   TODO: Revisit Matcher.UNKOWN
+//
+
+export const {
+  /** Identity for delimiter captures (like newlines) */
+  DELIMITER = (Matcher.DELIMITER = 'DELIMITER'),
+  /** Identity for unknown captures */
+  UNKNOWN = (Matcher.UNKNOWN = 'UNKNOWN'),
 } = Matcher;
-
-/** @typedef {MatcherFlags} Matcher.Flags */
-/** @typedef {MatcherText} Matcher.Text */
-/** @typedef {MatcherOperator} Matcher.Operator */
-/** @typedef {MatcherIdentity} Matcher.Identity */
-/** @typedef {MatcherEntity} Matcher.Entity */
-/** @typedef {MatcherCapture} Matcher.Capture */
-/** @typedef {MatcherEntityFactory} Matcher.EntityFactory */
-/** @typedef {MatcherPatternFactory} Matcher.PatternFactory */
-/** @typedef {MatcherPattern} Matcher.Pattern */
-/** @typedef {MatcherEntities} Matcher.Entities */
-/** @template {RegExpMatchArray | RegExpExecArray} T @typedef {MatcherMatchArray} Matcher.MatchArray<T> */
-/** @template {RegExpMatchArray | RegExpExecArray} T @typedef {MatcherMatchResult} Matcher.MatchResult<T> */
-/** @template {RegExp} T @typedef {MatcherIterator} Matcher.Iterator<T> */
-
-export {Matcher};

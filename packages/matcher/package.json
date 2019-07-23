@@ -1,0 +1,12 @@
+{
+  "name": "@smotaal/matcher",
+  "description": "Featherweight declarative RegExp matcher",
+  "version": "0.0.0",
+  "type": "module",
+  "main": "matcher.js",
+  "types": "types.d.ts",
+  "exports": {
+    "./debug": "./lib/debug.js",
+    "./matches": "./lib/matches.js"
+  }
+}

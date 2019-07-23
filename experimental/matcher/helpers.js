@@ -1,4 +1,4 @@
-﻿/// <reference path="./types.d.ts" />
+﻿/// <reference types="../../packages/matcher" />
 
 import {countLineBreaks} from '../../packages/tokenizer/lib/core.js';
 
@@ -120,7 +120,7 @@ export const {
   const createMatcherTokenizer = instance => defineProperties(instance, tokenizerProperties);
 
   /**
-   * @param {import('/modules/matcher/matcher.js').Matcher} matcher
+   * @param {import('markup/packages/matcher/matcher').Matcher} matcher
    * @param {any} [options]
    */
   const createMatcherMode = (matcher, options) => {

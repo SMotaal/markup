@@ -1,5 +1,4 @@
-﻿// import {Matcher} from '../../../modules/matcher/matcher.js';
-import {Matcher} from '../matcher/matcher.js';
+﻿import {Matcher} from '../../packages/matcher/matcher.js';
 import {HexDigit, DecimalDigit, BinaryDigit, ControlLetter, IdentifierStart, IdentifierPart} from './ranges.js';
 import {keywords, ECMAScriptGoal, CommentGoal, RegExpGoal, StringGoal, TemplateLiteralGoal} from './definitions.js';
 import {capture, forward, fault, open, close} from './helpers.js';
@@ -135,7 +134,7 @@ export const matcher = (ECMAScript =>
   Fallthrough: ({fallthrough = '.', type, flatten} = {}) =>
     Matcher.define(
       (typeof fallthrough === 'string' || (fallthrough = '.'), type && typeof type === 'string')
-        ? entity => Matcher.sequence/* regexp */`(
+        ? entity => Matcher.sequence/* regexp */ `(
             ${fallthrough}
             ${entity((text, entity, match, state) => {
               capture(
@@ -154,7 +153,7 @@ export const matcher = (ECMAScript =>
     ),
   Break: ({lf = true, crlf = false} = {}) =>
     Matcher.define(
-      entity => Matcher.sequence/* regexp */`(
+      entity => Matcher.sequence/* regexp */ `(
         ${Matcher.join(lf && '\\n', crlf && '\\r\\n')}
         ${entity((text, entity, match, state) => {
           match.format = 'whitespace';
@@ -171,7 +170,7 @@ export const matcher = (ECMAScript =>
     ),
   Whitespace: () =>
     Matcher.define(
-      entity => Matcher.sequence/* regexp */`(
+      entity => Matcher.sequence/* regexp */ `(
         \s+
         ${entity((text, entity, match, state) => {
           match.format = 'whitespace';
@@ -181,14 +180,17 @@ export const matcher = (ECMAScript =>
     ),
   Escape: ({
     IdentifierStartCharacter = RegExp(
-      Matcher.sequence/* regexp */`[${IdentifierStart}]`,
+      Matcher.sequence/* regexp */ `[${IdentifierStart}]`,
       IdentifierPart.includes('\\p{') ? 'u' : '',
     ),
-    IdentifierPartSequence = RegExp(Matcher.sequence/* regexp */`[${IdentifierPart}]+`, IdentifierPart.includes('\\p{') ? 'u' : ''),
+    IdentifierPartSequence = RegExp(
+      Matcher.sequence/* regexp */ `[${IdentifierPart}]+`,
+      IdentifierPart.includes('\\p{') ? 'u' : '',
+    ),
     fromUnicodeEscape = (fromCodePoint => text => fromCodePoint(parseInt(text.slice(2), 16)))(String.fromCodePoint),
   } = {}) =>
     Matcher.define(
-      entity => Matcher.sequence/* regexp */`(
+      entity => Matcher.sequence/* regexp */ `(
         \\u[${HexDigit}][${HexDigit}][${HexDigit}][${HexDigit}]
         ${entity((text, entity, match, state) => {
           match.format = 'escape';
@@ -218,7 +220,7 @@ export const matcher = (ECMAScript =>
     ),
   Comment: () =>
     Matcher.define(
-      entity => Matcher.sequence/* regexp */`(
+      entity => Matcher.sequence/* regexp */ `(
         \/\/|\/\*
         ${entity((text, entity, match, state) => {
           match.format = 'punctuation';
@@ -245,7 +247,7 @@ export const matcher = (ECMAScript =>
     DoubleQuoteLookAhead = /(?:[^"\\\n]+?(?=\\.|")|\\.)*?(?:"|$)/g,
   } = {}) =>
     Matcher.define(
-      entity => Matcher.sequence/* regexp */`(
+      entity => Matcher.sequence/* regexp */ `(
         "|'
         ${entity((text, entity, match, state) => {
           match.format = 'punctuation';
@@ -273,7 +275,7 @@ export const matcher = (ECMAScript =>
     ),
   TemplateLiteral: () =>
     Matcher.define(
-      entity => Matcher.sequence/* regexp */`(
+      entity => Matcher.sequence/* regexp */ `(
         ${'`'}
         ${entity((text, entity, match, state) => {
           match.format = 'punctuation';
@@ -295,7 +297,7 @@ export const matcher = (ECMAScript =>
     ),
   Opener: () =>
     Matcher.define(
-      entity => Matcher.sequence/* regexp */`(
+      entity => Matcher.sequence/* regexp */ `(
         \$\{|\{|\(|\[
         ${entity((text, entity, match, state) => {
           match.format = 'punctuation';
@@ -315,7 +317,7 @@ export const matcher = (ECMAScript =>
     ),
   Closer: () =>
     Matcher.define(
-      entity => Matcher.sequence/* regexp */`(
+      entity => Matcher.sequence/* regexp */ `(
         \}|\)|\]
         ${entity((text, entity, match, state) => {
           match.format = 'punctuation';
@@ -338,7 +340,7 @@ export const matcher = (ECMAScript =>
     // TODO: Refine the necessary criteria for RegExp vs Div
     // TEST: [eval('var g;class x {}/1/g'), eval('var g=class x {}/1/g')]
     Matcher.define(
-      entity => Matcher.sequence/* regexp */`(
+      entity => Matcher.sequence/* regexp */ `(
         \*\/|\/=|\/
         ${entity((text, entity, match, state) => {
           match.format = 'punctuation';
@@ -368,7 +370,7 @@ export const matcher = (ECMAScript =>
     ),
   Operator: () =>
     Matcher.define(
-      entity => Matcher.sequence/* regexp */`(
+      entity => Matcher.sequence/* regexp */ `(
         ,|;|\.\.\.|\.|:|\?|=>
         |\+\+|--
         |\+=|-=|\*\*=|\*=
@@ -392,7 +394,7 @@ export const matcher = (ECMAScript =>
     ),
   Keyword: () =>
     Matcher.define(
-      entity => Matcher.sequence/* regexp */`\b(
+      entity => Matcher.sequence/* regexp */ `\b(
         ${Matcher.join(...keywords).replace(/\./g, '\\.')}
         ${entity((text, entity, match, state) => {
           match.format = 'identifier';
@@ -412,7 +414,7 @@ export const matcher = (ECMAScript =>
     ),
   Identifier: ({RegExpFlags = /^[gimsuy]+$/} = {}) =>
     Matcher.define(
-      entity => Matcher.sequence/* regexp */`(
+      entity => Matcher.sequence/* regexp */ `(
         [${IdentifierStart}][${IdentifierPart}]*
         ${entity((text, entity, match, state) => {
           match.format = 'identifier';
@@ -432,14 +434,14 @@ export const matcher = (ECMAScript =>
   Number: ({
     NumericSeparator,
     Digits = NumericSeparator
-      ? Digit => Matcher.sequence/* regexp */`[${Digit}][${Digit}${Matcher.escape(NumericSeparator)}]*`
-      : Digit => Matcher.sequence/* regexp */`[${Digit}]+`,
+      ? Digit => Matcher.sequence/* regexp */ `[${Digit}][${Digit}${Matcher.escape(NumericSeparator)}]*`
+      : Digit => Matcher.sequence/* regexp */ `[${Digit}]+`,
     DecimalDigits = Digits(DecimalDigit),
     HexDigits = Digits(HexDigit),
     BinaryDigits = Digits(BinaryDigit),
   } = {}) =>
     Matcher.define(
-      entity => Matcher.sequence/* regexp */`\b(
+      entity => Matcher.sequence/* regexp */ `\b(
         ${DecimalDigits}\.${DecimalDigits}[eE]${DecimalDigits}
         |\.${DecimalDigits}[eE]${DecimalDigits}
         |0[xX]${HexDigits}
