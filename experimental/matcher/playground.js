@@ -1,11 +1,10 @@
-﻿import {createMatcherMode} from '../../packages/matcher/lib/tokenizer.js';
-import {Matcher} from '../../packages/matcher/matcher.js';
+﻿import {TokenMatcher, createMatcherMode} from '../../packages/matcher/lib/token-matcher.js';
 
 export default async markup => {
   const parser = markup.parsers[0];
   const mode = createMatcherMode(
-    Matcher.define(
-      entity => Matcher.sequence`
+    TokenMatcher.define(
+      entity => TokenMatcher.sequence`
         (
           \S+
           ${entity('text')}

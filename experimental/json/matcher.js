@@ -1,15 +1,14 @@
-﻿import {Matcher} from '../../packages/matcher/matcher.js';
-import {DecimalDigit} from '../es/ranges.js';
+﻿import {DecimalDigit} from '../es/ranges.js';
 import {ECMAScriptGoal, StringGoal} from '../es/definitions.js';
-import {capture, forward, fault, open, close} from '../es/helpers.js';
+import {TokenMatcher} from '../../packages/matcher/lib/token-matcher.js';
 
 /// SEE: https://cswr.github.io/JsonSchema/spec/grammar/
 
 export const matcher = (JSON =>
-  Matcher.define(
+  TokenMatcher.define(
     // Matcher generator for this matcher instance
     entity =>
-      Matcher.join(
+      TokenMatcher.join(
         entity(JSON.Break()),
         entity(JSON.Whitespace()),
         entity(JSON.StringLiteral()),
@@ -28,49 +27,57 @@ export const matcher = (JSON =>
     },
   ))({
   Fallthrough: () =>
-    Matcher.define(
-      entity => Matcher.sequence`(
+    TokenMatcher.define(
+      entity => TokenMatcher.sequence`(
         .
         ${entity((text, entity, match, state) => {
-          capture(state.context.goal.type || 'sequence', match, text);
+          TokenMatcher.capture(state.context.goal.type || 'sequence', match, text);
         })}
       )`,
     ),
   Break: ({lf = true, crlf = false} = {}) =>
-    Matcher.define(
-      entity => Matcher.sequence`(
-        ${Matcher.join(lf && '\\n', crlf && '\\r\\n')}
+    TokenMatcher.define(
+      entity => TokenMatcher.sequence`(
+        ${TokenMatcher.join(lf && '\\n', crlf && '\\r\\n')}
         ${entity((text, entity, match, state) => {
           const group = state.context.group;
           match.format = 'whitespace';
-          capture(group && group.closer === '\n' ? close(text, state) || 'closer' : 'break', match, text);
+          TokenMatcher.capture(
+            group && group.closer === '\n' ? TokenMatcher.close(text, state) || 'closer' : 'break',
+            match,
+            text,
+          );
           match.flatten = false;
         })}
       )`,
     ),
   Whitespace: () =>
-    Matcher.define(
-      entity => Matcher.sequence`(
+    TokenMatcher.define(
+      entity => TokenMatcher.sequence`(
         \s+
         ${entity((text, entity, match, state) => {
           match.format = 'whitespace';
-          capture((match.flatten = state.lineOffset !== match.index) ? 'whitespace' : 'inset', match, text);
+          TokenMatcher.capture(
+            (match.flatten = state.lineOffset !== match.index) ? 'whitespace' : 'inset',
+            match,
+            text,
+          );
         })}
       )`,
     ),
   StringLiteral: () =>
-    Matcher.define(
-      entity => Matcher.sequence`(
+    TokenMatcher.define(
+      entity => TokenMatcher.sequence`(
         \\"|"|\\'|'
         ${entity((text, entity, match, state) => {
           const context = state.context;
           match.format = 'punctuation';
-          capture(
+          TokenMatcher.capture(
             text[0] === '\\'
-              ? (context.goal !== StringGoal && fault(text, state)) || (context.goal.type || 'sequence')
+              ? (context.goal !== StringGoal && TokenMatcher.fault(text, state)) || (context.goal.type || 'sequence')
               : context.goal === StringGoal
-              ? close(text, state) || ((match.punctuator = StringGoal.type), 'closer')
-              : open(text, state) || ((match.punctuator = StringGoal.type), 'opener'),
+              ? TokenMatcher.close(text, state) || ((match.punctuator = StringGoal.type), 'closer')
+              : TokenMatcher.open(text, state) || ((match.punctuator = StringGoal.type), 'opener'),
             match,
             text,
           );
@@ -78,17 +85,17 @@ export const matcher = (JSON =>
       )`,
     ),
   Opener: () =>
-    Matcher.define(
-      entity => Matcher.sequence`(
+    TokenMatcher.define(
+      entity => TokenMatcher.sequence`(
         \{|\[
         ${entity((text, entity, match, state) => {
           const context = state.context;
           match.format = 'punctuation';
-          capture(
+          TokenMatcher.capture(
             context.goal.punctuators && context.goal.punctuators[text] === true
               ? (match.punctuator = 'combinator')
               : context.goal.openers && context.goal.openers[text] === true
-              ? open(text, state) || 'opener'
+              ? TokenMatcher.open(text, state) || 'opener'
               : context.goal.type || 'sequence',
             match,
             text,
@@ -97,17 +104,17 @@ export const matcher = (JSON =>
       )`,
     ),
   Closer: () =>
-    Matcher.define(
-      entity => Matcher.sequence`(
+    TokenMatcher.define(
+      entity => TokenMatcher.sequence`(
         \}|\]
         ${entity((text, entity, match, state) => {
           const context = state.context;
           match.format = 'punctuation';
-          capture(
+          TokenMatcher.capture(
             context.goal.punctuators && context.goal.punctuators[text] === true
               ? (match.punctuator = 'combinator')
               : context.goal.closers && context.goal.closers[text] === true
-              ? close(text, state) || 'closer'
+              ? TokenMatcher.close(text, state) || 'closer'
               : context.goal.type || 'sequence',
             match,
             text,
@@ -116,13 +123,13 @@ export const matcher = (JSON =>
       )`,
     ),
   Operator: () =>
-    Matcher.define(
-      entity => Matcher.sequence`(
+    TokenMatcher.define(
+      entity => TokenMatcher.sequence`(
         ,|;
         ${entity((text, entity, match, state) => {
           const context = state.context;
           match.format = 'punctuation';
-          capture(
+          TokenMatcher.capture(
             context.goal === ECMAScriptGoal
               ? 'operator'
               : context.goal.punctuators && context.goal.punctuators[text] === true
@@ -137,13 +144,13 @@ export const matcher = (JSON =>
   Keyword: () =>
     // TODO: Handle contextual cases:
     //  - { get() set() } as Identifiers
-    Matcher.define(
-      entity => Matcher.sequence`\b(
+    TokenMatcher.define(
+      entity => TokenMatcher.sequence`\b(
         true|false|null
         ${entity((text, entity, match, state) => {
           const context = state.context;
           match.format = 'identifier';
-          capture(
+          TokenMatcher.capture(
             (match.flatten = context.goal !== ECMAScriptGoal) ? context.goal.type || 'sequence' : 'keyword',
             match,
             text,
@@ -154,12 +161,12 @@ export const matcher = (JSON =>
   Number: ({
     NumericSeparator,
     Digits = NumericSeparator
-      ? Digit => Matcher.sequence`[${Digit}][${Digit}${Matcher.escape(NumericSeparator)}]*`
-      : Digit => Matcher.sequence`[${Digit}]+`,
+      ? Digit => TokenMatcher.sequence`[${Digit}][${Digit}${TokenMatcher.escape(NumericSeparator)}]*`
+      : Digit => TokenMatcher.sequence`[${Digit}]+`,
     DecimalDigits = Digits(DecimalDigit),
   } = {}) =>
-    Matcher.define(
-      entity => Matcher.sequence`\b(
+    TokenMatcher.define(
+      entity => TokenMatcher.sequence`\b(
         ${DecimalDigits}\.${DecimalDigits}[eE]${DecimalDigits}
         |\.${DecimalDigits}[eE]${DecimalDigits}
         |${DecimalDigits}\.${DecimalDigits}
@@ -167,7 +174,7 @@ export const matcher = (JSON =>
         |${DecimalDigits}
         ${entity((text, entity, match, state) => {
           match.format = 'number';
-          capture(state.context.goal.type || 'number', match, text);
+          TokenMatcher.capture(state.context.goal.type || 'number', match, text);
         })}
       )\b`,
     ),

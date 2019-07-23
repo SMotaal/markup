@@ -30,9 +30,8 @@ type MatcherOperator = <T>(text: string, capture: number, match: MatcherMatch, s
 type MatcherEntity = MatcherIdentity | MatcherOperator | undefined;
 
 interface MatcherEntities extends Array<MatcherEntity> {
-	flags?: string;
+  flags?: string;
 }
-
 
 type MatcherIterator<T extends RegExp = Matcher> = IterableIterator<
   T extends Matcher ? MatcherMatchArray : RegExpMatchArray | RegExpExecArray
@@ -59,6 +58,7 @@ interface TokenizerState<T extends RegExp, U extends {} = Object> {
   sourceText?: string;
   lastToken?: Token<U>;
   previousToken?: Token<U>;
+  initializeContext?: <T extends {}, P extends {} = {}, C extends {} = {}>(context: T, properties?: P) => T & P & C;
 }
 
 // Debugging
