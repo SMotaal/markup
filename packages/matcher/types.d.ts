@@ -28,8 +28,8 @@ declare module './lib/matcher' {
   }
 }
 
-declare module './lib/segmenter' {
-  declare namespace Segmenter {
+declare module './lib/segment-matcher' {
+  declare namespace SegmentMatcher {
     export {
       MatcherFlags as Flags,
       MatcherText as Text,
