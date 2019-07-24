@@ -1,33 +1,28 @@
 # Markup <nav float-right>[<kbd>GitHub</kbd>](https://github.com/SMotaal/markup)
 
-Semi-contextual parsing experiments, which fall somewhere between the scope of regular expressions and the more much more advanced realms of source code parsing.
+Semi-contextual parsing experiments using regular expressions as a core building block.
 
-**FYI**: Markup is undergoing refactoring to release [@SMotaal/tokenizer](./packages/tokenizer/README.md)
+> **Note**: Stale documentation is currently under review.
 
-## Scope
-
-**What it aims to accomplish**
-
-- Scan and Highlight various standard formats (like HTML, CSS, JS, JSON... etc).
-- Provide simplified mechisms for defining syntaxes.
-- Generate a single scan for multiple operations.
-- Allow extended modeling of modifications.
-
-**What it does not try to do**
-
-- Anything the runtime would do anyway, like:
-  - Parse malformed/unbalanced expressions.
-  - Code validation or error checking.
+---
 
 ## Demo
+
+The minimalistic web interface is designed from the ground up to stay out of the way, ie without the noise of non-essential UI, or the use of any libraries, frameworks or tools, using pure ECMAScript module sources.
+
+_Classic_ — [`html`](./markup.html#html) [`css`](./markup.html#css) [`js`](./markup.html#js) [`md`](./markup.html#md)
+
+_Experimental_ — [`html`](./experimental/#html) [`css`](./experimental/#css) [`js`](./experimental/#js) [`md`](./experimental/#md)
+
+<details>
+
+Multiple entrypoints are used for the various experimental efforts, all using the same interface and hash-based options:
 
 ```
 markup.html#‹specifier›!‹mode›*‹iterations›**‹repeats›
 ```
 
-<blockquote>
-
-**Notes**
+**Parameters**
 
 The order of the parameters is manadatory, but all parameters are optional.
 
@@ -51,9 +46,7 @@ The order of the parameters is manadatory, but all parameters are optional.
 
    </blockquote>
 
-</blockquote>
-
-#### Examples
+**Examples**
 
 <figure>
 
@@ -78,3 +71,32 @@ _Repeats & Iterations_
 - [`#*2**2`](./markup.html#*2**2) — Render &times; 2 and Tokenize &times; 2
 
 </figure>
+
+</details>
+
+---
+
+## Noteworthy Aspects
+
+### Matcher-based Grammar
+
+The second generation matcher-based experimental tokenizer designs, inspired by [erights/quasiParserGenerator](https://github.com/erights/quasiParserGenerator). Efforts on way to refactor this into it's own separate package — [source code](https://github.com/SMotaal/markup/tree/master/packages/matcher/).
+
+- [Matcher-based JSON](./experimental/json/)
+- [Matcher-based ECMAScript](./experimental/es/)
+
+### Classic Grammar (aka `@smotaal/grammar`)
+
+The original extensible and declarative grammars. While my experimental efforts have since concluded, these heavily-refined first-approximation grammars see many uses in [other project(s)](https://www.smotaal.io/markout 'Markout') — [source code](https://github.com/SMotaal/markup/tree/master/packages/grammar/).
+
+### Markup Core (aka `@smotaal/tokenizer`)
+
+The second generation tokenizer architecture, optimized for both Classic and Matcher-based grammars — [source code](https://github.com/SMotaal/markup/tree/master/packages/tokenizer/).
+
+### Compositional DOM (aka `pseudom`)
+
+The minimalistic isomorphic compositional DOM used to render tokenized markup — [source code](https://github.com/SMotaal/markup/tree/master/packages/pseudom/).
+
+---
+
+All my experimental work is intended to remain open and freely available, with the one obvious expectation of fair attribution where used.
