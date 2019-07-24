@@ -65,6 +65,7 @@ export const matcher = (JSONGrammar =>
   StringLiteral: ({
     // Used to safely fast forward until the end of a string
     DoubleQuoteLookAhead = /(?:[^"\\\n]+?(?=\\.|")|\\.)*?(?:"|$)/g,
+    flattenQuotes = true,
   } = {}) =>
     TokenMatcher.define(
       entity => TokenMatcher.sequence/* regexp */ `(
@@ -77,11 +78,11 @@ export const matcher = (JSONGrammar =>
                   (state.context.goal.type || 'sequence')
               : state.context.goal === JSONStringGoal
               ? TokenMatcher.close(text, state) ||
-                ((match.punctuator = JSONStringGoal.type), (match.flatten = true), 'closer')
+                ((match.punctuator = JSONStringGoal.type), (match.flatten = flattenQuotes), 'closer')
               : TokenMatcher.open(text, state) ||
                 // Safely fast forward to end of string
                 (TokenMatcher.forward(DoubleQuoteLookAhead, match, state, -1),
-                (match.flatten = true),
+                (match.flatten = flattenQuotes),
                 (match.punctuator = JSONStringGoal.type),
                 'opener'),
             match,
