@@ -1956,7 +1956,7 @@ class TokenMatcher extends Matcher {
     return open;
   }
 
-  static get close() {
+  static close() {
     /**
      * Safely mutates matcher state to close the current context.
      *
@@ -1968,7 +1968,8 @@ class TokenMatcher extends Matcher {
       const groups = state.groups;
       const index = groups.closers.lastIndexOf(text);
 
-      if (index === -1 || index !== groups.length - 1) return fault(text, state);
+      // TODO: Make TokenMatcher.fault overloadable?
+      if (index === -1 || index !== groups.length - 1) return TokenMatcher.fault(text, state);
 
       groups.closers.splice(index, groups.closers.length);
       groups.splice(index, groups.length);
@@ -2481,7 +2482,8 @@ const experimentalES = ((
   sourceURL = './matcher.js',
   sourceType = 'es',
   resolveSourceType = (defaultType, {sourceType, resourceType, options}) => {
-    if (!sourceType && resourceType === 'javascript') return 'es';
+    if (!sourceType && (resourceType === 'javascript' || resourceType === 'octet')) return 'es';
+    return defaultType;
   },
 ) => async markup => {
   markup.parsers[0].register(mode);

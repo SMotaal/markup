@@ -9,7 +9,8 @@ export default ((
   sourceURL = './matcher.js',
   sourceType = 'es',
   resolveSourceType = (defaultType, {sourceType, resourceType, options}) => {
-    if (!sourceType && resourceType === 'javascript') return 'es';
+    if (!sourceType && (resourceType === 'javascript' || resourceType === 'octet')) return 'es';
+    return defaultType;
   },
 ) => async markup => {
   markup.parsers[0].register(mode);

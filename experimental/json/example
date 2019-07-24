@@ -1,0 +1,39 @@
+{
+  "private": true,
+  "numbers": [0, -0, 0.0, 0.0e0, 0.0e-00],
+  "name": "@smotaal/markup",
+  "description": "smotaal.io/markup",
+  "version": "0.0.0-alpha.2",
+  "author": "Saleh Abdel Motaal <saleh@grasppe.com>",
+  "repository": "https://github.com/SMotaal/markup.git",
+  "license": "MIT",
+  "type": "module",
+  "main": "index.mjs",
+  "exports": {},
+  "scripts": {
+    "serve": "http-server --cors -s",
+    "bundle": "rollup -c rollup.config.js"
+  },
+  "devDependencies": {
+    "@types/node": "*",
+    "http-server": "*",
+    "prettier": "*",
+    "rollup": "*",
+    "typescript": "*",
+    "@smotaal/esm": "SMotaal/esm"
+  },
+  "resolutions": {
+    "SMotaal/esm": "../esm"
+  },
+  "workspaces": {
+    "packages": [
+      "../esm",
+      "packages/grammars",
+      "packages/tokenizer",
+      "packages/pseudom"
+    ],
+    "nohoist": [
+      "**/pseudom"
+    ]
+  }
+}

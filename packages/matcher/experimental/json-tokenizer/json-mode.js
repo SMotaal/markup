@@ -1,9 +1,11 @@
 ﻿//@ts-check
 
-import {matcher} from './matcher.js';
-import {initializeState, finalizeState} from '../es/helpers.js';
-import {createMatcherMode} from '../../packages/matcher/lib/token-matcher.js';
-import {countLineBreaks} from '../../packages/tokenizer/lib/core.js';
+import {matcher} from './json-matcher.js';
+import {initializeState, finalizeState} from '../common/helpers.js';
+import {createMatcherMode} from '../../lib/token-matcher.js';
+import {countLineBreaks} from '../../../tokenizer/lib/core.js';
+
+// TODO: Refactor out unneeded ECMAScript facets
 
 export const mode = createMatcherMode(matcher, {
   syntax: 'json',
@@ -86,10 +88,8 @@ export const mode = createMatcherMode(matcher, {
       lineBreaks = (text === '\n' && 1) || countLineBreaks(text);
       isDelimiter = type === 'closer' || type === 'opener';
       isWhitespace = !isDelimiter && (type === 'whitespace' || type === 'break' || type === 'inset');
-
-      (isComment = type === 'comment' || punctuator === 'comment')
-        ? (type = 'comment')
-        : type || (type = (!isDelimiter && !fault && currentGoalType) || 'text');
+      isComment = false;
+      type || (type = (!isDelimiter && !fault && currentGoalType) || 'text');
 
       if (lineBreaks) {
         state.lineIndex += lineBreaks;
@@ -188,7 +188,7 @@ export const mode = createMatcherMode(matcher, {
     },
 });
 
-/** @typedef {import('../es/types').Match} Match */
-/** @typedef {import('../es/types').Groups} Groups */
-/** @typedef {import('../es/types').Contexts} Contexts */
-/** @typedef {import('../es/types').State} State */
+/** @typedef {import('../common/types').Match} Match */
+/** @typedef {import('../common/types').Groups} Groups */
+/** @typedef {import('../common/types').Contexts} Contexts */
+/** @typedef {import('../common/types').State} State */
