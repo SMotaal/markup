@@ -87,7 +87,7 @@ The second generation matcher-based experimental tokenizer designs, inspired by 
 
 ### Classic Grammar (aka `@smotaal/grammar`)
 
-The original extensible and declarative grammars. While my experimental efforts have since concluded, these heavily-refined first-approximation grammars see many uses in [other project(s)](https://www.smotaal.io/markout 'Markout') — [source code](https://github.com/SMotaal/markup/tree/master/packages/grammar/).
+The original extensible and declarative grammars. While my experimental efforts have since concluded, these heavily-refined first-approximation grammars see many uses in [other project(s)](https://www.smotaal.io/markout 'Markout') — [source code](https://github.com/SMotaal/markup/tree/master/packages/grammars/).
 
 ### Markup Core (aka `@smotaal/tokenizer`)
 
