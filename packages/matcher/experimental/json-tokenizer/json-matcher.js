@@ -29,7 +29,7 @@ export const matcher = (JSONGrammar =>
       entity => TokenMatcher.sequence/* regexp */ `(
         .
         ${entity((text, entity, match, state) => {
-          TokenMatcher.capture(state.context.goal.type || 'sequence', match, text);
+          TokenMatcher.capture(state.context.goal.type || TokenMatcher.fault(text, state), match, text);
         })}
       )`,
     ),
@@ -129,7 +129,7 @@ export const matcher = (JSONGrammar =>
   Operator: () =>
     TokenMatcher.define(
       entity => TokenMatcher.sequence/* regexp */ `(
-        ,|;
+        :|,|;
         ${entity((text, entity, match, state) => {
           match.format = 'punctuation';
           TokenMatcher.capture(
@@ -159,14 +159,14 @@ export const matcher = (JSONGrammar =>
       )\b`,
     ),
   Number: ({
-    // DecimalDigits = TokenMatcher.sequence/* regexp */ `[${Digit}]+`,
+    //
     DecimalDigits = TokenMatcher.sequence/* regexp */ `[${DecimalDigit}]+`,
   } = {}) =>
     TokenMatcher.define(
       entity => TokenMatcher.sequence/* regexp */ `(
         \b${DecimalDigits}\.${DecimalDigits}[eE][-+]?${DecimalDigits}
-        |(?:\\-|\b)${DecimalDigits}\.${DecimalDigits}
-        |(?:\\-|\b)(?:0|0*${DecimalDigits})
+        |(?:-|\b)${DecimalDigits}\.${DecimalDigits}
+        |(?:-|\b)(?:0|0*${DecimalDigits})
         ${entity((text, entity, match, state) => {
           match.format = 'number';
           TokenMatcher.capture(
