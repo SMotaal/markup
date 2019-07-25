@@ -143,7 +143,6 @@ export const matcher = (ECMAScript =>
                   ? state.context.goal.type || 'sequence'
                   : TokenMatcher.fault(text, state),
                 match,
-                // text,
               );
               typeof flatten === 'boolean' && (match.flatten = flatten);
             })}
@@ -157,11 +156,12 @@ export const matcher = (ECMAScript =>
         ${entity((text, entity, match, state) => {
           match.format = 'whitespace';
           TokenMatcher.capture(
-            state.context.group !== undefined && state.context.group.closer === '\n'
-              ? TokenMatcher.close(text, state) || (state.context.goal === CommentGoal ? 'break' : 'closer')
-              : 'break',
+            (state.context.group !== undefined &&
+              state.context.group.closer === '\n' &&
+              TokenMatcher.close(text, state)) ||
+              // Identity of a break take precedence over closer
+              'break',
             match,
-            // text,
           );
           match.flatten = false;
         })}
@@ -203,7 +203,6 @@ export const matcher = (ECMAScript =>
                 ? ((match.flatten = true), 'identifier')
                 : 'escape'),
             match,
-            // text,
           );
         })}
       )|(
@@ -220,15 +219,18 @@ export const matcher = (ECMAScript =>
   Comment: () =>
     TokenMatcher.define(
       entity => TokenMatcher.sequence/* regexp */ `(
-        \/\/|\/\*
+        \/\/|\/\*|\*\/
         ${entity((text, entity, match, state) => {
           match.format = 'punctuation';
           TokenMatcher.capture(
             state.context.goal === ECMAScriptGoal
               ? TokenMatcher.open(text, state) ||
                   // Safely fast forward to end of comment
-                  (text === '//' ? TokenMatcher.forward('\n', match, state) : TokenMatcher.forward('*/', match, state),
-                  (match.punctuator = CommentGoal.type),
+                  ((match.punctuator = CommentGoal.type),
+                  TokenMatcher.forward(state.context.goal.groups[text].closer, match, state),
+                  // text.startsWith('/*')
+                  //   ? TokenMatcher.forward('*/', match, state)
+                  //   : text.startsWith('//') && TokenMatcher.forward('\n', match, state),
                   'opener')
               : state.context.goal !== CommentGoal
               ? state.context.goal.type || 'sequence'
@@ -236,7 +238,6 @@ export const matcher = (ECMAScript =>
               ? CommentGoal.type
               : TokenMatcher.close(text, state) || (match.punctuator = CommentGoal.type),
             match,
-            // text,
           );
         })}
       )`,
@@ -267,7 +268,6 @@ export const matcher = (ECMAScript =>
                 // (match.flatten = true),
                 'closer'),
             match,
-            // text,
           );
         })}
       )`,
@@ -289,7 +289,6 @@ export const matcher = (ECMAScript =>
               ? TemplateLiteralGoal.type
               : TokenMatcher.close(text, state) || ((match.punctuator = TemplateLiteralGoal.type), 'closer'),
             match,
-            // text,
           );
         })}
       )`,
@@ -309,7 +308,6 @@ export const matcher = (ECMAScript =>
               ? TokenMatcher.open(text, state) || 'opener'
               : state.context.goal.type || 'sequence',
             match,
-            // text,
           );
         })}
       )`,
@@ -330,7 +328,6 @@ export const matcher = (ECMAScript =>
               ? TokenMatcher.close(text, state) || 'closer'
               : state.context.goal.type || 'sequence',
             match,
-            // text,
           );
         })}
       )`,
@@ -362,7 +359,6 @@ export const matcher = (ECMAScript =>
               ? TokenMatcher.open(text, state) || ((match.punctuator = 'pattern'), 'opener')
               : (match.punctuator = 'operator'),
             match,
-            // text,
           );
         })}
       )`,
@@ -386,7 +382,6 @@ export const matcher = (ECMAScript =>
               ? (match.punctuator = 'punctuation')
               : state.context.goal.type || 'sequence',
             match,
-            // text,
           );
         })}
       )`,
@@ -406,7 +401,6 @@ export const matcher = (ECMAScript =>
               ? 'keyword'
               : state.context.captureKeyword(text, state) || TokenMatcher.fault(text, state),
             match,
-            // text,
           );
         })}
       )\b(?=[^\s$_:]|\s+[^:]|$)`,
@@ -424,7 +418,6 @@ export const matcher = (ECMAScript =>
               ? ((match.flatten = true), (match.punctuator = RegExpGoal.type), 'closer')
               : ((match.flatten = true), 'identifier'),
             match,
-            // text,
           );
         })}
       )`,

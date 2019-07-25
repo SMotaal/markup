@@ -1182,130 +1182,150 @@ const {
     return mode;
   };
 
+  Object.freeze(createTokenFromMatch);
+  Object.freeze(createMatcherInstance);
+  Object.freeze(createString);
+  Object.freeze(createMatcherTokenizer);
+  Object.freeze(createMatcherMode);
+
   return {createTokenFromMatch, createMatcherInstance, createString, createMatcherTokenizer, createMatcherMode};
 })();
 
-class TokenMatcher extends Matcher {
-  static get capture() {
-    const capture = (identity, match, text) => {
-      match.capture[(match.identity = identity)] = match[0];
-      (match.fault = identity === 'fault') && (match.flatten = false);
-      return match;
+const TokenMatcher = (() => {
+  /**
+   * Safely updates the match to reflect the captured identity.
+   *
+   * NOTE: fault always sets match.flatten to false
+   *
+   * @param {string} text - Text of the intended { type = "opener" } token
+   * @param {State} state - Matcher state
+   * @returns {undefined | string} - String when context is **not** open
+   */
+  const capture = (identity, match) => {
+    match.capture[(match.identity = identity)] = match[0];
+    (match.fault = identity === 'fault') && (match.flatten = false);
+    return match;
+  };
+
+  /**
+   * Safely mutates matcher state to open a new context.
+   *
+   * @param {string} text - Text of the intended { type = "opener" } token
+   * @param {State} state - Matcher state
+   * @returns {undefined | string} - String when context is **not** open
+   */
+  const open = (text, state) => {
+    const {
+      contexts,
+      context: parentContext,
+      context: {depth: index, goal: initialGoal},
+      groups,
+      initializeContext,
+    } = state;
+    const group = initialGoal.groups[text];
+
+    if (!group) return initialGoal.type || 'sequence';
+    groups.splice(index, groups.length, group);
+    groups.closers.splice(index, groups.closers.length, group.closer);
+
+    parentContext.contextCount++;
+
+    const goal = group.goal === undefined ? initialGoal : group.goal;
+
+    const nextContext = {
+      id: `${parentContext.id} ${
+        goal !== initialGoal ? `\n${goal[Symbol.toStringTag]} ${group[Symbol.toStringTag]}` : group[Symbol.toStringTag]
+      }`,
+      number: ++contexts.count,
+      depth: index + 1,
+      parentContext,
+      goal,
+      group,
+      state,
     };
-    Object.defineProperty(TokenMatcher, 'capture', {value: Object.freeze(capture), enumerable: true, writable: false});
-    return capture;
-  }
 
-  static get open() {
-    /**
-     * Safely mutates matcher state to open a new context.
-     *
-     * @param {string} text - Text of the intended { type = "opener" } token
-     * @param {State} state - Matcher state
-     * @returns {undefined | string} - String when context is **not** open
-     */
-    const open = (text, state) => {
-      const {
-        contexts,
-        context: parentContext,
-        context: {depth: index, goal: initialGoal},
-        groups,
-        initializeContext,
-      } = state;
-      const group = initialGoal.groups[text];
+    typeof initializeContext === 'function' && initializeContext(nextContext);
 
-      if (!group) return initialGoal.type || 'sequence';
-      groups.splice(index, groups.length, group);
-      groups.closers.splice(index, groups.closers.length, group.closer);
+    state.nextContext = contexts[index] = nextContext;
+  };
 
-      parentContext.contextCount++;
+  /**
+   * Safely mutates matcher state to close the current context.
+   *
+   * @param {string} text - Text of the intended { type = "closer" } token
+   * @param {State} state - Matcher state
+   * @returns {undefined | string} - String when context is **not** closed
+   */
+  const close = (text, state) => {
+    const groups = state.groups;
+    const index = groups.closers.lastIndexOf(text);
 
-      const goal = group.goal === undefined ? initialGoal : group.goal;
+    if (index === -1 || index !== groups.length - 1) return fault();
 
-      const nextContext = {
-        id: `${parentContext.id} ${
-          goal !== initialGoal
-            ? `\n${goal[Symbol.toStringTag]} ${group[Symbol.toStringTag]}`
-            : group[Symbol.toStringTag]
-        }`,
-        number: ++contexts.count,
-        depth: index + 1,
-        parentContext,
-        goal,
-        group,
-        state,
-      };
+    groups.closers.splice(index, groups.closers.length);
+    groups.splice(index, groups.length);
+    state.nextContext = state.context.parentContext;
+  };
 
-      typeof initializeContext === 'function' && initializeContext(nextContext);
+  /**
+   * Safely mutates matcher state to skip ahead.
+   *
+   * TODO: Finish implementing forward helper
+   *
+   * @param {string | RegExp} search
+   * @param {Match} match
+   * @param {State} state
+   * @param {number} [delta]
+   */
+  const forward = (search, match, state, delta) => {
+    if (typeof search === 'string' && search.length) {
+      state.nextOffset = match.input.indexOf(search, match.index + match[0].length) + (0 + delta || 0);
+    } else if (search != null && typeof search === 'object') {
+      search.lastIndex = match.index + match[0].length;
+      search.exec(match.input);
+      state.nextOffset = search.lastIndex + (0 + delta || 0);
+    } else {
+      throw new TypeError(`forward invoked with an invalid search argument`);
+    }
+  };
 
-      state.nextContext = contexts[index] = nextContext;
-    };
-    Object.defineProperty(TokenMatcher, 'open', {value: Object.freeze(open), enumerable: true, writable: false});
-    return open;
-  }
+  /**
+   * @returns {'fault'}
+   */
+  const fault = (text, state) => {
+    // console.warn(text, {...state});
+    return 'fault';
+  };
 
-  static close() {
-    /**
-     * Safely mutates matcher state to close the current context.
-     *
-     * @param {string} text - Text of the intended { type = "closer" } token
-     * @param {State} state - Matcher state
-     * @returns {undefined | string} - String when context is **not** closed
-     */
-    const close = (text, state) => {
-      const groups = state.groups;
-      const index = groups.closers.lastIndexOf(text);
+  class TokenMatcher extends Matcher {}
 
-      // TODO: Make TokenMatcher.fault overloadable?
-      if (index === -1 || index !== groups.length - 1) return TokenMatcher.fault(text, state);
+  Object.defineProperty(TokenMatcher, 'capture', {
+    value: capture,
+    enumerable: true,
+    writable: false,
+  });
 
-      groups.closers.splice(index, groups.closers.length);
-      groups.splice(index, groups.length);
-      state.nextContext = state.context.parentContext;
-    };
-    Object.defineProperty(TokenMatcher, 'close', {value: Object.freeze(close), enumerable: true, writable: false});
-    return close;
-  }
+  Object.defineProperty(TokenMatcher, 'open', {value: open, enumerable: true, writable: false});
 
-  static get forward() {
-    /**
-     * Safely mutates matcher state to skip ahead.
-     *
-     * TODO: Finish implementing forward helper
-     *
-     * @param {string | RegExp} search
-     * @param {Match} match
-     * @param {State} state
-     * @param {number} [delta]
-     */
+  Object.defineProperty(TokenMatcher, 'close', {value: close, enumerable: true, writable: false});
 
-    const forward = (search, match, state, delta) => {
-      if (typeof search === 'string' && search.length) {
-        state.nextOffset = match.input.indexOf(search, match.index + match[0].length) + (0 + delta || 0);
-      } else if (search != null && typeof search === 'object') {
-        search.lastIndex = match.index + match[0].length;
-        search.exec(match.input);
-        state.nextOffset = search.lastIndex + (0 + delta || 0);
-      } else {
-        throw new TypeError(`forward invoked with an invalid search argument`);
-      }
-    };
-    Object.defineProperty(TokenMatcher, 'forward', {value: Object.freeze(forward), enumerable: true, writable: false});
-    return forward;
-  }
+  Object.defineProperty(TokenMatcher, 'forward', {
+    value: forward,
+    enumerable: true,
+    writable: false,
+  });
 
-  static get fault() {
-    /**
-     * @returns {'fault'}
-     */
-    const fault = (text, state) => {
-      // console.warn(text, {...state});
-      return 'fault';
-    };
-    Object.defineProperty(TokenMatcher, 'fault', {value: Object.freeze(fault), enumerable: true, writable: false});
-    return fault;
-  }
-}
+  Object.defineProperty(TokenMatcher, 'fault', {value: fault, enumerable: true, writable: false});
+
+  Object.freeze(capture);
+  Object.freeze(open);
+  Object.freeze(close);
+  Object.freeze(forward);
+  Object.freeze(fault);
+  Object.freeze(TokenMatcher);
+
+  return TokenMatcher;
+})();
 
 const matcher = (ECMAScript =>
   TokenMatcher.define(
@@ -1354,7 +1374,6 @@ const matcher = (ECMAScript =>
                   ? state.context.goal.type || 'sequence'
                   : TokenMatcher.fault(text, state),
                 match,
-                // text,
               );
               typeof flatten === 'boolean' && (match.flatten = flatten);
             })}
@@ -1368,11 +1387,12 @@ const matcher = (ECMAScript =>
         ${entity((text, entity, match, state) => {
           match.format = 'whitespace';
           TokenMatcher.capture(
-            state.context.group !== undefined && state.context.group.closer === '\n'
-              ? TokenMatcher.close(text, state) || (state.context.goal === CommentGoal ? 'break' : 'closer')
-              : 'break',
+            (state.context.group !== undefined &&
+              state.context.group.closer === '\n' &&
+              TokenMatcher.close(text, state)) ||
+              // Identity of a break take precedence over closer
+              'break',
             match,
-            // text,
           );
           match.flatten = false;
         })}
@@ -1414,7 +1434,6 @@ const matcher = (ECMAScript =>
                 ? ((match.flatten = true), 'identifier')
                 : 'escape'),
             match,
-            // text,
           );
         })}
       )|(
@@ -1431,15 +1450,18 @@ const matcher = (ECMAScript =>
   Comment: () =>
     TokenMatcher.define(
       entity => TokenMatcher.sequence/* regexp */ `(
-        \/\/|\/\*
+        \/\/|\/\*|\*\/
         ${entity((text, entity, match, state) => {
           match.format = 'punctuation';
           TokenMatcher.capture(
             state.context.goal === ECMAScriptGoal
               ? TokenMatcher.open(text, state) ||
                   // Safely fast forward to end of comment
-                  (text === '//' ? TokenMatcher.forward('\n', match, state) : TokenMatcher.forward('*/', match, state),
-                  (match.punctuator = CommentGoal.type),
+                  ((match.punctuator = CommentGoal.type),
+                  TokenMatcher.forward(state.context.goal.groups[text].closer, match, state),
+                  // text.startsWith('/*')
+                  //   ? TokenMatcher.forward('*/', match, state)
+                  //   : text.startsWith('//') && TokenMatcher.forward('\n', match, state),
                   'opener')
               : state.context.goal !== CommentGoal
               ? state.context.goal.type || 'sequence'
@@ -1447,7 +1469,6 @@ const matcher = (ECMAScript =>
               ? CommentGoal.type
               : TokenMatcher.close(text, state) || (match.punctuator = CommentGoal.type),
             match,
-            // text,
           );
         })}
       )`,
@@ -1478,7 +1499,6 @@ const matcher = (ECMAScript =>
                 // (match.flatten = true),
                 'closer'),
             match,
-            // text,
           );
         })}
       )`,
@@ -1500,7 +1520,6 @@ const matcher = (ECMAScript =>
               ? TemplateLiteralGoal.type
               : TokenMatcher.close(text, state) || ((match.punctuator = TemplateLiteralGoal.type), 'closer'),
             match,
-            // text,
           );
         })}
       )`,
@@ -1520,7 +1539,6 @@ const matcher = (ECMAScript =>
               ? TokenMatcher.open(text, state) || 'opener'
               : state.context.goal.type || 'sequence',
             match,
-            // text,
           );
         })}
       )`,
@@ -1541,7 +1559,6 @@ const matcher = (ECMAScript =>
               ? TokenMatcher.close(text, state) || 'closer'
               : state.context.goal.type || 'sequence',
             match,
-            // text,
           );
         })}
       )`,
@@ -1573,7 +1590,6 @@ const matcher = (ECMAScript =>
               ? TokenMatcher.open(text, state) || ((match.punctuator = 'pattern'), 'opener')
               : (match.punctuator = 'operator'),
             match,
-            // text,
           );
         })}
       )`,
@@ -1597,7 +1613,6 @@ const matcher = (ECMAScript =>
               ? (match.punctuator = 'punctuation')
               : state.context.goal.type || 'sequence',
             match,
-            // text,
           );
         })}
       )`,
@@ -1617,7 +1632,6 @@ const matcher = (ECMAScript =>
               ? 'keyword'
               : state.context.captureKeyword(text, state) || TokenMatcher.fault(text, state),
             match,
-            // text,
           );
         })}
       )\b(?=[^\s$_:]|\s+[^:]|$)`,
@@ -1635,7 +1649,6 @@ const matcher = (ECMAScript =>
               ? ((match.flatten = true), (match.punctuator = RegExpGoal.type), 'closer')
               : ((match.flatten = true), 'identifier'),
             match,
-            // text,
           );
         })}
       )`,
