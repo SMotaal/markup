@@ -1,5 +1,11 @@
-﻿import {HexDigit, DecimalDigit, BinaryDigit, ControlLetter, IdentifierStart, IdentifierPart} from './ranges.js';
-import {keywords, ECMAScriptGoal, CommentGoal, RegExpGoal, StringGoal, TemplateLiteralGoal} from './definitions.js';
+﻿import {ECMAScriptRanges} from './es-ranges.js';
+import {
+  ECMAScriptGoal,
+  ECMAScriptCommentGoal,
+  ECMAScriptRegExpGoal,
+  ECMAScriptStringGoal,
+  ECMAScriptTemplateLiteralGoal,
+} from './es-definitions.js';
 import {TokenMatcher} from '../../packages/matcher/lib/token-matcher.js';
 
 DUMMY: async () => {
@@ -178,19 +184,15 @@ export const matcher = (ECMAScript =>
       )`,
     ),
   Escape: ({
-    IdentifierStartCharacter = RegExp(
-      TokenMatcher.sequence/* regexp */ `[${IdentifierStart}]`,
-      IdentifierPart.includes('\\p{') ? 'u' : '',
-    ),
-    IdentifierPartSequence = RegExp(
-      TokenMatcher.sequence/* regexp */ `[${IdentifierPart}]+`,
-      IdentifierPart.includes('\\p{') ? 'u' : '',
-    ),
+    IdentifierStartCharacter = RegExp(TokenMatcher.sequence/* regexp */ `[${ECMAScriptRanges.IdentifierStart}]`, 'u'),
+    IdentifierPartSequence = RegExp(TokenMatcher.sequence/* regexp */ `[${ECMAScriptRanges.IdentifierPart}]+`, 'u'),
     fromUnicodeEscape = (fromCodePoint => text => fromCodePoint(parseInt(text.slice(2), 16)))(String.fromCodePoint),
   } = {}) =>
     TokenMatcher.define(
       entity => TokenMatcher.sequence/* regexp */ `(
-        \\u[${HexDigit}][${HexDigit}][${HexDigit}][${HexDigit}]
+        \\u[${ECMAScriptRanges.HexDigit}][${ECMAScriptRanges.HexDigit}][${ECMAScriptRanges.HexDigit}][${
+        ECMAScriptRanges.HexDigit
+      }]
         ${entity((text, entity, match, state) => {
           match.format = 'escape';
           TokenMatcher.capture(
@@ -206,13 +208,13 @@ export const matcher = (ECMAScript =>
           );
         })}
       )|(
-        \\f|\\n|\\r|\\t|\\v|\\c[${ControlLetter}]
-        |\\x[${HexDigit}][${HexDigit}]
-        |\\u\{[${HexDigit}]*\}
+        \\f|\\n|\\r|\\t|\\v|\\c[${ECMAScriptRanges.ControlLetter}]
+        |\\x[${ECMAScriptRanges.HexDigit}][${ECMAScriptRanges.HexDigit}]
+        |\\u\{[${ECMAScriptRanges.HexDigit}]*\}
         |\\[^]
         ${entity((text, entity, match, state) => {
           TokenMatcher.capture(state.context.goal.type || 'escape', match);
-          match.capture[keywords[text]] = text;
+          match.capture[ECMAScriptGoal.keywords[text]] = text;
         })}
       )`,
     ),
@@ -226,17 +228,17 @@ export const matcher = (ECMAScript =>
             state.context.goal === ECMAScriptGoal
               ? TokenMatcher.open(text, state) ||
                   // Safely fast forward to end of comment
-                  ((match.punctuator = CommentGoal.type),
+                  ((match.punctuator = ECMAScriptCommentGoal.type),
                   TokenMatcher.forward(state.context.goal.groups[text].closer, match, state),
                   // text.startsWith('/*')
                   //   ? TokenMatcher.forward('*/', match, state)
                   //   : text.startsWith('//') && TokenMatcher.forward('\n', match, state),
                   'opener')
-              : state.context.goal !== CommentGoal
+              : state.context.goal !== ECMAScriptCommentGoal
               ? state.context.goal.type || 'sequence'
               : state.context.group.closer !== text
-              ? CommentGoal.type
-              : TokenMatcher.close(text, state) || (match.punctuator = CommentGoal.type),
+              ? ECMAScriptCommentGoal.type
+              : TokenMatcher.close(text, state) || (match.punctuator = ECMAScriptCommentGoal.type),
             match,
           );
         })}
@@ -257,14 +259,14 @@ export const matcher = (ECMAScript =>
                   // Safely fast forward to end of string
                   (TokenMatcher.forward(text === '"' ? DoubleQuoteLookAhead : SingleQuoteLookAhead, match, state, -1),
                   // (match.flatten = true),
-                  (match.punctuator = StringGoal.type),
+                  (match.punctuator = ECMAScriptStringGoal.type),
                   'opener')
-              : state.context.goal !== StringGoal
+              : state.context.goal !== ECMAScriptStringGoal
               ? state.context.goal.type || 'sequence'
               : state.context.group.closer !== text
-              ? StringGoal.type
+              ? ECMAScriptStringGoal.type
               : TokenMatcher.close(text, state) ||
-                ((match.punctuator = StringGoal.type),
+                ((match.punctuator = ECMAScriptStringGoal.type),
                 // (match.flatten = true),
                 'closer'),
             match,
@@ -282,12 +284,12 @@ export const matcher = (ECMAScript =>
             state.context.goal === ECMAScriptGoal
               ? TokenMatcher.open(text, state) ||
                   // TODO: Explore fast forward in template string parts
-                  ((match.punctuator = TemplateLiteralGoal.type), 'opener')
-              : state.context.goal !== TemplateLiteralGoal
+                  ((match.punctuator = ECMAScriptTemplateLiteralGoal.type), 'opener')
+              : state.context.goal !== ECMAScriptTemplateLiteralGoal
               ? state.context.goal.type || 'sequence'
               : state.context.group.closer !== text
-              ? TemplateLiteralGoal.type
-              : TokenMatcher.close(text, state) || ((match.punctuator = TemplateLiteralGoal.type), 'closer'),
+              ? ECMAScriptTemplateLiteralGoal.type
+              : TokenMatcher.close(text, state) || ((match.punctuator = ECMAScriptTemplateLiteralGoal.type), 'closer'),
             match,
           );
         })}
@@ -304,7 +306,7 @@ export const matcher = (ECMAScript =>
               ? (match.punctuator = 'combinator')
               : state.context.goal.openers &&
                 state.context.goal.openers[text] === true &&
-                (state.context.goal !== RegExpGoal || state.context.group.opener !== '[')
+                (state.context.goal !== ECMAScriptRegExpGoal || state.context.group.opener !== '[')
               ? TokenMatcher.open(text, state) || 'opener'
               : state.context.goal.type || 'sequence',
             match,
@@ -323,7 +325,7 @@ export const matcher = (ECMAScript =>
               ? (match.punctuator = 'combinator')
               : state.context.goal.closers &&
                 state.context.goal.closers[text] === true &&
-                (state.context.goal !== RegExpGoal ||
+                (state.context.goal !== ECMAScriptRegExpGoal ||
                   (state.context.group.opener !== '[' || text === state.context.group.closer))
               ? TokenMatcher.close(text, state) || 'closer'
               : state.context.goal.type || 'sequence',
@@ -341,10 +343,10 @@ export const matcher = (ECMAScript =>
         ${entity((text, entity, match, state) => {
           match.format = 'punctuation';
           TokenMatcher.capture(
-            state.context.goal === CommentGoal
+            state.context.goal === ECMAScriptCommentGoal
               ? (state.context.group.closer === text && TokenMatcher.close(text, state)) ||
                   (match.punctuator = state.context.goal.type)
-              : state.context.goal === RegExpGoal && state.context.group.closer !== ']'
+              : state.context.goal === ECMAScriptRegExpGoal && state.context.group.closer !== ']'
               ? TokenMatcher.close('/', state) || ((match.punctuator = state.context.goal.type), 'closer')
               : state.context.goal !== ECMAScriptGoal
               ? state.context.goal.type || 'sequence'
@@ -389,7 +391,7 @@ export const matcher = (ECMAScript =>
   Keyword: () =>
     TokenMatcher.define(
       entity => TokenMatcher.sequence/* regexp */ `\b(
-        ${TokenMatcher.join(...keywords).replace(/\./g, '\\.')}
+        ${TokenMatcher.join(...ECMAScriptGoal.keywords).replace(/\./g, '\\.')}
         ${entity((text, entity, match, state) => {
           match.format = 'identifier';
           TokenMatcher.capture(
@@ -408,29 +410,29 @@ export const matcher = (ECMAScript =>
   Identifier: ({RegExpFlags = /^[gimsuy]+$/} = {}) =>
     TokenMatcher.define(
       entity => TokenMatcher.sequence/* regexp */ `(
-        [${IdentifierStart}][${IdentifierPart}]*
+        [${ECMAScriptRanges.IdentifierStart}][${ECMAScriptRanges.IdentifierPart}]*
         ${entity((text, entity, match, state) => {
           match.format = 'identifier';
           TokenMatcher.capture(
             state.context.goal !== ECMAScriptGoal
               ? state.context.goal.type || 'sequence'
               : state.lastToken !== undefined && state.lastToken.punctuator === 'pattern' && RegExpFlags.test(text)
-              ? ((match.flatten = true), (match.punctuator = RegExpGoal.type), 'closer')
+              ? ((match.flatten = true), (match.punctuator = ECMAScriptRegExpGoal.type), 'closer')
               : ((match.flatten = true), 'identifier'),
             match,
           );
         })}
       )`,
-      `${IdentifierStart}${IdentifierPart}`.includes('\\p{') ? 'u' : '',
+      `${ECMAScriptRanges.IdentifierStart}${ECMAScriptRanges.IdentifierPart}`.includes('\\p{') ? 'u' : '',
     ),
   Number: ({
     NumericSeparator,
     Digits = NumericSeparator
       ? Digit => TokenMatcher.sequence/* regexp */ `[${Digit}][${Digit}${TokenMatcher.escape(NumericSeparator)}]*`
       : Digit => TokenMatcher.sequence/* regexp */ `[${Digit}]+`,
-    DecimalDigits = Digits(DecimalDigit),
-    HexDigits = Digits(HexDigit),
-    BinaryDigits = Digits(BinaryDigit),
+    DecimalDigits = Digits(ECMAScriptRanges.DecimalDigit),
+    HexDigits = Digits(ECMAScriptRanges.HexDigit),
+    BinaryDigits = Digits(ECMAScriptRanges.BinaryDigit),
   } = {}) =>
     TokenMatcher.define(
       entity => TokenMatcher.sequence/* regexp */ `\b(

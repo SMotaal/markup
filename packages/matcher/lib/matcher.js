@@ -87,11 +87,20 @@ export class Matcher extends RegExp {
   }
 
   static flags(...sources) {
-    let flags = '',
-      iterative;
+    let flags, iterative, sourceFlags;
+    flags = '';
     for (const source of sources) {
-      if (!source || (typeof source !== 'string' && typeof source.flags !== 'string')) continue;
-      for (const flag of source.flags || source)
+      sourceFlags =
+        (!!source &&
+          (typeof source === 'string'
+            ? source
+            : typeof source === 'object' &&
+              typeof source.flags !== 'string' &&
+              typeof source.source === 'string' &&
+              source.flags)) ||
+        undefined;
+      if (!sourceFlags) continue;
+      for (const flag of sourceFlags)
         (flag === 'g' || flag === 'y' ? iterative || !(iterative = true) : flags.includes(flag)) || (flags += flag);
     }
     return flags;

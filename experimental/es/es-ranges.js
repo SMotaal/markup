@@ -1,64 +1,11 @@
-﻿import {RegExpRange} from '../../packages/matcher/lib/range.js';
+﻿import {Ranges} from '../../packages/matcher/experimental/common/helpers.js';
 
-export const {
-  ranges,
-  Null,
-  BinaryDigit,
-  DecimalDigit,
-  ControlLetter,
-  HexLetter,
-  HexDigit,
-  GraveAccent,
-  ZeroWidthNonJoiner,
-  ZeroWidthJoiner,
-  ZeroWidthNoBreakSpace,
-  Whitespace,
-  IdentifierStart,
-  IdentifierPart,
-  UnicodeIDStart,
-  UnicodeIDContinue,
-} = (factories => {
-  /** @type {ObjectConstructor} */
-  const {defineProperty, create} = Object;
-
-  const safeRange = (strings, ...values) => {
-    try {
-      return RegExpRange.define(strings, ...values).source.slice(1, -1);
-    } catch (exception) {}
-  };
-
-  const descriptors = {
-    ranges: {
-      get() {
-        return ranges;
-      },
-      enumerable: true,
-      configurable: false,
-    },
-  };
-
-  for (const property in factories) {
-    descriptors[property] = {
-      get() {
-        const value = factories[property](safeRange, ranges);
-        defineProperty(ranges, property, {value, enumerable: true, configurable: false});
-        return value;
-      },
-      enumerable: true,
-      configurable: true,
-    };
-  }
-
-  /** @type {Record<keyof factories, string>} */
-  const ranges = create(null, descriptors);
-
-  return ranges;
-})({
-  Null: range => range`\0`,
+export const ECMAScriptRanges = Ranges({
+  NullCharacter: range => range`\0`,
   BinaryDigit: range => range`01`,
   DecimalDigit: range => range`0-9`,
-  ControlLetter: range => range`a-zA-Z`,
-  HexLetter: range => range`a-fA-F`,
+  ControlLetter: range => range`A-Za-z`,
+  HexLetter: range => range`A-Fa-f`,
   HexDigit: (range, {DecimalDigit, HexLetter}) => range`${DecimalDigit}${HexLetter}`,
   GraveAccent: range => range`${'`'}`,
   ZeroWidthNonJoiner: range => range`\u200c`,

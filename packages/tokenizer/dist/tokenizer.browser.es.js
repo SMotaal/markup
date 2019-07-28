@@ -675,6 +675,17 @@ class MarkupRenderer {
     renderedLine && (yield renderedLine);
   }
 
+  /** @type {string => string} */
+  static get escape() {
+    return Object.defineProperty(MarkupRenderer, 'escape', {
+      value: ((replace, replacement) => string => replace(string, replacement))(
+        RegExp.prototype[Symbol.replace].bind(/[\0-\x1F"\\]/g),
+        m => `&#x${m.charCodeAt(0).toString(16)};`,
+      ),
+      writable: false,
+    }).escape;
+  }
+
   /**
    * @param {string} tag
    * @param {Partial<HTMLElement>} [properties]
@@ -702,19 +713,12 @@ class MarkupRenderer {
           : Element$2(tag, properties);
 
       typeof hint === 'string' && hint !== '' && (hintSeparator = hint.indexOf('\n\n')) !== -1
-        ? ((element.dataset = {hint: `${markupHint}${hint.slice(hintSeparator).replace(/\n/g, '&#x000A;')}`}),
+        ? ((element.dataset = {
+            hint: `${markupHint}${MarkupRenderer.escape(hint.slice(hintSeparator))}`,
+          }),
           hintSeparator === 0 || (element.className = `${element.className} ${hint.slice(0, hintSeparator)}`))
         : (hint && (element.className = `${element.className} ${hint}`),
           (element.dataset = {hint: hint || markupHint || element.className}));
-
-      // (hint &&
-      //   (hint = hint) &&
-      //   ((element.className = `${element.className || ''} ${classHint || hint}`),
-      //   (element.dataset = {
-      //     // hint: (markupHint ? `${markupHint}\n\n${hint}` : hint).replace(/\n/g, '&#x000A;'),
-      //     hint: (markupHint ? `${markupHint}\n\n${hint}` : hint).replace(/\n/g, '&#x000A;'),
-      //   }))) ||
-      //   (element.className && (hint = element.className));
 
       return element;
     });
@@ -737,19 +741,233 @@ MarkupRenderer.defaults = Object.freeze({
 const markupDOM = new MarkupRenderer();
 
 //@ts-check
+/// <reference path="./types.d.ts" />
 
-const RegExpClass = /^(?:\[(?=.*?\]$)|)((?:\\.|[^\\\n\[\]]*)*)\]?$/;
+/** Matcher for composable matching */
+class Matcher extends RegExp {
+  /**
+   * @param {MatcherPattern} pattern
+   * @param {MatcherFlags} [flags]
+   * @param {MatcherEntities} [entities]
+   * @param {{}} [state]
+   */
+  constructor(pattern, flags, entities, state) {
+    //@ts-ignore
+    super(pattern, flags);
+    (pattern &&
+      pattern.entities &&
+      Symbol.iterator in pattern.entities &&
+      ((!entities && (entities = pattern.entities)) || entities === pattern.entities)) ||
+      Object.freeze((entities = (entities && Symbol.iterator in entities && [...entities]) || []));
+    /** @type {MatcherEntities} */
+    this.entities = entities;
+    this.state = state;
+    this.exec = this.exec;
+    ({DELIMITER: this.DELIMITER = Matcher.DELIMITER, UNKNOWN: this.UNKNOWN = Matcher.UNKNOWN} = new.target);
+  }
+
+  /**
+   * @param {string} source
+   */
+  exec(source) {
+    /** @type {MatcherExecArray} */
+    let match;
+
+    // @ts-ignore
+    match = super.exec(source);
+
+    // @ts-ignore
+    if (match === null) return null;
+
+    // @ts-ignore
+    match.matcher = this;
+    match.capture = {};
+
+    //@ts-ignore
+    for (
+      let i = 0, entity;
+      match[++i] === undefined ||
+      void (
+        (entity = this.entities[(match.entity = i - 1)]) == null ||
+        (typeof entity === 'function'
+          ? entity(match[0], i, match, this.state)
+          : (match.capture[(match.identity = entity)] = match[0]))
+      );
+
+    );
+
+    return match;
+  }
+
+  /**
+   * @param {MatcherPatternFactory} factory
+   * @param {MatcherFlags} [flags]
+   * @param {PropertyDescriptorMap} [properties]
+   */
+  static define(factory, flags, properties) {
+    /** @type {MatcherEntities} */
+    const entities = [];
+    entities.flags = '';
+    const pattern = factory(entity => {
+      if (entity !== null && entity instanceof Matcher) {
+        entities.push(...entity.entities);
+
+        !entity.flags || (entities.flags = entities.flags ? Matcher.flags(entities.flags, entity.flags) : entity.flags);
+
+        return entity.source;
+      } else {
+        entities.push(((entity != null || undefined) && entity) || undefined);
+      }
+    });
+    flags = Matcher.flags('g', flags == null ? pattern.flags : flags, entities.flags);
+    const matcher = new ((this && (this.prototype === Matcher.prototype || this.prototype instanceof RegExp) && this) ||
+      Matcher)(pattern, flags, entities);
+
+    properties && Object.defineProperties(matcher, properties);
+
+    return matcher;
+  }
+
+  static flags(...sources) {
+    let flags, iterative, sourceFlags;
+    flags = '';
+    for (const source of sources) {
+      sourceFlags =
+        (!!source &&
+          (typeof source === 'string'
+            ? source
+            : typeof source === 'object' &&
+              typeof source.flags !== 'string' &&
+              typeof source.source === 'string' &&
+              source.flags)) ||
+        undefined;
+      if (!sourceFlags) continue;
+      for (const flag of sourceFlags)
+        (flag === 'g' || flag === 'y' ? iterative || !(iterative = true) : flags.includes(flag)) || (flags += flag);
+    }
+    return flags;
+  }
+
+  static get sequence() {
+    const {raw} = String;
+    const {replace} = Symbol;
+
+    /**
+     * @param {TemplateStringsArray} template
+     * @param  {...any} spans
+     * @returns {string}
+     */
+    const sequence = (template, ...spans) =>
+      sequence.WHITESPACE[replace](raw(template, ...spans.map(sequence.span)), '');
+    // const sequence = (template, ...spans) =>
+    //   sequence.WHITESPACE[replace](sequence.COMMENTS[replace](raw(template, ...spans.map(sequence.span)), ''), '');
+
+    /**
+     * @param {any} value
+     * @returns {string}
+     */
+    sequence.span = value =>
+      (value &&
+        // TODO: Don't coerce to string here?
+        (typeof value !== 'symbol' && `${value}`)) ||
+      '';
+
+    sequence.WHITESPACE = /^\s+|\s*\n\s*|\s+$/g;
+    // sequence.COMMENTS = /(?:^|\n)\s*\/\/.*(?=\n)|\n\s*\/\/.*(?:\n\s*)*$/g;
+
+    Object.defineProperty(Matcher, 'sequence', {value: Object.freeze(sequence), enumerable: true, writable: false});
+    return sequence;
+  }
+
+  static get join() {
+    const {sequence} = this;
+
+    const join = (...values) =>
+      values
+        .map(sequence.span)
+        .filter(Boolean)
+        .join('|');
+
+    Object.defineProperty(Matcher, 'join', {value: Object.freeze(join), enumerable: true, writable: false});
+
+    return join;
+  }
+
+  static get matchAll() {
+    /**
+     * @template {RegExp} T
+     * @type {(string: MatcherText, matcher: T) => MatcherIterator<T> }
+     */
+    const matchAll =
+      //@ts-ignore
+      (() =>
+        Function.call.bind(
+          // String.prototype.matchAll || // TODO: Uncomment eventually
+          {
+            /**
+             * @this {string}
+             * @param {RegExp | string} pattern
+             */
+            *matchAll() {
+              const matcher =
+                arguments[0] &&
+                (arguments[0] instanceof RegExp
+                  ? Object.setPrototypeOf(RegExp(arguments[0].source, arguments[0].flags || 'g'), arguments[0])
+                  : RegExp(arguments[0], 'g'));
+              const string = String(this);
+
+              if (!(matcher.flags.includes('g') || matcher.flags.includes('y')))
+                return void (yield matcher.exec(string));
+
+              for (
+                let match, lastIndex = -1;
+                lastIndex <
+                ((match = matcher.exec(string))
+                  ? (lastIndex = matcher.lastIndex + (match[0].length === 0))
+                  : lastIndex);
+                yield match, matcher.lastIndex = lastIndex
+              );
+            },
+          }.matchAll,
+        ))();
+
+    Object.defineProperty(Matcher, 'matchAll', {value: Object.freeze(matchAll), enumerable: true, writable: false});
+
+    return matchAll;
+  }
+}
+
+// Well-known identities for meaningful debugging which are
+//   Strings but could possible be changed to Symbols
+//
+//   TODO: Revisit Matcher.UNKOWN
+//
+
+const {
+  /** Identity for delimiter captures (like newlines) */
+  DELIMITER = (Matcher.DELIMITER = 'DELIMITER'),
+  /** Identity for unknown captures */
+  UNKNOWN = (Matcher.UNKNOWN = 'UNKNOWN'),
+} = Matcher;
+
+//@ts-check
+
+const RegExpClass = /^(?:\[(?=.*(?:[^\\](?:\\\\)*|)\]$)|)((?:\\.|[^\\\n\[\]]*)*)\]?$/;
 
 class RegExpRange extends RegExp {
+  /**
+   * @param {string|RegExp} source
+   * @param {string} [flags]
+   */
   constructor(source, flags) {
     /** @type {string} */
     let range;
 
-    range =
-      source && typeof source === 'object' && source instanceof RegExp
-        ? (flags === undefined && (flags = source.flags), source.source)
-        : (typeof source === 'string' ? source : (source = `${source || ''}`)).trim() &&
-          (source = RegExpClass[Symbol.replace](source, '[$1]'));
+    range = (source && typeof source === 'object' && source instanceof RegExp
+      ? (flags === undefined && (flags = source.flags), source.source)
+      : (typeof source === 'string' ? source : (source = `${source || ''}`)).trim() &&
+        (source = RegExpClass[Symbol.replace](source, '[$1]'))
+    ).slice(1, -1);
 
     if (!range || !RegExpClass.test(range)) {
       throw TypeError(`Invalid Regular Expression class range: ${range}`);
@@ -757,49 +975,197 @@ class RegExpRange extends RegExp {
 
     typeof flags === 'string' || (flags = `${flags || ''}` || '');
 
-    flags.includes('u') || !(source.includes('\\p{') || source.includes('\\u')) || (flags += 'u');
+    flags.includes('u') ||
+      //@ts-ignore
+      !(source.includes('\\p{') || source.includes('\\u')) ||
+      (flags += 'u');
 
+    //@ts-ignore
     super(source, flags);
 
-    Object.defineProperty(this, 'range', {value: range.slice(1, -1), enumerable: true, writable: false});
+    // this.arguments = [...arguments];
+
+    Object.defineProperty(this, 'range', {value: range, enumerable: true, writable: false});
+  }
+
+  /** @type {string} */
+  //@ts-ignore
+  get range() {
+    return `^`;
   }
 
   toString() {
     return this.range;
   }
 
+  /**
+   * @param {TemplateStringsArray} strings
+   * @param {... any[]} values
+   */
   static define(strings, ...values) {
-    return new (this || RegExpRange)(String.raw(strings, ...values));
+    let source = String.raw(strings, ...values);
+    let flags;
+    // @ts-ignore
+    return (
+      RegExpRange.ranges[source] ||
+      Object.freeze(
+        (RegExpRange.ranges[source] = (flags = Matcher.flags(
+          ...values.map(value => (value instanceof RegExpRange ? value : undefined)),
+        ))
+          ? new (this || RegExpRange)(source, flags)
+          : new (this || RegExpRange)(source)),
+      )
+    );
   }
 }
 
-const {
-  ranges,
-  Null,
-  BinaryDigit,
-  DecimalDigit,
-  ControlLetter,
-  HexLetter,
-  HexDigit,
-  GraveAccent,
-  ZeroWidthNonJoiner,
-  ZeroWidthJoiner,
-  ZeroWidthNoBreakSpace,
-  Whitespace,
-  IdentifierStart,
-  IdentifierPart,
-  UnicodeIDStart,
-  UnicodeIDContinue,
-} = (factories => {
-  /** @type {ObjectConstructor} */
-  const {defineProperty, create} = Object;
+/** @type {{[name: string]: RegExpRange}} */
+RegExpRange.ranges = {};
 
-  const safeRange = (strings, ...values) => {
-    try {
-      return RegExpRange.define(strings, ...values).source.slice(1, -1);
-    } catch (exception) {}
-  };
+globalThis.RegExpRange = RegExpRange;
 
+//@ts-check
+
+const generateDefinitions = ({groups = {}, goals = {}, identities = {}, symbols = {}, tokens = {}}) => {
+  // const {FaultGoal: FaultGoalSymbol = symbols.FaultGoal = generateDefinitions.FaultGoal.symbol} = symbols;
+  // const FaultGoal = (goals[(symbols.FaultGoal = generateDefinitions.FaultGoal.symbol)] = generateDefinitions.FaultGoal);
+  const FaultGoal = generateDefinitions.FaultGoal;
+  // typeof symbols.FaultGoal === 'symbol' &&
+  // typeof goals[symbols.FaultGoal] === 'object' &&
+  // (goals[symbols.FaultGoal].symbol === undefined || symbols.FaultGoal === goals[symbols.FaultGoal].symbol)
+  //   ? goals[symbols.FaultGoal]
+  //   : typeof symbols.FaultGoal === 'symbol'
+  //   ? (goals[symbols.FaultGoal] = {...generateDefinitions.FaultGoal, symbol: symbols.FaultGoal})
+  //   : (goals[(symbols.FaultGoal = generateDefinitions.FaultGoal.symbol)] = generateDefinitions.FaultGoal);
+
+  const {create, freeze, entries, getOwnPropertySymbols, getOwnPropertyNames, setPrototypeOf} = Object;
+
+  const punctuators = create(null);
+
+  for (const opener of getOwnPropertyNames(groups)) {
+    const {[opener]: group} = groups;
+    'goal' in group && (group.goal = goals[group.goal] || FaultGoal);
+    'parentGoal' in group && (group.parentGoal = goals[group.parentGoal] || FaultGoal);
+    freeze(group);
+  }
+
+  for (const symbol of getOwnPropertySymbols(goals)) {
+    // @ts-ignore
+    const {[symbol]: goal} = goals;
+
+    goal.symbol === symbol || (goal.symbol = symbol);
+    goal.name = symbol.description.replace(/Goal$/, '');
+    symbols[`${goal.name}Goal`] = goal.symbol;
+    goal[Symbol.toStringTag] = `«${goal.name}»`;
+    goal.tokens = tokens[symbol] = {};
+    goal.groups = [];
+
+    if (goal.punctuators) {
+      for (const punctuator of (goal.punctuators = [...goal.punctuators]))
+        punctuators[punctuator] = !(goal.punctuators[punctuator] = true);
+      freeze(setPrototypeOf(goal.punctuators, punctuators));
+    }
+
+    if (goal.closers) {
+      for (const closer of (goal.closers = [...goal.closers])) punctuators[closer] = !(goal.closers[closer] = true);
+      freeze(setPrototypeOf(goal.closers, punctuators));
+    }
+
+    if (goal.openers) {
+      for (const opener of (goal.openers = [...goal.openers])) {
+        const group = (goal.groups[opener] = {...groups[opener]});
+        punctuators[opener] = !(goal.openers[opener] = true);
+        GoalSpecificTokenRecord(goal, group.opener, 'opener', {group});
+        GoalSpecificTokenRecord(goal, group.closer, 'closer', {group});
+        group.description || (group.description = `${group.opener}…${group.closer}`);
+        group[Symbol.toStringTag] = `‹${group.opener}›`;
+      }
+      freeze(setPrototypeOf(goal.openers, punctuators));
+    }
+
+    freeze(goal.groups);
+    freeze(goal.tokens);
+    freeze(goal);
+  }
+
+  freeze(punctuators);
+  freeze(goals);
+  freeze(groups);
+  freeze(identities);
+  freeze(symbols);
+
+  return freeze({groups, goals, identities, symbols, tokens});
+
+  // if (keywords) {
+  //   for (const [identity, list] of entries({})) {
+  //     for (const keyword of list.split(/\s+/)) {
+  //       keywords[keyword] = identity;
+  //     }
+  //   }
+
+  //   keywords[Symbol.iterator] = Array.prototype[Symbol.iterator].bind(Object.getOwnPropertyNames(keywords));
+  //   freeze(keywords);
+  // }
+
+  /**
+   * Creates a symbolically mapped goal-specific token record
+   *
+   * @template {{}} T
+   * @param {Goal} goal
+   * @param {string} text
+   * @param {type} type
+   * @param {T} properties
+   */
+  function GoalSpecificTokenRecord(goal, text, type, properties) {
+    const symbol = Symbol(`‹${goal.name} ${text}›`);
+    return (goal.tokens[text] = goal.tokens[symbol] = tokens[symbol] = {symbol, text, type, goal, ...properties});
+  }
+};
+
+const FaultGoal = (generateDefinitions.FaultGoal = {symbol: Symbol('FaultGoal'), type: 'fault'});
+generateDefinitions({goals: {[FaultGoal.symbol]: FaultGoal}});
+
+/**
+ * @template {string} K
+ * @template {string} I
+ * @param {{[i in I]: K[]}} mappings
+ */
+const Keywords = mappings => {
+  /** @type {{[i in I]: ReadonlyArray<K>}} */
+  //@ts-ignore
+  const identities = {};
+
+  /** @type {{[k in K]: I}} */
+  //@ts-ignore
+  const keywords = {...Keywords.prototype};
+
+  for (const identity in mappings) {
+    identities[identity] = Object.freeze([...mappings[identity]]);
+    for (const keyword of mappings[identity]) {
+      keywords[keyword] = identity;
+    }
+  }
+
+  Object.setPrototypeOf(keywords, identities);
+  Object.freeze(identities);
+  Object.freeze(keywords);
+
+  return keywords;
+};
+
+Keywords.prototype = {
+  [Symbol.iterator]() {
+    return Object.getOwnPropertyNames(this)[Symbol.iterator]();
+  },
+};
+
+/**
+ * @template {string} K
+ * @template {{[k in K]: (range: typeof RegExpRange.define, ranges: Record<K, RegExpRange>) => RegExpRange}} T
+ * @param {T} factories
+ */
+const Ranges = factories => {
+  /** @type {PropertyDescriptorMap} */
   const descriptors = {
     ranges: {
       get() {
@@ -810,11 +1176,19 @@ const {
     },
   };
 
+  // TODO: Revisit once unicode classes are stable
+  const safeRange = (strings, ...values) => {
+    try {
+      return RegExpRange.define(strings, ...values);
+    } catch (exception) {}
+  };
+
   for (const property in factories) {
     descriptors[property] = {
       get() {
         const value = factories[property](safeRange, ranges);
-        defineProperty(ranges, property, {value, enumerable: true, configurable: false});
+        if (value === undefined) throw new RangeError(`Failed to define: ${factories[property]}`);
+        Object.defineProperty(ranges, property, {value, enumerable: true, configurable: false});
         return value;
       },
       enumerable: true,
@@ -822,16 +1196,29 @@ const {
     };
   }
 
-  /** @type {Record<keyof factories, string>} */
-  const ranges = create(null, descriptors);
+  /** @type {{ranges: typeof ranges} & Record<K, RegExpRange>} */
+  const ranges = Object.create(null, descriptors);
 
   return ranges;
-})({
-  Null: range => range`\0`,
+};
+
+/** @typedef {import('./types').Match} Match */
+/** @typedef {import('./types').Groups} Groups */
+/** @typedef {import('./types').Group} Group */
+/** @typedef {import('./types').Goal} Goal */
+/** @typedef {import('./types').Context} Context */
+/** @typedef {import('./types').Contexts} Contexts */
+/** @typedef {import('./types').State} State */
+/** @typedef {import('./types').Token} Token */
+/** @typedef {Goal['type']} type */
+/** @typedef {{symbol: symbol, text: string, type: type, goal?: Goal, group?: Group}} token */
+
+const ECMAScriptRanges = Ranges({
+  NullCharacter: range => range`\0`,
   BinaryDigit: range => range`01`,
   DecimalDigit: range => range`0-9`,
-  ControlLetter: range => range`a-zA-Z`,
-  HexLetter: range => range`a-fA-F`,
+  ControlLetter: range => range`A-Za-z`,
+  HexLetter: range => range`A-Fa-f`,
   HexDigit: (range, {DecimalDigit, HexLetter}) => range`${DecimalDigit}${HexLetter}`,
   GraveAccent: range => range`${'`'}`,
   ZeroWidthNonJoiner: range => range`\u200c`,
@@ -1115,105 +1502,6 @@ const initializeContext = (assign =>
     );
   })(Object.assign);
 
-const generateDefinitions = ({groups, goals, identities, symbols, keywords, tokens}) => {
-  const {[symbols.FaultGoal]: FaultGoal} = goals;
-
-  const {create, freeze, entries, getOwnPropertySymbols, getOwnPropertyNames, setPrototypeOf} = Object;
-
-  const punctuators = create(null);
-
-  for (const opener of getOwnPropertyNames(groups)) {
-    const {[opener]: group} = groups;
-    'goal' in group && (group.goal = goals[group.goal] || FaultGoal);
-    'parentGoal' in group && (group.parentGoal = goals[group.parentGoal] || FaultGoal);
-    freeze(group);
-  }
-
-  for (const symbol of getOwnPropertySymbols(goals)) {
-    // @ts-ignore
-    const {[symbol]: goal} = goals;
-
-    goal.name = (goal.symbol = symbol).description.replace(/Goal$/, '');
-    goal[Symbol.toStringTag] = `«${goal.name}»`;
-    goal.tokens = tokens[symbol] = {};
-    goal.groups = [];
-
-    if (goal.punctuators) {
-      for (const punctuator of (goal.punctuators = [...goal.punctuators]))
-        punctuators[punctuator] = !(goal.punctuators[punctuator] = true);
-      freeze(setPrototypeOf(goal.punctuators, punctuators));
-    }
-
-    if (goal.closers) {
-      for (const closer of (goal.closers = [...goal.closers])) punctuators[closer] = !(goal.closers[closer] = true);
-      freeze(setPrototypeOf(goal.closers, punctuators));
-    }
-
-    if (goal.openers) {
-      for (const opener of (goal.openers = [...goal.openers])) {
-        const group = (goal.groups[opener] = {...groups[opener]});
-        punctuators[opener] = !(goal.openers[opener] = true);
-        GoalSpecificTokenRecord(goal, group.opener, 'opener', {group});
-        GoalSpecificTokenRecord(goal, group.closer, 'closer', {group});
-        group.description || (group.description = `${group.opener}…${group.closer}`);
-        group[Symbol.toStringTag] = `‹${group.opener}›`;
-      }
-      freeze(setPrototypeOf(goal.openers, punctuators));
-    }
-
-    freeze(goal.groups);
-    freeze(goal.tokens);
-    freeze(goal);
-  }
-
-  freeze(punctuators);
-  freeze(goals);
-  freeze(groups);
-  freeze(identities);
-  freeze(symbols);
-
-  for (const [identity, list] of entries({})) {
-    for (const keyword of list.split(/\s+/)) {
-      keywords[keyword] = identity;
-    }
-  }
-
-  keywords[Symbol.iterator] = Array.prototype[Symbol.iterator].bind(Object.getOwnPropertyNames(keywords));
-  freeze(keywords);
-
-  /**
-   * Creates a symbolically mapped goal-specific token record
-   *
-   * @template {{}} T
-   * @param {Goal} goal
-   * @param {string} text
-   * @param {type} type
-   * @param {T} properties
-   */
-  function GoalSpecificTokenRecord(goal, text, type, properties) {
-    const symbol = Symbol(`‹${goal.name} ${text}›`);
-    return (goal.tokens[text] = goal.tokens[symbol] = tokens[symbol] = {symbol, text, type, goal, ...properties});
-  }
-};
-
-/**
- * @template {string} K
- * @template {string} I
- * @param {{[i in I]: K[]}} mappings
- */
-const Keywords = mappings => {
-  /** @type {{[k in K]: I}} */
-  //@ts-ignore
-  const keywords = {};
-
-  for (const identity in mappings) {
-    for (const keyword of mappings[identity]) {
-      keywords[keyword] = identity;
-    }
-  }
-  return keywords;
-};
-
 const Construct = class Construct extends Array {
   constructor() {
     super(...arguments);
@@ -1254,277 +1542,280 @@ const Construct = class Construct extends Array {
 
 //@ts-check
 
-const DEBUG_CONSTRUCTS = Boolean(false);
-
-const ECMAScriptGoalSymbol = Symbol('ECMAScriptGoal');
-const CommentGoalSymbol = Symbol('CommentGoal');
-const RegExpGoalSymbol = Symbol('RegExpGoal');
-const StringGoalSymbol = Symbol('StringGoal');
-const TemplateLiteralGoalSymbol = Symbol('TemplateLiteralGoal');
-const FaultGoalSymbol = Symbol('FaultGoal');
-
-const goals = {};
-
-goals[ECMAScriptGoalSymbol] = {
-  type: undefined,
-  flatten: undefined,
-  fold: undefined,
-  openers: ['{', '(', '[', "'", '"', '`', '/', '/*', '//'],
-  closers: ['}', ')', ']'],
-};
-
-goals[CommentGoalSymbol] = {type: 'comment', flatten: true, fold: true};
-
-goals[RegExpGoalSymbol] = {
-  type: 'pattern',
-  flatten: undefined,
-  fold: undefined,
-  openers: ['[', '(', '{'],
-  closers: [']', ')', '}'],
-  opener: '/',
-  closer: '/',
-  // punctuators: ['+', '*', '?', '|', '^', '{', '}', '(', ')'],
-  punctuators: ['+', '*', '?', '|', '^'],
-};
-
-goals[StringGoalSymbol] = {type: 'quote', flatten: true, fold: true};
-
-goals[TemplateLiteralGoalSymbol] = {
-  type: 'quote',
-  flatten: true,
-  fold: false,
-  openers: ['${'],
-  opener: '`',
-  closer: '`',
-};
-
-goals[FaultGoalSymbol] = {type: 'fault'}; // , groups: {}
-
 const {
-  [FaultGoalSymbol]: FaultGoal,
-  [ECMAScriptGoalSymbol]: ECMAScriptGoal,
-  [CommentGoalSymbol]: CommentGoal,
-  [RegExpGoalSymbol]: RegExpGoal,
-  [StringGoalSymbol]: StringGoal,
-  [TemplateLiteralGoalSymbol]: TemplateLiteralGoal,
-} = goals;
+  ECMAScriptGoal,
+  ECMAScriptCommentGoal,
+  ECMAScriptRegExpGoal,
+  ECMAScriptStringGoal,
+  ECMAScriptTemplateLiteralGoal,
+  ECMAScriptDefinitions,
+} = (() => {
+  const DEBUG_CONSTRUCTS = Boolean(false);
 
-const groups = {
-  ['{']: {opener: '{', closer: '}'},
-  ['(']: {opener: '(', closer: ')'},
-  ['[']: {opener: '[', closer: ']'},
-  ['//']: {
-    opener: '//',
-    closer: '\n',
-    goal: CommentGoalSymbol,
-    parentGoal: ECMAScriptGoalSymbol,
-    description: '‹comment›',
-  },
-  ['/*']: {
-    opener: '/*',
-    closer: '*/',
-    goal: CommentGoalSymbol,
-    parentGoal: ECMAScriptGoalSymbol,
-    description: '‹comment›',
-  },
-  ['/']: {
+  const identities = {
+    UnicodeIDStart: 'ECMAScript.UnicodeIDStart',
+    UnicodeIDContinue: 'ECMAScript.UnicodeIDContinue',
+    HexDigits: 'ECMAScript.HexDigits',
+    CodePoint: 'ECMAScript.CodePoint',
+    ControlEscape: 'ECMAScript.ControlEscape',
+    ContextualWord: 'ECMAScript.ContextualWord',
+    RestrictedWord: 'ECMAScript.RestrictedWord',
+    FutureReservedWord: 'ECMAScript.FutureReservedWord',
+    Keyword: 'ECMAScript.Keyword',
+    // MetaProperty: 'ECMAScript.MetaProperty',
+  };
+
+  const goals = {};
+  const symbols = {};
+
+  const ECMAScriptGoal = (goals[(symbols.ECMAScriptGoalSymbol = Symbol('ECMAScriptGoal'))] = {
+    type: undefined,
+    flatten: undefined,
+    fold: undefined,
+    openers: ['{', '(', '[', "'", '"', '`', '/', '/*', '//'],
+    closers: ['}', ')', ']'],
+    /** @type {ECMAScript.Keywords} */
+    // @ts-ignore
+    keywords: Keywords({
+      // TODO: Let's make those constructs (this.new.target borks)
+      // [identities.MetaProperty]: 'new.target import.meta',
+      [identities.Keyword]: [
+        ...['await', 'break', 'case', 'catch', 'class', 'const', 'continue'],
+        ...['debugger', 'default', 'delete', 'do', 'else', 'export', 'extends'],
+        ...['finally', 'for', 'function', 'if', 'import', 'in', 'instanceof'],
+        ...['let', 'new', 'return', 'super', 'switch', 'this', 'throw', 'try'],
+        ...['typeof', 'var', 'void', 'while', 'with', 'yield'],
+      ],
+      [identities.RestrictedWord]: ['interface', 'implements', 'package', 'private', 'protected', 'public'],
+      [identities.FutureReservedWord]: ['enum'],
+      // NOTE: This is purposely not aligned with the spec
+      [identities.ContextualWord]: ['arguments', 'async', 'as', 'from', 'of', 'static', 'get', 'set'],
+    }),
+  });
+
+  const ECMAScriptCommentGoal = (goals[(symbols.ECMAScriptCommentGoalSymbol = Symbol('ECMAScriptCommentGoal'))] = {
+    type: 'comment',
+    flatten: true,
+    fold: true,
+  });
+
+  const ECMAScriptRegExpGoal = (goals[(symbols.ECMAScriptRegExpGoalSymbol = Symbol('ECMAScriptRegExpGoal'))] = {
+    type: 'pattern',
+    flatten: undefined,
+    fold: undefined,
+    openers: ['[', '(', '{'],
+    closers: [']', ')', '}'],
     opener: '/',
     closer: '/',
-    goal: RegExpGoalSymbol,
-    parentGoal: ECMAScriptGoalSymbol,
-    description: '‹pattern›',
-  },
-  ["'"]: {
-    opener: "'",
-    closer: "'",
-    goal: StringGoalSymbol,
-    parentGoal: ECMAScriptGoalSymbol,
-    description: '‹string›',
-  },
-  ['"']: {
-    opener: '"',
-    closer: '"',
-    goal: StringGoalSymbol,
-    parentGoal: ECMAScriptGoalSymbol,
-    description: '‹string›',
-  },
-  ['`']: {
+    // punctuators: ['+', '*', '?', '|', '^', '{', '}', '(', ')'],
+    punctuators: ['+', '*', '?', '|', '^'],
+  });
+
+  const ECMAScriptStringGoal = (goals[(symbols.ECMAScriptStringGoalSymbol = Symbol('ECMAScriptStringGoal'))] = {
+    type: 'quote',
+    flatten: true,
+    fold: true,
+  });
+
+  const ECMAScriptTemplateLiteralGoal = (goals[
+    (symbols.ECMAScriptTemplateLiteralGoalSymbol = Symbol('ECMAScriptTemplateLiteralGoal'))
+  ] = {
+    type: 'quote',
+    flatten: true,
+    fold: false,
+    openers: ['${'],
     opener: '`',
     closer: '`',
-    goal: TemplateLiteralGoalSymbol,
-    parentGoal: ECMAScriptGoalSymbol,
-    description: '‹template›',
-  },
-  ['${']: {
-    opener: '${',
-    closer: '}',
-    goal: ECMAScriptGoalSymbol,
-    parentGoal: TemplateLiteralGoalSymbol,
-    description: '‹span›',
-  },
-};
+  });
 
-const identities = {
-  UnicodeIDStart: 'ECMAScriptUnicodeIDStart',
-  UnicodeIDContinue: 'ECMAScriptUnicodeIDContinue',
-  HexDigits: 'ECMAScriptHexDigits',
-  CodePoint: 'ECMAScriptCodePoint',
-  ControlEscape: 'ECMAScriptControlEscape',
-  ContextualWord: 'ECMAScriptContextualWord',
-  RestrictedWord: 'ECMAScriptRestrictedWord',
-  FutureReservedWord: 'ECMAScriptFutureReservedWord',
-  Keyword: 'ECMAScriptKeyword',
-  // MetaProperty: 'ECMAScriptMetaProperty',
-};
+  // const groups = {};
 
-/** @type {ECMAScript.Keywords} */
-// @ts-ignore
-const keywords = Keywords({
-  // TODO: Let's make those constructs (this.new.target borks)
-  // [identities.MetaProperty]: 'new.target import.meta',
-  [identities.Keyword]: [
-    ...['await', 'break', 'case', 'catch', 'class', 'const', 'continue'],
-    ...['debugger', 'default', 'delete', 'do', 'else', 'export', 'extends'],
-    ...['finally', 'for', 'function', 'if', 'import', 'in', 'instanceof'],
-    ...['let', 'new', 'return', 'super', 'switch', 'this', 'throw', 'try'],
-    ...['typeof', 'var', 'void', 'while', 'with', 'yield'],
-  ],
-  [identities.RestrictedWord]: ['interface', 'implements', 'package', 'private', 'protected', 'public'],
-  [identities.FutureReservedWord]: ['enum'],
-  // NOTE: This is purposely not aligned with the spec
-  [identities.ContextualWord]: ['arguments', 'async', 'as', 'from', 'of', 'static', 'get', 'set'],
-});
+  {
+    const operativeKeywords = new Set('await delete typeof void yield'.split(' '));
+    const declarativeKeywords = new Set('export import default async function class const let var'.split(' '));
+    const constructiveKeywords = new Set(
+      'await async function class await delete typeof void yield this new'.split(' '),
+    );
 
-{
-  const operativeKeywords = new Set('await delete typeof void yield'.split(' '));
-  const declarativeKeywords = new Set('export import default async function class const let var'.split(' '));
-  const constructiveKeywords = new Set('await async function class await delete typeof void yield this new'.split(' '));
-
-  /**
-   * Determines if the capture is a valid keyword, identifier or undefined
-   * based on matcher state (ie lastAtom, context, intent) and subset
-   * of ECMAScript keyword rules of significant.
-   *
-   * TODO: Refactor or extensively test captureKeyword
-   * TODO: Document subset of ECMAScript keyword rules of significant
-   *
-   * @param {string} text - Matched by /\b(‹text›)\b(?=[^\s$_:]|\s+[^:]|$)
-   * @param {State} state
-   * @param {string} [intent]
-   */
-  const captureKeyword = (text, {lastAtom: pre, lineIndex, context}, intent) => {
-    //                              (a) WILL BE ‹fault› UNLESS  …
-    switch (intent || (intent = context.intent)) {
-      //  DESTRUCTURING INTENT  (ie Variable/Class/Function declarations)
-      case 'destructuring':
-      //  DECLARATION INTENT  (ie Variable/Class/Function declarations)
-      case 'declaration':
-        return (
-          //                        (b)   WILL BE ‹idenfitier›
-          //                              AFTER ‹.›  (as ‹operator›)
-          (pre !== undefined && pre.text === '.' && 'identifier') ||
-          //                        (c)   WILL BE ‹keyword›
-          //                              IF DECLARATIVE AND …
-          (declarativeKeywords.has(text) &&
-            //                      (c1)  NOT AFTER ‹keyword› …
-            (pre === undefined ||
+    /**
+     * Determines if the capture is a valid keyword, identifier or undefined
+     * based on matcher state (ie lastAtom, context, intent) and subset
+     * of ECMAScript keyword rules of significant.
+     *
+     * TODO: Refactor or extensively test captureKeyword
+     * TODO: Document subset of ECMAScript keyword rules of significant
+     *
+     * @param {string} text - Matched by /\b(‹text›)\b(?=[^\s$_:]|\s+[^:]|$)
+     * @param {State} state
+     * @param {string} [intent]
+     */
+    const captureKeyword = (text, {lastAtom: pre, lineIndex, context}, intent) => {
+      //                              (a) WILL BE ‹fault› UNLESS  …
+      switch (intent || (intent = context.intent)) {
+        //  DESTRUCTURING INTENT  (ie Variable/Class/Function declarations)
+        case 'destructuring':
+        //  DECLARATION INTENT  (ie Variable/Class/Function declarations)
+        case 'declaration':
+          return (
+            //                        (b)   WILL BE ‹idenfitier›
+            //                              AFTER ‹.›  (as ‹operator›)
+            (pre !== undefined && pre.text === '.' && 'identifier') ||
+            //                        (c)   WILL BE ‹keyword›
+            //                              IF DECLARATIVE AND …
+            (declarativeKeywords.has(text) &&
+              //                      (c1)  NOT AFTER ‹keyword› …
+              (pre === undefined ||
+                pre.type !== 'keyword' ||
+                //                          UNLESS IS DIFFERENT
+                (pre.text !== text &&
+                  //                        AND NOT ‹export› NOR ‹import›
+                  !(text === 'export' || text === 'import') &&
+                  //                  (c2)  FOLLOWS ‹export› OR ‹default›
+                  (pre.text === 'export' ||
+                    pre.text === 'default' ||
+                    //                (c3)  IS ‹function› AFTER ‹async›
+                    (pre.text === 'async' && text === 'function')))) &&
+              'keyword')
+          );
+        default:
+          return (
+            //                        (b)   WILL BE ‹idenfitier› …
+            (((pre !== undefined &&
+              //                      (b1)  AFTER ‹.›  (as ‹operator›)
+              pre.text === '.') ||
+              //                      (b2)  OR ‹await› (not as ‹keyword›)
+              (text === 'await' && context.awaits === false) ||
+              //                      (b3)  OR ‹yield› (not as ‹keyword›)
+              (text === 'yield' && context.yields === false)) &&
+              'identifier') ||
+            //                        (c)   WILL BE ‹keyword› …
+            ((pre === undefined ||
+              //                      (c1)  NOT AFTER ‹keyword›
               pre.type !== 'keyword' ||
-              //                          UNLESS IS DIFFERENT
-              (pre.text !== text &&
-                //                        AND NOT ‹export› NOR ‹import›
-                !(text === 'export' || text === 'import') &&
-                //                  (c2)  FOLLOWS ‹export› OR ‹default›
-                (pre.text === 'export' ||
-                  pre.text === 'default' ||
-                  //                (c3)  IS ‹function› AFTER ‹async›
-                  (pre.text === 'async' && text === 'function')))) &&
-            'keyword')
-        );
-      default:
-        return (
-          //                        (b)   WILL BE ‹idenfitier› …
-          (((pre !== undefined &&
-            //                      (b1)  AFTER ‹.›  (as ‹operator›)
-            pre.text === '.') ||
-            //                      (b2)  OR ‹await› (not as ‹keyword›)
-            (text === 'await' && context.awaits === false) ||
-            //                      (b3)  OR ‹yield› (not as ‹keyword›)
-            (text === 'yield' && context.yields === false)) &&
-            'identifier') ||
-          //                        (c)   WILL BE ‹keyword› …
-          ((pre === undefined ||
-            //                      (c1)  NOT AFTER ‹keyword›
-            pre.type !== 'keyword' ||
-            //                      (c2)  UNLESS OPERATIVE
-            operativeKeywords.has(pre.text) ||
-            //                      (c3)  OR ‹if› AFTER ‹else›
-            (text === 'if' && pre.text === 'else') ||
-            //                      (c4)  OR ‹default› AFTER ‹export›
-            (text === 'default' && pre.text === 'export') ||
-            //                      (c5)  NOT AFTER ‹async›
-            //                            EXCEPT ‹function›
-            ((pre.text !== 'async' || text === 'function') &&
-              //                    (c6)  AND NOT AFTER ‹class›
-              //                          EXCEPT ‹extends›
-              (pre.text !== 'class' || text === 'extends') &&
-              //                    (c7)  AND NOT AFTER ‹for›
-              //                          EXCEPT ‹await› (as ‹keyword›)
-              (pre.text !== 'for' || text === 'await') &&
-              //                    (c6)  NOT AFTER ‹return›
-              //                          AND IS DIFFERENT
-              //                          AND IS NOT ‹return›
-              (pre.text !== 'return'
-                ? pre.text !== text
-                : text !== 'return'
-                ? //                (c7)  OR AFTER ‹return›
-                  //                      AND IS CONSTRUCTIVE
-                  constructiveKeywords.has(text)
-                : //                (c8)  OR AFTER ‹return›
-                  //                      AND IS ‹return›
-                  //                      WHEN ON NEXT LINE
-                  pre.lineNumber < 1 + lineIndex))) &&
-            'keyword')
-        );
-    }
+              //                      (c2)  UNLESS OPERATIVE
+              operativeKeywords.has(pre.text) ||
+              //                      (c3)  OR ‹if› AFTER ‹else›
+              (text === 'if' && pre.text === 'else') ||
+              //                      (c4)  OR ‹default› AFTER ‹export›
+              (text === 'default' && pre.text === 'export') ||
+              //                      (c5)  NOT AFTER ‹async›
+              //                            EXCEPT ‹function›
+              ((pre.text !== 'async' || text === 'function') &&
+                //                    (c6)  AND NOT AFTER ‹class›
+                //                          EXCEPT ‹extends›
+                (pre.text !== 'class' || text === 'extends') &&
+                //                    (c7)  AND NOT AFTER ‹for›
+                //                          EXCEPT ‹await› (as ‹keyword›)
+                (pre.text !== 'for' || text === 'await') &&
+                //                    (c6)  NOT AFTER ‹return›
+                //                          AND IS DIFFERENT
+                //                          AND IS NOT ‹return›
+                (pre.text !== 'return'
+                  ? pre.text !== text
+                  : text !== 'return'
+                  ? //                (c7)  OR AFTER ‹return›
+                    //                      AND IS CONSTRUCTIVE
+                    constructiveKeywords.has(text)
+                  : //                (c8)  OR AFTER ‹return›
+                    //                      AND IS ‹return›
+                    //                      WHEN ON NEXT LINE
+                    pre.lineNumber < 1 + lineIndex))) &&
+              'keyword')
+          );
+      }
+    };
+
+    const EmptyConstruct = Object.freeze(new Construct());
+    const initializeContext = context => {
+      if (context.state['USE_CONSTRUCTS'] !== true) return;
+      context.parentContext == null || context.parentContext.currentConstruct == null
+        ? (context.currentConstruct == null && (context.currentConstruct = EmptyConstruct),
+          (context.parentConstruct = context.openingConstruct = EmptyConstruct))
+        : (context.currentConstruct == null && (context.currentConstruct = new Construct()),
+          (context.parentConstruct = context.parentContext.currentConstruct),
+          context.parentContext.goal === ECMAScriptGoal && context.parentConstruct.add(context.group.description),
+          (context.openingConstruct = context.parentConstruct.clone()),
+          DEBUG_CONSTRUCTS === true && console.log(context));
+    };
+
+    goals[symbols.ECMAScriptRegExpGoalSymbol].initializeContext = goals[
+      symbols.ECMAScriptStringGoalSymbol
+    ].initializeContext = goals[symbols.ECMAScriptTemplateLiteralGoalSymbol].initializeContext = initializeContext;
+
+    /** @param {Context} context */
+    goals[symbols.ECMAScriptGoalSymbol].initializeContext = context => {
+      context.captureKeyword = captureKeyword;
+      context.state['USE_CONSTRUCTS'] === true && initializeContext(context);
+    };
+  }
+
+  return {
+    ECMAScriptGoal,
+    ECMAScriptCommentGoal,
+    ECMAScriptRegExpGoal,
+    ECMAScriptStringGoal,
+    ECMAScriptTemplateLiteralGoal,
+    ECMAScriptDefinitions: generateDefinitions({
+      symbols,
+      identities,
+      goals,
+      groups: {
+        ['{']: {opener: '{', closer: '}'},
+        ['(']: {opener: '(', closer: ')'},
+        ['[']: {opener: '[', closer: ']'},
+        ['//']: {
+          opener: '//',
+          closer: '\n',
+          goal: symbols.ECMAScriptCommentGoalSymbol,
+          parentGoal: symbols.ECMAScriptGoalSymbol,
+          description: '‹comment›',
+        },
+        ['/*']: {
+          opener: '/*',
+          closer: '*/',
+          goal: symbols.ECMAScriptCommentGoalSymbol,
+          parentGoal: symbols.ECMAScriptGoalSymbol,
+          description: '‹comment›',
+        },
+        ['/']: {
+          opener: '/',
+          closer: '/',
+          goal: symbols.ECMAScriptRegExpGoalSymbol,
+          parentGoal: symbols.ECMAScriptGoalSymbol,
+          description: '‹pattern›',
+        },
+        ["'"]: {
+          opener: "'",
+          closer: "'",
+          goal: symbols.ECMAScriptStringGoalSymbol,
+          parentGoal: symbols.ECMAScriptGoalSymbol,
+          description: '‹string›',
+        },
+        ['"']: {
+          opener: '"',
+          closer: '"',
+          goal: symbols.ECMAScriptStringGoalSymbol,
+          parentGoal: symbols.ECMAScriptGoalSymbol,
+          description: '‹string›',
+        },
+        ['`']: {
+          opener: '`',
+          closer: '`',
+          goal: symbols.ECMAScriptTemplateLiteralGoalSymbol,
+          parentGoal: symbols.ECMAScriptGoalSymbol,
+          description: '‹template›',
+        },
+        ['${']: {
+          opener: '${',
+          closer: '}',
+          goal: symbols.ECMAScriptGoalSymbol,
+          parentGoal: symbols.ECMAScriptTemplateLiteralGoalSymbol,
+          description: '‹span›',
+        },
+      },
+    }),
   };
-
-  const EmptyConstruct = Object.freeze(new Construct());
-  const initializeContext = context => {
-    if (context.state['USE_CONSTRUCTS'] !== true) return;
-    context.parentContext == null || context.parentContext.currentConstruct == null
-      ? (context.currentConstruct == null && (context.currentConstruct = EmptyConstruct),
-        (context.parentConstruct = context.openingConstruct = EmptyConstruct))
-      : (context.currentConstruct == null && (context.currentConstruct = new Construct()),
-        (context.parentConstruct = context.parentContext.currentConstruct),
-        context.parentContext.goal === ECMAScriptGoal && context.parentConstruct.add(context.group.description),
-        (context.openingConstruct = context.parentConstruct.clone()),
-        DEBUG_CONSTRUCTS === true && console.log(context));
-  };
-
-  goals[RegExpGoalSymbol].initializeContext = goals[StringGoalSymbol].initializeContext = goals[
-    TemplateLiteralGoalSymbol
-  ].initializeContext = initializeContext;
-
-  /** @param {Context} context */
-  goals[ECMAScriptGoalSymbol].initializeContext = context => {
-    context.captureKeyword = captureKeyword;
-    context.state['USE_CONSTRUCTS'] === true && initializeContext(context);
-  };
-}
-
-const symbols = {
-  ECMAScriptGoal: ECMAScriptGoalSymbol,
-  CommentGoal: CommentGoalSymbol,
-  RegExpGoal: RegExpGoalSymbol,
-  StringGoal: StringGoalSymbol,
-  TemplateLiteralGoal: TemplateLiteralGoalSymbol,
-  FaultGoal: FaultGoalSymbol,
-};
-
-/** Unique token records @type {{[symbol: symbol]: }} */
-const tokens = {};
-
-generateDefinitions({groups, goals, identities, symbols, keywords, tokens});
+})();
 
 /** @typedef {import('./types').State} State */
 /** @typedef {import('./types').Context} Context */
@@ -1543,207 +1834,6 @@ generateDefinitions({groups, goals, identities, symbols, keywords, tokens});
 // function Symbolic(key, description = key) {
 //   return (symbols[key] = Symbol(description));
 // }
-
-//@ts-check
-/// <reference path="./types.d.ts" />
-
-/** Matcher for composable matching */
-class Matcher extends RegExp {
-  /**
-   * @param {MatcherPattern} pattern
-   * @param {MatcherFlags} [flags]
-   * @param {MatcherEntities} [entities]
-   * @param {{}} [state]
-   */
-  constructor(pattern, flags, entities, state) {
-    //@ts-ignore
-    super(pattern, flags);
-    (pattern &&
-      pattern.entities &&
-      Symbol.iterator in pattern.entities &&
-      ((!entities && (entities = pattern.entities)) || entities === pattern.entities)) ||
-      Object.freeze((entities = (entities && Symbol.iterator in entities && [...entities]) || []));
-    /** @type {MatcherEntities} */
-    this.entities = entities;
-    this.state = state;
-    this.exec = this.exec;
-    ({DELIMITER: this.DELIMITER = Matcher.DELIMITER, UNKNOWN: this.UNKNOWN = Matcher.UNKNOWN} = new.target);
-  }
-
-  /**
-   * @param {string} source
-   */
-  exec(source) {
-    /** @type {MatcherExecArray} */
-    let match;
-
-    // @ts-ignore
-    match = super.exec(source);
-
-    // @ts-ignore
-    if (match === null) return null;
-
-    // @ts-ignore
-    match.matcher = this;
-    match.capture = {};
-
-    //@ts-ignore
-    for (
-      let i = 0, entity;
-      match[++i] === undefined ||
-      void (
-        (entity = this.entities[(match.entity = i - 1)]) == null ||
-        (typeof entity === 'function'
-          ? entity(match[0], i, match, this.state)
-          : (match.capture[(match.identity = entity)] = match[0]))
-      );
-
-    );
-
-    return match;
-  }
-
-  /**
-   * @param {MatcherPatternFactory} factory
-   * @param {MatcherFlags} [flags]
-   * @param {PropertyDescriptorMap} [properties]
-   */
-  static define(factory, flags, properties) {
-    /** @type {MatcherEntities} */
-    const entities = [];
-    entities.flags = '';
-    const pattern = factory(entity => {
-      if (entity !== null && entity instanceof Matcher) {
-        entities.push(...entity.entities);
-
-        !entity.flags || (entities.flags = entities.flags ? Matcher.flags(entities.flags, entity.flags) : entity.flags);
-
-        return entity.source;
-      } else {
-        entities.push(((entity != null || undefined) && entity) || undefined);
-      }
-    });
-    flags = Matcher.flags('g', flags == null ? pattern.flags : flags, entities.flags);
-    const matcher = new ((this && (this.prototype === Matcher.prototype || this.prototype instanceof RegExp) && this) ||
-      Matcher)(pattern, flags, entities);
-
-    properties && Object.defineProperties(matcher, properties);
-
-    return matcher;
-  }
-
-  static flags(...sources) {
-    let flags = '',
-      iterative;
-    for (const source of sources) {
-      if (!source || (typeof source !== 'string' && typeof source.flags !== 'string')) continue;
-      for (const flag of source.flags || source)
-        (flag === 'g' || flag === 'y' ? iterative || !(iterative = true) : flags.includes(flag)) || (flags += flag);
-    }
-    return flags;
-  }
-
-  static get sequence() {
-    const {raw} = String;
-    const {replace} = Symbol;
-
-    /**
-     * @param {TemplateStringsArray} template
-     * @param  {...any} spans
-     * @returns {string}
-     */
-    const sequence = (template, ...spans) =>
-      sequence.WHITESPACE[replace](raw(template, ...spans.map(sequence.span)), '');
-    // const sequence = (template, ...spans) =>
-    //   sequence.WHITESPACE[replace](sequence.COMMENTS[replace](raw(template, ...spans.map(sequence.span)), ''), '');
-
-    /**
-     * @param {any} value
-     * @returns {string}
-     */
-    sequence.span = value =>
-      (value &&
-        // TODO: Don't coerce to string here?
-        (typeof value !== 'symbol' && `${value}`)) ||
-      '';
-
-    sequence.WHITESPACE = /^\s+|\s*\n\s*|\s+$/g;
-    // sequence.COMMENTS = /(?:^|\n)\s*\/\/.*(?=\n)|\n\s*\/\/.*(?:\n\s*)*$/g;
-
-    Object.defineProperty(Matcher, 'sequence', {value: Object.freeze(sequence), enumerable: true, writable: false});
-    return sequence;
-  }
-
-  static get join() {
-    const {sequence} = this;
-
-    const join = (...values) =>
-      values
-        .map(sequence.span)
-        .filter(Boolean)
-        .join('|');
-
-    Object.defineProperty(Matcher, 'join', {value: Object.freeze(join), enumerable: true, writable: false});
-
-    return join;
-  }
-
-  static get matchAll() {
-    /**
-     * @template {RegExp} T
-     * @type {(string: MatcherText, matcher: T) => MatcherIterator<T> }
-     */
-    const matchAll =
-      //@ts-ignore
-      (() =>
-        Function.call.bind(
-          // String.prototype.matchAll || // TODO: Uncomment eventually
-          {
-            /**
-             * @this {string}
-             * @param {RegExp | string} pattern
-             */
-            *matchAll() {
-              const matcher =
-                arguments[0] &&
-                (arguments[0] instanceof RegExp
-                  ? Object.setPrototypeOf(RegExp(arguments[0].source, arguments[0].flags || 'g'), arguments[0])
-                  : RegExp(arguments[0], 'g'));
-              const string = String(this);
-
-              if (!(matcher.flags.includes('g') || matcher.flags.includes('y')))
-                return void (yield matcher.exec(string));
-
-              for (
-                let match, lastIndex = -1;
-                lastIndex <
-                ((match = matcher.exec(string))
-                  ? (lastIndex = matcher.lastIndex + (match[0].length === 0))
-                  : lastIndex);
-                yield match, matcher.lastIndex = lastIndex
-              );
-            },
-          }.matchAll,
-        ))();
-
-    Object.defineProperty(Matcher, 'matchAll', {value: Object.freeze(matchAll), enumerable: true, writable: false});
-
-    return matchAll;
-  }
-}
-
-// Well-known identities for meaningful debugging which are
-//   Strings but could possible be changed to Symbols
-//
-//   TODO: Revisit Matcher.UNKOWN
-//
-
-const {
-  /** Identity for delimiter captures (like newlines) */
-  DELIMITER = (Matcher.DELIMITER = 'DELIMITER'),
-  /** Identity for unknown captures */
-  UNKNOWN = (Matcher.UNKNOWN = 'UNKNOWN'),
-} = Matcher;
 
 /// <reference path="./types.d.ts" />
 
@@ -1994,8 +2084,15 @@ const TokenMatcher = (() => {
       state.nextOffset = match.input.indexOf(search, match.index + match[0].length) + (0 + delta || 0);
     } else if (search != null && typeof search === 'object') {
       search.lastIndex = match.index + match[0].length;
-      search.exec(match.input);
-      state.nextOffset = search.lastIndex + (0 + delta || 0);
+      const matched = search.exec(match.input);
+      // console.log(...matched, {matched});
+      if (matched[1]) {
+        state.nextOffset = search.lastIndex;
+        state.nextFault = true;
+        return 'fault';
+      } else {
+        state.nextOffset = search.lastIndex + (0 + delta || 0);
+      }
     } else {
       throw new TypeError(`forward invoked with an invalid search argument`);
     }
@@ -2121,19 +2218,15 @@ const matcher = (ECMAScript =>
       )`,
     ),
   Escape: ({
-    IdentifierStartCharacter = RegExp(
-      TokenMatcher.sequence/* regexp */ `[${IdentifierStart}]`,
-      IdentifierPart.includes('\\p{') ? 'u' : '',
-    ),
-    IdentifierPartSequence = RegExp(
-      TokenMatcher.sequence/* regexp */ `[${IdentifierPart}]+`,
-      IdentifierPart.includes('\\p{') ? 'u' : '',
-    ),
+    IdentifierStartCharacter = RegExp(TokenMatcher.sequence/* regexp */ `[${ECMAScriptRanges.IdentifierStart}]`, 'u'),
+    IdentifierPartSequence = RegExp(TokenMatcher.sequence/* regexp */ `[${ECMAScriptRanges.IdentifierPart}]+`, 'u'),
     fromUnicodeEscape = (fromCodePoint => text => fromCodePoint(parseInt(text.slice(2), 16)))(String.fromCodePoint),
   } = {}) =>
     TokenMatcher.define(
       entity => TokenMatcher.sequence/* regexp */ `(
-        \\u[${HexDigit}][${HexDigit}][${HexDigit}][${HexDigit}]
+        \\u[${ECMAScriptRanges.HexDigit}][${ECMAScriptRanges.HexDigit}][${ECMAScriptRanges.HexDigit}][${
+        ECMAScriptRanges.HexDigit
+      }]
         ${entity((text, entity, match, state) => {
           match.format = 'escape';
           TokenMatcher.capture(
@@ -2149,13 +2242,13 @@ const matcher = (ECMAScript =>
           );
         })}
       )|(
-        \\f|\\n|\\r|\\t|\\v|\\c[${ControlLetter}]
-        |\\x[${HexDigit}][${HexDigit}]
-        |\\u\{[${HexDigit}]*\}
+        \\f|\\n|\\r|\\t|\\v|\\c[${ECMAScriptRanges.ControlLetter}]
+        |\\x[${ECMAScriptRanges.HexDigit}][${ECMAScriptRanges.HexDigit}]
+        |\\u\{[${ECMAScriptRanges.HexDigit}]*\}
         |\\[^]
         ${entity((text, entity, match, state) => {
           TokenMatcher.capture(state.context.goal.type || 'escape', match);
-          match.capture[keywords[text]] = text;
+          match.capture[ECMAScriptGoal.keywords[text]] = text;
         })}
       )`,
     ),
@@ -2169,17 +2262,17 @@ const matcher = (ECMAScript =>
             state.context.goal === ECMAScriptGoal
               ? TokenMatcher.open(text, state) ||
                   // Safely fast forward to end of comment
-                  ((match.punctuator = CommentGoal.type),
+                  ((match.punctuator = ECMAScriptCommentGoal.type),
                   TokenMatcher.forward(state.context.goal.groups[text].closer, match, state),
                   // text.startsWith('/*')
                   //   ? TokenMatcher.forward('*/', match, state)
                   //   : text.startsWith('//') && TokenMatcher.forward('\n', match, state),
                   'opener')
-              : state.context.goal !== CommentGoal
+              : state.context.goal !== ECMAScriptCommentGoal
               ? state.context.goal.type || 'sequence'
               : state.context.group.closer !== text
-              ? CommentGoal.type
-              : TokenMatcher.close(text, state) || (match.punctuator = CommentGoal.type),
+              ? ECMAScriptCommentGoal.type
+              : TokenMatcher.close(text, state) || (match.punctuator = ECMAScriptCommentGoal.type),
             match,
           );
         })}
@@ -2200,14 +2293,14 @@ const matcher = (ECMAScript =>
                   // Safely fast forward to end of string
                   (TokenMatcher.forward(text === '"' ? DoubleQuoteLookAhead : SingleQuoteLookAhead, match, state, -1),
                   // (match.flatten = true),
-                  (match.punctuator = StringGoal.type),
+                  (match.punctuator = ECMAScriptStringGoal.type),
                   'opener')
-              : state.context.goal !== StringGoal
+              : state.context.goal !== ECMAScriptStringGoal
               ? state.context.goal.type || 'sequence'
               : state.context.group.closer !== text
-              ? StringGoal.type
+              ? ECMAScriptStringGoal.type
               : TokenMatcher.close(text, state) ||
-                ((match.punctuator = StringGoal.type),
+                ((match.punctuator = ECMAScriptStringGoal.type),
                 // (match.flatten = true),
                 'closer'),
             match,
@@ -2225,12 +2318,12 @@ const matcher = (ECMAScript =>
             state.context.goal === ECMAScriptGoal
               ? TokenMatcher.open(text, state) ||
                   // TODO: Explore fast forward in template string parts
-                  ((match.punctuator = TemplateLiteralGoal.type), 'opener')
-              : state.context.goal !== TemplateLiteralGoal
+                  ((match.punctuator = ECMAScriptTemplateLiteralGoal.type), 'opener')
+              : state.context.goal !== ECMAScriptTemplateLiteralGoal
               ? state.context.goal.type || 'sequence'
               : state.context.group.closer !== text
-              ? TemplateLiteralGoal.type
-              : TokenMatcher.close(text, state) || ((match.punctuator = TemplateLiteralGoal.type), 'closer'),
+              ? ECMAScriptTemplateLiteralGoal.type
+              : TokenMatcher.close(text, state) || ((match.punctuator = ECMAScriptTemplateLiteralGoal.type), 'closer'),
             match,
           );
         })}
@@ -2247,7 +2340,7 @@ const matcher = (ECMAScript =>
               ? (match.punctuator = 'combinator')
               : state.context.goal.openers &&
                 state.context.goal.openers[text] === true &&
-                (state.context.goal !== RegExpGoal || state.context.group.opener !== '[')
+                (state.context.goal !== ECMAScriptRegExpGoal || state.context.group.opener !== '[')
               ? TokenMatcher.open(text, state) || 'opener'
               : state.context.goal.type || 'sequence',
             match,
@@ -2266,7 +2359,7 @@ const matcher = (ECMAScript =>
               ? (match.punctuator = 'combinator')
               : state.context.goal.closers &&
                 state.context.goal.closers[text] === true &&
-                (state.context.goal !== RegExpGoal ||
+                (state.context.goal !== ECMAScriptRegExpGoal ||
                   (state.context.group.opener !== '[' || text === state.context.group.closer))
               ? TokenMatcher.close(text, state) || 'closer'
               : state.context.goal.type || 'sequence',
@@ -2284,10 +2377,10 @@ const matcher = (ECMAScript =>
         ${entity((text, entity, match, state) => {
           match.format = 'punctuation';
           TokenMatcher.capture(
-            state.context.goal === CommentGoal
+            state.context.goal === ECMAScriptCommentGoal
               ? (state.context.group.closer === text && TokenMatcher.close(text, state)) ||
                   (match.punctuator = state.context.goal.type)
-              : state.context.goal === RegExpGoal && state.context.group.closer !== ']'
+              : state.context.goal === ECMAScriptRegExpGoal && state.context.group.closer !== ']'
               ? TokenMatcher.close('/', state) || ((match.punctuator = state.context.goal.type), 'closer')
               : state.context.goal !== ECMAScriptGoal
               ? state.context.goal.type || 'sequence'
@@ -2332,7 +2425,7 @@ const matcher = (ECMAScript =>
   Keyword: () =>
     TokenMatcher.define(
       entity => TokenMatcher.sequence/* regexp */ `\b(
-        ${TokenMatcher.join(...keywords).replace(/\./g, '\\.')}
+        ${TokenMatcher.join(...ECMAScriptGoal.keywords).replace(/\./g, '\\.')}
         ${entity((text, entity, match, state) => {
           match.format = 'identifier';
           TokenMatcher.capture(
@@ -2351,29 +2444,29 @@ const matcher = (ECMAScript =>
   Identifier: ({RegExpFlags = /^[gimsuy]+$/} = {}) =>
     TokenMatcher.define(
       entity => TokenMatcher.sequence/* regexp */ `(
-        [${IdentifierStart}][${IdentifierPart}]*
+        [${ECMAScriptRanges.IdentifierStart}][${ECMAScriptRanges.IdentifierPart}]*
         ${entity((text, entity, match, state) => {
           match.format = 'identifier';
           TokenMatcher.capture(
             state.context.goal !== ECMAScriptGoal
               ? state.context.goal.type || 'sequence'
               : state.lastToken !== undefined && state.lastToken.punctuator === 'pattern' && RegExpFlags.test(text)
-              ? ((match.flatten = true), (match.punctuator = RegExpGoal.type), 'closer')
+              ? ((match.flatten = true), (match.punctuator = ECMAScriptRegExpGoal.type), 'closer')
               : ((match.flatten = true), 'identifier'),
             match,
           );
         })}
       )`,
-      `${IdentifierStart}${IdentifierPart}`.includes('\\p{') ? 'u' : '',
+      `${ECMAScriptRanges.IdentifierStart}${ECMAScriptRanges.IdentifierPart}`.includes('\\p{') ? 'u' : '',
     ),
   Number: ({
     NumericSeparator,
     Digits = NumericSeparator
       ? Digit => TokenMatcher.sequence/* regexp */ `[${Digit}][${Digit}${TokenMatcher.escape(NumericSeparator)}]*`
       : Digit => TokenMatcher.sequence/* regexp */ `[${Digit}]+`,
-    DecimalDigits = Digits(DecimalDigit),
-    HexDigits = Digits(HexDigit),
-    BinaryDigits = Digits(BinaryDigit),
+    DecimalDigits = Digits(ECMAScriptRanges.DecimalDigit),
+    HexDigits = Digits(ECMAScriptRanges.HexDigit),
+    BinaryDigits = Digits(ECMAScriptRanges.BinaryDigit),
   } = {}) =>
     TokenMatcher.define(
       entity => TokenMatcher.sequence/* regexp */ `\b(
@@ -2492,7 +2585,7 @@ import.meta.url.includes('/es/playground.js') && (mode.USE_CONSTRUCTS = true);
  * @param {import('/markup/packages/tokenizer/lib/api').API} markup
  */
 const experimentalES = ((
-  sourceURL = './matcher.js',
+  sourceURL = './es-matcher.js',
   sourceType = 'es',
   resolveSourceType = (defaultType, {sourceType, resourceType, options}) => {
     if (!sourceType && (resourceType === 'javascript' || resourceType === 'octet')) return 'es';

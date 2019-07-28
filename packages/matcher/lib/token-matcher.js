@@ -250,8 +250,15 @@ export const TokenMatcher = (() => {
       state.nextOffset = match.input.indexOf(search, match.index + match[0].length) + (0 + delta || 0);
     } else if (search != null && typeof search === 'object') {
       search.lastIndex = match.index + match[0].length;
-      search.exec(match.input);
-      state.nextOffset = search.lastIndex + (0 + delta || 0);
+      const matched = search.exec(match.input);
+      // console.log(...matched, {matched});
+      if (matched[1]) {
+        state.nextOffset = search.lastIndex;
+        state.nextFault = true;
+        return 'fault';
+      } else {
+        state.nextOffset = search.lastIndex + (0 + delta || 0);
+      }
     } else {
       throw new TypeError(`forward invoked with an invalid search argument`);
     }

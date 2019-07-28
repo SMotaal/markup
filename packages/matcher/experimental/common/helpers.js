@@ -1,5 +1,6 @@
 ﻿//@ts-check
 import {countLineBreaks} from '../../../tokenizer/lib/core.js';
+import {RegExpRange} from '../../lib/range.js';
 
 /** @typedef {typeof stats} ContextStats */
 const stats = {
@@ -100,6 +101,7 @@ export const createToken = (match, state) => {
     lineIndex,
     lineOffset,
     nextOffset,
+    nextFault,
     lastToken,
     lastTrivia,
     lastAtom,
@@ -129,9 +131,29 @@ export const createToken = (match, state) => {
 
   currentGoalType = currentGoal.type;
 
-  nextOffset &&
-    (state.nextOffset = void (nextOffset > offset && (text = match.input.slice(offset, nextOffset)),
-    (state.matcher.lastIndex = nextOffset)));
+  if (nextOffset != null) {
+    state.nextOffset = undefined;
+    if (nextOffset > offset) {
+      text = match.input.slice(offset, nextOffset);
+      state.matcher.lastIndex = nextOffset;
+    }
+  } else if (nextFault != null) {
+    state.nextFault = undefined;
+    if (nextFault === true) {
+      fault = true;
+      flatten = false;
+      type = 'fault';
+      punctuator = undefined;
+      // console.log({state: {...state}, match, nextFault});
+    }
+  }
+
+  // nextOffset != null
+  //   ? ((state.nextOffset = undefined),
+  //     nextOffset > offset && ((text = match.input.slice(offset, nextOffset)), (state.matcher.lastIndex = nextOffset)))
+  //   : nextFault != null &&
+  //     ((state.nextFault = undefined),
+  //     fault || (nextFault === true && ((fault = true), (flatten = false), (type = 'fault'))));
 
   lineBreaks = (text === '\n' && 1) || countLineBreaks(text);
   isDelimiter = type === 'closer' || type === 'opener';
@@ -148,12 +170,15 @@ export const createToken = (match, state) => {
 
   /* Flattening / Token Folding */
 
-  flatten === false || flatten === true || (flatten = !isDelimiter && currentGoal.flatten === true);
+  flatten === false ||
+    flatten === true ||
+    (flatten = fault !== true && isDelimiter !== true && currentGoal.flatten === true);
 
   captureNumber = ++tokenContext.captureCount;
   state.totalCaptureCount++;
 
   if (
+    fault !== true && // type ! 'fault' &&
     (fold = flatten) && // fold only if flatten is allowed
     lastToken != null &&
     ((lastToken.contextNumber === contextNumber && lastToken.fold === true) ||
@@ -264,8 +289,17 @@ export const initializeContext = (assign =>
     );
   })(Object.assign);
 
-export const generateDefinitions = ({groups, goals, identities, symbols, keywords, tokens}) => {
-  const {[symbols.FaultGoal]: FaultGoal} = goals;
+export const generateDefinitions = ({groups = {}, goals = {}, identities = {}, symbols = {}, tokens = {}}) => {
+  // const {FaultGoal: FaultGoalSymbol = symbols.FaultGoal = generateDefinitions.FaultGoal.symbol} = symbols;
+  // const FaultGoal = (goals[(symbols.FaultGoal = generateDefinitions.FaultGoal.symbol)] = generateDefinitions.FaultGoal);
+  const FaultGoal = generateDefinitions.FaultGoal;
+  // typeof symbols.FaultGoal === 'symbol' &&
+  // typeof goals[symbols.FaultGoal] === 'object' &&
+  // (goals[symbols.FaultGoal].symbol === undefined || symbols.FaultGoal === goals[symbols.FaultGoal].symbol)
+  //   ? goals[symbols.FaultGoal]
+  //   : typeof symbols.FaultGoal === 'symbol'
+  //   ? (goals[symbols.FaultGoal] = {...generateDefinitions.FaultGoal, symbol: symbols.FaultGoal})
+  //   : (goals[(symbols.FaultGoal = generateDefinitions.FaultGoal.symbol)] = generateDefinitions.FaultGoal);
 
   const {create, freeze, entries, getOwnPropertySymbols, getOwnPropertyNames, setPrototypeOf} = Object;
 
@@ -282,7 +316,9 @@ export const generateDefinitions = ({groups, goals, identities, symbols, keyword
     // @ts-ignore
     const {[symbol]: goal} = goals;
 
-    goal.name = (goal.symbol = symbol).description.replace(/Goal$/, '');
+    goal.symbol === symbol || (goal.symbol = symbol);
+    goal.name = symbol.description.replace(/Goal$/, '');
+    symbols[`${goal.name}Goal`] = goal.symbol;
     goal[Symbol.toStringTag] = `«${goal.name}»`;
     goal.tokens = tokens[symbol] = {};
     goal.groups = [];
@@ -321,14 +357,18 @@ export const generateDefinitions = ({groups, goals, identities, symbols, keyword
   freeze(identities);
   freeze(symbols);
 
-  for (const [identity, list] of entries({})) {
-    for (const keyword of list.split(/\s+/)) {
-      keywords[keyword] = identity;
-    }
-  }
+  return freeze({groups, goals, identities, symbols, tokens});
 
-  keywords[Symbol.iterator] = Array.prototype[Symbol.iterator].bind(Object.getOwnPropertyNames(keywords));
-  freeze(keywords);
+  // if (keywords) {
+  //   for (const [identity, list] of entries({})) {
+  //     for (const keyword of list.split(/\s+/)) {
+  //       keywords[keyword] = identity;
+  //     }
+  //   }
+
+  //   keywords[Symbol.iterator] = Array.prototype[Symbol.iterator].bind(Object.getOwnPropertyNames(keywords));
+  //   freeze(keywords);
+  // }
 
   /**
    * Creates a symbolically mapped goal-specific token record
@@ -345,22 +385,41 @@ export const generateDefinitions = ({groups, goals, identities, symbols, keyword
   }
 };
 
+export const FaultGoal = (generateDefinitions.FaultGoal = {symbol: Symbol('FaultGoal'), type: 'fault'});
+generateDefinitions({goals: {[FaultGoal.symbol]: FaultGoal}});
+
 /**
  * @template {string} K
  * @template {string} I
  * @param {{[i in I]: K[]}} mappings
  */
 export const Keywords = mappings => {
+  /** @type {{[i in I]: ReadonlyArray<K>}} */
+  //@ts-ignore
+  const identities = {};
+
   /** @type {{[k in K]: I}} */
   //@ts-ignore
-  const keywords = {};
+  const keywords = {...Keywords.prototype};
 
   for (const identity in mappings) {
+    identities[identity] = Object.freeze([...mappings[identity]]);
     for (const keyword of mappings[identity]) {
       keywords[keyword] = identity;
     }
   }
+
+  Object.setPrototypeOf(keywords, identities);
+  Object.freeze(identities);
+  Object.freeze(keywords);
+
   return keywords;
+};
+
+Keywords.prototype = {
+  [Symbol.iterator]() {
+    return Object.getOwnPropertyNames(this)[Symbol.iterator]();
+  },
 };
 
 export const Construct = class Construct extends Array {
@@ -388,6 +447,49 @@ export const Construct = class Construct extends Array {
     clone.last = this.last;
     return clone;
   }
+};
+
+/**
+ * @template {string} K
+ * @template {{[k in K]: (range: typeof RegExpRange.define, ranges: Record<K, RegExpRange>) => RegExpRange}} T
+ * @param {T} factories
+ */
+export const Ranges = factories => {
+  /** @type {PropertyDescriptorMap} */
+  const descriptors = {
+    ranges: {
+      get() {
+        return ranges;
+      },
+      enumerable: true,
+      configurable: false,
+    },
+  };
+
+  // TODO: Revisit once unicode classes are stable
+  const safeRange = (strings, ...values) => {
+    try {
+      return RegExpRange.define(strings, ...values);
+    } catch (exception) {}
+  };
+
+  for (const property in factories) {
+    descriptors[property] = {
+      get() {
+        const value = factories[property](safeRange, ranges);
+        if (value === undefined) throw new RangeError(`Failed to define: ${factories[property]}`);
+        Object.defineProperty(ranges, property, {value, enumerable: true, configurable: false});
+        return value;
+      },
+      enumerable: true,
+      configurable: true,
+    };
+  }
+
+  /** @type {{ranges: typeof ranges} & Record<K, RegExpRange>} */
+  const ranges = Object.create(null, descriptors);
+
+  return ranges;
 };
 
 /** @typedef {import('./types').Match} Match */

@@ -1,0 +1,7 @@
+{
+  "numbers": [0, -0, 0.00, 0.0e0, 0.0e-00, 0.0e+00],
+  "strings": {
+    '"escapes"': "\"\/\\\b\t\n\r\u0000\uffff"
+    "'escapes'": '\'\/\\\b\t\n\r\u0000\uffff'
+  },
+}

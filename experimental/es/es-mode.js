@@ -1,6 +1,6 @@
 ﻿//@ts-check
 
-import {matcher} from './matcher.js';
+import {matcher} from './es-matcher.js';
 import {initializeState, finalizeState, createToken} from './helpers.js';
 import {createMatcherMode} from '../../packages/matcher/lib/token-matcher.js';
 
