@@ -1,5 +1,5 @@
 import * as pseudom from '../../pseudom/pseudom.js';
-// export {encodeEntity, encodeEntities} from '../../pseudom/pseudom.js';
+// import {encodeEntities} from '../../pseudom/pseudom.js';
 import {each} from './helpers.js';
 
 /// RUNTIME
@@ -160,6 +160,17 @@ class MarkupRenderer {
     renderedLine && (yield renderedLine);
   }
 
+  /** @type {string => string} */
+  static get escape() {
+    return Object.defineProperty(MarkupRenderer, 'escape', {
+      value: ((replace, replacement) => string => replace(string, replacement))(
+        RegExp.prototype[Symbol.replace].bind(/[\0-\x1F"\\]/g),
+        m => `&#x${m.charCodeAt(0).toString(16)};`,
+      ),
+      writable: false,
+    }).escape;
+  }
+
   /**
    * @param {string} tag
    * @param {Partial<HTMLElement>} [properties]
@@ -187,19 +198,12 @@ class MarkupRenderer {
           : Element(tag, properties);
 
       typeof hint === 'string' && hint !== '' && (hintSeparator = hint.indexOf('\n\n')) !== -1
-        ? ((element.dataset = {hint: `${markupHint}${hint.slice(hintSeparator).replace(/\n/g, '&#x000A;')}`}),
+        ? ((element.dataset = {
+            hint: `${markupHint}${MarkupRenderer.escape(hint.slice(hintSeparator))}`,
+          }),
           hintSeparator === 0 || (element.className = `${element.className} ${hint.slice(0, hintSeparator)}`))
         : (hint && (element.className = `${element.className} ${hint}`),
           (element.dataset = {hint: hint || markupHint || element.className}));
-
-      // (hint &&
-      //   (hint = hint) &&
-      //   ((element.className = `${element.className || ''} ${classHint || hint}`),
-      //   (element.dataset = {
-      //     // hint: (markupHint ? `${markupHint}\n\n${hint}` : hint).replace(/\n/g, '&#x000A;'),
-      //     hint: (markupHint ? `${markupHint}\n\n${hint}` : hint).replace(/\n/g, '&#x000A;'),
-      //   }))) ||
-      //   (element.className && (hint = element.className));
 
       return element;
     });

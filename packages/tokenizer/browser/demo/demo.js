@@ -16,7 +16,7 @@ const Examples = ({
   ['json']: {url: LOCAL('./examples/samples/sample.json')},
   ['complex']: {url: LOCAL('./examples/samples/complex.html')},
   ['gfm']: {url: LOCAL('./examples/samples/gfm.md')},
-  ['es-matcher']: {url: RELATIVE('/markup/experimental/es/matcher.js', import.meta.url), mode: 'es'},
+  ['es-matcher']: {url: RELATIVE('/markup/experimental/es/es-matcher.js', import.meta.url), mode: 'es'},
   ['es-matcher-bundle']: {url: LOCAL('./dist/tokenizer.browser.es.js', import.meta.url), mode: 'es'},
   ['babel']: {url: UNPKG('@babel/standalone')},
   ['sesm']: {url: UNPKG('ses?module'), mode: 'es'},
@@ -153,7 +153,7 @@ export default (markup, overrides) => {
       const text = `${value || ''}`;
       (title = `${title || ''}`.trim()) ? element.setAttribute('title', title) : element.removeAttribute('title');
       element ? (element.innerText = text) : text && flags.has('debug') && console.info('[%s] %o', name, value);
-      document.documentElement.style.setProperty(`--${name}`, text);
+      // document.documentElement.style.setProperty(`--${name}`, text);
     };
 
     header.timing = (name, value) => {
