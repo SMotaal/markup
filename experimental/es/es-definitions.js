@@ -1,6 +1,6 @@
 ﻿//@ts-check
 // import {generateDefinitions, Keywords, Construct} from './helpers.js';
-import {Construct} from './helpers.js';
+import {Construct} from '../../packages/matcher/experimental/common/helpers.js';
 import {generateDefinitions, Keywords} from '../../packages/matcher/experimental/common/helpers.js';
 
 export const {

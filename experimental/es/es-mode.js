@@ -1,7 +1,7 @@
 ﻿//@ts-check
 
 import {matcher} from './es-matcher.js';
-import {initializeState, finalizeState, createToken} from './helpers.js';
+import {initializeState, finalizeState, createToken} from '../../packages/matcher/experimental/common/helpers.js';
 import {createMatcherMode} from '../../packages/matcher/lib/token-matcher.js';
 
 export const mode = createMatcherMode(matcher, {
