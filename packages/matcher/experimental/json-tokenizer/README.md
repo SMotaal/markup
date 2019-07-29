@@ -57,9 +57,11 @@ The Matcher-based tokenizer implementation for JSON.
 
 - Development playground [/markup/experimental/json/](./../../../../experimental/json/)
 
-- Matcher does yet optimize nested matcher templates, it simply concatenates the expression and the entities.
+- Imperative `TokenMatcher.forward` optimizations used for Strings.
 
-  - Manual optimizations must be made for strings and comments using the `TokenMatcher.forward` helper for performance and more importantly to limit the complexity of entity handlers by delegating to so called `LookAheadExpressions`.
+  > **Why**: Such optimizations are essential since Matcher does yet have a conceptual framework in place to optimize nested matchers which do not compose but instead shared enough state to switch cleanly switch back-and-forth based between two fundamental matcher templates, ie for different goals or grammars.
+  >
+  > Worth noting that this would be especially useful down the road for nesting different grammars directly without actually needing most or all of Markup's core APIs.
 
 ## References
 

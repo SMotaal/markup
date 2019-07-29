@@ -4,7 +4,14 @@ No Documentation Yet!
 
 ## Progress
 
-- [x] Initial Implementation
+- [x] Experiments
+
+  - [x] [`experimental/json-tokenizer`](./experimental/json-tokenizer/README.md)
+  - [ ] [`experimental/jessie-tokenizer`](./experimental/jessie-tokenizer/README.md)
+  - [ ] [`experimental/justin-tokenizer`](./experimental/justin-tokenizer/README.md)
+  - [ ] [`experimental/ses-tokenizer`](./experimental/ses-tokenizer/README.md)
+
+- [x] Implementation
 
   - [x] Implement base Matcher — [`lib/matcher.js`](./lib/matcher.js)
     - [x] Refactor Tokenizer helpers — [`lib/token-matcher.js`](./lib/token-matcher.js)
@@ -12,10 +19,3 @@ No Documentation Yet!
     - [x] Refactor Debugging helpers — [`lib/debug.js`](./lib/debug.js)
     - [x] Refactor Matches wrapper — [`lib/matches.js`](./lib/matches.js)
   - [x] Refactor RegExpRange — [`lib/range.js`](./lib/range.js)
-
-- [x] Experimental Implementation
-
-  - [x] [`experimental/json-tokenizer`](./experimental/json-tokenizer/README.md)
-  - [ ] [`experimental/jessie-tokenizer`](./experimental/jessie-tokenizer/README.md)
-  - [ ] [`experimental/justin-tokenizer`](./experimental/justin-tokenizer/README.md)
-  - [ ] [`experimental/js-tokenizer`](./experimental/js-tokenizer/README.md)
