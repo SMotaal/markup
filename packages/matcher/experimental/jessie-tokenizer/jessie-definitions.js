@@ -3,24 +3,32 @@ import {generateDefinitions, Keywords} from '../common/helpers.js';
 
 // TODO: Refactor from es-definitions and json-definitions
 
-export const {JessieGoal, JessieStringGoal, JessieObjectGoal, JessieArrayGoal, JessieDefinitions} = (() => {
+export const {JessieGoal, JessieStringGoal, JessieCommentGoal, JessieDefinitions} = (() => {
   const identities = {
     Keyword: 'Jessie.Keyword',
   };
   const goals = {};
   const symbols = {};
 
+  // Jessie being closer to ECMAScript than JSON means it will
+  //   require imperative matcher logic and so opt to minimize
+  //   complexity by not creating separate JessieObjectGoal and
+  //   JessieArrayGoal… etc. What we'll explore instead is how
+  //   we can constructional argument the goal's imperative logic.
+  //
+  // TODO: Imperative means excluded matches NEVER "fault"
   const JessieGoal = (goals[(symbols.JessieGoal = Symbol('JessieGoal'))] = {
     type: undefined,
     flatten: undefined,
     fold: undefined,
     // keywords: Keywords({[identities.Keyword]: ['true', 'false', 'null']}),
-    openers: ['{', '[', '"', "'"],
+    openers: ['{', '[', '"', "'", '//', '/*'],
+    closers: ['}', ']'],
+    punctuators: [':', ','],
   });
 
-  // TODO: Add "'"
   const JessieStringGoal = (goals[(symbols.JessieStringGoal = Symbol('JessieStringGoal'))] = {
-    ...JessieGoal,
+    // ...JessieGoal,
     type: 'quote',
     flatten: true,
     fold: true,
@@ -32,31 +40,23 @@ export const {JessieGoal, JessieStringGoal, JessieObjectGoal, JessieArrayGoal, J
 
   // TODO: Add TemplateLiteral
 
-  const JessieObjectGoal = (goals[(symbols.JessieObjectGoal = Symbol('JessieObjectGoal'))] = {
-    ...JessieGoal,
-    closers: ['}'],
-    punctuators: [':', ','],
-  });
-
-  const JessieArrayGoal = (goals[(symbols.JessieArrayGoal = Symbol('JessieArrayGoal'))] = {
-    ...JessieGoal,
-    closers: [']'],
-    punctuators: [','],
+  const JessieCommentGoal = (goals[(symbols.JessieCommentGoalSymbol = Symbol('JessieCommentGoal'))] = {
+    type: 'comment',
+    flatten: true,
+    fold: true,
   });
 
   return {
     JessieGoal,
     JessieStringGoal,
-    JessieObjectGoal,
-    JessieArrayGoal,
+    JessieCommentGoal,
     JessieDefinitions: generateDefinitions({
       symbols,
       identities,
       goals,
       groups: {
-        ['{']: {opener: '{', closer: '}', goal: symbols.JessieObjectGoal},
-        ['[']: {opener: '[', closer: ']', goal: symbols.JessieArrayGoal},
-        // TODO: Define "'" and '`'
+        ['{']: {opener: '{', closer: '}', goal: symbols.JessieGoal},
+        ['[']: {opener: '[', closer: ']', goal: symbols.JessieGoal},
         ['"']: {
           opener: '"',
           closer: '"',
@@ -70,6 +70,20 @@ export const {JessieGoal, JessieStringGoal, JessieObjectGoal, JessieArrayGoal, J
           goal: symbols.JessieStringGoal,
           parentGoal: symbols.JessieGoal,
           description: '‹string›',
+        },
+        ['//']: {
+          opener: '//',
+          closer: '\n',
+          goal: symbols.JessieCommentGoalSymbol,
+          parentGoal: symbols.JessieGoal,
+          description: '‹comment›',
+        },
+        ['/*']: {
+          opener: '/*',
+          closer: '*/',
+          goal: symbols.JessieCommentGoalSymbol,
+          parentGoal: symbols.JessieGoal,
+          description: '‹comment›',
         },
       },
     }),

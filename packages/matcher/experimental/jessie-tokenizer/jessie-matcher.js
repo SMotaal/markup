@@ -1,6 +1,6 @@
 ﻿import {TokenMatcher} from '../../lib/token-matcher.js';
 import {JSONRanges} from '../json-tokenizer/json-ranges.js';
-import {JessieGoal, JessieStringGoal} from './jessie-definitions.js';
+import {JessieGoal, JessieStringGoal, JessieCommentGoal} from './jessie-definitions.js';
 
 // TODO: Refactor from es-matcher and json-matcher
 
@@ -11,6 +11,7 @@ export const matcher = (JessieGrammar =>
       TokenMatcher.join(
         entity(JessieGrammar.Break()),
         entity(JessieGrammar.Whitespace()),
+        entity(JessieGrammar.Comment()),
         entity(JessieGrammar.String()),
         entity(JessieGrammar.Opener()),
         entity(JessieGrammar.Closer()),
@@ -29,7 +30,7 @@ export const matcher = (JessieGrammar =>
       entity => TokenMatcher.sequence/* regexp */ `(
         .
         ${entity((text, entity, match, state) => {
-          TokenMatcher.capture(state.context.goal.type || TokenMatcher.fault(text, state), match, text);
+          TokenMatcher.capture(state.context.goal.type || 'fault', match, text);
         })}
       )`,
     ),
@@ -40,7 +41,13 @@ export const matcher = (JessieGrammar =>
         ${entity((text, entity, match, state) => {
           match.format = 'whitespace';
           TokenMatcher.capture(
-            state.context.goal === JessieGoal ? 'break' : TokenMatcher.fault(text, state),
+            state.context.goal === JessieGoal
+              ? 'break'
+              : (state.context.group !== undefined &&
+                  state.context.group.closer === '\n' &&
+                  TokenMatcher.close(text, state)) ||
+                  state.context.goal.type ||
+                  'fault',
             match,
             text,
           );
@@ -56,6 +63,29 @@ export const matcher = (JessieGrammar =>
           match.format = 'whitespace';
           TokenMatcher.capture(
             state.context.goal.type || (match.flatten = state.lineOffset !== match.index) ? 'whitespace' : 'inset',
+            match,
+          );
+        })}
+      )`,
+    ),
+  Comment: () =>
+    TokenMatcher.define(
+      entity => TokenMatcher.sequence/* regexp */ `(
+        \/\/|\/\*|\*\/
+        ${entity((text, entity, match, state) => {
+          match.format = 'punctuation';
+          TokenMatcher.capture(
+            state.context.goal === JessieGoal
+              ? TokenMatcher.open(text, state) ||
+                  // Safely fast forward to end of comment
+                  ((match.punctuator = JessieCommentGoal.type),
+                  TokenMatcher.forward(state.context.goal.groups[text].closer, match, state),
+                  'opener')
+              : state.context.goal !== JessieCommentGoal
+              ? state.context.goal.type || 'fault'
+              : state.context.group.closer !== text
+              ? JessieCommentGoal.type
+              : TokenMatcher.close(text, state) || (match.punctuator = JessieCommentGoal.type),
             match,
           );
         })}
