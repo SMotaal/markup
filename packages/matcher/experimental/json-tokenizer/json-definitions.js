@@ -6,23 +6,19 @@ export const {JSONGoal, JSONStringGoal, JSONObjectGoal, JSONArrayGoal, JSONDefin
   const goals = {};
   const symbols = {};
 
+  // JSON being the well-defined declarative subset of ECMAScript
+  //   grammar free from any statements means it can rely mostly
+  //   on well-defined goals with little imperative logic. In fact
+  //   it can technically be implemented without any logic, but
+  //   that requires a lot of opinionated declarative mechanisms.
+  //
+  // TODO: Declarative means excluded matches ALWAYS "fault"
   const JSONGoal = (goals[(symbols.JSONGoal = Symbol('JSONGoal'))] = {
     type: undefined,
     flatten: undefined,
     fold: undefined,
     keywords: Keywords({[identities.Keyword]: ['true', 'false', 'null']}),
     openers: ['{', '[', '"'],
-  });
-
-  const JSONStringGoal = (goals[(symbols.JSONStringGoal = Symbol('JSONStringGoal'))] = {
-    ...JSONGoal,
-    type: 'quote',
-    flatten: true,
-    fold: true,
-    keywords: [],
-    openers: [],
-    closers: ['"'],
-    punctuators: ['\\', '\\b', '\\b', '\\n', '\\r', '\\t', '\\u', '\\"'],
   });
 
   const JSONObjectGoal = (goals[(symbols.JSONObjectGoal = Symbol('JSONObjectGoal'))] = {
@@ -34,7 +30,19 @@ export const {JSONGoal, JSONStringGoal, JSONObjectGoal, JSONArrayGoal, JSONDefin
   const JSONArrayGoal = (goals[(symbols.JSONArrayGoal = Symbol('JSONArrayGoal'))] = {
     ...JSONGoal,
     closers: [']'],
+
     punctuators: [','],
+  });
+
+  const JSONStringGoal = (goals[(symbols.JSONStringGoal = Symbol('JSONStringGoal'))] = {
+    ...JSONGoal,
+    type: 'quote',
+    flatten: true,
+    fold: true,
+    keywords: [],
+    openers: [],
+    closers: ['"'],
+    punctuators: ['\\', '\\b', '\\b', '\\n', '\\r', '\\t', '\\u', '\\"'],
   });
 
   return {
