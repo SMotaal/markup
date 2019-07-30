@@ -1,9 +1,8 @@
 ﻿/**
- * This issue was first noticed while swtiching to packages/matcher
- * where some of the experimental/es contexts failt to close where expected.
- *
- * @file https://www.smotaal.io/pholio/content/Markup.md
+ * @source https://www.smotaal.io/pholio/content/Markup.md
  */
+
+ECMAScriptGrammar: /(\n)|(\s+)|(\\u[0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F])|(\f|\n|\r|\t|\v|\c[a-zA-Z]|\x[0-9a-fA-F][0-9a-fA-F]|\u\{[0-9a-fA-F]*\}|\.)|(\/\/|\/\*)|("|')|(`)|(\$\{|\{|\(|\[)|(\}|\)|\])|(\*\/|\/=|\/)|(,|;|\.\.\.|\.|:|\?|=>|\+\+|--|\+=|-=|\*\*=|\*=|&&|&=|&|\|\||\|=|\||%=|%|\^=|\^|~=|~|<<=|<<|<=|<|>>>=|>>>|>>=|>>|>=|>|!==|!=|!|===|==|=|\+|-|\*\*|\*)|\b(await|break|case|catch|class|const|continue|debugger|default|delete|do|else|export|extends|finally|for|function|if|import|in|instanceof|let|new|return|super|switch|this|throw|try|typeof|var|void|while|with|yield|interface|implements|package|private|protected|public|enum|arguments|async|as|from|of|static)\b(?=[^\s$_:]|\s+[^:])|([_$\p{ID_Start}][_$\p{ID_Continue}\u200c\u200d\u034f]*)|\d+|./gu;
 
 // This is how you match identifiers in ECMAScripts with the true power unicode
 const ECMAScriptIdentifier = /[_$\p{ID_Start}][_$\u200c\u200d\p{ID_Continue}\u034f]*/u;
