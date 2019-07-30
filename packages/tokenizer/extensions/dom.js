@@ -137,7 +137,7 @@ class MarkupRenderer {
         for (const normlizedline of text.split(Lines)) {
           (normalizedLineInset = normlizedline.startsWith(lineInset)
             ? normlizedline.slice(0, lineInset.length)
-            : normlizedline.match(LineInset || (LineInset = RegExp(`^${lineInset.replace(/./g, '$&?')}`)))[0]) &&
+            : normlizedline.match(LineInset || (LineInset = RegExp(`^${lineInset.replace(/./g, '$&?')}|`)))[0]) &&
             emitInset(normalizedLineInset, insetHint);
 
           (normalizedLineText = normalizedLineInset
