@@ -1724,8 +1724,7 @@ const markup = (function (exports) {
    * @typedef {DocumentFragment & {logs?: string[]}} Fragment
    */
 
-  // export {patterns, entities} from '../../grammars/common/patterns.js';
-
+  /// <reference lib="esnext.asynciterable" />
   /**
    * @template T
    * @typedef {Promise<T> | T} async
