@@ -3,21 +3,13 @@
 import {countLineBreaks} from '../../tokenizer/lib/core.js';
 import {Matcher} from './matcher.js';
 
-export const {
-  createTokenFromMatch,
-  createMatcherInstance,
-  // createString,
-  createMatcherTokenizer,
-  createMatcherMode,
-} = (() => {
+export const {createTokenFromMatch, createMatcherInstance, createMatcherTokenizer, createMatcherMode} = (() => {
   const {
     RegExp,
     Object,
-    Object: {assign, create, freeze, defineProperty, defineProperties, getOwnPropertyNames, setPrototypeOf},
+    Object: {assign, create, freeze, defineProperty, defineProperties, setPrototypeOf},
     String,
   } = globalThis;
-
-  // /** @typedef {RegExpConstructor['prototype']} Matcher */
 
   /**
    * @template {Matcher} T
@@ -152,11 +144,10 @@ export const {
 
   Object.freeze(createTokenFromMatch);
   Object.freeze(createMatcherInstance);
-  Object.freeze(createString);
   Object.freeze(createMatcherTokenizer);
   Object.freeze(createMatcherMode);
 
-  return {createTokenFromMatch, createMatcherInstance, createString, createMatcherTokenizer, createMatcherMode};
+  return {createTokenFromMatch, createMatcherInstance, createMatcherTokenizer, createMatcherMode};
 })();
 
 export const TokenMatcher = (() => {
