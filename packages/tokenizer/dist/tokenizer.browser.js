@@ -1823,6 +1823,8 @@ class MarkupRenderer {
       operator: factory(SPAN, {markupHint: `${PUNCTUATOR} operator`, markupClass: classPrefix}),
       assigner: factory(SPAN, {markupHint: `${PUNCTUATOR} operator assigner`, markupClass: classPrefix}),
       combinator: factory(SPAN, {markupHint: `${PUNCTUATOR} operator combinator`, markupClass: classPrefix}),
+      delimiter: factory(SPAN, {markupHint: `${PUNCTUATOR} operator delimiter`, markupClass: classPrefix}),
+
       punctuation: factory(SPAN, {markupHint: `${PUNCTUATOR} punctuation`, markupClass: classPrefix}),
 
       breaker: factory(SPAN, {markupHint: `${PUNCTUATOR} breaker`, markupClass: classPrefix}),
@@ -1897,7 +1899,7 @@ class MarkupRenderer {
         for (const normlizedline of text.split(Lines)) {
           (normalizedLineInset = normlizedline.startsWith(lineInset)
             ? normlizedline.slice(0, lineInset.length)
-            : normlizedline.match(LineInset || (LineInset = RegExp(`^${lineInset.replace(/./g, '$&?')}`)))[0]) &&
+            : normlizedline.match(LineInset || (LineInset = RegExp(`^${lineInset.replace(/./g, '$&?')}|`)))[0]) &&
             emitInset(normalizedLineInset, insetHint);
 
           (normalizedLineText = normalizedLineInset

@@ -575,6 +575,8 @@ class MarkupRenderer {
       operator: factory(SPAN, {markupHint: `${PUNCTUATOR} operator`, markupClass: classPrefix}),
       assigner: factory(SPAN, {markupHint: `${PUNCTUATOR} operator assigner`, markupClass: classPrefix}),
       combinator: factory(SPAN, {markupHint: `${PUNCTUATOR} operator combinator`, markupClass: classPrefix}),
+      delimiter: factory(SPAN, {markupHint: `${PUNCTUATOR} operator delimiter`, markupClass: classPrefix}),
+
       punctuation: factory(SPAN, {markupHint: `${PUNCTUATOR} punctuation`, markupClass: classPrefix}),
 
       breaker: factory(SPAN, {markupHint: `${PUNCTUATOR} breaker`, markupClass: classPrefix}),
@@ -649,7 +651,7 @@ class MarkupRenderer {
         for (const normlizedline of text.split(Lines)) {
           (normalizedLineInset = normlizedline.startsWith(lineInset)
             ? normlizedline.slice(0, lineInset.length)
-            : normlizedline.match(LineInset || (LineInset = RegExp(`^${lineInset.replace(/./g, '$&?')}`)))[0]) &&
+            : normlizedline.match(LineInset || (LineInset = RegExp(`^${lineInset.replace(/./g, '$&?')}|`)))[0]) &&
             emitInset(normalizedLineInset, insetHint);
 
           (normalizedLineText = normalizedLineInset
@@ -1080,8 +1082,7 @@ const finalizeState = state => {
   state.nextTokenContext = void (state.lastTokenContext = state.nextTokenContext);
 
   // Finalize tokenization artifacts
-  // NOTE: don't forget to uncomment after debugging
-  state.context = state.contexts = state.groups = undefined;
+  error || (state.context = state.contexts = state.groups = undefined);
 
   // Output to console when necessary
   debug && (error ? warn : log)(`[tokenizer]: ${error || 'done'} — %O`, state);
@@ -1107,6 +1108,7 @@ const createToken = (match, state) => {
     offset,
     lineInset,
     lineBreaks,
+    isOperator,
     isDelimiter,
     isComment,
     isWhitespace,
@@ -1179,8 +1181,9 @@ const createToken = (match, state) => {
   //     fault || (nextFault === true && ((fault = true), (flatten = false), (type = 'fault'))));
 
   lineBreaks = (text === '\n' && 1) || countLineBreaks(text);
-  isDelimiter = type === 'closer' || type === 'opener';
-  isWhitespace = !isDelimiter && (type === 'whitespace' || type === 'break' || type === 'inset');
+  (isOperator = type === 'operator' || type === 'delimiter' || type === 'breaker' || type === 'combinator') ||
+    (isDelimiter = type === 'closer' || type === 'opener') ||
+    (isWhitespace = type === 'whitespace' || type === 'break' || type === 'inset');
 
   (isComment = type === 'comment' || punctuator === 'comment')
     ? (type = 'comment')
@@ -1195,7 +1198,7 @@ const createToken = (match, state) => {
 
   flatten === false ||
     flatten === true ||
-    (flatten = fault !== true && isDelimiter !== true && currentGoal.flatten === true);
+    (flatten = fault !== true && (isDelimiter !== true || currentGoal.fold === true) && currentGoal.flatten === true);
 
   captureNumber = ++tokenContext.captureCount;
   state.totalCaptureCount++;
@@ -1206,7 +1209,8 @@ const createToken = (match, state) => {
     lastToken != null &&
     ((lastToken.contextNumber === contextNumber && lastToken.fold === true) ||
       (type === 'closer' && flatten === true)) && // never fold across contexts
-    (lastToken.type === type || (currentGoal.fold === true && (lastToken.type = currentGoalType)))
+    (lastToken.type === type ||
+      (currentGoal.fold === true && (lastToken.type === currentGoalType || lastToken.punctuator === currentGoalType)))
   ) {
     lastToken.captureCount++;
     lastToken.text += text;
@@ -1260,9 +1264,10 @@ const createToken = (match, state) => {
       contextNumber,
       contextDepth,
 
-      isWhitespace, // whitespace:
-      isDelimiter, // delimiter:
-      isComment, // comment:
+      isWhitespace,
+      isOperator,
+      isDelimiter,
+      isComment,
 
       // FIXME: Nondescript
       fault,
@@ -1358,8 +1363,11 @@ const generateDefinitions = ({groups = {}, goals = {}, identities = {}, symbols 
     }
 
     if (goal.openers) {
+      const overrides = {...goal.openers};
       for (const opener of (goal.openers = [...goal.openers])) {
-        const group = (goal.groups[opener] = {...groups[opener]});
+        const group = (goal.groups[opener] = {...groups[opener], ...overrides[opener]});
+        typeof group.goal === 'symbol' && (group.goal = goals[group.goal] || FaultGoal);
+        typeof group.parentGoal === 'symbol' && (group.parentGoal = goals[group.goal] || FaultGoal);
         punctuators[opener] = !(goal.openers[opener] = true);
         GoalSpecificTokenRecord(goal, group.opener, 'opener', {group});
         GoalSpecificTokenRecord(goal, group.closer, 'closer', {group});
@@ -1368,6 +1376,8 @@ const generateDefinitions = ({groups = {}, goals = {}, identities = {}, symbols 
       }
       freeze(setPrototypeOf(goal.openers, punctuators));
     }
+
+    if (goal.punctuation) freeze(setPrototypeOf((goal.punctuation = {...goal.punctuation}), null));
 
     freeze(goal.groups);
     freeze(goal.tokens);
@@ -1556,6 +1566,7 @@ const {
   ECMAScriptGoal,
   ECMAScriptCommentGoal,
   ECMAScriptRegExpGoal,
+  ECMAScriptRegExpClassGoal,
   ECMAScriptStringGoal,
   ECMAScriptTemplateLiteralGoal,
   ECMAScriptDefinitions,
@@ -1572,7 +1583,6 @@ const {
     RestrictedWord: 'ECMAScript.RestrictedWord',
     FutureReservedWord: 'ECMAScript.FutureReservedWord',
     Keyword: 'ECMAScript.Keyword',
-    // MetaProperty: 'ECMAScript.MetaProperty',
   };
 
   const goals = {};
@@ -1601,6 +1611,14 @@ const {
       // NOTE: This is purposely not aligned with the spec
       [identities.ContextualWord]: ['arguments', 'async', 'as', 'from', 'of', 'static', 'get', 'set'],
     }),
+
+    punctuation: {
+      '=>': 'delimiter',
+      '?': 'delimiter',
+      ':': 'delimiter',
+      ',': 'delimiter',
+      ';': 'breaker',
+    },
   });
 
   const ECMAScriptCommentGoal = (goals[(symbols.ECMAScriptCommentGoalSymbol = Symbol('ECMAScriptCommentGoal'))] = {
@@ -1614,12 +1632,45 @@ const {
     flatten: undefined,
     fold: undefined,
     openers: ['(', '{', '['],
-    closers: [')', '}', ']'],
+    closers: [')', '}'],
     opener: '/',
     closer: '/',
-    // punctuators: ['+', '*', '?', '|', '^', '{', '}', '(', ')'],
-    punctuators: ['+', '*', '?', '|', '^'],
+    punctuators: ['+', '*', '?', '|', '^', '.', '?=', '?:'],
+    punctuation: {
+      '[': 'combinator',
+      ']': 'combinator',
+      '(': 'combinator',
+      ')': 'combinator',
+      '{': 'combinator',
+      '}': 'combinator',
+    },
   });
+
+  const ECMAScriptRegExpClassGoal = (goals[
+    (symbols.ECMAScriptRegExpClassGoal = Symbol('ECMAScriptRegExpClassGoal'))
+  ] = {
+    type: 'pattern',
+    flatten: undefined,
+    fold: undefined,
+    openers: [],
+    closers: [']'],
+    opener: '[',
+    closer: ']',
+    punctuators: ['\\', '^', '-'],
+    punctuation: {
+      '[': 'pattern',
+      ']': 'combinator',
+      '(': 'pattern',
+      ')': 'pattern',
+      '{': 'pattern',
+      '}': 'pattern',
+    },
+  });
+
+  ECMAScriptRegExpGoal.openers['['] = {
+    goal: symbols.ECMAScriptRegExpClassGoal,
+    parentGoal: symbols.ECMAScriptRegExpGoalSymbol,
+  };
 
   const ECMAScriptStringGoal = (goals[(symbols.ECMAScriptStringGoalSymbol = Symbol('ECMAScriptStringGoal'))] = {
     type: 'quote',
@@ -1636,9 +1687,10 @@ const {
     openers: ['${'],
     opener: '`',
     closer: '`',
+    punctuation: {
+      '${': 'opener',
+    },
   });
-
-  // const groups = {};
 
   {
     const operativeKeywords = new Set('await delete typeof void yield'.split(' '));
@@ -1763,6 +1815,7 @@ const {
     ECMAScriptGoal,
     ECMAScriptCommentGoal,
     ECMAScriptRegExpGoal,
+    ECMAScriptRegExpClassGoal,
     ECMAScriptStringGoal,
     ECMAScriptTemplateLiteralGoal,
     ECMAScriptDefinitions: generateDefinitions({
@@ -1837,13 +1890,6 @@ const {
  * @typedef {'arguments'|'async'|'as'|'from'|'of'|'static'} ECMAScript.ContextualKeyword
  * @typedef {Record<ECMAScript.Keyword|ECMAScript.RestrictedWord|ECMAScript.FutureReservedWord|ECMAScript.ContextualKeyword, symbol>} ECMAScript.Keywords
  */
-
-// //@ts-ignore
-// const keywords = {};
-
-// function Symbolic(key, description = key) {
-//   return (symbols[key] = Symbol(description));
-// }
 
 /// <reference path="./types.d.ts" />
 
@@ -2272,7 +2318,11 @@ const matcher = (ECMAScript =>
                 (state.context.goal === ECMAScriptCommentGoal && (match[match.format] = ECMAScriptCommentGoal.type),
                 'closer')
               : (text.length === 1 || ((state.nextOffset = match.index + 1), (text = match[0] = text[0])),
-                state.context.goal.type || 'sequence'),
+                (((match.punctuator = state.context.goal.punctuation && state.context.goal.punctuation[text]) ||
+                  (state.context.goal.punctuators && state.context.goal.punctuators[text] === true)) &&
+                  'punctuator') ||
+                  state.context.goal.type ||
+                  'sequence'),
             match,
           );
         })}
@@ -2334,11 +2384,13 @@ const matcher = (ECMAScript =>
           match.format = 'punctuator';
           TokenMatcher.capture(
             state.context.goal.punctuators !== undefined && state.context.goal.punctuators[text] === true
-              ? (match.punctuator = 'combinator')
-              : state.context.goal.openers &&
-                state.context.goal.openers[text] === true &&
-                (state.context.goal !== ECMAScriptRegExpGoal || state.context.group.opener !== '[')
-              ? TokenMatcher.open(text, state) || 'opener'
+              ? (match.punctuator =
+                  (state.context.goal.punctuation && state.context.goal.punctuation[text]) || 'combinator')
+              : state.context.goal.openers && state.context.goal.openers[text] === true
+              ? TokenMatcher.open(text, state) ||
+                ((match.punctuator =
+                  (state.context.goal.punctuation && state.context.goal.punctuation[text]) || state.context.goal.type),
+                'opener')
               : (text.length === 1 || ((state.nextOffset = match.index + 1), (text = match[0] = text[0])),
                 state.context.goal.type || 'sequence'),
             match,
@@ -2355,11 +2407,15 @@ const matcher = (ECMAScript =>
           TokenMatcher.capture(
             state.context.goal.punctuators && state.context.goal.punctuators[text] === true
               ? (match.punctuator = 'combinator')
-              : state.context.goal.closers &&
-                state.context.goal.closers[text] === true &&
-                (state.context.goal !== ECMAScriptRegExpGoal ||
-                  (state.context.group.opener !== '[' || text === state.context.group.closer))
-              ? TokenMatcher.close(text, state) || 'closer'
+              : // : state.context.goal.closers &&
+              //   state.context.goal.closers[text] === true &&
+              //   (state.context.goal !== ECMAScriptRegExpGoal ||
+              //     (state.context.group.opener !== '[' || text === state.context.group.closer))
+              state.context.goal.closers && state.context.goal.closers[text] === true
+              ? TokenMatcher.close(text, state) ||
+                ((match.punctuator =
+                  (state.context.goal.punctuation && state.context.goal.punctuation[text]) || state.context.goal.type),
+                'closer')
               : state.context.goal.type || 'sequence',
             match,
           );
@@ -2384,7 +2440,7 @@ const matcher = (ECMAScript =>
               : state.context.goal !== ECMAScriptGoal
               ? state.context.goal.type || 'sequence'
               : state.lastAtom === undefined ||
-                (state.lastAtom.type === 'operator'
+                (state.lastAtom.type === 'operator' || state.lastAtom.type === 'delimiter'
                   ? state.lastAtom.text !== '++' && state.lastAtom.text !== '--'
                   : state.lastAtom.type === 'closer'
                   ? state.lastAtom.text === '}'
@@ -2399,8 +2455,11 @@ const matcher = (ECMAScript =>
   Operator: () =>
     TokenMatcher.define(
       entity => TokenMatcher.sequence/* regexp */ `(
-        ,|;|\.\.\.|\.|:|\?|=>
-        |\+\+|--
+        ,|;|\.\.\.|\.|:|\?${
+          // We're including non-conflicting RegExp atoms here
+          '[:=]?'
+        }
+        |\+\+|--|=>
         |\+=|-=|\*\*=|\*=
         |&&|&=|&|\|\||\|=|\||%=|%|\^=|\^|~=|~
         |<<=|<<|<=|<|>>>=|>>>|>>=|>>|>=|>
@@ -2410,9 +2469,11 @@ const matcher = (ECMAScript =>
           match.format = 'punctuator';
           TokenMatcher.capture(
             state.context.goal === ECMAScriptGoal
-              ? (text === '*' && state.lastAtom && state.lastAtom.text === 'function' && 'keyword') || 'operator'
+              ? (text === '*' && state.lastAtom && state.lastAtom.text === 'function' && 'keyword') ||
+                  (ECMAScriptGoal.punctuation[text] || 'operator')
               : state.context.goal.punctuators && state.context.goal.punctuators[text] === true
-              ? (match.punctuator = 'punctuation')
+              ? (match.punctuator =
+                  (state.context.goal.punctuation && state.context.goal.punctuation[text]) || 'punctuation')
               : (text.length === 1 || ((state.nextOffset = match.index + 1), (text = match[0] = text[0])),
                 state.context.goal.type || 'sequence'),
             match,
