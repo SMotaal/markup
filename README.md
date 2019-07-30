@@ -78,22 +78,22 @@ _Repeats & Iterations_
 
 ## Noteworthy Aspects
 
-### Matcher-based Grammar
+### Matcher-based Grammar (aka [`@smotaal/matcher`](./packages/matcher/README.md))
 
 The second generation matcher-based experimental tokenizer designs, inspired by [erights/quasiParserGenerator](https://github.com/erights/quasiParserGenerator). Efforts on way to refactor this into it's own separate package — [source code](https://github.com/SMotaal/markup/tree/master/packages/matcher/).
 
 - [Matcher-based JSON](./experimental/json/)
 - [Matcher-based ECMAScript](./experimental/es/)
 
-### Classic Grammar (aka `@smotaal/grammar`)
+### Classic Grammar (aka [`@smotaal/grammar`](./packages/grammar/README.md))
 
-The original extensible and declarative grammars. While my experimental efforts have since concluded, these heavily-refined first-approximation grammars see uses in [other project(s)](https://www.smotaal.io/markout 'Markout') — [source code](https://github.com/SMotaal/markup/tree/master/packages/grammars/).
+The original extensible and declarative grammars. While my experimental efforts have since concluded, these heavily-refined first-approximation grammars see uses in [other project(s)](https://www.smotaal.io/markout 'Markout') — [source code](https://github.com/SMotaal/markup/tree/master/packages/grammar/).
 
-### Markup Core (aka `@smotaal/tokenizer`)
+### Markup Core (aka [`@smotaal/tokenizer`](./packages/tokenizer/README.md))
 
 The second generation tokenizer architecture, optimized for both Classic and Matcher-based grammars — [source code](https://github.com/SMotaal/markup/tree/master/packages/tokenizer/).
 
-### Compositional DOM (aka `pseudom`)
+### Compositional DOM (aka [`pseudom`](./packages/pseudom/README.md))
 
 The minimalistic isomorphic compositional DOM used to render tokenized markup — [source code](https://github.com/SMotaal/markup/tree/master/packages/pseudom/).
 

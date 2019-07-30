@@ -1,2 +1,2 @@
-﻿export {entities} from '../../grammars/common/patterns.js';
+﻿export {entities} from '../../grammar/common/patterns.js';
 export * from '../tokenizer.extended.extended.js';

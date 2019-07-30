@@ -1,10 +1,4 @@
-// export {patterns, entities} from '../../grammars/common/patterns.js';
-// export * from '../../grammars/common/helpers.js';
-
 /// <reference lib="esnext.asynciterable" />
-
-const VOID = Symbol('[[Void]]');
-
 /**
  * @template T
  * @typedef {Promise<T> | T} async
