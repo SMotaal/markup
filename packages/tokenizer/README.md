@@ -20,7 +20,7 @@ Nestable syntax tokenizer using Regular Expressions.
 
 ```js
 import {Parser} from '@smotaal/tokenizer/tokenizer.js';
-import {javascript} from '@smotaal/grammars/javascript/javascript-grammar.js';
+import {javascript} from '@smotaal/grammar/javascript/javascript-grammar.js';
 
 const parser = new Parser();
 export const {modes, mappings} = parser;
