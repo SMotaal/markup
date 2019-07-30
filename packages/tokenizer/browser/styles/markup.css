@@ -253,6 +253,7 @@ pre.markup[line-numbers] .markup-line::before {
   /* font-weight: 300; */
 }
 
+.markup.pattern.delimiter,
 .markup.pattern.opener,
 .markup.pattern.closer,
 .markup.punctuator {
@@ -286,6 +287,7 @@ pre.markup[line-numbers] .markup-line::before {
   --color: var(--markup-quotes, cadetblue);
 }
 
+.markup.delimiter,
 .markup.punctuator.span {
   --color: var(--markup-spans, coral);
 }
@@ -332,10 +334,10 @@ pre.markup[line-numbers] .markup-line::before {
   font-variant-ligatures: none;
 }
 
+.markup.delimiter,
 .markup.opener,
 .markup.closer {
   font-weight: 500;
-  font-variant-ligatures: none;
 }
 
 @media only print {
