@@ -1,8 +1,10 @@
 ﻿import {ECMAScriptRanges} from './es-ranges.js';
 import {
+  // TODO: Always import expected goals even if not directly referenced
   ECMAScriptGoal,
   ECMAScriptCommentGoal,
   ECMAScriptRegExpGoal,
+  ECMAScriptRegExpClassGoal,
   ECMAScriptStringGoal,
   ECMAScriptTemplateLiteralGoal,
 } from './es-definitions.js';
@@ -237,7 +239,11 @@ export const matcher = (ECMAScript =>
                 (state.context.goal === ECMAScriptCommentGoal && (match[match.format] = ECMAScriptCommentGoal.type),
                 'closer')
               : (text.length === 1 || ((state.nextOffset = match.index + 1), (text = match[0] = text[0])),
-                state.context.goal.type || 'sequence'),
+                (((match.punctuator = state.context.goal.punctuation && state.context.goal.punctuation[text]) ||
+                  (state.context.goal.punctuators && state.context.goal.punctuators[text] === true)) &&
+                  'punctuator') ||
+                  state.context.goal.type ||
+                  'sequence'),
             match,
           );
         })}
@@ -299,11 +305,13 @@ export const matcher = (ECMAScript =>
           match.format = 'punctuator';
           TokenMatcher.capture(
             state.context.goal.punctuators !== undefined && state.context.goal.punctuators[text] === true
-              ? (match.punctuator = 'combinator')
-              : state.context.goal.openers &&
-                state.context.goal.openers[text] === true &&
-                (state.context.goal !== ECMAScriptRegExpGoal || state.context.group.opener !== '[')
-              ? TokenMatcher.open(text, state) || 'opener'
+              ? (match.punctuator =
+                  (state.context.goal.punctuation && state.context.goal.punctuation[text]) || 'combinator')
+              : state.context.goal.openers && state.context.goal.openers[text] === true
+              ? TokenMatcher.open(text, state) ||
+                ((match.punctuator =
+                  (state.context.goal.punctuation && state.context.goal.punctuation[text]) || state.context.goal.type),
+                'opener')
               : (text.length === 1 || ((state.nextOffset = match.index + 1), (text = match[0] = text[0])),
                 state.context.goal.type || 'sequence'),
             match,
@@ -320,11 +328,15 @@ export const matcher = (ECMAScript =>
           TokenMatcher.capture(
             state.context.goal.punctuators && state.context.goal.punctuators[text] === true
               ? (match.punctuator = 'combinator')
-              : state.context.goal.closers &&
-                state.context.goal.closers[text] === true &&
-                (state.context.goal !== ECMAScriptRegExpGoal ||
-                  (state.context.group.opener !== '[' || text === state.context.group.closer))
-              ? TokenMatcher.close(text, state) || 'closer'
+              : // : state.context.goal.closers &&
+              //   state.context.goal.closers[text] === true &&
+              //   (state.context.goal !== ECMAScriptRegExpGoal ||
+              //     (state.context.group.opener !== '[' || text === state.context.group.closer))
+              state.context.goal.closers && state.context.goal.closers[text] === true
+              ? TokenMatcher.close(text, state) ||
+                ((match.punctuator =
+                  (state.context.goal.punctuation && state.context.goal.punctuation[text]) || state.context.goal.type),
+                'closer')
               : state.context.goal.type || 'sequence',
             match,
           );
@@ -349,7 +361,7 @@ export const matcher = (ECMAScript =>
               : state.context.goal !== ECMAScriptGoal
               ? state.context.goal.type || 'sequence'
               : state.lastAtom === undefined ||
-                (state.lastAtom.type === 'operator'
+                (state.lastAtom.type === 'operator' || state.lastAtom.type === 'delimiter'
                   ? state.lastAtom.text !== '++' && state.lastAtom.text !== '--'
                   : state.lastAtom.type === 'closer'
                   ? state.lastAtom.text === '}'
@@ -364,8 +376,11 @@ export const matcher = (ECMAScript =>
   Operator: () =>
     TokenMatcher.define(
       entity => TokenMatcher.sequence/* regexp */ `(
-        ,|;|\.\.\.|\.|:|\?|=>
-        |\+\+|--
+        ,|;|\.\.\.|\.|:|\?${
+          // We're including non-conflicting RegExp atoms here
+          '[:=]?'
+        }
+        |\+\+|--|=>
         |\+=|-=|\*\*=|\*=
         |&&|&=|&|\|\||\|=|\||%=|%|\^=|\^|~=|~
         |<<=|<<|<=|<|>>>=|>>>|>>=|>>|>=|>
@@ -375,9 +390,11 @@ export const matcher = (ECMAScript =>
           match.format = 'punctuator';
           TokenMatcher.capture(
             state.context.goal === ECMAScriptGoal
-              ? (text === '*' && state.lastAtom && state.lastAtom.text === 'function' && 'keyword') || 'operator'
+              ? (text === '*' && state.lastAtom && state.lastAtom.text === 'function' && 'keyword') ||
+                  (ECMAScriptGoal.punctuation[text] || 'operator')
               : state.context.goal.punctuators && state.context.goal.punctuators[text] === true
-              ? (match.punctuator = 'punctuation')
+              ? (match.punctuator =
+                  (state.context.goal.punctuation && state.context.goal.punctuation[text]) || 'punctuation')
               : (text.length === 1 || ((state.nextOffset = match.index + 1), (text = match[0] = text[0])),
                 state.context.goal.type || 'sequence'),
             match,

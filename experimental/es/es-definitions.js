@@ -1,12 +1,11 @@
 ﻿//@ts-check
-// import {generateDefinitions, Keywords, Construct} from './helpers.js';
-import {Construct} from '../../packages/matcher/experimental/common/helpers.js';
-import {generateDefinitions, Keywords} from '../../packages/matcher/experimental/common/helpers.js';
+import {generateDefinitions, Keywords, Construct} from '../../packages/matcher/experimental/common/helpers.js';
 
 export const {
   ECMAScriptGoal,
   ECMAScriptCommentGoal,
   ECMAScriptRegExpGoal,
+  ECMAScriptRegExpClassGoal,
   ECMAScriptStringGoal,
   ECMAScriptTemplateLiteralGoal,
   ECMAScriptDefinitions,
@@ -23,7 +22,6 @@ export const {
     RestrictedWord: 'ECMAScript.RestrictedWord',
     FutureReservedWord: 'ECMAScript.FutureReservedWord',
     Keyword: 'ECMAScript.Keyword',
-    // MetaProperty: 'ECMAScript.MetaProperty',
   };
 
   const goals = {};
@@ -52,6 +50,14 @@ export const {
       // NOTE: This is purposely not aligned with the spec
       [identities.ContextualWord]: ['arguments', 'async', 'as', 'from', 'of', 'static', 'get', 'set'],
     }),
+
+    punctuation: {
+      '=>': 'delimiter',
+      '?': 'delimiter',
+      ':': 'delimiter',
+      ',': 'delimiter',
+      ';': 'breaker',
+    },
   });
 
   const ECMAScriptCommentGoal = (goals[(symbols.ECMAScriptCommentGoalSymbol = Symbol('ECMAScriptCommentGoal'))] = {
@@ -65,12 +71,45 @@ export const {
     flatten: undefined,
     fold: undefined,
     openers: ['(', '{', '['],
-    closers: [')', '}', ']'],
+    closers: [')', '}'],
     opener: '/',
     closer: '/',
-    // punctuators: ['+', '*', '?', '|', '^', '{', '}', '(', ')'],
-    punctuators: ['+', '*', '?', '|', '^'],
+    punctuators: ['+', '*', '?', '|', '^', '.', '?=', '?:'],
+    punctuation: {
+      '[': 'combinator',
+      ']': 'combinator',
+      '(': 'combinator',
+      ')': 'combinator',
+      '{': 'combinator',
+      '}': 'combinator',
+    },
   });
+
+  const ECMAScriptRegExpClassGoal = (goals[
+    (symbols.ECMAScriptRegExpClassGoal = Symbol('ECMAScriptRegExpClassGoal'))
+  ] = {
+    type: 'pattern',
+    flatten: undefined,
+    fold: undefined,
+    openers: [],
+    closers: [']'],
+    opener: '[',
+    closer: ']',
+    punctuators: ['\\', '^', '-'],
+    punctuation: {
+      '[': 'pattern',
+      ']': 'combinator',
+      '(': 'pattern',
+      ')': 'pattern',
+      '{': 'pattern',
+      '}': 'pattern',
+    },
+  });
+
+  ECMAScriptRegExpGoal.openers['['] = {
+    goal: symbols.ECMAScriptRegExpClassGoal,
+    parentGoal: symbols.ECMAScriptRegExpGoalSymbol,
+  };
 
   const ECMAScriptStringGoal = (goals[(symbols.ECMAScriptStringGoalSymbol = Symbol('ECMAScriptStringGoal'))] = {
     type: 'quote',
@@ -87,9 +126,10 @@ export const {
     openers: ['${'],
     opener: '`',
     closer: '`',
+    punctuation: {
+      '${': 'opener',
+    },
   });
-
-  // const groups = {};
 
   {
     const operativeKeywords = new Set('await delete typeof void yield'.split(' '));
@@ -214,6 +254,7 @@ export const {
     ECMAScriptGoal,
     ECMAScriptCommentGoal,
     ECMAScriptRegExpGoal,
+    ECMAScriptRegExpClassGoal,
     ECMAScriptStringGoal,
     ECMAScriptTemplateLiteralGoal,
     ECMAScriptDefinitions: generateDefinitions({
@@ -288,10 +329,3 @@ export const {
  * @typedef {'arguments'|'async'|'as'|'from'|'of'|'static'} ECMAScript.ContextualKeyword
  * @typedef {Record<ECMAScript.Keyword|ECMAScript.RestrictedWord|ECMAScript.FutureReservedWord|ECMAScript.ContextualKeyword, symbol>} ECMAScript.Keywords
  */
-
-// //@ts-ignore
-// const keywords = {};
-
-// function Symbolic(key, description = key) {
-//   return (symbols[key] = Symbol(description));
-// }
