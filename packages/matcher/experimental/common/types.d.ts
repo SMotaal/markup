@@ -167,6 +167,7 @@ export interface Token {
   contextNumber: number;
   contextDepth: number;
   isWhitespace: boolean;
+  isOperator: boolean;
   isDelimiter: boolean;
   isComment: boolean;
   // FIXME: Nondescript

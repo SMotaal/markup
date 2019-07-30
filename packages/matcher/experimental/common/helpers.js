@@ -57,8 +57,7 @@ export const finalizeState = state => {
   state.nextTokenContext = void (state.lastTokenContext = state.nextTokenContext);
 
   // Finalize tokenization artifacts
-  // NOTE: don't forget to uncomment after debugging
-  state.context = state.contexts = state.groups = undefined;
+  error || (state.context = state.contexts = state.groups = undefined);
 
   // Output to console when necessary
   debug && (error ? warn : log)(`[tokenizer]: ${error || 'done'} — %O`, state);
@@ -84,6 +83,7 @@ export const createToken = (match, state) => {
     offset,
     lineInset,
     lineBreaks,
+    isOperator,
     isDelimiter,
     isComment,
     isWhitespace,
@@ -156,8 +156,9 @@ export const createToken = (match, state) => {
   //     fault || (nextFault === true && ((fault = true), (flatten = false), (type = 'fault'))));
 
   lineBreaks = (text === '\n' && 1) || countLineBreaks(text);
-  isDelimiter = type === 'closer' || type === 'opener';
-  isWhitespace = !isDelimiter && (type === 'whitespace' || type === 'break' || type === 'inset');
+  (isOperator = type === 'operator' || type === 'delimiter' || type === 'breaker' || type === 'combinator') ||
+    (isDelimiter = type === 'closer' || type === 'opener') ||
+    (isWhitespace = type === 'whitespace' || type === 'break' || type === 'inset');
 
   (isComment = type === 'comment' || punctuator === 'comment')
     ? (type = 'comment')
@@ -172,7 +173,7 @@ export const createToken = (match, state) => {
 
   flatten === false ||
     flatten === true ||
-    (flatten = fault !== true && isDelimiter !== true && currentGoal.flatten === true);
+    (flatten = fault !== true && (isDelimiter !== true || currentGoal.fold === true) && currentGoal.flatten === true);
 
   captureNumber = ++tokenContext.captureCount;
   state.totalCaptureCount++;
@@ -183,7 +184,8 @@ export const createToken = (match, state) => {
     lastToken != null &&
     ((lastToken.contextNumber === contextNumber && lastToken.fold === true) ||
       (type === 'closer' && flatten === true)) && // never fold across contexts
-    (lastToken.type === type || (currentGoal.fold === true && (lastToken.type = currentGoalType)))
+    (lastToken.type === type ||
+      (currentGoal.fold === true && (lastToken.type === currentGoalType || lastToken.punctuator === currentGoalType)))
   ) {
     lastToken.captureCount++;
     lastToken.text += text;
@@ -237,9 +239,10 @@ export const createToken = (match, state) => {
       contextNumber,
       contextDepth,
 
-      isWhitespace, // whitespace:
-      isDelimiter, // delimiter:
-      isComment, // comment:
+      isWhitespace,
+      isOperator,
+      isDelimiter,
+      isComment,
 
       // FIXME: Nondescript
       fault,
@@ -335,8 +338,11 @@ export const generateDefinitions = ({groups = {}, goals = {}, identities = {}, s
     }
 
     if (goal.openers) {
+      const overrides = {...goal.openers};
       for (const opener of (goal.openers = [...goal.openers])) {
-        const group = (goal.groups[opener] = {...groups[opener]});
+        const group = (goal.groups[opener] = {...groups[opener], ...overrides[opener]});
+        typeof group.goal === 'symbol' && (group.goal = goals[group.goal] || FaultGoal);
+        typeof group.parentGoal === 'symbol' && (group.parentGoal = goals[group.goal] || FaultGoal);
         punctuators[opener] = !(goal.openers[opener] = true);
         GoalSpecificTokenRecord(goal, group.opener, 'opener', {group});
         GoalSpecificTokenRecord(goal, group.closer, 'closer', {group});
@@ -345,6 +351,8 @@ export const generateDefinitions = ({groups = {}, goals = {}, identities = {}, s
       }
       freeze(setPrototypeOf(goal.openers, punctuators));
     }
+
+    if (goal.punctuation) freeze(setPrototypeOf((goal.punctuation = {...goal.punctuation}), null));
 
     freeze(goal.groups);
     freeze(goal.tokens);
