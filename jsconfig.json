@@ -1,3 +1,13 @@
 ﻿{
-	"extends": "../jsconfig.json"
+  "extends": "../jsconfig.json",
+  "exclude": [
+    "node_modules",
+    "**/node_modules/*",
+    "trash",
+    "**/trash/*",
+    "[[]trash[]]",
+    "**/[[]trash[]]/*",
+    "[[]more[]]",
+    "**/[[]more[]]/*"
+  ]
 }
