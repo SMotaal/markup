@@ -2,7 +2,7 @@
 
 /// Initialize
 import.meta.url.endsWith('#initialize') &&
-  import('./node').then(() => import('./benchmarks/benchmark.js'));
+  import('./node/index.mjs').then(() => import('./benchmarks/benchmark.js'));
   // import('./node').then(() => import('./lib/markup.spec.js'));
 
 /// Loader
