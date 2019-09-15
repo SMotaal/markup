@@ -261,6 +261,7 @@ pre.markup[line-numbers] .markup-line::before {
   text-rendering: geometricPrecision;
 }
 
+/* .markup.delimiter, */
 .markup.opener,
 .markup.closer {
   --color: var(--markup-closures, orange);
@@ -271,6 +272,7 @@ pre.markup[line-numbers] .markup-line::before {
   text-rendering: geometricPrecision;
 }
 
+/* .markup.in-pattern.delimiter, */
 .markup.in-pattern.opener,
 .markup.in-pattern.closer,
 .markup.combinator {
@@ -282,6 +284,8 @@ pre.markup[line-numbers] .markup-line::before {
   --color: var(--markup-breakers, grey);
 }
 
+.markup.string,
+.markup.in-string,
 .markup.quote,
 .markup.in-quote {
   --color: var(--markup-quotes, cadetblue);
@@ -311,6 +315,8 @@ pre.markup[line-numbers] .markup-line::before {
 .markup.in-regexp,
 .markup.pattern,
 .markup.in-pattern,
+.markup.string,
+.markup.in-string,
 .markup.quote,
 .markup.in-quote,
 .markup.fault {
@@ -338,6 +344,7 @@ pre.markup[line-numbers] .markup-line::before {
 .markup.opener,
 .markup.closer {
   font-weight: 500;
+  /* font-variant-ligatures: none; */
 }
 
 @media only print {
