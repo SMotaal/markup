@@ -18,42 +18,46 @@ DUMMY: async () => {
     }
 
     Solidus: {
-                        // ExpressionStart never divide
+                        // [x] ExpressionStart never divide
       ( ([              /([(regexp)])/g / [] ] ) );
       ( [] /( [         /([(regexp)])/g / [] ] ) );
       ( ([]) /( [       /([(regexp)])/g / [] ] ) );
       ( [] /* */ /( [   /([(regexp)])/g / [] ] ) );
       ( []/( [/*/*//*/*//([(regexp)])/g / [] ] ) );
 
-                        // Literals always divide (never ASI)
-      ( []              /([(div)])/g / [] );
-      ( ([])            /([(div)])/g / [] );
-      ( []/*/*//**//*/*//([(div)])/g / [] );
+                        // [x] Literals always divide (never ASI)
+      ( []              /([(divisor)])/g / [] );
+      ( ([])            /([(divisor)])/g / [] );
+      ( []/*/*//**//*/*//([(divisor)])/g / [] );
 
-      a = b             // Identifiers always divide (never ASI)
-                        /(div)/g.exec(c).map(d);
+      a = b             // [x] Identifiers always divide (never ASI)
+                        /(divisor)/g.exec(c).map(d);
 
-                        // Declaration (ASI) then ExpressionStart
+                        // [x] Declaration (ASI) then ExpressionStart
       function ƒ () {}  /(regexp)/g.exec(c).map(d);
 
 
-      async () => {}    // Curly+LineBreak is ASI
+      async () => {}    // [x] Curly+LineBreak is ASI
                         /(regexp)/g.exec(c).map(d);
-      async () => {}
+      async () => {}    /* [x] and with Multiline Comment */
                         /(regexp)/g.exec(c).map(d);
 
-      async () => ({})  //
-                        /(div)/g.exec(c).map(d);
+      async () => ({})  // [x] Parenthsized Expression (no ASI)
+                        /(divisor)/g.exec(c).map(d);
 
-                        // Function calls always in Expression
-      async ()          /(div)/g.exec(c).map(d);
+      async ()          // [x] Function calls always in Expression
+                        /(divisor)/g.exec(c).map(d);
+      async ()          /(divisor)/g.exec(c).map(d);
 
-                        // FIXME: ObjectLiteral is "a literal"
-      const x = {}      /(div)/g.exec(c).map(d);
+      async () =>       // [x] Arrow Function Body is Expression
+                        /(regexp)/g.exec(c).map(d);
 
-                        // FIXME: Function/ClassExpression is "an expression"
+                        // [ ] ObjectLiteral is "a literal"
+      const x = {}      /(divisor)/g.exec(c).map(d);
+
+                        // [ ] Function/ClassExpression is "an expression"
       const y = function ƒ () {}
-                        /(div)/g.exec(c).map(d);
+                        /(divisor)/g.exec(c).map(d);
 
                         // Keyword always regexp (regardless of ASI)
       return await/*/\*//(regexp)/g.exec(c).map(d);
@@ -75,7 +79,7 @@ DUMMY: async () => {
                         return
                         return  async   function () {}
 
-                        // FIXME: Non-Keywords
+                        // [ ] Non-Keywords
                         async
                         async   ('')
       });
@@ -86,20 +90,20 @@ DUMMY: async () => {
     }
 
     Strings: {
-      '@@'            // FIXME: Not a fault
+      '@@'            // [x] Not a ‹fault›
 
       '\
-      a\a'            // quote›‹punctuator, comment
+      a\a'            // [x] ‹quote›•‹comment›
 
       "\
-      \\n\\b"/**/     // quote›‹comment, comment
+      \\n\\b"/**/     // [x] ‹quote›•‹comment›•‹comment›
     }
 
     Numerals: {
       0, -0, 1, -1, +1.1, 0.1, 0.1e3
       0b01, 0x0123456789abcdef
-      // 1_1
       NaN, Infinity, -Infinity
+      // 1_1 // [ ] Proposal Numeric Separators
     }
   }
 };
@@ -167,7 +171,7 @@ export const matcher = (ECMAScript =>
             (state.context.group !== undefined &&
               state.context.group.closer === '\n' &&
               TokenMatcher.close(text, state)) ||
-              // Identity of a break take precedence over closer
+              // NOTE: ‹break› takes precedence over ‹closer›
               'break',
             match,
           );
