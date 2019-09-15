@@ -4,161 +4,19 @@
   (global = global || self, factory(global.markup = {}));
 }(this, function (exports) { 'use strict';
 
-  const {assign, defineProperty} = Object;
+  const {encodeEntity, encodeEntities} = (() => {
+    const encodeEntity = entity => `&#${entity.charCodeAt(0)};`;
 
-  const document$1 = void null;
+    Object.freeze(encodeEntity);
 
-  class Node {
-    get children() {
-      return defineProperty(this, 'children', {value: new Set()}).children;
-    }
-    get childElementCount() {
-      return (this.hasOwnProperty('children') && this.children.size) || 0;
-    }
-    get textContent() {
-      return (this.hasOwnProperty('children') && this.children.size && [...this.children].join('')) || '';
-    }
-    set textContent(text) {
-      this.hasOwnProperty('children') && this.children.size && this.children.clear();
-      text && this.children.add(new String(text));
-    }
-    appendChild(element) {
-      return element && this.children.add(element), element;
-    }
-    append(...elements) {
-      if (elements.length) for (const element of elements) element && this.children.add(element);
-    }
-    removeChild(element) {
-      element && this.hasOwnProperty('children') && this.children.size && this.children.delete(element);
-      return element;
-    }
-    remove(...elements) {
-      if (elements.length && this.hasOwnProperty('children') && this.children.size)
-        for (const element of elements) element && this.children.delete(element);
-    }
-  }
+    const EntityMatcher = /[\u00A0-\u9999<>\&]/g;
 
-  class Element extends Node {
-    get innerHTML() {
-      return this.textContent;
-    }
-    set innerHTML(text) {
-      this.textContent = text;
-    }
-    get outerHTML() {
-      let classList;
-      let {className, tag, innerHTML, dataset} = this;
+    const encodeEntities = string => EntityMatcher[Symbol.replace](string, encodeEntity);
 
-      className &&
-        (className = className.trim()) &&
-        ({
-          [className]: classList = (className &&
-            (Element.classLists[className] = [...new Set(className.split(/\s+/g))].join(' '))) ||
-            '',
-        } = Element.classLists || (Element.classLists = Object.create(null)));
+    Object.freeze(encodeEntities);
 
-      const openTag = [tag];
-
-      classList && openTag.push(`class="${classList}"`);
-
-      if (dataset)
-        for (const [key, value] of Object.entries(dataset))
-          value == null || !key.trim || openTag.push(`data-${key}=${JSON.stringify(`${value}`)}`);
-
-      return `<${openTag.join(' ')}>${innerHTML || ''}</${tag}>`;
-    }
-
-    toString() {
-      return this.outerHTML;
-    }
-    toJSON() {
-      return this.toString();
-    }
-  }
-
-  class DocumentFragment extends Node {
-    toString() {
-      return this.textContent;
-    }
-    toJSON() {
-      return (this.childElementCount && [...this.children]) || [];
-    }
-    [Symbol.iterator]() {
-      return ((this.childElementCount && this.children) || '')[Symbol.iterator]();
-    }
-  }
-
-  class Text extends String {
-    toString() {
-      return encodeEntities(super.toString());
-    }
-  }
-
-  const createElement = (tag, properties, ...children) => {
-    const element = assign(new Element(), {
-      tag,
-      className: (properties && properties.className) || '',
-      properties,
-    });
-    children.length && defineProperty(element, 'children', {value: new Set(children)});
-    return element;
-  };
-
-  const createText = (content = '') => new Text(content);
-  const encodeEntity = entity => `&#${entity.charCodeAt(0)};`;
-  const encodeEntities = string => string.replace(/[\u00A0-\u9999<>\&]/g, encodeEntity);
-  const createFragment = () => new DocumentFragment();
-
-  const pseudo = /*#__PURE__*/Object.freeze({
-    document: document$1,
-    Node: Node,
-    Element: Element,
-    DocumentFragment: DocumentFragment,
-    Text: Text,
-    createElement: createElement,
-    createText: createText,
-    encodeEntity: encodeEntity,
-    encodeEntities: encodeEntities,
-    createFragment: createFragment
-  });
-
-  const {document: document$2, Element: Element$1, Node: Node$1, Text: Text$1, DocumentFragment: DocumentFragment$1} =
-    'object' === typeof self && (self || 0).window === self && self;
-
-  const {createElement: createElement$1, createText: createText$1, createFragment: createFragment$1} = {
-    createElement: (tag, properties, ...children) => {
-      const element = document$2.createElement(tag);
-      properties && Object.assign(element, properties);
-      if (!children.length) return element;
-      if (element.append) {
-        while (children.length > 500) element.append(...children.splice(0, 500));
-        children.length && element.append(...children);
-      } else if (element.appendChild) {
-        for (const child of children) element.appendChild(child);
-      }
-      return element;
-    },
-
-    createText: (content = '') => document$2.createTextNode(content),
-
-    createFragment: () => document$2.createDocumentFragment(),
-  };
-
-  const dom = /*#__PURE__*/Object.freeze({
-    document: document$2,
-    Element: Element$1,
-    Node: Node$1,
-    Text: Text$1,
-    DocumentFragment: DocumentFragment$1,
-    createElement: createElement$1,
-    createText: createText$1,
-    createFragment: createFragment$1
-  });
-
-  // TEST: Trace for ESM testing
-  typeof process === 'object' && console.info('[ESM]: %o', (typeof document === 'undefined' ? new (require('u' + 'rl').URL)('file:' + __filename).href : (document.currentScript && document.currentScript.src || new URL('tokenizer.browser.experimental.js', document.baseURI).href)));
-
-  const native = document$2 && dom;
+    return {encodeEntity, encodeEntities};
+  })();
 
   /// Helpers
   const InspectSymbol = Symbol.for('nodejs.util.inspect.custom');
@@ -1727,6 +1585,193 @@
    * @typedef {DocumentFragment & {logs?: string[]}} Fragment
    */
 
+  /** @param {Pick<globalThis, 'document'|'DocumentFragment'|'Element'|'Object'|'Node'|'Text'>} endowments */
+  const createNativeDOM = (endowments = globalThis) => {
+    if (
+      !(
+        typeof endowments === 'object' &&
+        typeof endowments.document === 'object' &&
+        ['createElement', 'createTextNode', 'createDocumentFragment'].every(
+          method => typeof endowments.document[method] === 'function',
+        )
+      )
+    )
+      return (endowments = undefined);
+
+    const dom = {};
+
+    dom.Object = endowments.Object || globalThis.Object;
+    // dom.String = endowments.String || globalThis.String;
+    // dom.Set = endowments.Set || globalThis.Set;
+    // dom.Symbol = endowments.Symbol || globalThis.Symbol;
+    dom.document = endowments.document;
+
+    /** @type {typeof endowments.DocumentFragment} */
+    dom.DocumentFragment = endowments.DocumentFragment || dom.document.createDocumentFragment().constructor;
+
+    /** @type {typeof endowments.Element} */
+    dom.Element =
+      endowments.Element ||
+      (() => {
+        let prototype = dom.document.createElement('span');
+        while (
+          prototype.constructor &&
+          prototype.constructor.name.startsWith('HTML') &&
+          prototype !== (prototype = dom.Object.getPrototypeOf(prototype) || prototype)
+        );
+        return prototype.constructor.name === 'Element' ? prototype.constructor : undefined;
+      })();
+
+    /** @type {typeof endowments.Node} */
+    dom.Node =
+      endowments.Node ||
+      (dom.Element &&
+        (() => {
+          let prototype = dom.Object.getPrototypeOf(dom.Element.prototype);
+          return prototype.constructor.name === 'Node' ? prototype.constructor : undefined;
+        })());
+
+    /** @type {typeof endowments.Text} */
+    dom.Text = endowments.Text || dom.document.createTextNode('').constructor;
+
+    dom.createElement = (tag, properties, ...children) => {
+      const element = dom.document.createElement(tag);
+      properties && dom.Object.assign(element, properties);
+      if (!children.length) return element;
+      if (element.append) {
+        while (children.length > 500) element.append(...children.splice(0, 500));
+        children.length && element.append(...children);
+      } else if (element.appendChild) {
+        for (const child of children) element.appendChild(child);
+      }
+      return element;
+    };
+    dom.createText = (content = '') => dom.document.createTextNode(content);
+    dom.createFragment = () => dom.document.createDocumentFragment();
+
+    endowments = undefined;
+
+    return dom.Object.freeze(dom.Object.setPrototypeOf(dom, null));
+  };
+
+  /** @param {Pick<globalThis, 'Object'|'Set'|'String'|'Symbol'>} endowments */
+  const createPseudoDOM = (endowments = globalThis) => {
+    const dom = {};
+
+    dom.Object = endowments.Object || globalThis.Object;
+    dom.Set = endowments.Set || globalThis.Set;
+    dom.String = endowments.String || globalThis.String;
+    dom.Symbol = endowments.Symbol || globalThis.Symbol;
+    dom.document = null;
+
+    dom.Node = class Node extends dom.Object {
+      get children() {
+        return dom.Object.defineProperty(this, 'children', {value: new dom.Set()}).children;
+      }
+      get childElementCount() {
+        return (this.hasOwnProperty('children') && this.children.size) || 0;
+      }
+      get textContent() {
+        return (this.hasOwnProperty('children') && this.children.size && [...this.children].join('')) || '';
+      }
+      set textContent(text) {
+        this.hasOwnProperty('children') && this.children.size && this.children.clear();
+        text && this.children.add(new dom.String(text));
+      }
+      appendChild(element) {
+        return element && this.children.add(element), element;
+      }
+      append(...elements) {
+        if (elements.length) for (const element of elements) element && this.children.add(element);
+      }
+      removeChild(element) {
+        element && this.hasOwnProperty('children') && this.children.size && this.children.delete(element);
+        return element;
+      }
+      remove(...elements) {
+        if (elements.length && this.hasOwnProperty('children') && this.children.size)
+          for (const element of elements) element && this.children.delete(element);
+      }
+    };
+
+    dom.Element = class Element extends dom.Node {
+      get innerHTML() {
+        return this.textContent;
+      }
+      set innerHTML(text) {
+        this.textContent = text;
+      }
+      get outerHTML() {
+        let classList;
+        let {className, tag, innerHTML, dataset} = this;
+
+        className &&
+          (className = className.trim()) &&
+          ({
+            [className]: classList = (className &&
+              (Element.classLists[className] = [...new dom.Set(className.split(/\s+/g))].join(' '))) ||
+              '',
+          } = Element.classLists || (Element.classLists = dom.Object.create(null)));
+
+        const openTag = [tag];
+
+        classList && openTag.push(`class="${classList}"`);
+
+        if (dataset)
+          for (const [key, value] of dom.Object.entries(dataset))
+            value == null || !key.trim || openTag.push(`data-${key}=${JSON.stringify(`${value}`)}`);
+
+        return `<${openTag.join(' ')}>${innerHTML || ''}</${tag}>`;
+      }
+
+      toString() {
+        return this.outerHTML;
+      }
+      toJSON() {
+        return this.toString();
+      }
+    };
+
+    dom.DocumentFragment = class DocumentFragment extends dom.Node {
+      toString() {
+        return this.textContent;
+      }
+      toJSON() {
+        return (this.childElementCount && [...this.children]) || [];
+      }
+      [dom.Symbol.iterator]() {
+        return ((this.childElementCount && this.children) || '')[dom.Symbol.iterator]();
+      }
+    };
+
+    /** @type {typeof globalThis.Text} */
+    dom.Text = class Text extends dom.String {
+      toString() {
+        return encodeEntities(super.toString());
+      }
+    };
+
+    dom.createElement = (tag, properties, ...children) => {
+      const element = dom.Object.assign(new dom.Element(), {
+        tag,
+        className: (properties && properties.className) || '',
+        properties,
+      });
+      children.length && dom.Object.defineProperty(element, 'children', {value: new dom.Set(children)});
+      return element;
+    };
+    dom.createText = (content = '') => new dom.Text(content);
+    dom.createFragment = () => new dom.DocumentFragment();
+
+    endowments = undefined;
+
+    return dom.Object.freeze(dom.Object.setPrototypeOf(dom, null));
+  };
+
+  const pseudo = createPseudoDOM(globalThis);
+  const native =
+    globalThis.document && globalThis.document.defaultView === globalThis && createNativeDOM(globalThis);
+
   /// <reference lib="esnext.asynciterable" />
   /**
    * @template T
@@ -1770,23 +1815,7 @@
     }
   }
 
-  /// RUNTIME
-
-  /** Uses lightweight proxy objects that can be serialized into HTML text */
-  const HTML_MODE = true;
-
-  const supported = !!native;
-  const native$1 = !HTML_MODE ;
-  const implementation =  pseudo;
-  const {createElement: Element$2, createText: Text$2, createFragment: Fragment} = implementation;
-  const Template = template =>
-    !supported || Template.supported === false
-      ? false
-      : Template.supported === true
-      ? document.createElement('template')
-      : (Template.supported = !!(
-          (template = document.createElement('template')) && 'HTMLTemplateElement' === (template.constructor || '').name
-        )) && template;
+  //@ts-check
 
   /// IMPLEMENTATION
 
@@ -1809,7 +1838,7 @@
         fault: factory(SPAN, {markupHint: `fault`, markupClass: classPrefix}),
         text: factory(SPAN, {markupHint: classPrefix, markupClass: classPrefix}),
 
-        whitespace: Text$2,
+        whitespace: MarkupRenderer.dom.Text,
         inset: factory(SPAN, {markupHint: `inset whitespace`, markupClass: classPrefix}),
         break: factory(SPAN, {markupHint: `break whitespace`, markupClass: classPrefix}),
 
@@ -1822,7 +1851,8 @@
 
         literal: factory(SPAN, {markupHint: LITERAL, markupClass: classPrefix}),
         number: factory(SPAN, {markupHint: `${LITERAL} number`, markupClass: classPrefix}),
-        quote: factory(SPAN, {markupHint: `quote`, markupClass: classPrefix}),
+        quote: factory(SPAN, {markupHint: `string quote`, markupClass: classPrefix}),
+        string: factory(SPAN, {markupHint: `string`, markupClass: classPrefix}),
         pattern: factory(SPAN, {markupHint: `pattern`, markupClass: classPrefix}),
 
         punctuator: factory(SPAN, {markupHint: PUNCTUATOR, markupClass: classPrefix}),
@@ -1845,12 +1875,12 @@
     async render(tokens, fragment) {
       let logs, template, first, elements;
       try {
-        fragment || (fragment = Fragment());
+        fragment || (fragment = MarkupRenderer.dom.Fragment());
         logs = fragment.logs; // || (fragment.logs = []);
         elements = this.renderer(tokens);
         if ((first = await elements.next()) && 'value' in first) {
-          template = Template();
-          if (!native$1 && template && 'textContent' in fragment) {
+          template = MarkupRenderer.dom.Template();
+          if (!MarkupRenderer.dom.native && template && 'textContent' in fragment) {
             logs && logs.push(`render method = 'text' in template`);
             const body = [first.value];
             first.done || (await each(elements, element => body.push(element)));
@@ -1896,7 +1926,7 @@
           (punctuator &&
             (renderers[punctuator] || (type && renderers[type]) || renderers.punctuator || renderers.operator)) ||
           (type && (renderers[type] || (type !== 'whitespace' && type !== 'break' && renderers.text))) ||
-          Text$2;
+          MarkupRenderer.dom.Text;
 
         // Normlize inset for { type != 'inset', inset = /\s+/ }
         if (reflows && lineBreaks && type !== 'break') {
@@ -1924,27 +1954,16 @@
           emit(renderer, text, type, hint);
           type === 'break'
             ? (renderedLine = void (yield renderedLine))
-            : type === 'whitespace' || renderedLine.appendChild(Element$2('wbr'));
+            : type === 'whitespace' || renderedLine.appendChild(MarkupRenderer.dom.Element('wbr'));
         }
       }
       renderedLine && (yield renderedLine);
     }
 
-    /** @type {string => string} */
-    static get escape() {
-      return Object.defineProperty(MarkupRenderer, 'escape', {
-        value: ((replace, replacement) => string => replace(string, replacement))(
-          RegExp.prototype[Symbol.replace].bind(/[\0-\x1F"\\]/g),
-          m => `&#x${m.charCodeAt(0).toString(16)};`,
-        ),
-        writable: false,
-      }).escape;
-    }
-
     /**
-     * @param {string} tag
-     * @param {Partial<HTMLElement>} [properties]
-     * @param {boolean} [unflattened]
+     * @template {{defaults?: Partial<typeof MarkupRenderer.defaults>; markupClass?: string; markupHint?: string;}} T
+     * @param {string} tagName
+     * @param {Partial<HTMLElement> & T} [elementProperties]
      */
     static factory(tagName, elementProperties) {
       const [
@@ -1963,13 +1982,13 @@
         let element, hintSeparator;
 
         element =
-          (typeof content === 'string' && (content = Text$2(content))) || content != null
-            ? Element$2(tag, properties, content)
-            : Element$2(tag, properties);
+          (typeof content === 'string' && (content = MarkupRenderer.dom.Text(content))) || content != null
+            ? MarkupRenderer.dom.Element(tag, properties, content)
+            : MarkupRenderer.dom.Element(tag, properties);
 
         typeof hint === 'string' && hint !== '' && (hintSeparator = hint.indexOf('\n\n')) !== -1
           ? ((element.dataset = {
-              hint: `${markupHint}${MarkupRenderer.escape(hint.slice(hintSeparator))}`,
+              hint: `${markupHint}${MarkupRenderer.dom.escape(hint.slice(hintSeparator))}`,
             }),
             hintSeparator === 0 || (element.className = `${element.className} ${hint.slice(0, hintSeparator)}`))
           : (hint && (element.className = `${element.className} ${hint}`),
@@ -1981,6 +2000,8 @@
   }
 
   MarkupRenderer.defaults = Object.freeze({
+    /** Specifies the intended mode for rendering a token @type {'html'} */
+    MODE: 'html',
     /** Tag name of the element to use for rendering a token. */
     SPAN: 'span',
     /** Tag name of the element to use for grouping tokens in a single line. */
@@ -1990,6 +2011,32 @@
     /** Enable renderer-side unpacking { inset } || { breaks > 0 } tokens */
     REFLOW: true,
   });
+
+  MarkupRenderer.dom = (() => {
+    /** Uses lightweight proxy objects that can be serialized into HTML text */
+    const HTML_MODE = MarkupRenderer.defaults.MODE === 'html';
+    const supported = !!native;
+    const native$1 = !HTML_MODE && supported;
+    const implementation = native$1 ? native : pseudo;
+    const {createElement: Element, createText: Text, createFragment: Fragment} = implementation;
+    const Template = template =>
+      !supported || Template.supported === false
+        ? false
+        : Template.supported === true
+        ? document.createElement('template')
+        : (Template.supported = !!(
+            (template = document.createElement('template')) && 'HTMLTemplateElement' === (template.constructor || '').name
+          )) && template;
+    const escape = /** @type {(source: string) => string} */ (((replace, replacement) => string =>
+      replace(string, replacement))(
+      RegExp.prototype[Symbol.replace].bind(/[\0-\x1F"\\]/g),
+      m => `&#x${m.charCodeAt(0).toString(16)};`,
+    ));
+
+    Template.supported = undefined;
+
+    return Object.freeze({supported, native: native$1, implementation, escape, Element, Text, Fragment, Template});
+  })();
 
   /// INTERFACE
 

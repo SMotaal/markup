@@ -234,6 +234,298 @@ const {
   UNKNOWN = (Matcher.UNKNOWN = 'UNKNOWN'),
 } = Matcher;
 
+/// <reference path="./types.d.ts" />
+
+const {createTokenFromMatch, createMatcherInstance, createMatcherTokenizer, createMatcherMode} = (() => {
+  const {
+    RegExp,
+    Object,
+    Object: {assign, create, freeze, defineProperty, defineProperties, setPrototypeOf},
+    String,
+  } = globalThis;
+
+  /**
+   * @template {Matcher} T
+   * @template {{}} U
+   * @param {T} matcher
+   * @param {TokenizerState<T, U>} [state]
+   * @returns {TokenMatcher<U>}
+   */
+  const createMatcherInstance = (matcher, state) =>
+    defineProperty(
+      ((state || (state = create(null))).matcher =
+        (matcher && matcher instanceof RegExp && createMatcherClone(matcher)) || RegExp(matcher, 'g')),
+      'state',
+      {value: state},
+    );
+
+  /**
+   * @template {Matcher} T
+   * @template {T} U
+   * @template {{}} V
+   * @type {(matcher: T & V, instance?: U) => U & V}
+   * @param {T} param0
+   * @param {U} [param1]
+   * @returns {U}
+   */
+  const createMatcherClone = ({constructor: {prototype}, source, flags, lastIndex, ...properties}, instance) => (
+    (instance = assign(instance || RegExp(source, flags || 'g'), properties)),
+    prototype && setPrototypeOf(instance, prototype),
+    instance
+  );
+
+  /** @type {(value: any) => string} */
+  const createString = String;
+
+  /**
+   * @type {<M extends MatchArray, T extends {}>(init: MatchResult<M>) => Token<T>}
+   * @param {MatchResult<MatchArray>} param0
+   */
+  const createTokenFromMatch = ({0: text, identity, capture, index}) => ({
+    type: (identity && (identity.description || identity)) || 'text',
+    text,
+    lineBreaks: countLineBreaks(text),
+    lineInset: (capture && capture.inset) || '',
+    offset: index,
+    capture,
+  });
+
+  const tokenizerProperties = Object.getOwnPropertyDescriptors(
+    freeze(
+      class Tokenizer {
+        /** @template {Matcher} T @template {{}} U */
+        *tokenize() {
+          /** @type {Token<U>} */
+          // let next;
+          /** @type {{createToken: typeof createTokenFromMatch, initializeState: <V>(state: V) => V & TokenizerState<T, U>}} */
+          const createToken = (this && this.createToken) || createTokenFromMatch;
+          /** @type {string} */
+          const string = createString(Object.keys({[arguments[0]]: 1})[0]);
+          /** @type {TokenMatcher<U>} */
+          const matcher = createMatcherInstance(this.matcher, assign(arguments[1] || {}, {sourceText: string}));
+          /** @type {TokenizerState<T, U>} */
+          const state = matcher.state;
+          this.initializeState && this.initializeState(state);
+          matcher.exec = matcher.exec;
+
+          for (
+            let match, capturedToken, retainedToken, index = 0;
+            // BAIL on first failed/empty match
+            ((match = matcher.exec(string)) !== null && match[0] !== '') ||
+            //   BUT first yield a nextToken if present
+            (retainedToken !== undefined && (yield retainedToken), (state.nextToken = undefined));
+
+          ) {
+            if ((capturedToken = createToken(match, state)) === undefined) continue;
+
+            // HOLD back one grace token
+            //   until createToken(…) !== undefined (ie new token)
+            //   set the incremental token index for this token
+            //   and keep it referenced directly on the state
+            (state.nextToken = capturedToken).index = index++;
+
+            //   THEN yield a previously held token
+            if (retainedToken !== undefined) yield retainedToken;
+
+            //   THEN finally clear the nextToken reference
+            retainedToken = capturedToken;
+            state.nextToken = undefined;
+          }
+
+          this.finalizeState && this.finalizeState(state);
+
+          // console.log({...state});
+        }
+      }.prototype,
+    ),
+  );
+
+  /**
+   * @type { {<T extends Matcher, U extends {} = {}>(sourceText: string, initialState?: Partial<TokenizerState<undefined, U>): IterableIterator<Token<U>>} }
+   */
+  const createMatcherTokenizer = instance => defineProperties(instance, tokenizerProperties);
+
+  /**
+   * @param {Matcher} matcher
+   * @param {any} [options]
+   */
+  const createMatcherMode = (matcher, options) => {
+    const tokenizer = createMatcherTokenizer({
+      createToken: createTokenFromMatch,
+      /** @type {(state: {}) =>  void} */
+      initializeState: undefined,
+      finalizeState: undefined,
+      matcher: freeze(createMatcherInstance(matcher)),
+    });
+
+    const mode = {syntax: 'matcher', tokenizer};
+    options &&
+      ({
+        syntax: mode.syntax = mode.syntax,
+        aliases: mode.aliases,
+        preregister: mode.preregister,
+        createToken: tokenizer.createToken = tokenizer.createToken,
+        initializeState: tokenizer.initializeState,
+        finalizeState: tokenizer.finalizeState,
+        ...mode.overrides
+      } = options);
+
+    freeze(tokenizer);
+
+    return mode;
+  };
+
+  Object.freeze(createTokenFromMatch);
+  Object.freeze(createMatcherInstance);
+  Object.freeze(createMatcherTokenizer);
+  Object.freeze(createMatcherMode);
+
+  return {createTokenFromMatch, createMatcherInstance, createMatcherTokenizer, createMatcherMode};
+})();
+
+const TokenMatcher = (() => {
+  /**
+   * Safely updates the match to reflect the captured identity.
+   *
+   * NOTE: fault always sets match.flatten to false
+   *
+   * @param {string} text - Text of the intended { type = "opener" } token
+   * @param {State} state - Matcher state
+   * @returns {undefined | string} - String when context is **not** open
+   */
+  const capture = (identity, match) => {
+    match.capture[(match.identity = identity)] = match[0];
+    (match.fault = identity === 'fault') && (match.flatten = false);
+    return match;
+  };
+
+  /**
+   * Safely mutates matcher state to open a new context.
+   *
+   * @param {string} text - Text of the intended { type = "opener" } token
+   * @param {State} state - Matcher state
+   * @returns {undefined | string} - String when context is **not** open
+   */
+  const open = (text, state) => {
+    const {
+      contexts,
+      context: parentContext,
+      context: {depth: index, goal: initialGoal},
+      groups,
+      initializeContext,
+    } = state;
+    const group = initialGoal.groups[text];
+
+    if (!group) return initialGoal.type || 'sequence';
+    groups.splice(index, groups.length, group);
+    groups.closers.splice(index, groups.closers.length, group.closer);
+
+    parentContext.contextCount++;
+
+    const goal = group.goal === undefined ? initialGoal : group.goal;
+
+    const nextContext = {
+      id: `${parentContext.id} ${
+        goal !== initialGoal ? `\n${goal[Symbol.toStringTag]} ${group[Symbol.toStringTag]}` : group[Symbol.toStringTag]
+      }`,
+      number: ++contexts.count,
+      depth: index + 1,
+      parentContext,
+      goal,
+      group,
+      state,
+    };
+
+    typeof initializeContext === 'function' && initializeContext(nextContext);
+
+    state.nextContext = contexts[index] = nextContext;
+  };
+
+  /**
+   * Safely mutates matcher state to close the current context.
+   *
+   * @param {string} text - Text of the intended { type = "closer" } token
+   * @param {State} state - Matcher state
+   * @returns {undefined | string} - String when context is **not** closed
+   */
+  const close = (text, state) => {
+    const groups = state.groups;
+    const index = groups.closers.lastIndexOf(text);
+
+    if (index === -1 || index !== groups.length - 1) return fault();
+
+    groups.closers.splice(index, groups.closers.length);
+    groups.splice(index, groups.length);
+    state.nextContext = state.context.parentContext;
+  };
+
+  /**
+   * Safely mutates matcher state to skip ahead.
+   *
+   * TODO: Finish implementing forward helper
+   *
+   * @param {string | RegExp} search
+   * @param {Match} match
+   * @param {State} state
+   * @param {number} [delta]
+   */
+  const forward = (search, match, state, delta) => {
+    if (typeof search === 'string' && search.length) {
+      state.nextOffset = match.input.indexOf(search, match.index + match[0].length) + (0 + delta || 0);
+    } else if (search != null && typeof search === 'object') {
+      search.lastIndex = match.index + match[0].length;
+      const matched = search.exec(match.input);
+      // console.log(...matched, {matched});
+      if (matched[1]) {
+        state.nextOffset = search.lastIndex;
+        state.nextFault = true;
+        return 'fault';
+      } else {
+        state.nextOffset = search.lastIndex + (0 + delta || 0);
+      }
+    } else {
+      throw new TypeError(`forward invoked with an invalid search argument`);
+    }
+  };
+
+  /**
+   * @returns {'fault'}
+   */
+  const fault = (text, state) => {
+    // console.warn(text, {...state});
+    return 'fault';
+  };
+
+  class TokenMatcher extends Matcher {}
+
+  Object.defineProperty(TokenMatcher, 'capture', {
+    value: capture,
+    enumerable: true,
+    writable: false,
+  });
+
+  Object.defineProperty(TokenMatcher, 'open', {value: open, enumerable: true, writable: false});
+
+  Object.defineProperty(TokenMatcher, 'close', {value: close, enumerable: true, writable: false});
+
+  Object.defineProperty(TokenMatcher, 'forward', {
+    value: forward,
+    enumerable: true,
+    writable: false,
+  });
+
+  Object.defineProperty(TokenMatcher, 'fault', {value: fault, enumerable: true, writable: false});
+
+  Object.freeze(capture);
+  Object.freeze(open);
+  Object.freeze(close);
+  Object.freeze(forward);
+  Object.freeze(fault);
+  Object.freeze(TokenMatcher);
+
+  return TokenMatcher;
+})();
+
 //@ts-check
 
 const RegExpClass = /^(?:\[(?=.*(?:[^\\](?:\\\\)*|)\]$)|)((?:\\.|[^\\\n\[\]]*)*)\]?$/;
@@ -310,16 +602,6 @@ globalThis.RegExpRange = RegExpRange;
 
 //@ts-check
 
-/** @typedef {typeof stats} ContextStats */
-const stats = {
-  captureCount: 0,
-  contextCount: 0,
-  tokenCount: 0,
-  nestedCaptureCount: 0,
-  nestedContextCount: 0,
-  nestedTokenCount: 0,
-};
-
 /** @param {State} state */
 // TODO: Document initializeState
 const initializeState = state => {
@@ -336,7 +618,8 @@ const initializeState = state => {
     depth: 0,
     parentContext: undefined,
     goal: state.matcher.goal,
-    group: undefined,
+    //@ts-ignore
+    group: (state.groups.root = Object.freeze({})),
     state,
     ...(state.USE_CONSTRUCTS === true ? {currentConstruct: new Construct()} : {}),
   });
@@ -569,6 +852,9 @@ const createToken = (match, state) => {
     ((state.lastContext = currentContext),
     currentContext === nextContext.parentContext
       ? (state.totalContextCount++,
+        // tokenReference === 'lastAtom'
+        //   ? ((nextContext.firstAtom = nextToken), (nextContext.firstTrivia = undefined))
+        //   : ((nextContext.firstAtom = undefined), (nextContext.firstTrivia = nextToken)),
         (nextContext.precedingAtom = lastAtom),
         (nextContext.precedingTrivia = lastTrivia),
         (nextContext.precedingToken = lastToken))
@@ -601,17 +887,7 @@ const initializeContext = (assign =>
   })(Object.assign);
 
 const generateDefinitions = ({groups = {}, goals = {}, identities = {}, symbols = {}, tokens = {}}) => {
-  // const {FaultGoal: FaultGoalSymbol = symbols.FaultGoal = generateDefinitions.FaultGoal.symbol} = symbols;
-  // const FaultGoal = (goals[(symbols.FaultGoal = generateDefinitions.FaultGoal.symbol)] = generateDefinitions.FaultGoal);
   const FaultGoal = generateDefinitions.FaultGoal;
-  // typeof symbols.FaultGoal === 'symbol' &&
-  // typeof goals[symbols.FaultGoal] === 'object' &&
-  // (goals[symbols.FaultGoal].symbol === undefined || symbols.FaultGoal === goals[symbols.FaultGoal].symbol)
-  //   ? goals[symbols.FaultGoal]
-  //   : typeof symbols.FaultGoal === 'symbol'
-  //   ? (goals[symbols.FaultGoal] = {...generateDefinitions.FaultGoal, symbol: symbols.FaultGoal})
-  //   : (goals[(symbols.FaultGoal = generateDefinitions.FaultGoal.symbol)] = generateDefinitions.FaultGoal);
-
   const {create, freeze, entries, getOwnPropertySymbols, getOwnPropertyNames, setPrototypeOf} = Object;
 
   const punctuators = create(null);
@@ -638,11 +914,15 @@ const generateDefinitions = ({groups = {}, goals = {}, identities = {}, symbols 
       for (const punctuator of (goal.punctuators = [...goal.punctuators]))
         punctuators[punctuator] = !(goal.punctuators[punctuator] = true);
       freeze(setPrototypeOf(goal.punctuators, punctuators));
+    } else {
+      goal.punctuators = punctuators;
     }
 
     if (goal.closers) {
       for (const closer of (goal.closers = [...goal.closers])) punctuators[closer] = !(goal.closers[closer] = true);
       freeze(setPrototypeOf(goal.closers, punctuators));
+    } else {
+      goal.closers = generateDefinitions.Empty;
     }
 
     if (goal.openers) {
@@ -658,9 +938,12 @@ const generateDefinitions = ({groups = {}, goals = {}, identities = {}, symbols 
         group[Symbol.toStringTag] = `‹${group.opener}›`;
       }
       freeze(setPrototypeOf(goal.openers, punctuators));
+    } else {
+      goal.closers = generateDefinitions.Empty;
     }
 
-    if (goal.punctuation) freeze(setPrototypeOf((goal.punctuation = {...goal.punctuation}), null));
+    // if (goal.punctuation)
+    freeze(setPrototypeOf((goal.punctuation = {...goal.punctuation}), null));
 
     freeze(goal.groups);
     freeze(goal.tokens);
@@ -700,6 +983,9 @@ const generateDefinitions = ({groups = {}, goals = {}, identities = {}, symbols 
     return (goal.tokens[text] = goal.tokens[symbol] = tokens[symbol] = {symbol, text, type, goal, ...properties});
   }
 };
+
+// generateDefinitions.Empty = Object.freeze(new class Empty extends Array{});
+generateDefinitions.Empty = Object.freeze({[Symbol.iterator]: (iterator => iterator).bind([][Symbol.iterator])});
 
 const FaultGoal = (generateDefinitions.FaultGoal = {symbol: Symbol('FaultGoal'), type: 'fault'});
 generateDefinitions({goals: {[FaultGoal.symbol]: FaultGoal}});
@@ -808,6 +1094,18 @@ const Ranges = factories => {
   return ranges;
 };
 
+/** @typedef {typeof stats} ContextStats */
+const stats = {
+  captureCount: 0,
+  contextCount: 0,
+  tokenCount: 0,
+  nestedCaptureCount: 0,
+  nestedContextCount: 0,
+  nestedTokenCount: 0,
+};
+
+/// Ambient
+
 /** @typedef {import('./types').Match} Match */
 /** @typedef {import('./types').Groups} Groups */
 /** @typedef {import('./types').Group} Group */
@@ -854,6 +1152,7 @@ const {
   ECMAScriptTemplateLiteralGoal,
   ECMAScriptDefinitions,
 } = (() => {
+  // Avoids TypeScript "always …" style errors
   const DEBUG_CONSTRUCTS = Boolean(false);
 
   const identities = {
@@ -1174,298 +1473,6 @@ const {
  * @typedef {Record<ECMAScript.Keyword|ECMAScript.RestrictedWord|ECMAScript.FutureReservedWord|ECMAScript.ContextualKeyword, symbol>} ECMAScript.Keywords
  */
 
-/// <reference path="./types.d.ts" />
-
-const {createTokenFromMatch, createMatcherInstance, createMatcherTokenizer, createMatcherMode} = (() => {
-  const {
-    RegExp,
-    Object,
-    Object: {assign, create, freeze, defineProperty, defineProperties, setPrototypeOf},
-    String,
-  } = globalThis;
-
-  /**
-   * @template {Matcher} T
-   * @template {{}} U
-   * @param {T} matcher
-   * @param {TokenizerState<T, U>} [state]
-   * @returns {TokenMatcher<U>}
-   */
-  const createMatcherInstance = (matcher, state) =>
-    defineProperty(
-      ((state || (state = create(null))).matcher =
-        (matcher && matcher instanceof RegExp && createMatcherClone(matcher)) || RegExp(matcher, 'g')),
-      'state',
-      {value: state},
-    );
-
-  /**
-   * @template {Matcher} T
-   * @template {T} U
-   * @template {{}} V
-   * @type {(matcher: T & V, instance?: U) => U & V}
-   * @param {T} param0
-   * @param {U} [param1]
-   * @returns {U}
-   */
-  const createMatcherClone = ({constructor: {prototype}, source, flags, lastIndex, ...properties}, instance) => (
-    (instance = assign(instance || RegExp(source, flags || 'g'), properties)),
-    prototype && setPrototypeOf(instance, prototype),
-    instance
-  );
-
-  /** @type {(value: any) => string} */
-  const createString = String;
-
-  /**
-   * @type {<M extends MatchArray, T extends {}>(init: MatchResult<M>) => Token<T>}
-   * @param {MatchResult<MatchArray>} param0
-   */
-  const createTokenFromMatch = ({0: text, identity, capture, index}) => ({
-    type: (identity && (identity.description || identity)) || 'text',
-    text,
-    lineBreaks: countLineBreaks(text),
-    lineInset: (capture && capture.inset) || '',
-    offset: index,
-    capture,
-  });
-
-  const tokenizerProperties = Object.getOwnPropertyDescriptors(
-    freeze(
-      class Tokenizer {
-        /** @template {Matcher} T @template {{}} U */
-        *tokenize() {
-          /** @type {Token<U>} */
-          // let next;
-          /** @type {{createToken: typeof createTokenFromMatch, initializeState: <V>(state: V) => V & TokenizerState<T, U>}} */
-          const createToken = (this && this.createToken) || createTokenFromMatch;
-          /** @type {string} */
-          const string = createString(Object.keys({[arguments[0]]: 1})[0]);
-          /** @type {TokenMatcher<U>} */
-          const matcher = createMatcherInstance(this.matcher, assign(arguments[1] || {}, {sourceText: string}));
-          /** @type {TokenizerState<T, U>} */
-          const state = matcher.state;
-          this.initializeState && this.initializeState(state);
-          matcher.exec = matcher.exec;
-
-          for (
-            let match, capturedToken, retainedToken, index = 0;
-            // BAIL on first failed/empty match
-            ((match = matcher.exec(string)) !== null && match[0] !== '') ||
-            //   BUT first yield a nextToken if present
-            (retainedToken !== undefined && (yield retainedToken), (state.nextToken = undefined));
-
-          ) {
-            if ((capturedToken = createToken(match, state)) === undefined) continue;
-
-            // HOLD back one grace token
-            //   until createToken(…) !== undefined (ie new token)
-            //   set the incremental token index for this token
-            //   and keep it referenced directly on the state
-            (state.nextToken = capturedToken).index = index++;
-
-            //   THEN yield a previously held token
-            if (retainedToken !== undefined) yield retainedToken;
-
-            //   THEN finally clear the nextToken reference
-            retainedToken = capturedToken;
-            state.nextToken = undefined;
-          }
-
-          this.finalizeState && this.finalizeState(state);
-
-          // console.log({...state});
-        }
-      }.prototype,
-    ),
-  );
-
-  /**
-   * @type { {<T extends Matcher, U extends {} = {}>(sourceText: string, initialState?: Partial<TokenizerState<undefined, U>): IterableIterator<Token<U>>} }
-   */
-  const createMatcherTokenizer = instance => defineProperties(instance, tokenizerProperties);
-
-  /**
-   * @param {Matcher} matcher
-   * @param {any} [options]
-   */
-  const createMatcherMode = (matcher, options) => {
-    const tokenizer = createMatcherTokenizer({
-      createToken: createTokenFromMatch,
-      /** @type {(state: {}) =>  void} */
-      initializeState: undefined,
-      finalizeState: undefined,
-      matcher: freeze(createMatcherInstance(matcher)),
-    });
-
-    const mode = {syntax: 'matcher', tokenizer};
-    options &&
-      ({
-        syntax: mode.syntax = mode.syntax,
-        aliases: mode.aliases,
-        preregister: mode.preregister,
-        createToken: tokenizer.createToken = tokenizer.createToken,
-        initializeState: tokenizer.initializeState,
-        finalizeState: tokenizer.finalizeState,
-        ...mode.overrides
-      } = options);
-
-    freeze(tokenizer);
-
-    return mode;
-  };
-
-  Object.freeze(createTokenFromMatch);
-  Object.freeze(createMatcherInstance);
-  Object.freeze(createMatcherTokenizer);
-  Object.freeze(createMatcherMode);
-
-  return {createTokenFromMatch, createMatcherInstance, createMatcherTokenizer, createMatcherMode};
-})();
-
-const TokenMatcher = (() => {
-  /**
-   * Safely updates the match to reflect the captured identity.
-   *
-   * NOTE: fault always sets match.flatten to false
-   *
-   * @param {string} text - Text of the intended { type = "opener" } token
-   * @param {State} state - Matcher state
-   * @returns {undefined | string} - String when context is **not** open
-   */
-  const capture = (identity, match) => {
-    match.capture[(match.identity = identity)] = match[0];
-    (match.fault = identity === 'fault') && (match.flatten = false);
-    return match;
-  };
-
-  /**
-   * Safely mutates matcher state to open a new context.
-   *
-   * @param {string} text - Text of the intended { type = "opener" } token
-   * @param {State} state - Matcher state
-   * @returns {undefined | string} - String when context is **not** open
-   */
-  const open = (text, state) => {
-    const {
-      contexts,
-      context: parentContext,
-      context: {depth: index, goal: initialGoal},
-      groups,
-      initializeContext,
-    } = state;
-    const group = initialGoal.groups[text];
-
-    if (!group) return initialGoal.type || 'sequence';
-    groups.splice(index, groups.length, group);
-    groups.closers.splice(index, groups.closers.length, group.closer);
-
-    parentContext.contextCount++;
-
-    const goal = group.goal === undefined ? initialGoal : group.goal;
-
-    const nextContext = {
-      id: `${parentContext.id} ${
-        goal !== initialGoal ? `\n${goal[Symbol.toStringTag]} ${group[Symbol.toStringTag]}` : group[Symbol.toStringTag]
-      }`,
-      number: ++contexts.count,
-      depth: index + 1,
-      parentContext,
-      goal,
-      group,
-      state,
-    };
-
-    typeof initializeContext === 'function' && initializeContext(nextContext);
-
-    state.nextContext = contexts[index] = nextContext;
-  };
-
-  /**
-   * Safely mutates matcher state to close the current context.
-   *
-   * @param {string} text - Text of the intended { type = "closer" } token
-   * @param {State} state - Matcher state
-   * @returns {undefined | string} - String when context is **not** closed
-   */
-  const close = (text, state) => {
-    const groups = state.groups;
-    const index = groups.closers.lastIndexOf(text);
-
-    if (index === -1 || index !== groups.length - 1) return fault();
-
-    groups.closers.splice(index, groups.closers.length);
-    groups.splice(index, groups.length);
-    state.nextContext = state.context.parentContext;
-  };
-
-  /**
-   * Safely mutates matcher state to skip ahead.
-   *
-   * TODO: Finish implementing forward helper
-   *
-   * @param {string | RegExp} search
-   * @param {Match} match
-   * @param {State} state
-   * @param {number} [delta]
-   */
-  const forward = (search, match, state, delta) => {
-    if (typeof search === 'string' && search.length) {
-      state.nextOffset = match.input.indexOf(search, match.index + match[0].length) + (0 + delta || 0);
-    } else if (search != null && typeof search === 'object') {
-      search.lastIndex = match.index + match[0].length;
-      const matched = search.exec(match.input);
-      // console.log(...matched, {matched});
-      if (matched[1]) {
-        state.nextOffset = search.lastIndex;
-        state.nextFault = true;
-        return 'fault';
-      } else {
-        state.nextOffset = search.lastIndex + (0 + delta || 0);
-      }
-    } else {
-      throw new TypeError(`forward invoked with an invalid search argument`);
-    }
-  };
-
-  /**
-   * @returns {'fault'}
-   */
-  const fault = (text, state) => {
-    // console.warn(text, {...state});
-    return 'fault';
-  };
-
-  class TokenMatcher extends Matcher {}
-
-  Object.defineProperty(TokenMatcher, 'capture', {
-    value: capture,
-    enumerable: true,
-    writable: false,
-  });
-
-  Object.defineProperty(TokenMatcher, 'open', {value: open, enumerable: true, writable: false});
-
-  Object.defineProperty(TokenMatcher, 'close', {value: close, enumerable: true, writable: false});
-
-  Object.defineProperty(TokenMatcher, 'forward', {
-    value: forward,
-    enumerable: true,
-    writable: false,
-  });
-
-  Object.defineProperty(TokenMatcher, 'fault', {value: fault, enumerable: true, writable: false});
-
-  Object.freeze(capture);
-  Object.freeze(open);
-  Object.freeze(close);
-  Object.freeze(forward);
-  Object.freeze(fault);
-  Object.freeze(TokenMatcher);
-
-  return TokenMatcher;
-})();
-
 const matcher = (ECMAScript =>
   TokenMatcher.define(
     // Matcher generator for this matcher instance
@@ -1529,7 +1536,7 @@ const matcher = (ECMAScript =>
             (state.context.group !== undefined &&
               state.context.group.closer === '\n' &&
               TokenMatcher.close(text, state)) ||
-              // Identity of a break take precedence over closer
+              // NOTE: ‹break› takes precedence over ‹closer›
               'break',
             match,
           );
@@ -1849,7 +1856,9 @@ const mode = createMatcherMode(matcher, {
     finalizeState(state);
   },
 
-  createToken: (match, state) => {
+  createToken: (log => (match, state) => {
+    // let construct;
+    const lastAtom = state.lastAtom;
     const token = createToken(match, state);
 
     if (state.USE_CONSTRUCTS === true && token !== undefined) {
@@ -1865,9 +1874,12 @@ const mode = createMatcherMode(matcher, {
           case 'identifier':
             context.currentConstruct.add(`‹${type}›`);
             break;
+          case 'delimiter':
+          case 'breaker':
           case 'operator':
             switch (text) {
               case ',':
+              // debugger;
               case ';':
                 context.currentConstruct.set('');
                 break;
@@ -1905,6 +1917,23 @@ const mode = createMatcherMode(matcher, {
             break;
         }
         token.construct = context.currentConstruct.text;
+        typeof log === 'function' &&
+          ((type === 'opener' && (text === '/' || text === '{')) ||
+            // Semi
+            text === ';' ||
+            // Arrow Function
+            text === '=>') &&
+          log(
+            '%s\t%o\n\t%o\n\t%o',
+            text,
+            type === 'breaker'
+              ? context.currentConstruct.previousText
+              : type === 'opener'
+              ? token.context.openingConstruct.text
+              : token.construct,
+            lastAtom,
+            token,
+          );
       }
       token.isDelimiter || context.currentConstruct == null
         ? context.openingConstruct == null ||
@@ -1916,7 +1945,12 @@ const mode = createMatcherMode(matcher, {
           (token.hint = `${token.hint}\n\n${context.currentConstruct.previousText}\n…`);
     }
     return token;
-  },
+  })(
+    /** @type {Console['log']} */
+    // null && //
+    //@ts-ignore
+    (console.internal || console).log,
+  ),
 });
 
 /** @typedef {import('./types').State} State */
