@@ -1,24 +1,6 @@
+//@ts-check
 import * as pseudom from '../../pseudom/pseudom.js';
-// import {encodeEntities} from '../../pseudom/pseudom.js';
 import {each} from './helpers.js';
-
-/// RUNTIME
-
-/** Uses lightweight proxy objects that can be serialized into HTML text */
-const HTML_MODE = true;
-
-const supported = !!pseudom.native;
-const native = !HTML_MODE && supported;
-const implementation = native ? pseudom.native : pseudom.pseudo;
-const {createElement: Element, createText: Text, createFragment: Fragment} = implementation;
-const Template = template =>
-  !supported || Template.supported === false
-    ? false
-    : Template.supported === true
-    ? document.createElement('template')
-    : (Template.supported = !!(
-        (template = document.createElement('template')) && 'HTMLTemplateElement' === (template.constructor || '').name
-      )) && template;
 
 /// IMPLEMENTATION
 
@@ -41,7 +23,7 @@ class MarkupRenderer {
       fault: factory(SPAN, {markupHint: `fault`, markupClass: classPrefix}),
       text: factory(SPAN, {markupHint: classPrefix, markupClass: classPrefix}),
 
-      whitespace: Text,
+      whitespace: MarkupRenderer.dom.Text,
       inset: factory(SPAN, {markupHint: `inset whitespace`, markupClass: classPrefix}),
       break: factory(SPAN, {markupHint: `break whitespace`, markupClass: classPrefix}),
 
@@ -54,7 +36,8 @@ class MarkupRenderer {
 
       literal: factory(SPAN, {markupHint: LITERAL, markupClass: classPrefix}),
       number: factory(SPAN, {markupHint: `${LITERAL} number`, markupClass: classPrefix}),
-      quote: factory(SPAN, {markupHint: `quote`, markupClass: classPrefix}),
+      quote: factory(SPAN, {markupHint: `string quote`, markupClass: classPrefix}),
+      string: factory(SPAN, {markupHint: `string`, markupClass: classPrefix}),
       pattern: factory(SPAN, {markupHint: `pattern`, markupClass: classPrefix}),
 
       punctuator: factory(SPAN, {markupHint: PUNCTUATOR, markupClass: classPrefix}),
@@ -77,12 +60,12 @@ class MarkupRenderer {
   async render(tokens, fragment) {
     let logs, template, first, elements;
     try {
-      fragment || (fragment = Fragment());
+      fragment || (fragment = MarkupRenderer.dom.Fragment());
       logs = fragment.logs; // || (fragment.logs = []);
       elements = this.renderer(tokens);
       if ((first = await elements.next()) && 'value' in first) {
-        template = Template();
-        if (!native && template && 'textContent' in fragment) {
+        template = MarkupRenderer.dom.Template();
+        if (!MarkupRenderer.dom.native && template && 'textContent' in fragment) {
           logs && logs.push(`render method = 'text' in template`);
           const body = [first.value];
           first.done || (await each(elements, element => body.push(element)));
@@ -128,7 +111,7 @@ class MarkupRenderer {
         (punctuator &&
           (renderers[punctuator] || (type && renderers[type]) || renderers.punctuator || renderers.operator)) ||
         (type && (renderers[type] || (type !== 'whitespace' && type !== 'break' && renderers.text))) ||
-        Text;
+        MarkupRenderer.dom.Text;
 
       // Normlize inset for { type != 'inset', inset = /\s+/ }
       if (reflows && lineBreaks && type !== 'break') {
@@ -156,27 +139,16 @@ class MarkupRenderer {
         emit(renderer, text, type, hint);
         type === 'break'
           ? (renderedLine = void (yield renderedLine))
-          : type === 'whitespace' || renderedLine.appendChild(Element('wbr'));
+          : type === 'whitespace' || renderedLine.appendChild(MarkupRenderer.dom.Element('wbr'));
       }
     }
     renderedLine && (yield renderedLine);
   }
 
-  /** @type {string => string} */
-  static get escape() {
-    return Object.defineProperty(MarkupRenderer, 'escape', {
-      value: ((replace, replacement) => string => replace(string, replacement))(
-        RegExp.prototype[Symbol.replace].bind(/[\0-\x1F"\\]/g),
-        m => `&#x${m.charCodeAt(0).toString(16)};`,
-      ),
-      writable: false,
-    }).escape;
-  }
-
   /**
-   * @param {string} tag
-   * @param {Partial<HTMLElement>} [properties]
-   * @param {boolean} [unflattened]
+   * @template {{defaults?: Partial<typeof MarkupRenderer.defaults>; markupClass?: string; markupHint?: string;}} T
+   * @param {string} tagName
+   * @param {Partial<HTMLElement> & T} [elementProperties]
    */
   static factory(tagName, elementProperties) {
     const [
@@ -195,13 +167,13 @@ class MarkupRenderer {
       let element, hintSeparator;
 
       element =
-        (typeof content === 'string' && (content = Text(content))) || content != null
-          ? Element(tag, properties, content)
-          : Element(tag, properties);
+        (typeof content === 'string' && (content = MarkupRenderer.dom.Text(content))) || content != null
+          ? MarkupRenderer.dom.Element(tag, properties, content)
+          : MarkupRenderer.dom.Element(tag, properties);
 
       typeof hint === 'string' && hint !== '' && (hintSeparator = hint.indexOf('\n\n')) !== -1
         ? ((element.dataset = {
-            hint: `${markupHint}${MarkupRenderer.escape(hint.slice(hintSeparator))}`,
+            hint: `${markupHint}${MarkupRenderer.dom.escape(hint.slice(hintSeparator))}`,
           }),
           hintSeparator === 0 || (element.className = `${element.className} ${hint.slice(0, hintSeparator)}`))
         : (hint && (element.className = `${element.className} ${hint}`),
@@ -213,6 +185,8 @@ class MarkupRenderer {
 }
 
 MarkupRenderer.defaults = Object.freeze({
+  /** Specifies the intended mode for rendering a token @type {'html'} */
+  MODE: 'html',
   /** Tag name of the element to use for rendering a token. */
   SPAN: 'span',
   /** Tag name of the element to use for grouping tokens in a single line. */
@@ -222,6 +196,32 @@ MarkupRenderer.defaults = Object.freeze({
   /** Enable renderer-side unpacking { inset } || { breaks > 0 } tokens */
   REFLOW: true,
 });
+
+MarkupRenderer.dom = (() => {
+  /** Uses lightweight proxy objects that can be serialized into HTML text */
+  const HTML_MODE = MarkupRenderer.defaults.MODE === 'html';
+  const supported = !!pseudom.native;
+  const native = !HTML_MODE && supported;
+  const implementation = native ? pseudom.native : pseudom.pseudo;
+  const {createElement: Element, createText: Text, createFragment: Fragment} = implementation;
+  const Template = template =>
+    !supported || Template.supported === false
+      ? false
+      : Template.supported === true
+      ? document.createElement('template')
+      : (Template.supported = !!(
+          (template = document.createElement('template')) && 'HTMLTemplateElement' === (template.constructor || '').name
+        )) && template;
+  const escape = /** @type {(source: string) => string} */ (((replace, replacement) => string =>
+    replace(string, replacement))(
+    RegExp.prototype[Symbol.replace].bind(/[\0-\x1F"\\]/g),
+    m => `&#x${m.charCodeAt(0).toString(16)};`,
+  ));
+
+  Template.supported = undefined;
+
+  return Object.freeze({supported, native, implementation, escape, Element, Text, Fragment, Template});
+})();
 
 /// INTERFACE
 

@@ -1,5 +1,5 @@
 import * as pseudom from '../../pseudom/pseudom.js';
-export {encodeEntity, encodeEntities} from '../../pseudom/pseudom.js';
+export {encodeEntity, encodeEntities} from '../../pseudom/helpers.js';
 import {each} from './helpers.js';
 
 /// RUNTIME
@@ -151,7 +151,8 @@ class MarkupRenderer {
             ((normalizedLineText === '\n'
               ? ((lineBreak = normalizedLineText), (normalizedLineText = ''))
               : normalizedLineText.endsWith('\n')
-              ? ((lineBreak = '\n'), (normalizedLineText = normalizedLineText.slice(0, normalizedLineText.endsWith('\r\n') ? -2 : -1)))
+              ? ((lineBreak = '\n'),
+                (normalizedLineText = normalizedLineText.slice(0, normalizedLineText.endsWith('\r\n') ? -2 : -1)))
               : !(lineBreak = '')) && emit(renderer, normalizedLineText, type, hint, flatten),
             lineBreak &&
               (emit(renderers.break, lineBreak, type, hint, false), yield renderedLine, (renderedLine = null)));
