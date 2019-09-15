@@ -30,6 +30,7 @@ export interface Group {
 }
 
 export interface Groups extends Array<Group> {
+  root?: Group;
   closers?: string[];
 }
 
