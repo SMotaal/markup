@@ -1,10 +1,9 @@
-import * as pseudo from './pseudo.js';
-import * as dom from './native.js';
-export {encodeEntity, encodeEntities} from './pseudo.js';
+import {createNativeDOM} from './native.js';
+import {createPseudoDOM} from './pseudo.js';
 
-// TEST: Trace for ESM testing
-typeof process === 'object' && console.info('[ESM]: %o', import.meta.url);
+export {encodeEntity, encodeEntities} from './helpers.js';
 
-export const native = dom.document && dom;
+export const pseudo = createPseudoDOM(globalThis);
+export const native =
+  globalThis.document && globalThis.document.defaultView === globalThis && createNativeDOM(globalThis);
 export const {createElement, createText, createFragment} = native || pseudo;
-export {pseudo};
