@@ -1,12 +1,18 @@
 {
   "name": "@smotaal/pseudom",
   "displayName": "pseu·dom",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "Featherweight compositional DOM for document/less runtimes",
   "license": "MIT",
   "type": "module",
   "main": "pseudom.js",
   "module": "pseudom.js",
+  "exports": {
+    "./": "./pseudom.js",
+    "./pseudo": "./pseudo.js",
+    "./native": "./native.js",
+    "./helpers": "./helpers.js"
+  },
   "publishConfig": {
     "access": "public"
   }
