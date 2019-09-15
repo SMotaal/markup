@@ -59,30 +59,32 @@ In an expression, you do `Expression` things:
 <!--prettier-ignore-start-->
 
 ```js markup-mode=es
-                     ObjectLiteral: (                            {...$$}   );
-                      ArrayLiteral: (                            [...$$]   );
-                     RegExpLiteral: (                            /[{*}]/   );
-           ArrowFunctionExpression: (                 (...$$) => {{ ; }}   );
-                                    (                 (...$$) => (( $ ))   );
-      AsyncArrowFunctionExpression: (           async (...$$) => {{ ; }}   );
-                                    (           async (...$$) => (( $ ))   );
-                FunctionExpression: (        function $$ (...$$) {{ ; }}   );
-           AsyncFunctionExpression: (  async function $$ (...$$) {{ ; }}   );
-       GeneratorFunctionExpression: (       function* $$ (...$$) {{ ; }}   );
-  AsyncGeneratorFunctionExpression: ( async function* $$ (...$$) {{ ; }}   );
-                   ClassExpression: (                   class $$ {/***/}   );
-                                    (   class $$ extends (( $ )) {/***/}   );
-                 SpecialExpression: (                      await (( $ ))   );
-                                    (                     delete (( $ ))   );
-                                    (                   import ( (( $ )) ) );
-                                    (         (( $ )) instanceof (( $ ))   );
-                                    (                        new (( $ ))   );
-                                    (              new (( $ )) ( (( $ )) ) );
-                                    (                        this[( $ )]   );
-                                    (                     typeof (( $ ))   );
-                                    (                      yield (( $ ))   );
-                                    (                     yield* (( $ ))   );
-                                    (                       void (( $ ))   );
+                     ObjectLiteral: (                              {...$$}   );
+                      ArrayLiteral: (                              [...$$]   );
+                     RegExpLiteral: (                              /[{-}]/   );
+           ArrowFunctionExpression: (                 (...$$) => { {{ ; }} } );
+                                    (                 (...$$) =>   (( $ ))   );
+      AsyncArrowFunctionExpression: (           async (...$$) => { {{ ; }} } );
+                                    (           async (...$$) =>   (( $ ))   );
+                FunctionExpression: (        function $$ (...$$) { {{ ; }} } );
+           AsyncFunctionExpression: (  async function $$ (...$$) { {{ ; }} } );
+       GeneratorFunctionExpression: (       function* $$ (...$$) { {{ ; }} } );
+  AsyncGeneratorFunctionExpression: ( async function* $$ (...$$) { {{ ; }} } );
+                   ClassExpression: (                   class $$ {  /***/  } );
+                                    (   class $$ extends (( $ )) {  /***/  } );
+                 SpecialExpression: (                        await (( $ ))   );
+                                    (                       delete (( $ ))   );
+                                    (                     import ( (( $ )) ) );
+                                    (           (( $ )) instanceof (( $ ))   );
+                                    (                          new (( $ ))   );
+                                    (                new (( $ )) ( (( $ )) ) );
+                                    (                       typeof (( $ ))   );
+                                    (                        yield (( $ ))   );
+                                    (                       yield* (( $ ))   );
+                                    (                         void (( $ ))   );
+               ReferenceExpression: ( /* binding ‹keyword› */ this [( $ )]   );
+                                    ( /* or ‹identifier›   */ this  . $      );
+                                    ( /* like...           */ this( (($ )) ) );
 ```
 
 <!--prettier-ignore-end-->
@@ -99,7 +101,7 @@ In an expression, you do `Expression` things:
 
 - To further articulate on the above point, it would specifically exclude omitted forms of arrow functions having a single unwrapped argument, ie the `$$ =>` form, which while not presenated are still like many undeniably `Expression` things per the spec, just not significantly relevant to the matter at hand.
 
-- The remaining cases where you leave the current `Expression` context and enter into **nested** contexts of a clear intent include things like [Literal Object `{...$$}`][ecma-script-object], [Literal Array `[...$$]`][ecma-script-array], [Literal Pattern `/[{*}]/`][ecma-script-regular-expression], [Class Body `{/***/}`][ecma-script-class-body], and [Arguments `(...$$)`][ecma-script-arguments-list] which specifically excludes omitted forms of arrow functions with a single unwrapped argument.
+- The remaining cases where you leave the current `Expression` context and enter into **nested** contexts of a clear intent include things like [Literal Object `{...$$}`][ecma-script-object], [Literal Array `[...$$]`][ecma-script-array], [Literal Pattern `/[{-}]/`][ecma-script-regular-expression], [Class Body `{/***/}`][ecma-script-class-body], and [Arguments `(...$$)`][ecma-script-arguments-list] which specifically excludes omitted forms of arrow functions with a single unwrapped argument.
 
 - The non-spec thing introduced here (ie `SpecialExpression`) is simply to present `Expression` context forms for the set of keywords that are applicable in that context:
 
@@ -125,22 +127,21 @@ In statements, you do `Statements` things:
 
 ```js  markup-mode=es
 
-              FunctionDeclaration: {        function $$$ (...$$) {{ ; }}   };
-         AsyncFunctionDeclaration: {  async function $$$ (...$$) {{ ; }}   };
-     GeneratorFunctionDeclaration: {       function* $$$ (...$$) {{ ; }}   };
-AsyncGeneratorFunctionDeclaration: { async function* $$$ (...$$) {{ ; }}   };
-                 ClassDeclaration: {                    class $$ {/***/}   };
-                                   {    class $$ extends (( $ )) {/***/}   };
-              VariableDeclaration: {                   var $$$ = (( $ ))   };
-                                   {               var [{$$$}] = (( $ ))   };
-                ControlStatements: {                 for (/***/) {{ ; }}   };
-                                   {           while ( (( $ )) ) {{ ; }}   };
-                                   {          do {{ ; }} while ( (( $ )) ) };
-                                   {          switch ( (( $ )) ) {/***/}   };
-                                   { if ( (( $ )) ) {{ ; }} else {{ ; }}   };
-                                   {      try {{ ; }} catch ($$) {{ ; }}   };
-                                   {         try {{ ; }} finally {{ ; }}   };
-                BindingStatements: {            with ( (( $ )) ) {{ ; }}   };
+              FunctionDeclaration: {         function $$$ (...$$) { {{ ; }} } };
+         AsyncFunctionDeclaration: {   async function $$$ (...$$) { {{ ; }} } };
+     GeneratorFunctionDeclaration: {        function* $$$ (...$$) { {{ ; }} } };
+AsyncGeneratorFunctionDeclaration: {  async function* $$$ (...$$) { {{ ; }} } };
+                 ClassDeclaration: {                     class $$ {  /***/  } };
+                                   {     class $$ extends (( $ )) {  /***/  } };
+              VariableDeclaration: {                      var $$$ = (( $ ))   };
+                                   {                  var [{$$$}] = (( $ ))   };
+                ControlStatements: {                    for (/***/) {{ ; }}   };
+                                   {              while ( (( $ )) ) {{ ; }}   };
+                                   {             do {{ ; }} while ( (( $ )) ) };
+                                   {             switch ( (( $ )) ) {/***/}   };
+                                   {    if ( (( $ )) ) {{ ; }} else {{ ; }}   };
+                                   { try … catch ($$) … finally { {{ ; }} } };
+                BindingStatements: {               with ( (( $ )) ) {{ ; }}   };
 ```
 
 <!--prettier-ignore-end-->
