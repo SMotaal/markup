@@ -1,16 +1,23 @@
 ﻿//@ts-check
 import {countLineBreaks} from '../../../tokenizer/lib/core.js';
+import {createMatcherMode, TokenMatcher} from '../../lib/token-matcher.js';
 import {RegExpRange} from '../../lib/range.js';
 
-/** @typedef {typeof stats} ContextStats */
-const stats = {
-  captureCount: 0,
-  contextCount: 0,
-  tokenCount: 0,
-  nestedCaptureCount: 0,
-  nestedContextCount: 0,
-  nestedTokenCount: 0,
-};
+/// Helpers
+/**
+ * @typedef {<T extends {}>(options?: T) => MatcherPatternFactory} PatternFactory
+ */
+
+/**
+ * @template {symbol} G
+ * @template {string} K
+ * @param {G} goal
+ * @param {(constructor: typeof TokenMatcher) => Record<G|K, PatternFactory> } factory
+ */
+export const createMatcher = (goal, factory) =>
+  TokenMatcher.define(factory(TokenMatcher)[goal](), 'gu', {goal: {value: goal, enumerable: true, writable: false}});
+
+export const createMode = ({matcher, ...options}) => createMatcherMode(matcher, {...defaults.mode, ...options});
 
 /** @param {State} state */
 // TODO: Document initializeState
@@ -28,7 +35,8 @@ export const initializeState = state => {
     depth: 0,
     parentContext: undefined,
     goal: state.matcher.goal,
-    group: undefined,
+    //@ts-ignore
+    group: (state.groups.root = Object.freeze({})),
     state,
     ...(state.USE_CONSTRUCTS === true ? {currentConstruct: new Construct()} : {}),
   });
@@ -261,6 +269,9 @@ export const createToken = (match, state) => {
     ((state.lastContext = currentContext),
     currentContext === nextContext.parentContext
       ? (state.totalContextCount++,
+        // tokenReference === 'lastAtom'
+        //   ? ((nextContext.firstAtom = nextToken), (nextContext.firstTrivia = undefined))
+        //   : ((nextContext.firstAtom = undefined), (nextContext.firstTrivia = nextToken)),
         (nextContext.precedingAtom = lastAtom),
         (nextContext.precedingTrivia = lastTrivia),
         (nextContext.precedingToken = lastToken))
@@ -293,17 +304,7 @@ export const initializeContext = (assign =>
   })(Object.assign);
 
 export const generateDefinitions = ({groups = {}, goals = {}, identities = {}, symbols = {}, tokens = {}}) => {
-  // const {FaultGoal: FaultGoalSymbol = symbols.FaultGoal = generateDefinitions.FaultGoal.symbol} = symbols;
-  // const FaultGoal = (goals[(symbols.FaultGoal = generateDefinitions.FaultGoal.symbol)] = generateDefinitions.FaultGoal);
   const FaultGoal = generateDefinitions.FaultGoal;
-  // typeof symbols.FaultGoal === 'symbol' &&
-  // typeof goals[symbols.FaultGoal] === 'object' &&
-  // (goals[symbols.FaultGoal].symbol === undefined || symbols.FaultGoal === goals[symbols.FaultGoal].symbol)
-  //   ? goals[symbols.FaultGoal]
-  //   : typeof symbols.FaultGoal === 'symbol'
-  //   ? (goals[symbols.FaultGoal] = {...generateDefinitions.FaultGoal, symbol: symbols.FaultGoal})
-  //   : (goals[(symbols.FaultGoal = generateDefinitions.FaultGoal.symbol)] = generateDefinitions.FaultGoal);
-
   const {create, freeze, entries, getOwnPropertySymbols, getOwnPropertyNames, setPrototypeOf} = Object;
 
   const punctuators = create(null);
@@ -330,11 +331,15 @@ export const generateDefinitions = ({groups = {}, goals = {}, identities = {}, s
       for (const punctuator of (goal.punctuators = [...goal.punctuators]))
         punctuators[punctuator] = !(goal.punctuators[punctuator] = true);
       freeze(setPrototypeOf(goal.punctuators, punctuators));
+    } else {
+      goal.punctuators = punctuators;
     }
 
     if (goal.closers) {
       for (const closer of (goal.closers = [...goal.closers])) punctuators[closer] = !(goal.closers[closer] = true);
       freeze(setPrototypeOf(goal.closers, punctuators));
+    } else {
+      goal.closers = generateDefinitions.Empty;
     }
 
     if (goal.openers) {
@@ -350,9 +355,12 @@ export const generateDefinitions = ({groups = {}, goals = {}, identities = {}, s
         group[Symbol.toStringTag] = `‹${group.opener}›`;
       }
       freeze(setPrototypeOf(goal.openers, punctuators));
+    } else {
+      goal.closers = generateDefinitions.Empty;
     }
 
-    if (goal.punctuation) freeze(setPrototypeOf((goal.punctuation = {...goal.punctuation}), null));
+    // if (goal.punctuation)
+    freeze(setPrototypeOf((goal.punctuation = {...goal.punctuation}), null));
 
     freeze(goal.groups);
     freeze(goal.tokens);
@@ -392,6 +400,9 @@ export const generateDefinitions = ({groups = {}, goals = {}, identities = {}, s
     return (goal.tokens[text] = goal.tokens[symbol] = tokens[symbol] = {symbol, text, type, goal, ...properties});
   }
 };
+
+// generateDefinitions.Empty = Object.freeze(new class Empty extends Array{});
+generateDefinitions.Empty = Object.freeze({[Symbol.iterator]: (iterator => iterator).bind([][Symbol.iterator])});
 
 export const FaultGoal = (generateDefinitions.FaultGoal = {symbol: Symbol('FaultGoal'), type: 'fault'});
 generateDefinitions({goals: {[FaultGoal.symbol]: FaultGoal}});
@@ -499,6 +510,24 @@ export const Ranges = factories => {
 
   return ranges;
 };
+
+/// Internal
+
+const defaults = {
+  mode: {initializeState, finalizeState, createToken},
+};
+
+/** @typedef {typeof stats} ContextStats */
+const stats = {
+  captureCount: 0,
+  contextCount: 0,
+  tokenCount: 0,
+  nestedCaptureCount: 0,
+  nestedContextCount: 0,
+  nestedTokenCount: 0,
+};
+
+/// Ambient
 
 /** @typedef {import('./types').Match} Match */
 /** @typedef {import('./types').Groups} Groups */
