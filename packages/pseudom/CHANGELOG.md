@@ -8,7 +8,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## [`0.0.9`] — 2019-10-09
 
-- Improve support for `dataset` properties
+- Add parity support for `dataset` properties for `pseudo.createElement(…)`
 
 ## [`0.0.8`] — 2019-10-09
 

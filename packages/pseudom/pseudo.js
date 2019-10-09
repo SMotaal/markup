@@ -98,11 +98,11 @@ export const createPseudoDOM = (endowments = globalThis) => {
   };
 
   dom.createElement = (tag, properties, ...children) => {
-    const element = dom.Object.assign(new dom.Element(), {
-      tag,
-      className: (properties && properties.className) || '',
-      properties,
-    });
+    const element = new dom.Element();
+    element.tag = tag;
+    properties == null ||
+      (({dataset: element.dataset, className: element.className, ...element.properties} = properties),
+      element.className || (element.className = ''));
     children.length && dom.Object.defineProperty(element, 'children', {value: new dom.Set(children)});
     return element;
   };
