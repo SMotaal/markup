@@ -1,0 +1,16 @@
+{
+  "name": "@smotaal/pseudom-node-boilerplate",
+  "version": "0.0.1",
+  "private": true,
+  "main": "index.mjs",
+  "type": "module",
+  "dependencies": {
+    "@smotaal/pseudom": "*"
+  },
+  "scripts": {
+    "start": "node --experimental-modules index.mjs"
+  },
+  "files": [
+    "index.mjs"
+  ]
+}
