@@ -27,7 +27,7 @@ export const matcher = (JSONGrammar =>
       entity => TokenMatcher.sequence/* regexp */ `(
         .
         ${entity((text, entity, match, state) => {
-          TokenMatcher.capture(state.context.goal.type || TokenMatcher.fault(text, state), match, text);
+          TokenMatcher.capture(state.context.goal.type || 'fault', match, text);
         })}
       )`,
     ),
@@ -38,7 +38,7 @@ export const matcher = (JSONGrammar =>
         ${entity((text, entity, match, state) => {
           match.format = 'whitespace';
           TokenMatcher.capture(
-            state.context.goal === JSONGoal ? 'break' : TokenMatcher.fault(text, state),
+            state.context.goal === JSONGoal ? 'break' : 'fault',
             match,
             text,
           );
