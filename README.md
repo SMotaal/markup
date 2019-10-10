@@ -6,6 +6,16 @@ Semi-contextual parsing experiments using regular expressions as a core building
 
 ---
 
+## Refactor
+
+<details>
+
+- [ ] [_Custom Elements_](./elements/) — Compartmentalize reusable web components structured to progressively compose from simple to the more advanced use cases through iterations.
+
+</details>
+
+---
+
 ## Demo
 
 The minimalistic web interface is designed from the ground up to stay out of the way, ie without the noise of non-essential UI, or the use of any libraries, frameworks or tools, using pure ECMAScript module sources.
