@@ -1091,6 +1091,7 @@ class TokenizerAPI {
             ''}`;
           const tokens = tokenize(source, options, flags);
           const snapshot = {...this};
+          for (const item of tokens);
           console.log('[tokenize‹warmup›]: %o', snapshot);
         }
       },
@@ -1305,11 +1306,11 @@ const createPseudoDOM = (endowments = globalThis) => {
   };
 
   dom.createElement = (tag, properties, ...children) => {
-    const element = dom.Object.assign(new dom.Element(), {
-      tag,
-      className: (properties && properties.className) || '',
-      properties,
-    });
+    const element = new dom.Element();
+    element.tag = tag;
+    properties == null ||
+      (({dataset: element.dataset, className: element.className, ...element.properties} = properties),
+      element.className || (element.className = ''));
     children.length && dom.Object.defineProperty(element, 'children', {value: new dom.Set(children)});
     return element;
   };
@@ -1596,7 +1597,134 @@ MarkupRenderer.dom = (() => {
 const markupDOM = new MarkupRenderer();
 
 //@ts-check
-/// <reference path="./types.d.ts" />
+const CurrentMatch = Symbol('CurrentMatch');
+const CurrentToken = Symbol('CurrentToken');
+const CreatedToken = Symbol('CreatedToken');
+const TotalTokens = Symbol('TotalTokens');
+const TotalMatches = Symbol('TotalMatches');
+const Next = Symbol('Next');
+const Initialize = Symbol('Initialize');
+const Finalize = Symbol('Finalize');
+const Tokens = Symbol('Tokens');
+
+/** @template {RegExp} T  @implements {MatcherIterator<T>} */
+class MatcherState {
+  /** @param {Partial<MatcherState<T>>} properties */
+  constructor({source, matcher, initialize, finalize, ...properties}) {
+    Object.assign(this, properties);
+
+    this.done = false;
+    /** @type {*} */
+    this.value = undefined;
+
+    /** @type {string} */
+    this.source = String(source);
+    /** @type {T} */
+    this.matcher =
+      matcher &&
+      (matcher instanceof RegExp
+        ? Object.setPrototypeOf(RegExp(matcher.source, matcher.flags || 'g'), matcher)
+        : RegExp(matcher, 'g'));
+
+    /** @type {RegExpExecArray} */
+    this[CurrentMatch] = undefined;
+    this[TotalMatches] = -1;
+    this[Next] = this.getNextMatch;
+    this[Initialize] =
+      typeof initialize === 'function'
+        ? () => {
+            this.initialize();
+            initialize();
+          }
+        : this.initialize;
+    this[Finalize] =
+      typeof finalize === 'function'
+        ? () => {
+            finalize();
+            this.finalize();
+          }
+        : this.finalize;
+  }
+
+  initialize() {
+    Object.defineProperties(this, {
+      source: {value: this.source, writable: false, configurable: true},
+      matcher: {value: this.matcher, writable: false, configurable: true},
+    });
+    this[TotalMatches] = 0;
+  }
+
+  finalize() {
+    Object.freeze(this);
+  }
+
+  [Symbol.iterator]() {
+    return this;
+  }
+
+  next() {
+    if (this.done) return this;
+    if (this[TotalMatches] === -1) this[Initialize]();
+    if ((this.done = (this.value = this[Next]()) == null)) this[Finalize]();
+    else this[TotalMatches]++;
+    return this;
+  }
+
+  getNextMatch() {
+    return !this.done &&
+      this.matcher.lastIndex <
+        ((this[CurrentMatch] = this.matcher.exec(this.source)) != null /* */
+          ? this.matcher.lastIndex + (this[CurrentMatch][0].length === 0 && 1)
+          : this.matcher.lastIndex)
+      ? this[CurrentMatch]
+      : undefined;
+  }
+}
+
+/** @template {RegExp} T  @extends {MatcherState<T>} */
+class TokenizerState extends MatcherState {
+  /** @param {Partial<TokenizerState<T>>} properties */
+  constructor(properties) {
+    super(properties)[Next] = this.getNextToken;
+  }
+
+  initialize() {
+    super.initialize();
+    this[TotalTokens] = 0;
+  }
+
+  finalize() {
+    super.finalize();
+  }
+
+  getNextToken() {
+    if (this.done || this.getNextMatch() == null) return;
+
+    this[CurrentToken] = this[CreatedToken];
+    this[CreatedToken] = this.createToken(this[CurrentMatch], this);
+
+    if (this[CreatedToken] !== undefined) {
+      this[CreatedToken].index = ++this[TotalTokens];
+    }
+
+    // Initial design considered holding on to one token
+    //   that used to be set to state.nextToken along with
+    //   the matching state.nextTokenContext.
+    //
+    // TODO: Replace graceful holding with construct stacking.
+    return this[CurrentToken] || this.getNextToken();
+  }
+
+  get [Tokens]() {
+    return Object.defineProperty(this, Tokens, {value: [], writable: false, configurable: true})[Tokens];
+  }
+
+  createToken(match, state) {}
+}
+
+TokenizerState.defaults = {source: undefined, initialize: undefined, finalize: undefined};
+
+//@ts-check
 
 /** Matcher for composable matching */
 class Matcher extends RegExp {
@@ -1613,24 +1741,25 @@ class Matcher extends RegExp {
       pattern.entities &&
       Symbol.iterator in pattern.entities &&
       ((!entities && (entities = pattern.entities)) || entities === pattern.entities)) ||
-      Object.freeze((entities = (entities && Symbol.iterator in entities && [...entities]) || []));
+      Object.freeze(
+        Object.assign((entities = (entities && Symbol.iterator in entities && [...entities]) || []), {
+          flags,
+          meta: Matcher.metaEntitiesFrom(entities),
+          identities: Matcher.identityEntitiesFrom(entities),
+        }),
+      );
+
     /** @type {MatcherEntities} */
     this.entities = entities;
     this.state = state;
     this.exec = this.exec;
+    this.capture = this.capture;
+
     ({DELIMITER: this.DELIMITER = Matcher.DELIMITER, UNKNOWN: this.UNKNOWN = Matcher.UNKNOWN} = new.target);
   }
 
-  /**
-   * @param {string} source
-   */
-  exec(source) {
-    /** @type {MatcherExecArray} */
-    let match;
-
-    // @ts-ignore
-    match = super.exec(source);
-
+  /** @param {MatcherExecArray} match */
+  capture(match) {
     // @ts-ignore
     if (match === null) return null;
 
@@ -1655,6 +1784,37 @@ class Matcher extends RegExp {
   }
 
   /**
+   * @param {string} source
+   */
+  exec(source) {
+    const match = /** @type {MatcherExecArray} */ (super.exec(source));
+    match == null || this.capture(match);
+    return match;
+  }
+
+  /** @returns {entity is MatcherMetaEntity} */
+  static isMetaEntity(entity) {
+    return typeof entity === 'string' && entity.endsWith('?');
+  }
+
+  /** @returns {entity is MatcherIdentityEntity} */
+  static isIdentityEntity(entity) {
+    return typeof entity === 'string'
+      ? entity !== '' && entity.trim() === entity && !entity.endsWith('?')
+      : typeof entity === 'symbol';
+  }
+
+  static metaEntitiesFrom(entities) {
+    return /** @type {MatcherEntitySet<MatcherMetaEntity>} */ (new Set([...entities].filter(Matcher.isMetaEntity)));
+  }
+
+  static identityEntitiesFrom(entities) {
+    return /** @type {MatcherEntitySet<MatcherIdentityEntity>} */ (new Set(
+      [...entities].filter(Matcher.isIdentityEntity),
+    ));
+  }
+
+  /**
    * @param {MatcherPatternFactory} factory
    * @param {MatcherFlags} [flags]
    * @param {PropertyDescriptorMap} [properties]
@@ -1674,6 +1834,8 @@ class Matcher extends RegExp {
         entities.push(((entity != null || undefined) && entity) || undefined);
       }
     });
+    entities.meta = Matcher.metaEntitiesFrom(entities);
+    entities.identities = Matcher.identityEntitiesFrom(entities);
     flags = Matcher.flags('g', flags == null ? pattern.flags : flags, entities.flags);
     const matcher = new ((this && (this.prototype === Matcher.prototype || this.prototype instanceof RegExp) && this) ||
       Matcher)(pattern, flags, entities);
@@ -1749,42 +1911,35 @@ class Matcher extends RegExp {
   }
 
   static get matchAll() {
-    /**
-     * @template {RegExp} T
-     * @type {(string: MatcherText, matcher: T) => MatcherIterator<T> }
-     */
-    const matchAll =
-      //@ts-ignore
-      (() =>
-        Function.call.bind(
-          // String.prototype.matchAll || // TODO: Uncomment eventually
-          {
-            /**
-             * @this {string}
-             * @param {RegExp | string} pattern
-             */
-            *matchAll() {
-              const matcher =
-                arguments[0] &&
-                (arguments[0] instanceof RegExp
-                  ? Object.setPrototypeOf(RegExp(arguments[0].source, arguments[0].flags || 'g'), arguments[0])
-                  : RegExp(arguments[0], 'g'));
-              const string = String(this);
+    /** @template {RegExp} T @type {(string: MatcherText, matcher: T) => MatcherIterator<T> } */
+    // const matchAll = (string, matcher) => new MatcherState(string, matcher);
+    const matchAll = (() =>
+      Function.call.bind(
+        // String.prototype.matchAll || // TODO: Uncomment eventually
+        {
+          /**
+           * @this {string}
+           * @param {RegExp | string} pattern
+           */
+          *matchAll() {
+            const matcher =
+              arguments[0] &&
+              (arguments[0] instanceof RegExp
+                ? Object.setPrototypeOf(RegExp(arguments[0].source, arguments[0].flags || 'g'), arguments[0])
+                : RegExp(arguments[0], 'g'));
+            const string = String(this);
 
-              if (!(matcher.flags.includes('g') || matcher.flags.includes('y')))
-                return void (yield matcher.exec(string));
+            if (!(matcher.flags.includes('g') || matcher.flags.includes('y'))) return void (yield matcher.exec(string));
 
-              for (
-                let match, lastIndex = -1;
-                lastIndex <
-                ((match = matcher.exec(string))
-                  ? (lastIndex = matcher.lastIndex + (match[0].length === 0))
-                  : lastIndex);
-                yield match, matcher.lastIndex = lastIndex
-              );
-            },
-          }.matchAll,
-        ))();
+            for (
+              let match, lastIndex = -1;
+              lastIndex <
+              ((match = matcher.exec(string)) ? (lastIndex = matcher.lastIndex + (match[0].length === 0)) : lastIndex);
+              yield match, matcher.lastIndex = lastIndex
+            );
+          },
+        }.matchAll,
+      ))();
 
     Object.defineProperty(Matcher, 'matchAll', {value: Object.freeze(matchAll), enumerable: true, writable: false});
 
@@ -1800,20 +1955,15 @@ class Matcher extends RegExp {
 
 const {
   /** Identity for delimiter captures (like newlines) */
-  DELIMITER = (Matcher.DELIMITER = 'DELIMITER'),
+  DELIMITER = (Matcher.DELIMITER = 'DELIMITER?'),
   /** Identity for unknown captures */
-  UNKNOWN = (Matcher.UNKNOWN = 'UNKNOWN'),
+  UNKNOWN = (Matcher.UNKNOWN = 'UNKNOWN?'),
 } = Matcher;
 
 /// <reference path="./types.d.ts" />
 
 const {createTokenFromMatch, createMatcherInstance, createMatcherTokenizer, createMatcherMode} = (() => {
-  const {
-    RegExp,
-    Object,
-    Object: {assign, create, freeze, defineProperty, defineProperties, setPrototypeOf},
-    String,
-  } = globalThis;
+  const {RegExp, Object, String} = globalThis;
 
   /**
    * @template {Matcher} T
@@ -1823,8 +1973,8 @@ const {createTokenFromMatch, createMatcherInstance, createMatcherTokenizer, crea
    * @returns {TokenMatcher<U>}
    */
   const createMatcherInstance = (matcher, state) =>
-    defineProperty(
-      ((state || (state = create(null))).matcher =
+    Object.defineProperty(
+      ((state || (state = Object.create(null))).matcher =
         (matcher && matcher instanceof RegExp && createMatcherClone(matcher)) || RegExp(matcher, 'g')),
       'state',
       {value: state},
@@ -1840,8 +1990,8 @@ const {createTokenFromMatch, createMatcherInstance, createMatcherTokenizer, crea
    * @returns {U}
    */
   const createMatcherClone = ({constructor: {prototype}, source, flags, lastIndex, ...properties}, instance) => (
-    (instance = assign(instance || RegExp(source, flags || 'g'), properties)),
-    prototype && setPrototypeOf(instance, prototype),
+    (instance = Object.assign(instance || RegExp(source, flags || 'g'), properties)),
+    prototype && Object.setPrototypeOf(instance, prototype),
     instance
   );
 
@@ -1861,60 +2011,102 @@ const {createTokenFromMatch, createMatcherInstance, createMatcherTokenizer, crea
     capture,
   });
 
-  const tokenizerProperties = Object.getOwnPropertyDescriptors(
-    freeze(
-      class Tokenizer {
-        /** @template {Matcher} T @template {{}} U */
-        *tokenize() {
-          /** @type {Token<U>} */
-          // let next;
-          /** @type {{createToken: typeof createTokenFromMatch, initializeState: <V>(state: V) => V & TokenizerState<T, U>}} */
-          const createToken = (this && this.createToken) || createTokenFromMatch;
-          /** @type {string} */
-          const string = createString(Object.keys({[arguments[0]]: 1})[0]);
-          /** @type {TokenMatcher<U>} */
-          const matcher = createMatcherInstance(this.matcher, assign(arguments[1] || {}, {sourceText: string}));
-          /** @type {TokenizerState<T, U>} */
-          const state = matcher.state;
-          this.initializeState && this.initializeState(state);
-          matcher.exec = matcher.exec;
+  class Tokenizer {
+    /**
+     * @template {Matcher} T
+     * @template {{}} U
+     * @param {string} string
+     * @param {U} properties
+     */
+    tokenize(
+      string,
+      properties,
+      USE_ITERATOR = properties && 'USE_ITERATOR' in properties
+        ? !!properties.USE_ITERATOR
+        : properties && 'USE_GENERATOR' in properties
+        ? !properties.USE_GENERATOR
+        : !true,
+    ) {
+      return !!USE_ITERATOR ? this.TokenIterator(string, properties) : this.TokenGenerator(string, properties);
+    }
+    /**
+     * @template {Matcher} T
+     * @template {{}} U
+     * @param {string} string
+     * @param {U} properties
+     */
+    TokenIterator(string, properties) {
+      /** @type {{createToken: typeof createTokenFromMatch, initializeState: <V>(state: V) => V & TokenizerState<T, U>}} */
+      const createToken = (this && this.createToken) || createTokenFromMatch;
+      [string] = Object.keys({[string]: null});
+      const state = new TokenizerState({
+        ...TokenizerState.defaults,
+        ...((typeof properties === 'object' && properties) || undefined),
+        source: string,
+        initialize: this.initializeState && (() => void this.initializeState(state)),
+        finalize: this.finalizeState && (() => void this.finalizeState(state)),
+        createToken: match => createToken(match, state),
+      });
 
-          for (
-            let match, capturedToken, retainedToken, index = 0;
-            // BAIL on first failed/empty match
-            ((match = matcher.exec(string)) !== null && match[0] !== '') ||
-            //   BUT first yield a nextToken if present
-            (retainedToken !== undefined && (yield retainedToken), (state.nextToken = undefined));
+      /** @type {TokenMatcher<U>} */
+      const matcher = createMatcherInstance(this.matcher, state);
+      matcher.exec = matcher.exec;
+      return state;
+    }
 
-          ) {
-            if ((capturedToken = createToken(match, state)) === undefined) continue;
+    /** @template {Matcher} T @template {{}} U */
+    *TokenGenerator() {
+      /** @type {{createToken: typeof createTokenFromMatch, initializeState: <V>(state: V) => V & TokenizerState<T, U>}} */
+      const createToken = (this && this.createToken) || createTokenFromMatch;
+      /** @type {string} */
+      const string = createString(Object.keys({[arguments[0]]: 1})[0]);
+      /** @type {TokenMatcher<U>} */
+      const matcher = createMatcherInstance(this.matcher, arguments[1] || {});
 
-            // HOLD back one grace token
-            //   until createToken(…) !== undefined (ie new token)
-            //   set the incremental token index for this token
-            //   and keep it referenced directly on the state
-            (state.nextToken = capturedToken).index = index++;
+      /** @type {TokenizerState<T, U>} */
+      const state = matcher.state;
+      this.initializeState && this.initializeState(state);
+      matcher.exec = matcher.exec;
 
-            //   THEN yield a previously held token
-            if (retainedToken !== undefined) yield retainedToken;
+      for (
+        let match, capturedToken, retainedToken, index = 0;
+        // BAIL on first failed/empty match
+        ((match = matcher.exec(string)) !== null && match[0] !== '') ||
+        //   BUT first yield a nextToken if present
+        (retainedToken !== undefined && (yield retainedToken), (state.nextToken = undefined));
 
-            //   THEN finally clear the nextToken reference
-            retainedToken = capturedToken;
-            state.nextToken = undefined;
-          }
+      ) {
+        if ((capturedToken = createToken(match, state)) === undefined) continue;
 
-          this.finalizeState && this.finalizeState(state);
+        // HOLD back one grace token
+        //   until createToken(…) !== undefined (ie new token)
+        //   set the incremental token index for this token
+        //   and keep it referenced directly on the state
+        (state.nextToken = capturedToken).index = index++;
 
-          // console.log({...state});
-        }
-      }.prototype,
-    ),
+        //   THEN yield a previously held token
+        if (retainedToken !== undefined) yield retainedToken;
+
+        //   THEN finally clear the nextToken reference
+        retainedToken = capturedToken;
+        state.nextToken = undefined;
+      }
+
+      this.finalizeState && this.finalizeState(state);
+    }
+  }
+
+  const tokenizerPropertyDescriptors = Object.getOwnPropertyDescriptors(
+    Object.freeze(Object.freeze(Tokenizer).prototype),
   );
 
-  /**
-   * @type { {<T extends Matcher, U extends {} = {}>(sourceText: string, initialState?: Partial<TokenizerState<undefined, U>): IterableIterator<Token<U>>} }
-   */
-  const createMatcherTokenizer = instance => defineProperties(instance, tokenizerProperties);
+  /** @type { {<T extends Matcher, U extends {} = {}>(sourceText: string, initialState?: Partial<TokenizerState<undefined, U>): IterableIterator<Token<U>>} } */
+  const createMatcherTokenizer = instance =>
+    Object.defineProperties(
+      instance,
+      tokenizerPropertyDescriptors,
+      // TODO: iteratorMode ? iteratorProperties : generatorProperties,
+    );
 
   /**
    * @param {Matcher} matcher
@@ -1926,7 +2118,7 @@ const {createTokenFromMatch, createMatcherInstance, createMatcherTokenizer, crea
       /** @type {(state: {}) =>  void} */
       initializeState: undefined,
       finalizeState: undefined,
-      matcher: freeze(createMatcherInstance(matcher)),
+      matcher: Object.freeze(createMatcherInstance(matcher)),
     });
 
     const mode = {syntax: 'matcher', tokenizer};
@@ -1941,7 +2133,7 @@ const {createTokenFromMatch, createMatcherInstance, createMatcherTokenizer, crea
         ...mode.overrides
       } = options);
 
-    freeze(tokenizer);
+    Object.freeze(tokenizer);
 
     return mode;
   };
@@ -1960,9 +2152,7 @@ const TokenMatcher = (() => {
    *
    * NOTE: fault always sets match.flatten to false
    *
-   * @param {string} text - Text of the intended { type = "opener" } token
-   * @param {State} state - Matcher state
-   * @returns {undefined | string} - String when context is **not** open
+   * @template T @param {string} identity @param {T} match @returns {T}
    */
   const capture = (identity, match) => {
     match.capture[(match.identity = identity)] = match[0];
@@ -2023,7 +2213,7 @@ const TokenMatcher = (() => {
     const groups = state.groups;
     const index = groups.closers.lastIndexOf(text);
 
-    if (index === -1 || index !== groups.length - 1) return fault();
+    if (index === -1 || index !== groups.length - 1) return 'fault';
 
     groups.closers.splice(index, groups.closers.length);
     groups.splice(index, groups.length);
@@ -2044,6 +2234,7 @@ const TokenMatcher = (() => {
     if (typeof search === 'string' && search.length) {
       state.nextOffset = match.input.indexOf(search, match.index + match[0].length) + (0 + delta || 0);
     } else if (search != null && typeof search === 'object') {
+      // debugger;
       search.lastIndex = match.index + match[0].length;
       const matched = search.exec(match.input);
       // console.log(...matched, {matched});
@@ -2059,15 +2250,10 @@ const TokenMatcher = (() => {
     }
   };
 
-  /**
-   * @returns {'fault'}
-   */
-  const fault = (text, state) => {
-    // console.warn(text, {...state});
-    return 'fault';
-  };
-
   class TokenMatcher extends Matcher {}
+
+  /** @type {import('../experimental/common/types').Goal|symbol} */
+  TokenMatcher.prototype.goal = undefined;
 
   Object.defineProperty(TokenMatcher, 'capture', {
     value: capture,
@@ -2085,13 +2271,10 @@ const TokenMatcher = (() => {
     writable: false,
   });
 
-  Object.defineProperty(TokenMatcher, 'fault', {value: fault, enumerable: true, writable: false});
-
   Object.freeze(capture);
   Object.freeze(open);
   Object.freeze(close);
   Object.freeze(forward);
-  Object.freeze(fault);
   Object.freeze(TokenMatcher);
 
   return TokenMatcher;
@@ -2413,8 +2596,8 @@ const createToken = (match, state) => {
 
       goal: currentGoal,
       group: contextGroup,
-      state,
-      context: tokenContext,
+      // state,
+      // context: tokenContext,
     };
   }
   /* Context */
@@ -2459,18 +2642,17 @@ const initializeContext = (assign =>
 
 const generateDefinitions = ({groups = {}, goals = {}, identities = {}, symbols = {}, tokens = {}}) => {
   const FaultGoal = generateDefinitions.FaultGoal;
-  const {create, freeze, entries, getOwnPropertySymbols, getOwnPropertyNames, setPrototypeOf} = Object;
 
-  const punctuators = create(null);
+  const punctuators = Object.create(null);
 
-  for (const opener of getOwnPropertyNames(groups)) {
+  for (const opener of Object.getOwnPropertyNames(groups)) {
     const {[opener]: group} = groups;
     'goal' in group && (group.goal = goals[group.goal] || FaultGoal);
     'parentGoal' in group && (group.parentGoal = goals[group.parentGoal] || FaultGoal);
-    freeze(group);
+    Object.freeze(group);
   }
 
-  for (const symbol of getOwnPropertySymbols(goals)) {
+  for (const symbol of Object.getOwnPropertySymbols(goals)) {
     // @ts-ignore
     const {[symbol]: goal} = goals;
 
@@ -2484,14 +2666,14 @@ const generateDefinitions = ({groups = {}, goals = {}, identities = {}, symbols 
     if (goal.punctuators) {
       for (const punctuator of (goal.punctuators = [...goal.punctuators]))
         punctuators[punctuator] = !(goal.punctuators[punctuator] = true);
-      freeze(setPrototypeOf(goal.punctuators, punctuators));
+      Object.freeze(Object.setPrototypeOf(goal.punctuators, punctuators));
     } else {
       goal.punctuators = punctuators;
     }
 
     if (goal.closers) {
       for (const closer of (goal.closers = [...goal.closers])) punctuators[closer] = !(goal.closers[closer] = true);
-      freeze(setPrototypeOf(goal.closers, punctuators));
+      Object.freeze(Object.setPrototypeOf(goal.closers, punctuators));
     } else {
       goal.closers = generateDefinitions.Empty;
     }
@@ -2508,26 +2690,26 @@ const generateDefinitions = ({groups = {}, goals = {}, identities = {}, symbols 
         group.description || (group.description = `${group.opener}…${group.closer}`);
         group[Symbol.toStringTag] = `‹${group.opener}›`;
       }
-      freeze(setPrototypeOf(goal.openers, punctuators));
+      Object.freeze(Object.setPrototypeOf(goal.openers, punctuators));
     } else {
       goal.closers = generateDefinitions.Empty;
     }
 
     // if (goal.punctuation)
-    freeze(setPrototypeOf((goal.punctuation = {...goal.punctuation}), null));
+    Object.freeze(Object.setPrototypeOf((goal.punctuation = {...goal.punctuation}), null));
 
-    freeze(goal.groups);
-    freeze(goal.tokens);
-    freeze(goal);
+    Object.freeze(goal.groups);
+    Object.freeze(goal.tokens);
+    Object.freeze(goal);
   }
 
-  freeze(punctuators);
-  freeze(goals);
-  freeze(groups);
-  freeze(identities);
-  freeze(symbols);
+  Object.freeze(punctuators);
+  Object.freeze(goals);
+  Object.freeze(groups);
+  Object.freeze(identities);
+  Object.freeze(symbols);
 
-  return freeze({groups, goals, identities, symbols, tokens});
+  return Object.freeze({groups, goals, identities, symbols, tokens});
 
   // if (keywords) {
   //   for (const [identity, list] of entries({})) {
@@ -2788,7 +2970,7 @@ const {
     closers: [')', '}'],
     opener: '/',
     closer: '/',
-    punctuators: ['+', '*', '?', '|', '^', '.', '?=', '?:'],
+    punctuators: ['+', '*', '?', '|', '^', '.', '?=', '?:', '?!'],
     punctuation: {
       '[': 'combinator',
       ']': 'combinator',
@@ -3044,6 +3226,7 @@ const {
  * @typedef {Record<ECMAScript.Keyword|ECMAScript.RestrictedWord|ECMAScript.FutureReservedWord|ECMAScript.ContextualKeyword, symbol>} ECMAScript.Keywords
  */
 
+/** @type {TokenMatcher} */
 const matcher = (ECMAScript =>
   TokenMatcher.define(
     // Matcher generator for this matcher instance
@@ -3089,7 +3272,7 @@ const matcher = (ECMAScript =>
                   ? type || state.context.goal.type || 'sequence'
                   : state.context.goal !== ECMAScriptGoal
                   ? state.context.goal.type || 'sequence'
-                  : TokenMatcher.fault(text, state),
+                  : 'fault',
                 match,
               );
               typeof flatten === 'boolean' && (match.flatten = flatten);
@@ -3318,7 +3501,7 @@ const matcher = (ECMAScript =>
       entity => TokenMatcher.sequence/* regexp */ `(
         ,|;|\.\.\.|\.|:|\?${
           // We're including non-conflicting RegExp atoms here
-          '[:=]?'
+          '[:=!]?'
         }
         |\+\+|--|=>
         |\+=|-=|\*\*=|\*=
@@ -3355,7 +3538,7 @@ const matcher = (ECMAScript =>
               ? 'identifier'
               : state.context.captureKeyword === undefined
               ? 'keyword'
-              : state.context.captureKeyword(text, state) || TokenMatcher.fault(text, state),
+              : state.context.captureKeyword(text, state) || 'fault',
             match,
           );
         })}
@@ -3429,16 +3612,31 @@ const mode = createMatcherMode(matcher, {
 
   createToken: (log => (match, state) => {
     // let construct;
-    const lastAtom = state.lastAtom;
+    // const lastAtom = state.lastAtom;
     const token = createToken(match, state);
 
     if (state.USE_CONSTRUCTS === true && token !== undefined) {
-      const {type, text, context} = token;
+      const {type, text, context = state.nextTokenContext} = token;
       if (token.goal === matcher.goal) {
         switch (type) {
           case 'inset':
           case 'whitespace':
           case 'opener':
+          // if (context.currentConstruct.last === '=>') {
+          // } else
+          // if (text === '{') {
+          //   if (context.openingConstruct[context.openingConstruct.length - 2] === '(…)') {
+          //     [
+          //       ,
+          //       context.openingConstruct.block,
+          //     ] = /((?:(?:async |)function (?:\* |)(?:\S+ |)|(?:while|for|if|else|catch|switch|with) |)\(…\) \{…\})?$/.exec(
+          //       context.openingConstruct.text,
+          //     );
+          //     log('%s\t%o', text, {...context.openingConstruct});
+          //   } else {
+          //     // log('%s\t%o', text, [...context.openingConstruct.text]);
+          //   }
+          // }
           case 'closer':
             break;
           case 'number':
@@ -3450,16 +3648,21 @@ const mode = createMatcherMode(matcher, {
           case 'operator':
             switch (text) {
               case ',':
-              // debugger;
               case ';':
+                context.currentConstruct.add(text);
                 context.currentConstruct.set('');
                 break;
-              case '?':
-              case '=':
-                context.currentConstruct.set(text);
-                break;
-              default:
+              case '=>':
+              case '.':
                 context.currentConstruct.add(text);
+                break;
+              case ':':
+                if (context.currentConstruct.length === 1) {
+                  context.currentConstruct.add(text);
+                  break;
+                }
+              default:
+                context.currentConstruct.set(text);
                 break;
             }
             break;
@@ -3488,23 +3691,23 @@ const mode = createMatcherMode(matcher, {
             break;
         }
         token.construct = context.currentConstruct.text;
-        typeof log === 'function' &&
-          ((type === 'opener' && (text === '/' || text === '{')) ||
-            // Semi
-            text === ';' ||
-            // Arrow Function
-            text === '=>') &&
-          log(
-            '%s\t%o\n\t%o\n\t%o',
-            text,
-            type === 'breaker'
-              ? context.currentConstruct.previousText
-              : type === 'opener'
-              ? token.context.openingConstruct.text
-              : token.construct,
-            lastAtom,
-            token,
-          );
+        // typeof log === 'function' &&
+        //   ((type === 'opener' && (text === '/' || text === '{')) ||
+        //     // Semi
+        //     text === ';' ||
+        //     // Arrow Function
+        //     text === '=>') &&
+        //   log(
+        //     '%s\t%o\n\t%o\n\t%o',
+        //     text,
+        //     type === 'breaker'
+        //       ? context.currentConstruct.previousText
+        //       : type === 'opener'
+        //       ? token.context.openingConstruct.text
+        //       : token.construct,
+        //     lastAtom,
+        //     token,
+        //   );
       }
       token.isDelimiter || context.currentConstruct == null
         ? context.openingConstruct == null ||
@@ -3960,6 +4163,7 @@ Definitions: {
 
 
 const modes = /*#__PURE__*/Object.freeze({
+  __proto__: null,
   css: css,
   html: html,
   markdown: markdown,

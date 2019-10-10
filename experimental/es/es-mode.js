@@ -26,7 +26,7 @@ export const mode = createMatcherMode(matcher, {
 
   createToken: (log => (match, state) => {
     // let construct;
-    const lastAtom = state.lastAtom;
+    // const lastAtom = state.lastAtom;
     const token = createToken(match, state);
 
     if (state.USE_CONSTRUCTS === true && token !== undefined) {
@@ -36,6 +36,21 @@ export const mode = createMatcherMode(matcher, {
           case 'inset':
           case 'whitespace':
           case 'opener':
+          // if (context.currentConstruct.last === '=>') {
+          // } else
+          // if (text === '{') {
+          //   if (context.openingConstruct[context.openingConstruct.length - 2] === '(…)') {
+          //     [
+          //       ,
+          //       context.openingConstruct.block,
+          //     ] = /((?:(?:async |)function (?:\* |)(?:\S+ |)|(?:while|for|if|else|catch|switch|with) |)\(…\) \{…\})?$/.exec(
+          //       context.openingConstruct.text,
+          //     );
+          //     log('%s\t%o', text, {...context.openingConstruct});
+          //   } else {
+          //     // log('%s\t%o', text, [...context.openingConstruct.text]);
+          //   }
+          // }
           case 'closer':
             break;
           case 'number':
@@ -90,6 +105,23 @@ export const mode = createMatcherMode(matcher, {
             break;
         }
         token.construct = context.currentConstruct.text;
+        // typeof log === 'function' &&
+        //   ((type === 'opener' && (text === '/' || text === '{')) ||
+        //     // Semi
+        //     text === ';' ||
+        //     // Arrow Function
+        //     text === '=>') &&
+        //   log(
+        //     '%s\t%o\n\t%o\n\t%o',
+        //     text,
+        //     type === 'breaker'
+        //       ? context.currentConstruct.previousText
+        //       : type === 'opener'
+        //       ? token.context.openingConstruct.text
+        //       : token.construct,
+        //     lastAtom,
+        //     token,
+        //   );
       }
       token.isDelimiter || context.currentConstruct == null
         ? context.openingConstruct == null ||
