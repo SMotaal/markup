@@ -51,12 +51,12 @@ const defaults = {
   sourceType: undefined,
   element: 'pre#source-code',
   headerTemplate: 'template#source-header',
-  fetch: {
+  fetch: /** @type {RequestInit} */ ({
     mode: 'cors',
     // referrer: 'no-referrer',
     redirect: 'follow',
     headers: {'Content-Type': 'text/plain'},
-  },
+  }),
 };
 
 export default (markup, overrides) => {
