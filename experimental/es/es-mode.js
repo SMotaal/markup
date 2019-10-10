@@ -48,19 +48,20 @@ export const mode = createMatcherMode(matcher, {
             switch (text) {
               case ',':
               case ';':
+                context.currentConstruct.add(text);
                 context.currentConstruct.set('');
+                break;
+              case '=>':
+              case '.':
+                context.currentConstruct.add(text);
                 break;
               case ':':
                 if (context.currentConstruct.length === 1) {
                   context.currentConstruct.add(text);
                   break;
                 }
-              case '?':
-              case '=':
-                context.currentConstruct.set(text);
-                break;
               default:
-                context.currentConstruct.add(text);
+                context.currentConstruct.set(text);
                 break;
             }
             break;
