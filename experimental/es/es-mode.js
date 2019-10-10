@@ -24,11 +24,13 @@ export const mode = createMatcherMode(matcher, {
     finalizeState(state);
   },
 
-  createToken: (match, state) => {
+  createToken: (log => (match, state) => {
+    // let construct;
+    const lastAtom = state.lastAtom;
     const token = createToken(match, state);
 
     if (state.USE_CONSTRUCTS === true && token !== undefined) {
-      const {type, text, context} = token;
+      const {type, text, context = state.nextTokenContext} = token;
       if (token.goal === matcher.goal) {
         switch (type) {
           case 'inset':
@@ -40,12 +42,19 @@ export const mode = createMatcherMode(matcher, {
           case 'identifier':
             context.currentConstruct.add(`‹${type}›`);
             break;
+          case 'delimiter':
+          case 'breaker':
           case 'operator':
             switch (text) {
               case ',':
               case ';':
                 context.currentConstruct.set('');
                 break;
+              case ':':
+                if (context.currentConstruct.length === 1) {
+                  context.currentConstruct.add(text);
+                  break;
+                }
               case '?':
               case '=':
                 context.currentConstruct.set(text);
@@ -91,7 +100,12 @@ export const mode = createMatcherMode(matcher, {
           (token.hint = `${token.hint}\n\n${context.currentConstruct.previousText}\n…`);
     }
     return token;
-  },
+  })(
+    /** @type {Console['log']} */
+    // null && //
+    //@ts-ignore
+    (console.internal || console).log,
+  ),
 });
 
 /** @typedef {import('./types').State} State */

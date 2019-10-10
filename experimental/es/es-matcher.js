@@ -108,6 +108,7 @@ DUMMY: async () => {
   }
 };
 
+/** @type {TokenMatcher} */
 export const matcher = (ECMAScript =>
   TokenMatcher.define(
     // Matcher generator for this matcher instance
