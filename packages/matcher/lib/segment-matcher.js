@@ -15,7 +15,7 @@ export class SegmentMatcher extends Matcher {
   constructor(pattern, flags, entities, state) {
     //@ts-ignore
     super(pattern, flags, entities, state);
-    this.capture = this.capture;
+    this.captureEntity = this.captureEntity;
   }
   /**
    * @template {MatcherMatch} T
@@ -24,45 +24,48 @@ export class SegmentMatcher extends Matcher {
    * @param {T} match
    * @returns {T}
    */
-  capture(text, capture, match) {
+  captureEntity(text, capture, match) {
     if (capture === 0) return void (match.capture = {});
     if (text === undefined) return;
     const index = capture - 1;
     const {
-      entities: {[index]: entity},
+      entities: {[index]: entity, meta, identities},
       state,
     } = this;
-    typeof entity === 'function'
-      ? ((match.entity = index), entity(text, capture, match, state))
-      : entity == null ||
         // entity === INSET ||
         // entity === LOOKAHEAD ||
         // entity === Matcher.DELIMITER ||
         // entity === Matcher.UNKNOWN ||
-        (match.entity !== undefined || ((match.identity = entity), (match.entity = index)),
-        (match.capture[entity] = text));
+    // debugger;
+    if (!entity) return;
+
+    if (typeof entity === 'function') {
+      match.entity = index;
+      entity(text, capture, match, state);
+      return;
+    }
+
+    if (meta.has(entity)) {
+      // match.entity || (match.entity = index);
+      match.meta = `${(match.meta && `${match.meta} `) || ''}${/** @type {string} */ (entity)}`;
+    } else if (identities.has(entity) && match.identity == null) {
+      match.entity = index;
+      match.identity = entity;
+    }
+    match.capture[/** @type {MatcherNamedEntity} */ (entity)] = text;
+
   }
 
-  /**
-   * @param {string} source
-   */
-  exec(source) {
-    /** @type {MatcherExecArray} */
-    let match;
-
-    // @ts-ignore
-    match = super.exec(source);
-
-    // @ts-ignore
+  /** @param {MatcherExecArray} match */
+  capture(match) {
     if (match === null) return null;
 
-    // @ts-ignore
     match.matcher = this;
     match.capture = {};
 
     match &&
-      (match.forEach(this.capture || SegmentMatcher.prototype.capture, this),
-      match.identity || (match.capture[this.UNKNOWN || Matcher.UNKNOWN] = match[0]));
+      (match.forEach(this.captureEntity || SegmentMatcher.prototype.captureEntity, this),
+      match.identity || (match.capture[(match.identity = this.UNKNOWN || Matcher.UNKNOWN)] = match[0]));
 
     return match;
   }
@@ -70,7 +73,7 @@ export class SegmentMatcher extends Matcher {
 
 export const {
   /** Identity for delimiter captures (like newlines) */
-  INSET = (SegmentMatcher.INSET = 'INSET'),
+  INSET = (SegmentMatcher.INSET = 'INSET?'),
   /** Identity for unknown captures */
-  LOOKAHEAD = (SegmentMatcher.LOOKAHEAD = 'LOOKAHEAD'),
+  LOOKAHEAD = (SegmentMatcher.LOOKAHEAD = 'LOOKAHEAD?'),
 } = SegmentMatcher;

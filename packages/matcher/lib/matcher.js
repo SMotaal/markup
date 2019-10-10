@@ -1,6 +1,8 @@
 ﻿//@ts-check
 /// <reference path="./types.d.ts" />
 
+import {MatcherState} from './state.js';
+
 /** Matcher for composable matching */
 export class Matcher extends RegExp {
   /**
@@ -16,24 +18,25 @@ export class Matcher extends RegExp {
       pattern.entities &&
       Symbol.iterator in pattern.entities &&
       ((!entities && (entities = pattern.entities)) || entities === pattern.entities)) ||
-      Object.freeze((entities = (entities && Symbol.iterator in entities && [...entities]) || []));
+      Object.freeze(
+        Object.assign((entities = (entities && Symbol.iterator in entities && [...entities]) || []), {
+          flags,
+          meta: Matcher.metaEntitiesFrom(entities),
+          identities: Matcher.identityEntitiesFrom(entities),
+        }),
+      );
+
     /** @type {MatcherEntities} */
     this.entities = entities;
     this.state = state;
     this.exec = this.exec;
+    this.capture = this.capture;
+
     ({DELIMITER: this.DELIMITER = Matcher.DELIMITER, UNKNOWN: this.UNKNOWN = Matcher.UNKNOWN} = new.target);
   }
 
-  /**
-   * @param {string} source
-   */
-  exec(source) {
-    /** @type {MatcherExecArray} */
-    let match;
-
-    // @ts-ignore
-    match = super.exec(source);
-
+  /** @param {MatcherExecArray} match */
+  capture(match) {
     // @ts-ignore
     if (match === null) return null;
 
@@ -58,6 +61,38 @@ export class Matcher extends RegExp {
   }
 
   /**
+   * @param {string} source
+   */
+  exec(source) {
+    const match = /** @type {MatcherExecArray} */ (super.exec(source));
+    match == null || this.capture(match);
+    return match;
+
+  }
+
+  /** @returns {entity is MatcherMetaEntity} */
+  static isMetaEntity(entity) {
+    return typeof entity === 'string' && entity.endsWith('?');
+  }
+
+  /** @returns {entity is MatcherIdentityEntity} */
+  static isIdentityEntity(entity) {
+    return typeof entity === 'string'
+      ? entity !== '' && entity.trim() === entity && !entity.endsWith('?')
+      : typeof entity === 'symbol';
+  }
+
+  static metaEntitiesFrom(entities) {
+    return /** @type {MatcherEntitySet<MatcherMetaEntity>} */ (new Set([...entities].filter(Matcher.isMetaEntity)));
+  }
+
+  static identityEntitiesFrom(entities) {
+    return /** @type {MatcherEntitySet<MatcherIdentityEntity>} */ (new Set(
+      [...entities].filter(Matcher.isIdentityEntity),
+    ));
+  }
+
+  /**
    * @param {MatcherPatternFactory} factory
    * @param {MatcherFlags} [flags]
    * @param {PropertyDescriptorMap} [properties]
@@ -77,6 +112,8 @@ export class Matcher extends RegExp {
         entities.push(((entity != null || undefined) && entity) || undefined);
       }
     });
+    entities.meta = Matcher.metaEntitiesFrom(entities);
+    entities.identities = Matcher.identityEntitiesFrom(entities);
     flags = Matcher.flags('g', flags == null ? pattern.flags : flags, entities.flags);
     const matcher = new ((this && (this.prototype === Matcher.prototype || this.prototype instanceof RegExp) && this) ||
       Matcher)(pattern, flags, entities);
@@ -156,38 +193,34 @@ export class Matcher extends RegExp {
      * @template {RegExp} T
      * @type {(string: MatcherText, matcher: T) => MatcherIterator<T> }
      */
-    const matchAll =
-      //@ts-ignore
-      (() =>
-        Function.call.bind(
           // String.prototype.matchAll || // TODO: Uncomment eventually
-          {
-            /**
-             * @this {string}
-             * @param {RegExp | string} pattern
-             */
-            *matchAll() {
-              const matcher =
-                arguments[0] &&
-                (arguments[0] instanceof RegExp
-                  ? Object.setPrototypeOf(RegExp(arguments[0].source, arguments[0].flags || 'g'), arguments[0])
-                  : RegExp(arguments[0], 'g'));
-              const string = String(this);
+    //@ts-ignore
+    const matchAll = (() =>
+      Function.call.bind(
+        {
+          /**
+           * @this {string}
+           * @param {RegExp | string} pattern
+           */
+          *matchAll() {
+            const matcher =
+              arguments[0] &&
+              (arguments[0] instanceof RegExp
+                ? Object.setPrototypeOf(RegExp(arguments[0].source, arguments[0].flags || 'g'), arguments[0])
+                : RegExp(arguments[0], 'g'));
+            const string = String(this);
 
-              if (!(matcher.flags.includes('g') || matcher.flags.includes('y')))
-                return void (yield matcher.exec(string));
+            if (!(matcher.flags.includes('g') || matcher.flags.includes('y'))) return void (yield matcher.exec(string));
 
-              for (
-                let match, lastIndex = -1;
-                lastIndex <
-                ((match = matcher.exec(string))
-                  ? (lastIndex = matcher.lastIndex + (match[0].length === 0))
-                  : lastIndex);
-                yield match, matcher.lastIndex = lastIndex
-              );
-            },
-          }.matchAll,
-        ))();
+            for (
+              let match, lastIndex = -1;
+              lastIndex <
+              ((match = matcher.exec(string)) ? (lastIndex = matcher.lastIndex + (match[0].length === 0)) : lastIndex);
+              yield match, matcher.lastIndex = lastIndex
+            );
+          },
+        }.matchAll,
+      ))();
 
     Object.defineProperty(Matcher, 'matchAll', {value: Object.freeze(matchAll), enumerable: true, writable: false});
 
@@ -203,7 +236,7 @@ export class Matcher extends RegExp {
 
 export const {
   /** Identity for delimiter captures (like newlines) */
-  DELIMITER = (Matcher.DELIMITER = 'DELIMITER'),
+  DELIMITER = (Matcher.DELIMITER = 'DELIMITER?'),
   /** Identity for unknown captures */
-  UNKNOWN = (Matcher.UNKNOWN = 'UNKNOWN'),
+  UNKNOWN = (Matcher.UNKNOWN = 'UNKNOWN?'),
 } = Matcher;
