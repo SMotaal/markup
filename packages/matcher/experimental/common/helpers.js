@@ -4,9 +4,7 @@ import {createMatcherMode, TokenMatcher} from '../../lib/token-matcher.js';
 import {RegExpRange} from '../../lib/range.js';
 
 /// Helpers
-/**
- * @typedef {<T extends {}>(options?: T) => MatcherPatternFactory} PatternFactory
- */
+/** @typedef {<T extends {}>(options?: T) => MatcherPatternFactory} PatternFactory */
 
 /**
  * @template {symbol} G
@@ -259,8 +257,8 @@ export const createToken = (match, state) => {
 
       goal: currentGoal,
       group: contextGroup,
-      state,
-      context: tokenContext,
+      // state,
+      // context: tokenContext,
     };
   }
   /* Context */
@@ -305,18 +303,17 @@ export const initializeContext = (assign =>
 
 export const generateDefinitions = ({groups = {}, goals = {}, identities = {}, symbols = {}, tokens = {}}) => {
   const FaultGoal = generateDefinitions.FaultGoal;
-  const {create, freeze, entries, getOwnPropertySymbols, getOwnPropertyNames, setPrototypeOf} = Object;
 
-  const punctuators = create(null);
+  const punctuators = Object.create(null);
 
-  for (const opener of getOwnPropertyNames(groups)) {
+  for (const opener of Object.getOwnPropertyNames(groups)) {
     const {[opener]: group} = groups;
     'goal' in group && (group.goal = goals[group.goal] || FaultGoal);
     'parentGoal' in group && (group.parentGoal = goals[group.parentGoal] || FaultGoal);
-    freeze(group);
+    Object.freeze(group);
   }
 
-  for (const symbol of getOwnPropertySymbols(goals)) {
+  for (const symbol of Object.getOwnPropertySymbols(goals)) {
     // @ts-ignore
     const {[symbol]: goal} = goals;
 
@@ -330,14 +327,14 @@ export const generateDefinitions = ({groups = {}, goals = {}, identities = {}, s
     if (goal.punctuators) {
       for (const punctuator of (goal.punctuators = [...goal.punctuators]))
         punctuators[punctuator] = !(goal.punctuators[punctuator] = true);
-      freeze(setPrototypeOf(goal.punctuators, punctuators));
+      Object.freeze(Object.setPrototypeOf(goal.punctuators, punctuators));
     } else {
       goal.punctuators = punctuators;
     }
 
     if (goal.closers) {
       for (const closer of (goal.closers = [...goal.closers])) punctuators[closer] = !(goal.closers[closer] = true);
-      freeze(setPrototypeOf(goal.closers, punctuators));
+      Object.freeze(Object.setPrototypeOf(goal.closers, punctuators));
     } else {
       goal.closers = generateDefinitions.Empty;
     }
@@ -354,26 +351,26 @@ export const generateDefinitions = ({groups = {}, goals = {}, identities = {}, s
         group.description || (group.description = `${group.opener}…${group.closer}`);
         group[Symbol.toStringTag] = `‹${group.opener}›`;
       }
-      freeze(setPrototypeOf(goal.openers, punctuators));
+      Object.freeze(Object.setPrototypeOf(goal.openers, punctuators));
     } else {
       goal.closers = generateDefinitions.Empty;
     }
 
     // if (goal.punctuation)
-    freeze(setPrototypeOf((goal.punctuation = {...goal.punctuation}), null));
+    Object.freeze(Object.setPrototypeOf((goal.punctuation = {...goal.punctuation}), null));
 
-    freeze(goal.groups);
-    freeze(goal.tokens);
-    freeze(goal);
+    Object.freeze(goal.groups);
+    Object.freeze(goal.tokens);
+    Object.freeze(goal);
   }
 
-  freeze(punctuators);
-  freeze(goals);
-  freeze(groups);
-  freeze(identities);
-  freeze(symbols);
+  Object.freeze(punctuators);
+  Object.freeze(goals);
+  Object.freeze(groups);
+  Object.freeze(identities);
+  Object.freeze(symbols);
 
-  return freeze({groups, goals, identities, symbols, tokens});
+  return Object.freeze({groups, goals, identities, symbols, tokens});
 
   // if (keywords) {
   //   for (const [identity, list] of entries({})) {
