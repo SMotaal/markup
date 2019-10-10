@@ -154,7 +154,7 @@ export const matcher = (ECMAScript =>
                   ? type || state.context.goal.type || 'sequence'
                   : state.context.goal !== ECMAScriptGoal
                   ? state.context.goal.type || 'sequence'
-                  : TokenMatcher.fault(text, state),
+                  : 'fault',
                 match,
               );
               typeof flatten === 'boolean' && (match.flatten = flatten);
@@ -420,7 +420,7 @@ export const matcher = (ECMAScript =>
               ? 'identifier'
               : state.context.captureKeyword === undefined
               ? 'keyword'
-              : state.context.captureKeyword(text, state) || TokenMatcher.fault(text, state),
+              : state.context.captureKeyword(text, state) || 'fault',
             match,
           );
         })}

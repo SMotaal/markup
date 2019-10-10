@@ -67,7 +67,6 @@ export class Matcher extends RegExp {
     const match = /** @type {MatcherExecArray} */ (super.exec(source));
     match == null || this.capture(match);
     return match;
-
   }
 
   /** @returns {entity is MatcherMetaEntity} */
@@ -189,14 +188,11 @@ export class Matcher extends RegExp {
   }
 
   static get matchAll() {
-    /**
-     * @template {RegExp} T
-     * @type {(string: MatcherText, matcher: T) => MatcherIterator<T> }
-     */
-          // String.prototype.matchAll || // TODO: Uncomment eventually
-    //@ts-ignore
+    /** @template {RegExp} T @type {(string: MatcherText, matcher: T) => MatcherIterator<T> } */
+    // const matchAll = (string, matcher) => new MatcherState(string, matcher);
     const matchAll = (() =>
       Function.call.bind(
+        // String.prototype.matchAll || // TODO: Uncomment eventually
         {
           /**
            * @this {string}

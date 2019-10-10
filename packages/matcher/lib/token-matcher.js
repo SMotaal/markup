@@ -90,8 +90,6 @@ export const {createTokenFromMatch, createMatcherInstance, createMatcherTokenize
         createToken: match => createToken(match, state),
       });
 
-      // properties && (properties['(tokenizer)'] = state);
-
       /** @type {TokenMatcher<U>} */
       const matcher = createMatcherInstance(this.matcher, state);
       matcher.exec = matcher.exec;
@@ -100,18 +98,12 @@ export const {createTokenFromMatch, createMatcherInstance, createMatcherTokenize
 
     /** @template {Matcher} T @template {{}} U */
     *TokenGenerator() {
-      /** @type {Token<U>} */
-      // let next;
       /** @type {{createToken: typeof createTokenFromMatch, initializeState: <V>(state: V) => V & TokenizerState<T, U>}} */
       const createToken = (this && this.createToken) || createTokenFromMatch;
       /** @type {string} */
       const string = createString(Object.keys({[arguments[0]]: 1})[0]);
       /** @type {TokenMatcher<U>} */
-      // const matcher = createMatcherInstance(this.matcher, assign(arguments[1] || {}, {sourceText: string}));
-      const matcher = createMatcherInstance(
-        this.matcher,
-        arguments[1] || {},
-      );
+      const matcher = createMatcherInstance(this.matcher, arguments[1] || {});
 
       /** @type {TokenizerState<T, U>} */
       const state = matcher.state;
@@ -155,7 +147,7 @@ export const {createTokenFromMatch, createMatcherInstance, createMatcherTokenize
     Object.defineProperties(
       instance,
       tokenizerPropertyDescriptors,
-      // iteratorMode ? iteratorProperties : generatorProperties,
+      // TODO: iteratorMode ? iteratorProperties : generatorProperties,
     );
 
   /**
@@ -263,7 +255,7 @@ export const TokenMatcher = (() => {
     const groups = state.groups;
     const index = groups.closers.lastIndexOf(text);
 
-    if (index === -1 || index !== groups.length - 1) return fault(text, state);
+    if (index === -1 || index !== groups.length - 1) return 'fault';
 
     groups.closers.splice(index, groups.closers.length);
     groups.splice(index, groups.length);
@@ -284,6 +276,7 @@ export const TokenMatcher = (() => {
     if (typeof search === 'string' && search.length) {
       state.nextOffset = match.input.indexOf(search, match.index + match[0].length) + (0 + delta || 0);
     } else if (search != null && typeof search === 'object') {
+      // debugger;
       search.lastIndex = match.index + match[0].length;
       const matched = search.exec(match.input);
       // console.log(...matched, {matched});
@@ -297,14 +290,6 @@ export const TokenMatcher = (() => {
     } else {
       throw new TypeError(`forward invoked with an invalid search argument`);
     }
-  };
-
-  /**
-   * @returns {'fault'}
-   */
-  const fault = (text, state) => {
-    // console.warn(text, {...state});
-    return 'fault';
   };
 
   class TokenMatcher extends Matcher {}
@@ -328,13 +313,10 @@ export const TokenMatcher = (() => {
     writable: false,
   });
 
-  Object.defineProperty(TokenMatcher, 'fault', {value: fault, enumerable: true, writable: false});
-
   Object.freeze(capture);
   Object.freeze(open);
   Object.freeze(close);
   Object.freeze(forward);
-  Object.freeze(fault);
   Object.freeze(TokenMatcher);
 
   return TokenMatcher;
