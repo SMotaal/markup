@@ -1458,6 +1458,7 @@ const tokenizer = (function (exports) {
 
 
   const modes = /*#__PURE__*/Object.freeze({
+    __proto__: null,
     css: css,
     html: html,
     markdown: markdown,

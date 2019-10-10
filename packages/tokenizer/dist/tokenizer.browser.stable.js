@@ -1442,6 +1442,7 @@ Definitions: {
 
 
 const modes = /*#__PURE__*/Object.freeze({
+  __proto__: null,
   css: css,
   html: html,
   markdown: markdown,
@@ -1505,6 +1506,7 @@ class TokenizerAPI {
             ''}`;
           const tokens = tokenize(source, options, flags);
           const snapshot = {...this};
+          for (const item of tokens);
           console.log('[tokenize‹warmup›]: %o', snapshot);
         }
       },
@@ -1719,11 +1721,11 @@ const createPseudoDOM = (endowments = globalThis) => {
   };
 
   dom.createElement = (tag, properties, ...children) => {
-    const element = dom.Object.assign(new dom.Element(), {
-      tag,
-      className: (properties && properties.className) || '',
-      properties,
-    });
+    const element = new dom.Element();
+    element.tag = tag;
+    properties == null ||
+      (({dataset: element.dataset, className: element.className, ...element.properties} = properties),
+      element.className || (element.className = ''));
     children.length && dom.Object.defineProperty(element, 'children', {value: new dom.Set(children)});
     return element;
   };
