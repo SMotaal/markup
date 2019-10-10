@@ -1,5 +1,5 @@
 import {Resolvers, Hash, resolveURL as RELATIVE, rewrite, frame, timeout} from './helpers.js';
-import {darkMode} from './dark-mode.js';
+import {darkMode} from '/browser/dark-mode.js';
 
 const Examples = ({
   ['es']: ES = LOCAL('./dist/tokenizer.experimental.js'),
