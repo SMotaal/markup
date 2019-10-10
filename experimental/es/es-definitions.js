@@ -10,6 +10,7 @@ export const {
   ECMAScriptTemplateLiteralGoal,
   ECMAScriptDefinitions,
 } = (() => {
+  // Avoids TypeScript "always …" style errors
   const DEBUG_CONSTRUCTS = Boolean(false);
 
   const identities = {
