@@ -383,7 +383,7 @@ export const matcher = (ECMAScript =>
       entity => TokenMatcher.sequence/* regexp */ `(
         ,|;|\.\.\.|\.|:|\?${
           // We're including non-conflicting RegExp atoms here
-          '[:=]?'
+          '[:=!]?'
         }
         |\+\+|--|=>
         |\+=|-=|\*\*=|\*=
