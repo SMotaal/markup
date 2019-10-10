@@ -75,7 +75,7 @@ export const {
     closers: [')', '}'],
     opener: '/',
     closer: '/',
-    punctuators: ['+', '*', '?', '|', '^', '.', '?=', '?:'],
+    punctuators: ['+', '*', '?', '|', '^', '.', '?=', '?:', '?!'],
     punctuation: {
       '[': 'combinator',
       ']': 'combinator',
