@@ -13,24 +13,42 @@ interface MatcherExecArray extends RegExpExecArray, MatcherMatchRecord {}
 interface MatcherMatchArray extends RegExpMatchArray, MatcherMatchRecord {}
 
 interface MatcherMatchRecord {
-  identity: MatcherIdentity;
+  identity: MatcherIdentityEntity | Matcher;
   entity: number;
   capture: MatcherCapture;
   matcher: RegExp;
+  meta?: string;
 }
 
 interface MatcherCapture {
-  [identity: MatcherIdentity]: string;
+  [name: MatcherNamedEntity]: string;
 }
 
-type MatcherIdentity = string | symbol;
+interface Trimmed extends String {
+  trim(): this;
+}
+interface Suffixed<T extends string, V extends boolean = false> {
+  endsWith(suffix: T): V;
+}
+
+type MatcherIdentityEntity = symbol | (string & Trimmed & Suffixed<'?', false>);
+type MatcherMetaEntity = string & Suffixed<'?'>;
+
+type MatcherUnknownEntity = 'UNKNOWN?';
+type MatcherNamedEntity = MatcherIdentityEntity | MatcherMetaEntity;
 
 type MatcherOperator = <T>(text: string, capture: number, match: MatcherMatch, state?: T) => void;
 
-type MatcherEntity = MatcherIdentity | MatcherOperator | undefined;
+type MatcherEntity = MatcherNamedEntity | MatcherOperator | undefined;
+
+interface MatcherEntitySet<T extends MatcherEntity = MatcherEntity> extends Set<T> {
+  has<U>(entity: U): U extends T ? boolean : false;
+}
 
 interface MatcherEntities extends Array<MatcherEntity> {
   flags?: string;
+  meta?: MatcherEntitySet<MatcherMetaEntity>;
+  identities?: MatcherEntitySet<MatcherIdentityEntity>;
 }
 
 type MatcherIterator<T extends RegExp = Matcher> = IterableIterator<

@@ -2,14 +2,10 @@
 
 import {countLineBreaks} from '../../tokenizer/lib/core.js';
 import {Matcher} from './matcher.js';
+import {TokenizerState} from './state.js';
 
 export const {createTokenFromMatch, createMatcherInstance, createMatcherTokenizer, createMatcherMode} = (() => {
-  const {
-    RegExp,
-    Object,
-    Object: {assign, create, freeze, defineProperty, defineProperties, setPrototypeOf},
-    String,
-  } = globalThis;
+  const {RegExp, Object, String} = globalThis;
 
   /**
    * @template {Matcher} T
@@ -19,8 +15,8 @@ export const {createTokenFromMatch, createMatcherInstance, createMatcherTokenize
    * @returns {TokenMatcher<U>}
    */
   const createMatcherInstance = (matcher, state) =>
-    defineProperty(
-      ((state || (state = create(null))).matcher =
+    Object.defineProperty(
+      ((state || (state = Object.create(null))).matcher =
         (matcher && matcher instanceof RegExp && createMatcherClone(matcher)) || RegExp(matcher, 'g')),
       'state',
       {value: state},
@@ -36,8 +32,8 @@ export const {createTokenFromMatch, createMatcherInstance, createMatcherTokenize
    * @returns {U}
    */
   const createMatcherClone = ({constructor: {prototype}, source, flags, lastIndex, ...properties}, instance) => (
-    (instance = assign(instance || RegExp(source, flags || 'g'), properties)),
-    prototype && setPrototypeOf(instance, prototype),
+    (instance = Object.assign(instance || RegExp(source, flags || 'g'), properties)),
+    prototype && Object.setPrototypeOf(instance, prototype),
     instance
   );
 
@@ -57,60 +53,110 @@ export const {createTokenFromMatch, createMatcherInstance, createMatcherTokenize
     capture,
   });
 
-  const tokenizerProperties = Object.getOwnPropertyDescriptors(
-    freeze(
-      class Tokenizer {
-        /** @template {Matcher} T @template {{}} U */
-        *tokenize() {
-          /** @type {Token<U>} */
-          // let next;
-          /** @type {{createToken: typeof createTokenFromMatch, initializeState: <V>(state: V) => V & TokenizerState<T, U>}} */
-          const createToken = (this && this.createToken) || createTokenFromMatch;
-          /** @type {string} */
-          const string = createString(Object.keys({[arguments[0]]: 1})[0]);
-          /** @type {TokenMatcher<U>} */
-          const matcher = createMatcherInstance(this.matcher, assign(arguments[1] || {}, {sourceText: string}));
-          /** @type {TokenizerState<T, U>} */
-          const state = matcher.state;
-          this.initializeState && this.initializeState(state);
-          matcher.exec = matcher.exec;
+  class Tokenizer {
+    /**
+     * @template {Matcher} T
+     * @template {{}} U
+     * @param {string} string
+     * @param {U} properties
+     */
+    tokenize(
+      string,
+      properties,
+      USE_ITERATOR = properties && 'USE_ITERATOR' in properties
+        ? !!properties.USE_ITERATOR
+        : properties && 'USE_GENERATOR' in properties
+        ? !properties.USE_GENERATOR
+        : !true,
+    ) {
+      return !!USE_ITERATOR ? this.TokenIterator(string, properties) : this.TokenGenerator(string, properties);
+    }
+    /**
+     * @template {Matcher} T
+     * @template {{}} U
+     * @param {string} string
+     * @param {U} properties
+     */
+    TokenIterator(string, properties) {
+      /** @type {{createToken: typeof createTokenFromMatch, initializeState: <V>(state: V) => V & TokenizerState<T, U>}} */
+      const createToken = (this && this.createToken) || createTokenFromMatch;
+      [string] = Object.keys({[string]: null});
+      const state = new TokenizerState({
+        ...TokenizerState.defaults,
+        ...((typeof properties === 'object' && properties) || undefined),
+        source: string,
+        initialize: this.initializeState && (() => void this.initializeState(state)),
+        finalize: this.finalizeState && (() => void this.finalizeState(state)),
+        createToken: match => createToken(match, state),
+      });
 
-          for (
-            let match, capturedToken, retainedToken, index = 0;
-            // BAIL on first failed/empty match
-            ((match = matcher.exec(string)) !== null && match[0] !== '') ||
-            //   BUT first yield a nextToken if present
-            (retainedToken !== undefined && (yield retainedToken), (state.nextToken = undefined));
+      // properties && (properties['(tokenizer)'] = state);
 
-          ) {
-            if ((capturedToken = createToken(match, state)) === undefined) continue;
+      /** @type {TokenMatcher<U>} */
+      const matcher = createMatcherInstance(this.matcher, state);
+      matcher.exec = matcher.exec;
+      return state;
+    }
 
-            // HOLD back one grace token
-            //   until createToken(…) !== undefined (ie new token)
-            //   set the incremental token index for this token
-            //   and keep it referenced directly on the state
-            (state.nextToken = capturedToken).index = index++;
+    /** @template {Matcher} T @template {{}} U */
+    *TokenGenerator() {
+      /** @type {Token<U>} */
+      // let next;
+      /** @type {{createToken: typeof createTokenFromMatch, initializeState: <V>(state: V) => V & TokenizerState<T, U>}} */
+      const createToken = (this && this.createToken) || createTokenFromMatch;
+      /** @type {string} */
+      const string = createString(Object.keys({[arguments[0]]: 1})[0]);
+      /** @type {TokenMatcher<U>} */
+      // const matcher = createMatcherInstance(this.matcher, assign(arguments[1] || {}, {sourceText: string}));
+      const matcher = createMatcherInstance(
+        this.matcher,
+        arguments[1] || {},
+      );
 
-            //   THEN yield a previously held token
-            if (retainedToken !== undefined) yield retainedToken;
+      /** @type {TokenizerState<T, U>} */
+      const state = matcher.state;
+      this.initializeState && this.initializeState(state);
+      matcher.exec = matcher.exec;
 
-            //   THEN finally clear the nextToken reference
-            retainedToken = capturedToken;
-            state.nextToken = undefined;
-          }
+      for (
+        let match, capturedToken, retainedToken, index = 0;
+        // BAIL on first failed/empty match
+        ((match = matcher.exec(string)) !== null && match[0] !== '') ||
+        //   BUT first yield a nextToken if present
+        (retainedToken !== undefined && (yield retainedToken), (state.nextToken = undefined));
 
-          this.finalizeState && this.finalizeState(state);
+      ) {
+        if ((capturedToken = createToken(match, state)) === undefined) continue;
 
-          // console.log({...state});
-        }
-      }.prototype,
-    ),
+        // HOLD back one grace token
+        //   until createToken(…) !== undefined (ie new token)
+        //   set the incremental token index for this token
+        //   and keep it referenced directly on the state
+        (state.nextToken = capturedToken).index = index++;
+
+        //   THEN yield a previously held token
+        if (retainedToken !== undefined) yield retainedToken;
+
+        //   THEN finally clear the nextToken reference
+        retainedToken = capturedToken;
+        state.nextToken = undefined;
+      }
+
+      this.finalizeState && this.finalizeState(state);
+    }
+  }
+
+  const tokenizerPropertyDescriptors = Object.getOwnPropertyDescriptors(
+    Object.freeze(Object.freeze(Tokenizer).prototype),
   );
 
-  /**
-   * @type { {<T extends Matcher, U extends {} = {}>(sourceText: string, initialState?: Partial<TokenizerState<undefined, U>): IterableIterator<Token<U>>} }
-   */
-  const createMatcherTokenizer = instance => defineProperties(instance, tokenizerProperties);
+  /** @type { {<T extends Matcher, U extends {} = {}>(sourceText: string, initialState?: Partial<TokenizerState<undefined, U>): IterableIterator<Token<U>>} } */
+  const createMatcherTokenizer = instance =>
+    Object.defineProperties(
+      instance,
+      tokenizerPropertyDescriptors,
+      // iteratorMode ? iteratorProperties : generatorProperties,
+    );
 
   /**
    * @param {Matcher} matcher
@@ -122,7 +168,7 @@ export const {createTokenFromMatch, createMatcherInstance, createMatcherTokenize
       /** @type {(state: {}) =>  void} */
       initializeState: undefined,
       finalizeState: undefined,
-      matcher: freeze(createMatcherInstance(matcher)),
+      matcher: Object.freeze(createMatcherInstance(matcher)),
     });
 
     const mode = {syntax: 'matcher', tokenizer};
@@ -137,7 +183,7 @@ export const {createTokenFromMatch, createMatcherInstance, createMatcherTokenize
         ...mode.overrides
       } = options);
 
-    freeze(tokenizer);
+    Object.freeze(tokenizer);
 
     return mode;
   };
@@ -156,9 +202,7 @@ export const TokenMatcher = (() => {
    *
    * NOTE: fault always sets match.flatten to false
    *
-   * @param {string} text - Text of the intended { type = "opener" } token
-   * @param {State} state - Matcher state
-   * @returns {undefined | string} - String when context is **not** open
+   * @template T @param {string} identity @param {T} match @returns {T}
    */
   const capture = (identity, match) => {
     match.capture[(match.identity = identity)] = match[0];
@@ -264,6 +308,9 @@ export const TokenMatcher = (() => {
   };
 
   class TokenMatcher extends Matcher {}
+
+  /** @type {import('../experimental/common/types').Goal|symbol} */
+  TokenMatcher.prototype.goal = undefined;
 
   Object.defineProperty(TokenMatcher, 'capture', {
     value: capture,

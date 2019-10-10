@@ -43,15 +43,17 @@ debugMatcher.matches = (matches, options = {}) => {
 
   const INITIAL = method === 'render' ? '' : RESET_STYLE;
 
+  // console.log({matches});
+
   try {
     let format;
     let lastIndex = -1;
     for (const match of matches) {
       if (!match) continue;
       format = '';
-      const {0: string, index, identity, entity, capture, input, ...properties} = match;
+      const {0: string, index, identity, entity, capture, meta, input, ...properties} = match;
       //@ts-ignore
-      let {[DELIMITER]: delimiter, [UNKNOWN]: unknown} = capture;
+      let {[DELIMITER]: delimiter, [UNKNOWN]: unknown, ['INSET?']: inset} = capture;
       const values = [];
       //@ts-ignore
       const delta = (properties.index = index) - (properties.lastIndex = lastIndex);
@@ -111,25 +113,39 @@ debugMatcher.matches = (matches, options = {}) => {
       );
 
       {
-        // const start = (inset && inset.length) || 0;
-        // const end = (delimiter && -delimiter.length) || undefined;
-        // const lines = string.slice(start, end).split(`\n${inset || ''}`);
-        // inset = (inset && (method !== 'render' ? inset.replace(/ /g, SPACE).replace(/\t/g, TAB) : inset)) || '';
-        // const lineFormat = `%c%s%c%s%c`;
-        const lines = string.slice(0, (delimiter && -delimiter.length) || undefined).split(/\n|\r\n/g);
-        const lineFormat = `%c%s%c`;
-        values.push(
-          ...lines.flatMap((line, index) => [
-            `${INITIAL} /* border: 1px solid ${color}90; */ color: ${color};${(!index &&
-              ` --color: ${color}; --details: "${details}";`) ||
-              ''}`,
-            // `${INITIAL} border: 1px solid ${color}90; background: ${color}EE; color: white; font-weight: 300;`,
-            // inset || '\u200D',
-            `${INITIAL} border: 1px solid ${color}90; color: ${color}90; background: ${color}11; font-weight: 500; text-shadow: 0 0 0 #999F;`,
-            line || '\u200D',
-            INITIAL,
-          ]),
-        );
+        let lines, lineFormat;
+        if (inset) {
+          const start = (inset && inset.length) || 0;
+          const end = (delimiter && -delimiter.length) || undefined;
+          lines = string.slice(start, end).split(`\n${inset || ''}`);
+          inset = (inset && (method !== 'render' ? inset.replace(/ /g, SPACE).replace(/\t/g, TAB) : inset)) || '';
+          lineFormat = `%c%s%c%s%c`;
+          values.push(
+            ...lines.flatMap((line, index) => [
+              `${INITIAL} /* border: 1px solid ${color}90; */ color: ${color};${(!index &&
+                ` --color: ${color}; --details: "${details}";`) ||
+                ''}`,
+              `${INITIAL} border: 1px solid ${color}90; background: ${color}EE; color: white; font-weight: 300;`,
+              inset || '\u200D',
+              `${INITIAL} border: 1px solid ${color}90; color: ${color}90; background: ${color}11; font-weight: 500; text-shadow: 0 0 0 #999F;`,
+              line || '\u200D',
+              INITIAL,
+            ]),
+          );
+        } else {
+          lines = string.slice(0, (delimiter && -delimiter.length) || undefined).split(/\n|\r\n/g);
+          lineFormat = `%c%s%c`;
+          values.push(
+            ...lines.flatMap((line, index) => [
+              `${INITIAL} /* border: 1px solid ${color}90; */ color: ${color};${(!index &&
+                ` --color: ${color}; --details: "${details}";`) ||
+                ''}`,
+              `${INITIAL} border: 1px solid ${color}90; color: ${color}90; background: ${color}11; font-weight: 500; text-shadow: 0 0 0 #999F;`,
+              line || '\u200D',
+              INITIAL,
+            ]),
+          );
+        }
         //@ts-ignore
         format += `%c${identity.padStart(
           SEGMENT_MARGIN.length - 1,
@@ -145,7 +161,14 @@ debugMatcher.matches = (matches, options = {}) => {
           (format += `%c%s%c`);
       }
 
-      logs.push([method, [`${format}`.trimRight(), ...values.splice(0, values.length)]]);
+      logs.push([
+        method,
+        [
+          `${format}`.trimRight(),
+          ...values.splice(0, values.length),
+          //{string, identity, meta, capture, match}
+        ],
+      ]);
 
       lastIndex = index + string.length;
     }
@@ -154,6 +177,8 @@ debugMatcher.matches = (matches, options = {}) => {
     else logs.push(['warn', [exception]]);
   }
   timing && console.timeEnd(`printing${stamp}`);
+
+  // debugger;
 
   return render[method === 'render' ? 'output' : 'console'](...logs);
 };
