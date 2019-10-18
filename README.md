@@ -10,7 +10,7 @@ Semi-contextual parsing experiments using regular expressions as a core building
 
 <details>
 
-- [ ] [_Custom Elements_](./elements/) — Compartmentalize reusable web components structured to progressively compose from simple to the more advanced use cases through iterations.
+- [ ] [_Custom Elements_](./elements/README.md) — Compartmentalize reusable web components structured to progressively compose from simple to the more advanced use cases through iterations.
 
 </details>
 
