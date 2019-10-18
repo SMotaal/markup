@@ -148,9 +148,21 @@
   display: block;
   padding: 0;
   margin: 0;
-  margin-inline-start: calc(var(--markup-gutter, 0) + 1px);
+
   text-indent: calc(-1 * var(--markup-soft-indent, 0.0001em) + 1px);
+  -webkit-margin-start: calc(var(--markup-gutter, 0) + 1px);
+  margin-inline-start: calc(var(--markup-gutter, 0) + 1px);
+  -webkit-padding-start: calc(0.275em + var(--markup-soft-indent, 0.0001em));
   padding-inline-start: calc(0.275em + var(--markup-soft-indent, 0.0001em));
+
+  /* --markup-line-start-margin: calc(var(--markup-gutter, 0) + 1px); */
+  /* --markup-line-start-padding: calc(0.275em + var(--markup-soft-indent, 0.0001em)); */
+  /* --markup-line-indent: calc(-1 * var(--markup-soft-indent, 0.0001em) + 1px); */
+  /* -webkit-margin-start: var(--markup-line-start-margin); */
+  /* margin-inline-start: var(--markup-line-start-margin); */
+  /* -webkit-padding-start: var(--markup-line-start-padding); */
+  /* padding-inline-start: var(--markup-line-start-padding); */
+  /* text-indent: var(--markup-line-indent); */
 
   /* border: 0 solid transparent; */
   /* width: -webkit-fill-available; */
@@ -197,7 +209,9 @@ pre > .markup-line-numbers .markup-line {
   --markup-line-number-color: var(--markup-neutral-dim, #9999);
 
   border: 0 solid transparent;
+  -webkit-border-start-width: 0.5px;
   border-inline-start-width: 0.5px;
+  -webkit-border-start-color: #9999;
   border-inline-start-color: #9999;
 }
 
@@ -219,6 +233,7 @@ pre.markup[line-numbers] .markup-line::before {
   width: calc(-0.5em + var(--markup-gutter, 0.5em));
   height: calc(100% * var(--font-scale));
 
+  -webkit-margin-start: calc(-1 * var(--markup-gutter, 0) - var(--markup-soft-indent) / 0.75 + 1px);
   margin-inline-start: calc(-1 * var(--markup-gutter, 0) - var(--markup-soft-indent) / 0.75 + 1px);
 
   font-size: calc(100% * var(--font-scale));

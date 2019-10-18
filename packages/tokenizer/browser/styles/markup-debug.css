@@ -143,6 +143,7 @@
     /* outline: 1px solid greenyellow; */
     /* margin: 0; */
     /* padding: 0; */
+    -webkit-margin-end: -100%;
     margin-inline-end: -100%;
     pointer-events: none;
     width: 0;
