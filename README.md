@@ -109,4 +109,15 @@ The minimalistic isomorphic compositional DOM used to render tokenized markup â€
 
 ---
 
+## Drafts
+
+> **Note** â€” The following are incomplete thoughts.
+
+- `2019-09` [Articulative Parsing](/experimental-modules-shim/documentation/Articulative-Parsing.md)
+- `2019-06` [ECMAScript Constructs](/markup/experimental/es/Constructs.md)
+- `2019-05` [Contemplative Parsing](/experimental-modules-shim/documentation/Contemplative-Parsing.md)
+  - `2019-05` [Disambiguation](/experimental-modules-shim/documentation/Contemplative-Parsing-Disambiguation.md)
+
+---
+
 All my experimental work is intended to remain open and freely available, with the one obvious expectation of fair attribution where used.
