@@ -2354,6 +2354,80 @@ RegExpRange.ranges = {};
 
 globalThis.RegExpRange = RegExpRange;
 
+// @ts-check
+
+/**
+ * @typedef {Readonly<{symbol: symbol, description: string}>} Definition
+ * @extends {Map<string|symbol, Definition>}
+ */
+class SymbolMap extends Map {
+  /**
+   * @param {*} description
+   * @param {symbol} [symbol]
+   * @returns {symbol}
+   */
+  define(description, symbol) {
+    /** @type {Definition} */ let definition;
+
+    description = ((arguments.length > 0 && typeof description !== 'symbol') || undefined) && String(description);
+
+    if (description === undefined) {
+      throw new TypeError(
+        `Symbols.define invoked with a description (${
+          description != null ? typeof arguments[0] : arguments[0]
+        }) that is not non-coercible to a valid key.`,
+      );
+    }
+
+    definition = super.get(description);
+
+    if (symbol != null) {
+      if (typeof symbol !== 'symbol') {
+        throw new TypeError(
+          `Symbols.define invoked with an invalid symbol (${symbol == null ? arguments[1] : typeof arguments[1]}).`,
+        );
+      }
+
+      if (!definition) {
+        definition = super.get(symbol);
+      } else if (definition.symbol !== symbol) {
+        throw new ReferenceError('Symbols.define invoked with a description argument that is not unique.');
+      }
+
+      if (definition && definition.description !== description) {
+        throw new ReferenceError('Symbols.define invoked with a symbol argument that is not unique.');
+      }
+    }
+
+    if (!definition) {
+      definition = Object.freeze({symbol: symbol || Symbol(description), description: description});
+      super.set(definition.symbol, definition);
+      super.set(definition.description, definition);
+    }
+
+    return definition.symbol;
+  }
+
+  /** @param {symbol | string} key @returns {string} */
+  describe(key) {
+    return (super.get(key) || SymbolMap.undefined).description;
+  }
+}
+
+Object.defineProperty(SymbolMap, 'undefined', {value: Object.freeze(Object.create(null)), writable: false});
+
+Object.defineProperties(
+  Object.setPrototypeOf(
+    SymbolMap.prototype,
+    Object.create(Object.prototype, {
+      get: Object.getOwnPropertyDescriptor(Map.prototype, 'get'),
+      has: Object.getOwnPropertyDescriptor(Map.prototype, 'has'),
+      set: Object.getOwnPropertyDescriptor(Map.prototype, 'set'),
+    }),
+  ),
+  {get: {writable: false}, set: {writable: false}},
+);
+
 //@ts-check
 
 /** @param {State} state */
@@ -2640,6 +2714,14 @@ const initializeContext = (assign =>
     );
   })(Object.assign);
 
+const symbolMap = new SymbolMap();
+
+/** @type {SymbolMap['define']} */
+const defineSymbol = (description, symbol) => symbolMap.define(description, symbol);
+
+/** @type {SymbolMap['describe']} */
+const describeSymbol = symbol => symbolMap.describe(symbol);
+
 const generateDefinitions = ({groups = {}, goals = {}, identities = {}, symbols = {}, tokens = {}}) => {
   const FaultGoal = generateDefinitions.FaultGoal;
 
@@ -2657,7 +2739,7 @@ const generateDefinitions = ({groups = {}, goals = {}, identities = {}, symbols 
     const {[symbol]: goal} = goals;
 
     goal.symbol === symbol || (goal.symbol = symbol);
-    goal.name = symbol.description.replace(/Goal$/, '');
+    goal.name = describeSymbol(symbol).replace(/Goal$/, '');
     symbols[`${goal.name}Goal`] = goal.symbol;
     goal[Symbol.toStringTag] = `«${goal.name}»`;
     goal.tokens = tokens[symbol] = {};
@@ -2732,7 +2814,7 @@ const generateDefinitions = ({groups = {}, goals = {}, identities = {}, symbols 
    * @param {T} properties
    */
   function GoalSpecificTokenRecord(goal, text, type, properties) {
-    const symbol = Symbol(`‹${goal.name} ${text}›`);
+    const symbol = defineSymbol(`‹${goal.name} ${text}›`);
     return (goal.tokens[text] = goal.tokens[symbol] = tokens[symbol] = {symbol, text, type, goal, ...properties});
   }
 };
@@ -2740,7 +2822,7 @@ const generateDefinitions = ({groups = {}, goals = {}, identities = {}, symbols 
 // generateDefinitions.Empty = Object.freeze(new class Empty extends Array{});
 generateDefinitions.Empty = Object.freeze({[Symbol.iterator]: (iterator => iterator).bind([][Symbol.iterator])});
 
-const FaultGoal = (generateDefinitions.FaultGoal = {symbol: Symbol('FaultGoal'), type: 'fault'});
+const FaultGoal = (generateDefinitions.FaultGoal = {symbol: defineSymbol('FaultGoal'), type: 'fault'});
 generateDefinitions({goals: {[FaultGoal.symbol]: FaultGoal}});
 
 /**
@@ -2923,7 +3005,7 @@ const {
   const goals = {};
   const symbols = {};
 
-  const ECMAScriptGoal = (goals[(symbols.ECMAScriptGoalSymbol = Symbol('ECMAScriptGoal'))] = {
+  const ECMAScriptGoal = (goals[(symbols.ECMAScriptGoalSymbol = defineSymbol('ECMAScriptGoal'))] = {
     type: undefined,
     flatten: undefined,
     fold: undefined,
@@ -2956,13 +3038,15 @@ const {
     },
   });
 
-  const ECMAScriptCommentGoal = (goals[(symbols.ECMAScriptCommentGoalSymbol = Symbol('ECMAScriptCommentGoal'))] = {
+  const ECMAScriptCommentGoal = (goals[
+    (symbols.ECMAScriptCommentGoalSymbol = defineSymbol('ECMAScriptCommentGoal'))
+  ] = {
     type: 'comment',
     flatten: true,
     fold: true,
   });
 
-  const ECMAScriptRegExpGoal = (goals[(symbols.ECMAScriptRegExpGoalSymbol = Symbol('ECMAScriptRegExpGoal'))] = {
+  const ECMAScriptRegExpGoal = (goals[(symbols.ECMAScriptRegExpGoalSymbol = defineSymbol('ECMAScriptRegExpGoal'))] = {
     type: 'pattern',
     flatten: undefined,
     fold: undefined,
@@ -2982,7 +3066,7 @@ const {
   });
 
   const ECMAScriptRegExpClassGoal = (goals[
-    (symbols.ECMAScriptRegExpClassGoal = Symbol('ECMAScriptRegExpClassGoal'))
+    (symbols.ECMAScriptRegExpClassGoal = defineSymbol('ECMAScriptRegExpClassGoal'))
   ] = {
     type: 'pattern',
     flatten: undefined,
@@ -3007,14 +3091,14 @@ const {
     parentGoal: symbols.ECMAScriptRegExpGoalSymbol,
   };
 
-  const ECMAScriptStringGoal = (goals[(symbols.ECMAScriptStringGoalSymbol = Symbol('ECMAScriptStringGoal'))] = {
+  const ECMAScriptStringGoal = (goals[(symbols.ECMAScriptStringGoalSymbol = defineSymbol('ECMAScriptStringGoal'))] = {
     type: 'quote',
     flatten: true,
     fold: true,
   });
 
   const ECMAScriptTemplateLiteralGoal = (goals[
-    (symbols.ECMAScriptTemplateLiteralGoalSymbol = Symbol('ECMAScriptTemplateLiteralGoal'))
+    (symbols.ECMAScriptTemplateLiteralGoalSymbol = defineSymbol('ECMAScriptTemplateLiteralGoal'))
   ] = {
     type: 'quote',
     flatten: true,

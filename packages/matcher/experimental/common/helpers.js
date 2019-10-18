@@ -2,6 +2,7 @@
 import {countLineBreaks} from '../../../tokenizer/lib/core.js';
 import {createMatcherMode, TokenMatcher} from '../../lib/token-matcher.js';
 import {RegExpRange} from '../../lib/range.js';
+import {SymbolMap} from './helpers/symbol-map.js';
 
 /// Helpers
 /** @typedef {<T extends {}>(options?: T) => MatcherPatternFactory} PatternFactory */
@@ -301,6 +302,14 @@ export const initializeContext = (assign =>
     );
   })(Object.assign);
 
+const symbolMap = new SymbolMap();
+
+/** @type {SymbolMap['define']} */
+export const defineSymbol = (description, symbol) => symbolMap.define(description, symbol);
+
+/** @type {SymbolMap['describe']} */
+export const describeSymbol = symbol => symbolMap.describe(symbol);
+
 export const generateDefinitions = ({groups = {}, goals = {}, identities = {}, symbols = {}, tokens = {}}) => {
   const FaultGoal = generateDefinitions.FaultGoal;
 
@@ -318,7 +327,7 @@ export const generateDefinitions = ({groups = {}, goals = {}, identities = {}, s
     const {[symbol]: goal} = goals;
 
     goal.symbol === symbol || (goal.symbol = symbol);
-    goal.name = symbol.description.replace(/Goal$/, '');
+    goal.name = describeSymbol(symbol).replace(/Goal$/, '');
     symbols[`${goal.name}Goal`] = goal.symbol;
     goal[Symbol.toStringTag] = `«${goal.name}»`;
     goal.tokens = tokens[symbol] = {};
@@ -393,7 +402,7 @@ export const generateDefinitions = ({groups = {}, goals = {}, identities = {}, s
    * @param {T} properties
    */
   function GoalSpecificTokenRecord(goal, text, type, properties) {
-    const symbol = Symbol(`‹${goal.name} ${text}›`);
+    const symbol = defineSymbol(`‹${goal.name} ${text}›`);
     return (goal.tokens[text] = goal.tokens[symbol] = tokens[symbol] = {symbol, text, type, goal, ...properties});
   }
 };
@@ -401,7 +410,7 @@ export const generateDefinitions = ({groups = {}, goals = {}, identities = {}, s
 // generateDefinitions.Empty = Object.freeze(new class Empty extends Array{});
 generateDefinitions.Empty = Object.freeze({[Symbol.iterator]: (iterator => iterator).bind([][Symbol.iterator])});
 
-export const FaultGoal = (generateDefinitions.FaultGoal = {symbol: Symbol('FaultGoal'), type: 'fault'});
+export const FaultGoal = (generateDefinitions.FaultGoal = {symbol: defineSymbol('FaultGoal'), type: 'fault'});
 generateDefinitions({goals: {[FaultGoal.symbol]: FaultGoal}});
 
 /**
