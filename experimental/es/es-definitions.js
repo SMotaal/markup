@@ -1,5 +1,10 @@
 ﻿//@ts-check
-import {generateDefinitions, Keywords, Construct} from '../../packages/matcher/experimental/common/helpers.js';
+import {
+  generateDefinitions,
+  defineSymbol,
+  Keywords,
+  Construct,
+} from '../../packages/matcher/experimental/common/helpers.js';
 
 export const {
   ECMAScriptGoal,
@@ -28,7 +33,7 @@ export const {
   const goals = {};
   const symbols = {};
 
-  const ECMAScriptGoal = (goals[(symbols.ECMAScriptGoalSymbol = Symbol('ECMAScriptGoal'))] = {
+  const ECMAScriptGoal = (goals[(symbols.ECMAScriptGoalSymbol = defineSymbol('ECMAScriptGoal'))] = {
     type: undefined,
     flatten: undefined,
     fold: undefined,
@@ -61,13 +66,15 @@ export const {
     },
   });
 
-  const ECMAScriptCommentGoal = (goals[(symbols.ECMAScriptCommentGoalSymbol = Symbol('ECMAScriptCommentGoal'))] = {
+  const ECMAScriptCommentGoal = (goals[
+    (symbols.ECMAScriptCommentGoalSymbol = defineSymbol('ECMAScriptCommentGoal'))
+  ] = {
     type: 'comment',
     flatten: true,
     fold: true,
   });
 
-  const ECMAScriptRegExpGoal = (goals[(symbols.ECMAScriptRegExpGoalSymbol = Symbol('ECMAScriptRegExpGoal'))] = {
+  const ECMAScriptRegExpGoal = (goals[(symbols.ECMAScriptRegExpGoalSymbol = defineSymbol('ECMAScriptRegExpGoal'))] = {
     type: 'pattern',
     flatten: undefined,
     fold: undefined,
@@ -87,7 +94,7 @@ export const {
   });
 
   const ECMAScriptRegExpClassGoal = (goals[
-    (symbols.ECMAScriptRegExpClassGoal = Symbol('ECMAScriptRegExpClassGoal'))
+    (symbols.ECMAScriptRegExpClassGoal = defineSymbol('ECMAScriptRegExpClassGoal'))
   ] = {
     type: 'pattern',
     flatten: undefined,
@@ -112,14 +119,14 @@ export const {
     parentGoal: symbols.ECMAScriptRegExpGoalSymbol,
   };
 
-  const ECMAScriptStringGoal = (goals[(symbols.ECMAScriptStringGoalSymbol = Symbol('ECMAScriptStringGoal'))] = {
+  const ECMAScriptStringGoal = (goals[(symbols.ECMAScriptStringGoalSymbol = defineSymbol('ECMAScriptStringGoal'))] = {
     type: 'quote',
     flatten: true,
     fold: true,
   });
 
   const ECMAScriptTemplateLiteralGoal = (goals[
-    (symbols.ECMAScriptTemplateLiteralGoalSymbol = Symbol('ECMAScriptTemplateLiteralGoal'))
+    (symbols.ECMAScriptTemplateLiteralGoalSymbol = defineSymbol('ECMAScriptTemplateLiteralGoal'))
   ] = {
     type: 'quote',
     flatten: true,

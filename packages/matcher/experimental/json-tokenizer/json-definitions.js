@@ -1,5 +1,5 @@
 ﻿//@ts-check
-import {generateDefinitions, Keywords} from '../common/helpers.js';
+import {generateDefinitions, defineSymbol, Keywords} from '../common/helpers.js';
 
 export const {JSONGoal, JSONStringGoal, JSONObjectGoal, JSONArrayGoal, JSONDefinitions} = (() => {
   const identities = {Keyword: 'JSON.Keyword'};
@@ -13,7 +13,7 @@ export const {JSONGoal, JSONStringGoal, JSONObjectGoal, JSONArrayGoal, JSONDefin
   //   that requires a lot of opinionated declarative mechanisms.
   //
   // TODO: Declarative means excluded matches ALWAYS "fault"
-  const JSONGoal = (goals[(symbols.JSONGoal = Symbol('JSONGoal'))] = {
+  const JSONGoal = (goals[(symbols.JSONGoal = defineSymbol('JSONGoal'))] = {
     type: undefined,
     flatten: undefined,
     fold: undefined,
@@ -21,20 +21,20 @@ export const {JSONGoal, JSONStringGoal, JSONObjectGoal, JSONArrayGoal, JSONDefin
     openers: ['{', '[', '"'],
   });
 
-  const JSONObjectGoal = (goals[(symbols.JSONObjectGoal = Symbol('JSONObjectGoal'))] = {
+  const JSONObjectGoal = (goals[(symbols.JSONObjectGoal = defineSymbol('JSONObjectGoal'))] = {
     ...JSONGoal,
     closers: ['}'],
     punctuators: [':', ','],
   });
 
-  const JSONArrayGoal = (goals[(symbols.JSONArrayGoal = Symbol('JSONArrayGoal'))] = {
+  const JSONArrayGoal = (goals[(symbols.JSONArrayGoal = defineSymbol('JSONArrayGoal'))] = {
     ...JSONGoal,
     closers: [']'],
 
     punctuators: [','],
   });
 
-  const JSONStringGoal = (goals[(symbols.JSONStringGoal = Symbol('JSONStringGoal'))] = {
+  const JSONStringGoal = (goals[(symbols.JSONStringGoal = defineSymbol('JSONStringGoal'))] = {
     ...JSONGoal,
     type: 'quote',
     flatten: true,

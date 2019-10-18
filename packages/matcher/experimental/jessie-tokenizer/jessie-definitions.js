@@ -1,5 +1,5 @@
 ﻿//@ts-check
-import {generateDefinitions, Keywords} from '../common/helpers.js';
+import {generateDefinitions, defineSymbol, Keywords} from '../common/helpers.js';
 
 // TODO: Refactor from es-definitions and json-definitions
 
@@ -17,7 +17,7 @@ export const {JessieGoal, JessieStringGoal, JessieCommentGoal, JessieDefinitions
   //   we can constructional argument the goal's imperative logic.
   //
   // TODO: Imperative means excluded matches NEVER "fault"
-  const JessieGoal = (goals[(symbols.JessieGoal = Symbol('JessieGoal'))] = {
+  const JessieGoal = (goals[(symbols.JessieGoal = defineSymbol('JessieGoal'))] = {
     type: undefined,
     flatten: undefined,
     fold: undefined,
@@ -27,7 +27,7 @@ export const {JessieGoal, JessieStringGoal, JessieCommentGoal, JessieDefinitions
     punctuators: [':', ','],
   });
 
-  const JessieStringGoal = (goals[(symbols.JessieStringGoal = Symbol('JessieStringGoal'))] = {
+  const JessieStringGoal = (goals[(symbols.JessieStringGoal = defineSymbol('JessieStringGoal'))] = {
     // ...JessieGoal,
     type: 'quote',
     flatten: true,
@@ -40,7 +40,7 @@ export const {JessieGoal, JessieStringGoal, JessieCommentGoal, JessieDefinitions
 
   // TODO: Add TemplateLiteral
 
-  const JessieCommentGoal = (goals[(symbols.JessieCommentGoalSymbol = Symbol('JessieCommentGoal'))] = {
+  const JessieCommentGoal = (goals[(symbols.JessieCommentGoalSymbol = defineSymbol('JessieCommentGoal'))] = {
     type: 'comment',
     flatten: true,
     fold: true,

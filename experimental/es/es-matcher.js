@@ -62,19 +62,25 @@ DUMMY: async () => {
                         // Keyword always regexp (regardless of ASI)
       return await/*/\*//(regexp)/g.exec(c).map(d);
 
-      (async function* () {
-
+      (function () {
                         // Recursively operative Keywords
-                        yield   yield
                         void    void
                         typeof  typeof
-                        delete  delete
+                        delete  this
+
+        (async function () {
+                        // Recursively operative Keywords
                         await   await
                         ('')
+        });
 
-                        await   new     class {}
+        (function* () {
+                        // Recursively operative Keywords
+                        yield   yield
+                        ('')
+        });
+
                         return  new     class {}
-                        yield   async   function () {}
                         return
                         return
                         return  async   function () {}
