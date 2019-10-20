@@ -417,7 +417,14 @@ export const matcher = (ECMAScript =>
         })}
       )\b(?=[^\s$_:]|\s+[^:]|$)`,
     ),
-  Identifier: ({RegExpFlags = /^[gimsuy]+$/} = {}) =>
+  Identifier: ({
+    RegExpFlags = new RegExp(
+      /\w/g[Symbol.replace](
+        /*regexp*/ `^(?:g|i|m|s|u|y)+$`,
+        /*regexp*/ `$&(?=[^$&]*$)`, // interleaved
+      ),
+    ),
+  } = {}) =>
     TokenMatcher.define(
       entity => TokenMatcher.sequence/* regexp */ `(
         [${ECMAScriptRanges.IdentifierStart}][${ECMAScriptRanges.IdentifierPart}]*
