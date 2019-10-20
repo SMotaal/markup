@@ -182,9 +182,7 @@ export const matcher = (ECMAScript =>
         ${entity((text, entity, match, state) => {
           match.format = 'whitespace';
           TokenMatcher.capture(
-            (state.context.group !== undefined &&
-              state.context.group.closer === '\n' &&
-              TokenMatcher.close(text, state)) ||
+            (state.context.group != null && state.context.group.closer === '\n' && TokenMatcher.close(text, state)) ||
               // NOTE: ‹break› takes precedence over ‹closer›
               'break',
             match,
@@ -322,7 +320,7 @@ export const matcher = (ECMAScript =>
         ${entity((text, entity, match, state) => {
           match.format = 'punctuator';
           TokenMatcher.capture(
-            state.context.goal.punctuators !== undefined && state.context.goal.punctuators[text] === true
+            state.context.goal.punctuators != null && state.context.goal.punctuators[text] === true
               ? (match.punctuator =
                   (state.context.goal.punctuation && state.context.goal.punctuation[text]) || 'combinator')
               : state.context.goal.openers && state.context.goal.openers[text] === true
@@ -429,7 +427,7 @@ export const matcher = (ECMAScript =>
           TokenMatcher.capture(
             (match.flatten = state.context.goal !== ECMAScriptGoal)
               ? state.context.goal.type || 'sequence'
-              : state.lastAtom !== undefined && state.lastAtom.text === '.'
+              : state.lastAtom != null && state.lastAtom.text === '.'
               ? 'identifier'
               : state.context.captureKeyword === undefined
               ? 'keyword'
@@ -448,7 +446,7 @@ export const matcher = (ECMAScript =>
           TokenMatcher.capture(
             state.context.goal !== ECMAScriptGoal
               ? state.context.goal.type || 'sequence'
-              : state.lastToken !== undefined && state.lastToken.punctuator === 'pattern' && RegExpFlags.test(text)
+              : state.lastToken != null && state.lastToken.punctuator === 'pattern' && RegExpFlags.test(text)
               ? ((match.flatten = true), (match.punctuator = ECMAScriptRegExpGoal.type), 'closer')
               : ((match.flatten = true), 'identifier'),
             match,
