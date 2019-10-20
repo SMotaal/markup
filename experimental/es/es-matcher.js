@@ -299,7 +299,12 @@ export const matcher = (ECMAScript =>
             state.context.goal.punctuators != null && state.context.goal.punctuators[text] === true
               ? (match.punctuator =
                   (state.context.goal.punctuation && state.context.goal.punctuation[text]) || 'combinator')
-              : state.context.goal.openers && state.context.goal.openers[text] === true
+              : state.context.goal.openers != null &&
+                state.context.goal.openers[text] === true &&
+                (state.context.goal.spans == null ||
+                  state.context.goal.spans[text] == null ||
+                  ((state.context.goal.spans[text].lastIndex = match.index + text.length),
+                  (match.span = state.context.goal.spans[text].exec(match.input)) && match.span[1] != null))
               ? TokenMatcher.open(text, state) ||
                 ((match.punctuator =
                   (state.context.goal.punctuation && state.context.goal.punctuation[text]) || state.context.goal.type),
@@ -320,11 +325,8 @@ export const matcher = (ECMAScript =>
           TokenMatcher.capture(
             state.context.goal.punctuators && state.context.goal.punctuators[text] === true
               ? (match.punctuator = 'combinator')
-              : // : state.context.goal.closers &&
-              //   state.context.goal.closers[text] === true &&
-              //   (state.context.goal !== ECMAScriptRegExpGoal ||
-              //     (state.context.group.opener !== '[' || text === state.context.group.closer))
-              state.context.goal.closers && state.context.goal.closers[text] === true
+              : state.context.group.closer === text ||
+                (state.context.goal.closers && state.context.goal.closers[text] === true)
               ? TokenMatcher.close(text, state) ||
                 ((match.punctuator =
                   (state.context.goal.punctuation && state.context.goal.punctuation[text]) || state.context.goal.type),
@@ -353,7 +355,9 @@ export const matcher = (ECMAScript =>
               : state.context.goal !== ECMAScriptGoal
               ? state.context.goal.type || 'sequence'
               : state.lastAtom === undefined ||
-                (state.lastAtom.type === 'operator' || state.lastAtom.type === 'delimiter'
+                state.lastAtom.type === 'delimiter' ||
+                state.lastAtom.type === 'breaker' ||
+                (state.lastAtom.type === 'operator'
                   ? state.lastAtom.text !== '++' && state.lastAtom.text !== '--'
                   : state.lastAtom.type === 'closer'
                   ? state.lastAtom.text === '}'

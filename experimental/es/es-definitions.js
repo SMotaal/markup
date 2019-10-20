@@ -79,7 +79,7 @@ export const {
     flatten: undefined,
     fold: undefined,
     openers: ['(', '{', '['],
-    closers: [')', '}'],
+    closers: [],
     opener: '/',
     closer: '/',
     punctuators: ['+', '*', '?', '|', '^', '.', '?=', '?:', '?!'],
@@ -90,6 +90,10 @@ export const {
       ')': 'combinator',
       '{': 'combinator',
       '}': 'combinator',
+    },
+    // TODO: Figure out how to not trip on /{/
+    spans: {
+      '{': /(\s*\d+\s*,\s*\d+\s*}|\s*\d+\s*,\s*}|\s*\d+\s*}|\s*,\s*\d+\s*})|(?=.|$)/g,
     },
   });
 
