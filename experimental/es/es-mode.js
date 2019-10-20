@@ -57,6 +57,7 @@ export const mode = createMatcherMode(matcher, {
           case 'identifier':
             context.currentConstruct.add(`‹${type}›`);
             break;
+          case 'combinator': // ie ‹=>›
           case 'delimiter':
           case 'breaker':
           case 'operator':
