@@ -132,7 +132,6 @@ export const matcher = (ECMAScript =>
         entity(ECMAScript.Escape()),
         entity(ECMAScript.Comment()),
         entity(ECMAScript.StringLiteral()),
-        entity(ECMAScript.TemplateLiteral()),
         entity(ECMAScript.Opener()),
         entity(ECMAScript.Closer()),
         entity(ECMAScript.Solidus()),
@@ -265,49 +264,26 @@ export const matcher = (ECMAScript =>
         })}
       )`,
     ),
-  StringLiteral: ({
-    SingleQuoteLookAhead = /(?:[^'\\\n]+?(?=\\.|')|\\.)*?(?:'|$)/g,
-    DoubleQuoteLookAhead = /(?:[^"\\\n]+?(?=\\.|")|\\.)*?(?:"|$)/g,
-  } = {}) =>
+  StringLiteral: () =>
     TokenMatcher.define(
       entity => TokenMatcher.sequence/* regexp */ `(
-        "|'
+        "|'|${'`'}
         ${entity((text, entity, match, state) => {
           match.format = 'punctuator';
           TokenMatcher.capture(
             state.context.goal === ECMAScriptGoal
               ? TokenMatcher.open(text, state) ||
                   // Safely fast forward to end of string
-                  (TokenMatcher.forward(text === '"' ? DoubleQuoteLookAhead : SingleQuoteLookAhead, match, state, -1),
+                  (state.nextContext.goal.lookAhead != null &&
+                    state.nextContext.goal.lookAhead[text] &&
+                    TokenMatcher.forward(state.nextContext.goal.lookAhead[text], match, state, -1),
                   // (match.flatten = true),
-                  (match.punctuator = ECMAScriptStringGoal.type),
+                  (match.punctuator =
+                    (text === '`' ? ECMAScriptTemplateLiteralGoal.type : ECMAScriptStringGoal.type) || 'quote'),
                   'opener')
-              : state.context.goal !== ECMAScriptStringGoal
-              ? state.context.goal.type || 'sequence'
-              : state.context.group.closer !== text
-              ? ECMAScriptStringGoal.type
-              : TokenMatcher.close(text, state) || ((match.punctuator = ECMAScriptStringGoal.type), 'closer'),
-            match,
-          );
-        })}
-      )`,
-    ),
-  TemplateLiteral: () =>
-    TokenMatcher.define(
-      entity => TokenMatcher.sequence/* regexp */ `(
-        ${'`'}
-        ${entity((text, entity, match, state) => {
-          match.format = 'punctuator';
-          TokenMatcher.capture(
-            state.context.goal === ECMAScriptGoal
-              ? TokenMatcher.open(text, state) ||
-                  // TODO: Explore fast forward in template string parts
-                  ((match.punctuator = ECMAScriptTemplateLiteralGoal.type), 'opener')
-              : state.context.goal !== ECMAScriptTemplateLiteralGoal
-              ? state.context.goal.type || 'sequence'
-              : state.context.group.closer !== text
-              ? ECMAScriptTemplateLiteralGoal.type
-              : TokenMatcher.close(text, state) || ((match.punctuator = ECMAScriptTemplateLiteralGoal.type), 'closer'),
+              : state.context.group.closer === text
+              ? TokenMatcher.close(text, state) || ((match.punctuator = state.context.goal.type || 'quote'), 'closer')
+              : state.context.goal.type || 'quote',
             match,
           );
         })}
@@ -445,7 +421,11 @@ export const matcher = (ECMAScript =>
           match.format = 'identifier';
           TokenMatcher.capture(
             state.context.goal !== ECMAScriptGoal
-              ? state.context.goal.type || 'sequence'
+              ? (([text] = text.split(/\b/, 2)),
+                (state.nextOffset = match.index + text.length),
+                (match[0] = text),
+                // identity
+                state.context.goal.type || 'sequence')
               : state.lastToken != null && state.lastToken.punctuator === 'pattern' && RegExpFlags.test(text)
               ? ((match.flatten = true), (match.punctuator = ECMAScriptRegExpGoal.type), 'closer')
               : ((match.flatten = true), 'identifier'),

@@ -123,6 +123,10 @@ export const {
     type: 'quote',
     flatten: true,
     fold: true,
+    lookAhead: {
+      "'": /(?:[^'\\\n]+?(?=\\.|')|\\.)*?(?:'|$)/g,
+      '"': /(?:[^"\\\n]+?(?=\\.|")|\\.)*?(?:"|$)/g,
+    },
   });
 
   const ECMAScriptTemplateLiteralGoal = (goals[
@@ -136,6 +140,9 @@ export const {
     closer: '`',
     punctuation: {
       '${': 'opener',
+    },
+    lookAhead: {
+      '`': /(?:[^\\`$]+?(?=\\.|`|\${)|\\.)*?(?:`|$|\$(?={))/g,
     },
   });
 
@@ -299,6 +306,7 @@ export const {
           closer: "'",
           goal: symbols.ECMAScriptStringGoalSymbol,
           parentGoal: symbols.ECMAScriptGoalSymbol,
+          lookAhead: /(?:[^'\\\n]+?(?=\\.|')|\\.)*?(?:'|$)/g,
           description: '‹string›',
         },
         ['"']: {
@@ -306,6 +314,7 @@ export const {
           closer: '"',
           goal: symbols.ECMAScriptStringGoalSymbol,
           parentGoal: symbols.ECMAScriptGoalSymbol,
+          lookAhead: /(?:[^"\\\n]+?(?=\\.|")|\\.)*?(?:"|$)/g,
           description: '‹string›',
         },
         ['`']: {
@@ -313,6 +322,7 @@ export const {
           closer: '`',
           goal: symbols.ECMAScriptTemplateLiteralGoalSymbol,
           parentGoal: symbols.ECMAScriptGoalSymbol,
+          lookAhead: /(?:[^\\`$]+?(?=\\.|`|\$\{)|\\.)*?(?:`|$|\$(?=\{))/g,
           description: '‹template›',
         },
         ['${']: {
