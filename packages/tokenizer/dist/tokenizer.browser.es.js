@@ -2203,6 +2203,7 @@ const {
     flatten: undefined,
     fold: undefined,
     openers: ['{', '(', '[', "'", '"', '`', '/', '/*', '//'],
+    // TODO: Properly fault on invalid closer
     closers: ['}', ')', ']'],
     /** @type {ECMAScript.Keywords} */
     // @ts-ignore
@@ -2223,7 +2224,7 @@ const {
     }),
 
     punctuation: {
-      '=>': 'delimiter',
+      '=>': 'combinator',
       '?': 'delimiter',
       ':': 'delimiter',
       ',': 'delimiter',
@@ -2923,6 +2924,7 @@ const mode = createMatcherMode(matcher, {
           case 'identifier':
             context.currentConstruct.add(`‹${type}›`);
             break;
+          case 'combinator': // ie ‹=>›
           case 'delimiter':
           case 'breaker':
           case 'operator':

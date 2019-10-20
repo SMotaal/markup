@@ -38,6 +38,7 @@ export const {
     flatten: undefined,
     fold: undefined,
     openers: ['{', '(', '[', "'", '"', '`', '/', '/*', '//'],
+    // TODO: Properly fault on invalid closer
     closers: ['}', ')', ']'],
     /** @type {ECMAScript.Keywords} */
     // @ts-ignore
@@ -58,7 +59,7 @@ export const {
     }),
 
     punctuation: {
-      '=>': 'delimiter',
+      '=>': 'combinator',
       '?': 'delimiter',
       ':': 'delimiter',
       ',': 'delimiter',
