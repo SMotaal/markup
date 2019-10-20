@@ -126,9 +126,8 @@ export default (markup, overrides) => {
       const {'rerender-button': renderButton, 'contrast-button': contrastButton} = header.elements;
       renderButton && (renderButton.onclick = rerender);
       if (contrastButton) {
-        contrastButton.onmousedown = darkMode.toggler.onmousedown;
-        contrastButton.onmouseup = darkMode.toggler.onmouseup;
-        darkMode.toggler.hide();
+        contrastButton.onpointerdown = darkMode.onPointerDown;
+        contrastButton.onpointerup = darkMode.onPointerUp;
       }
     }
 
