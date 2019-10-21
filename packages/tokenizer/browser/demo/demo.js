@@ -9,6 +9,7 @@ const Examples = ({
 } = {}) => ({
   ['html']: {url: HTML, mode: 'html'},
   ['es']: {url: ES, mode: 'es'},
+  ['js']: {url: ES, mode: 'js'},
   ['css']: {url: CSS, mode: 'css'},
   ['esm']: {url: ES, mode: 'esm'},
   ['cjs']: {url: ES, mode: 'cjs'},
