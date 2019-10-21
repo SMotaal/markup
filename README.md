@@ -50,7 +50,7 @@ Hashes are options, but if a source is specified, it needs to go before any othe
 
 **Entrypoints**
 
-A number of playground entrypoints are hosted directly from the repository and are available through.
+A number of playground entrypoints are hosted directly from the repository:
 
 - https://smotaal.io/markup/markup.html
 - https://smotaal.io/markup/experimental/
