@@ -1,0 +1,199 @@
+﻿<!DOCTYPE html>
+<html>
+  <!-- Tags without attributes -->
+  <head>
+    <!-- Open/Close tags without attributes -->
+    <title>SMotaal's Tokenizer Samples</title>
+    <!-- Self-closing tags with one attribute -->
+    <meta charset="utf-8" />
+    <base href="." />
+    <!-- Self-closing tags with multiple attributes -->
+    <link rel="stylesheet" href="styles.css" />
+    <!-- Wrapped self-closing tags with multiple attributes -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=0, viewport-fit=cover"
+    />
+  </head>
+
+  <body>
+    <!-- Template Element with valid HTML "content" -->
+    <template>
+      <!-- Style Element with valid CSS "content" -->
+      <style>
+        @import url('./styles.css');
+
+        :root {
+          /* Neutrals */
+          --markup-neutral-light: #aaa;
+          --markup-neutral: #999;
+          --markup-neutral-fade: #9993;
+          --markup-neutral-dark: #666;
+        }
+
+        /* TODO: Add support for @media (prefers-dark-mode) when it lands */
+        .dark-mode,
+        :host(.dark-mode) {
+          /* Dark Theme */
+          --markup-background: var(--markup-dark-background, var(--markup-light-background));
+        }
+
+        .markup {
+          color: var(--color, var(--markup-color, var(--markup-light-text, currentColor)));
+        }
+      </style>
+      <pre id="source-code" class="markup-container">
+      <!-- Script Element with "src" and no "content" -->
+      <!-- <script src="./ui.js"></script> -->
+    </pre>
+      <!-- Script Element type "module" with valid JavaScript "content" -->
+      <script type="module">
+        import Default from 'data:text/javascript,export default "default";';
+        import * as Namespace from 'data:text/javascript,export default "default";';
+
+        Declarations: {
+          var identifier, property, any, x, y;
+          var {raw: tag} = String;
+          const constant = any;
+          let variable = any;
+
+          function ƒ(a = 1, ...rest) {
+            return (arguments || ƒ.arguments).length ? [a, ...rest] : [];
+          }
+
+          async function ƒ(a = 1, ...rest) {
+            return (await arguments.length) ? [a, ...rest] : [];
+          }
+
+          function* generator(a = 1, ...rest) {
+            yield yield* [];
+          }
+
+          async function* generator(a = 1, ...rest) {
+            yield yield* await [];
+          }
+
+          class Class extends Object {
+            constructor() {
+              super();
+            }
+            method() {}
+            static method() {}
+            async method() {}
+            async *['method']() {}
+            get [property]() {}
+            set [property](value) {
+              return (this.key = super[property] = this[0] = this[symbol]);
+            }
+          }
+        }
+
+        Operators: {
+          Unary: {
+            delete any.property;
+            delete any[identifier];
+            void any;
+            typeof any;
+            +any, -any, ~any, !any;
+            async () => await any;
+          }
+
+          Assignment: {
+            x = y = ((x += 0), (y -= 0), (x *= 0), (y /= -0), (x %= 0), (y **= 0)) || -0;
+          }
+
+          Comparison: {
+            x > y || (y < x && x >= y) || y <= x;
+            any && any instanceof Object && identifier && identifier in any;
+          }
+
+          Conditional: {
+            x / y || any ? x / 1 : y / 2;
+          }
+
+          Bitwise: {
+            AND: x &= y & x;
+            XOR: x ^= y ^ x;
+            OR: x |= y | x;
+            Shift: {
+              Left: x <<= y << x;
+              Right: x >>= y >> x;
+              Right: Unsigned: x >>>= y >>> x;
+            }
+          }
+        }
+
+        Expressions: {
+          Functions: [
+            function(a = 1, ...rest) {},
+            async function ƒ(a = 1, ...rest) {},
+            (...values) => void any,
+            async (...values) => void any,
+            (...values) => {},
+            async (...values) => {},
+            function*(a = 1, ...rest) {},
+            async function*(a = 1, ...rest) {},
+            class extends Object {},
+          ];
+
+          Constants: {
+            null, undefined, false, true;
+          }
+
+          Numerals: {
+            0, -0, 1, -1, +1.1, 0.1, 0.1e3;
+            0b01, 0x0123456789abcdef;
+            NaN, Infinity, -Infinity;
+          }
+
+          Strings: {
+            // prettier-ignore
+            '\' \" \`',  "\' \" \`", `\' \" \``, tag`\' \" \``;
+
+            '\x00 \u1234 \0 \u0000 \x00 \n\
+                  ...',
+              `\x00 \u1234 \0 \u0000 \x00 \n
+                  ...`,
+              tag`\${} \u{000A} \u1234 ${`${identifier}`.trim()} \n
+                  ...`;
+          }
+
+          Patterns: {
+            /./;
+            /./gisuy;
+            /./.test('');
+            /./gisuy.test('');
+            /./[Symbol.match]('');
+            /./gisuy[Symbol.match]('');
+            /^\.(?=(?:\/|[/\\\]\])()]|([\w\s\t]+).*?))$/;
+            /^\.(?=(?:\/|[/\\\]\])()]|([\w\s\t]+).*?))$/.test('');
+            /^\.(?=(?:\/|[/\\\]\])()]|([\w\s\t]+).*?))$/[Symbol.match]('');
+            /^\.(?=(?:([\x00\u1234])|.*?))$/u;
+            /^\.(?=(?:([\x00\u1234])|.*?))$/u.test('');
+            /^\.(?=(?:([\x00\u1234])|.*?))$/u[Symbol.match]('');
+          }
+
+          Objects: {
+            ({
+              ...{key: any, 0: any, '0': any, [0]: any, _: any, property},
+              // prettier-ignore
+              ...{ \u005F: any, '-': any, ['-']: any, [Symbol('')]: any },
+              ...{...{...{}, ...[]}},
+              ...{
+                method() {},
+                async method() {},
+                async *['method']() {},
+                get [property]() {},
+                set [property](any) {},
+              },
+            });
+          }
+
+          Arrays: {
+            [0, ...[...[[...']']][0][-1]], ...[1]];
+          }
+        }
+      </script>
+    </template>
+  </body>
+</html>
