@@ -357,6 +357,7 @@ export const matcher = (ECMAScript =>
               : state.lastAtom === undefined ||
                 state.lastAtom.type === 'delimiter' ||
                 state.lastAtom.type === 'breaker' ||
+                state.lastAtom.text === '=>' ||
                 (state.lastAtom.type === 'operator'
                   ? state.lastAtom.text !== '++' && state.lastAtom.text !== '--'
                   : state.lastAtom.type === 'closer'
