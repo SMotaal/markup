@@ -1098,8 +1098,8 @@ const createToken = (match, state) => {
 
       goal: currentGoal,
       group: contextGroup,
-      // state,
-      // context: tokenContext,
+      state,
+      context: tokenContext,
     };
   }
   /* Context */
@@ -1989,6 +1989,7 @@ const matcher = (ECMAScript =>
               : state.lastAtom === undefined ||
                 state.lastAtom.type === 'delimiter' ||
                 state.lastAtom.type === 'breaker' ||
+                state.lastAtom.text === '=>' ||
                 (state.lastAtom.type === 'operator'
                   ? state.lastAtom.text !== '++' && state.lastAtom.text !== '--'
                   : state.lastAtom.type === 'closer'
