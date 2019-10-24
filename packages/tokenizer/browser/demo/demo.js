@@ -1,4 +1,4 @@
-import {Resolvers, Hash, resolveURL as RELATIVE, rewrite, frame, timeout} from './helpers.js';
+﻿import {Resolvers, Hash, resolveURL as RELATIVE, rewrite, frame, timeout} from './helpers.js';
 import {darkMode} from '/browser/dark-mode.js';
 
 const Examples = ({
@@ -16,6 +16,7 @@ const Examples = ({
   ['md']: {url: MD, mode: 'md'},
   ['json']: {url: LOCAL('./examples/samples/sample.json')},
   ['complex']: {url: LOCAL('./examples/samples/complex.html')},
+  ['complex.html']: {url: LOCAL('../markup/samples/complex.html')},
   ['gfm']: {url: LOCAL('./examples/samples/gfm.md')},
   ['es-matcher']: {url: RELATIVE('/markup/experimental/es/es-matcher.js', import.meta.url), mode: 'es'},
   ['es-matcher-bundle']: {url: LOCAL('./dist/tokenizer.browser.es.js', import.meta.url), mode: 'es'},
