@@ -36,9 +36,12 @@ Markup is a monorepo which includes a number of experimental parsing-related wor
 
 This browser-based tool is designed to help with the development efforts. It has no dependencies and can be easily deployed on any static server, where the hash (ie fragment) is used to indicate the source to be tokenized and other options.
 
-Each entrypoint can customize mappings for aliases and modes. Aliases map unique names to a particular source URL and an optional mode. Modes map one or more unique names to a particular tokenizer.
+Each entrypoint can customize mappings for aliases (ie _mapped aliases_) and modes (ie _mode mappings_), where:
 
-By default, any playground entrypoint should handle hash-based parameters in a similar manner. However, entrypoints will likely have different mappings for aliases and modes.
+- _Mapped Aliases_ associate unique resource identifiers to particular URLs along with an optional explicit mode.
+- _Mode Mappings_ associate short and long mode identifiers to particular tokenizer configurations.
+
+By default, any playground entrypoint should handle hash-based parameters in a similar manner. However, entrypoints will likely use tailor aspects like mappings and fallbacks to their task.
 
 ```
 ‹entrypoint›#‹specifier›!‹mode›*‹iterations›**‹repeats›
@@ -46,9 +49,28 @@ By default, any playground entrypoint should handle hash-based parameters in a s
 
 <details><summary align=center>Details</summary>
 
-Hashes are options, but if a source is specified, it needs to go before any other parameters. But keep in mind that the fallback for the omitted parameters can be customized for each entrypoint and so they may behave differently unless explicit. The order for all other parameters aside from the source specifier should not matter.
+**Hash Rules**
 
-**Entrypoints**
+- All hash parameters are optional.
+- When a `‹specifier›` is used, it must always go first.
+- Every hash parameter other than the `‹specifier›` is delimited.
+- All hash parameters except for the `‹specifier›` can be in any order.
+
+**Valid Arrangements**
+
+- `#‹specifier›!‹mode›*‹iterations›**‹repeats›`
+- `#‹specifier›*‹iterations›!‹mode›**‹repeats›`
+- `#‹specifier›*‹iterations›**‹repeats›!‹mode›`
+- `#‹specifier›**‹repeats›!‹mode›*‹iterations›`
+- `#‹specifier›!‹mode›**‹repeats›*‹iterations›`
+
+**Things to Keep in Mind**
+
+- Default fallbacks for omitted parameters are configured by `‹entrypoint›` to tailor it to their task.
+- Playgrounds can also affect the outcomes of explicit parameters for their respective `‹entrypoint›` based on their task.
+- It is recommended to avoid "pilling" of a parameter as that may lead to unintended outcomes.
+
+**Live Entrypoints**
 
 A number of playground entrypoints are hosted directly from the repository:
 
@@ -59,7 +81,7 @@ A number of playground entrypoints are hosted directly from the repository:
 
 **Specifiers & Modes**
 
-Aside from mapped aliases, convenience prefixes are also incorporated for `unpkg:` and `cdnjs:` by default, which may be further customized by entrypoints. Those prefixes are first delegated to respective resolvers to determine the URL of the fetched source.
+Aside from _mapped aliases_ (above), specifiers can also use _convenience prefixes_ are also incorporated for `unpkg:` and `cdnjs:` by default, which may be further customized by entrypoints. Those prefixes are first delegated to respective resolvers to determine the URL of the fetched source.
 
 If an explicit mode parameter is passed, it will take first precedence, otherwise, the mode is determined from the alias or the `content-type` header of the fetched source. Each playground can override some of this behavior.
 
@@ -69,9 +91,10 @@ By default, each source will have a warmup parse, followed by a timed headless p
 
 Additional iterations can be specified to improve sampling accuracy for the average headless time. Additional repeats can be specified to sequentially render the same source multiple times.
 
-**Additional Notes**
+**Future Work**
 
-Efforts are on way to incorporate documentation into playgrounds.
+- [ ] Incorporate documentation into playgrounds
+- [ ] Refactor and deploy as a package
 
 </details>
 
