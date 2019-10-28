@@ -38,8 +38,8 @@ This browser-based tool is designed to help with the development efforts. It has
 
 Each entrypoint can customize mappings for aliases (ie _mapped aliases_) and modes (ie _mode mappings_), where:
 
-- _Mapped Aliases_ associate unique resource identifiers to particular URLs along with an optional explicit mode.
-- _Mode Mappings_ associate short and long mode identifiers to particular tokenizer configurations.
+- _Mapped Aliases_ associate shorthand identifier strings to particular URLs along with an optional explicit mode.
+- _Mode Mappings_ associate short and long mode identifier strings to particular tokenizer configurations.
 
 By default, any playground entrypoint should handle hash-based parameters in a similar manner. However, entrypoints will likely use tailor aspects like mappings and fallbacks to their task.
 
