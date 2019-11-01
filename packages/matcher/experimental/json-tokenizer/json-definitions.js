@@ -17,8 +17,8 @@ export const {JSONGoal, JSONStringGoal, JSONObjectGoal, JSONArrayGoal, JSONDefin
     type: undefined,
     flatten: undefined,
     fold: undefined,
-    keywords: Keywords({[identities.Keyword]: ['true', 'false', 'null']}),
     openers: ['{', '[', '"'],
+    keywords: Keywords({[identities.Keyword]: ['true', 'false', 'null']}),
   });
 
   const JSONObjectGoal = (goals[(symbols.JSONObjectGoal = defineSymbol('JSONObjectGoal'))] = {
@@ -30,19 +30,17 @@ export const {JSONGoal, JSONStringGoal, JSONObjectGoal, JSONArrayGoal, JSONDefin
   const JSONArrayGoal = (goals[(symbols.JSONArrayGoal = defineSymbol('JSONArrayGoal'))] = {
     ...JSONGoal,
     closers: [']'],
-
     punctuators: [','],
   });
 
   const JSONStringGoal = (goals[(symbols.JSONStringGoal = defineSymbol('JSONStringGoal'))] = {
-    ...JSONGoal,
     type: 'quote',
     flatten: true,
     fold: true,
     keywords: [],
     openers: [],
     closers: ['"'],
-    punctuators: ['\\', '\\b', '\\b', '\\n', '\\r', '\\t', '\\u', '\\"'],
+    punctuators: ['\\"', '\\\\', '\\/', '\\b', '\\n', '\\r', '\\t', '\\u'],
   });
 
   return {
