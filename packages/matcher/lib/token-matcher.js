@@ -280,11 +280,13 @@ export const TokenMatcher = (() => {
       search.lastIndex = match.index + match[0].length;
       const matched = search.exec(match.input);
       // console.log(...matched, {matched});
-      if (matched[1]) {
+      if (!matched || matched[1] !== undefined) {
+        if (delta === false) return false;
         state.nextOffset = search.lastIndex;
         state.nextFault = true;
         return 'fault';
       } else {
+        if (delta === false) return true;
         state.nextOffset = search.lastIndex + (0 + delta || 0);
       }
     } else {

@@ -34,6 +34,8 @@ export interface Groups extends Array<Group> {
   closers?: string[];
 }
 
+export interface SpanRegExp extends RegExp {
+}
 export interface Goal {
   name: string;
   type: string;
@@ -47,6 +49,7 @@ export interface Goal {
   groups: Group[];
   initializeContext: (context: Context) => void;
   tokens?: {[symbol: symbol]: MutableState & {symbol: symbol; text: string; type: string; goal: Goal}};
+  spans?: null | {[name: string]: SpanRegExp};
 }
 
 export interface Context extends ContextStats, Partial<MutableState> {

@@ -244,10 +244,11 @@ export const matcher = (ECMAScript =>
           TokenMatcher.capture(
             state.context.goal.openers && state.context.goal.openers[text]
               ? TokenMatcher.open(text, state) ||
-                  (state.context.goal === ECMAScriptGoal &&
-                    // Safely fast forward to end of expression
-                    (TokenMatcher.forward(state.context.goal.groups[text].closer, match, state) ||
-                      (match[match.format] = ECMAScriptCommentGoal.type)),
+                  (state.nextContext.goal.spans != null &&
+                    state.nextContext.goal.spans[text] &&
+                    (TokenMatcher.forward(state.nextContext.goal.spans[text], match, state),
+                    (match[match.format] = state.nextContext.goal.type || 'comment')),
+                  // (match.flatten = true),
                   'opener')
               : state.context.group && state.context.group.closer === text
               ? TokenMatcher.close(text, state) ||
@@ -274,12 +275,11 @@ export const matcher = (ECMAScript =>
             state.context.goal === ECMAScriptGoal
               ? TokenMatcher.open(text, state) ||
                   // Safely fast forward to end of string
-                  (state.nextContext.goal.lookAhead != null &&
-                    state.nextContext.goal.lookAhead[text] &&
-                    TokenMatcher.forward(state.nextContext.goal.lookAhead[text], match, state, -1),
+                  (state.nextContext.goal.spans != null &&
+                    state.nextContext.goal.spans[text] &&
+                    TokenMatcher.forward(state.nextContext.goal.spans[text], match, state),
+                  (match.punctuator = state.nextContext.goal || 'quote'),
                   // (match.flatten = true),
-                  (match.punctuator =
-                    (text === '`' ? ECMAScriptTemplateLiteralGoal.type : ECMAScriptStringGoal.type) || 'quote'),
                   'opener')
               : state.context.group.closer === text
               ? TokenMatcher.close(text, state) || ((match.punctuator = state.context.goal.type || 'quote'), 'closer')
@@ -303,13 +303,14 @@ export const matcher = (ECMAScript =>
                 state.context.goal.openers[text] === true &&
                 (state.context.goal.spans == null ||
                   state.context.goal.spans[text] == null ||
-                  ((state.context.goal.spans[text].lastIndex = match.index + text.length),
-                  (match.span = state.context.goal.spans[text].exec(match.input)) && match.span[1] != null))
+                  // Check if conditional span faults
+                  TokenMatcher.forward(state.context.goal.spans[text], match, state, false))
               ? TokenMatcher.open(text, state) ||
                 ((match.punctuator =
                   (state.context.goal.punctuation && state.context.goal.punctuation[text]) || state.context.goal.type),
                 'opener')
-              : (text.length === 1 || ((state.nextOffset = match.index + 1), (text = match[0] = text[0])),
+              : // If it is passive sequence we keep only on character
+                (text.length === 1 || ((state.nextOffset = match.index + 1), (text = match[0] = text[0])),
                 state.context.goal.type || 'sequence'),
             match,
           );

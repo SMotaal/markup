@@ -73,6 +73,12 @@ export const {
     type: 'comment',
     flatten: true,
     fold: true,
+    spans: {
+      // This faults when match[1] === ''
+      '//': /.*?(?=\n|($))/g,
+      // This faults when match[1] === ''
+      '/*': /[^]*?(?=\*\/|($))/g,
+    },
   });
 
   const ECMAScriptRegExpGoal = (goals[(symbols.ECMAScriptRegExpGoalSymbol = defineSymbol('ECMAScriptRegExpGoal'))] = {
@@ -92,9 +98,9 @@ export const {
       '{': 'combinator',
       '}': 'combinator',
     },
-    // TODO: Figure out how to not trip on /{/
     spans: {
-      '{': /(\s*\d+\s*,\s*\d+\s*}|\s*\d+\s*,\s*}|\s*\d+\s*}|\s*,\s*\d+\s*})|(?=.|$)/g,
+      // This faults when match[1] === ''
+      '{': /\s*(?:\d+\s*,\s*\d+|\d+\s*,|\d+|,\s*\d+)\s*}|()/g,
     },
   });
 
@@ -128,9 +134,11 @@ export const {
     type: 'quote',
     flatten: true,
     fold: true,
-    lookAhead: {
-      "'": /(?:[^'\\\n]+?(?=\\.|')|\\.)*?(?:'|$)/g,
-      '"': /(?:[^"\\\n]+?(?=\\.|")|\\.)*?(?:"|$)/g,
+    spans: {
+      // This faults when match[1] === '\n' or ''
+      "'": /(?:[^'\\\n]+?(?=\\[^]|')|\\[^])*?(?='|($|\n))/g,
+      // This faults when match[1] === '\n' or ''
+      '"': /(?:[^"\\\n]+?(?=\\[^]|")|\\[^])*?(?="|($|\n))/g,
     },
   });
 
@@ -146,8 +154,10 @@ export const {
     punctuation: {
       '${': 'opener',
     },
-    lookAhead: {
-      '`': /(?:[^\\`$]+?(?=\\.|`|\${)|\\.)*?(?:`|$|\$(?={))/g,
+    spans: {
+      // '`': /(?:[^\\`$]+?(?=\\.|`|\${)|\\.)*?(?:`|\$(?={|($)))/g,
+      // This faults when match[1] === ''
+      '`': /(?:[^\\`$]+?(?=\\.|`|\$\{)|\\.)*?(?=`|\$\{|($))/g,
     },
   });
 
@@ -319,7 +329,6 @@ export const {
           closer: '"',
           goal: symbols.ECMAScriptStringGoalSymbol,
           parentGoal: symbols.ECMAScriptGoalSymbol,
-          lookAhead: /(?:[^"\\\n]+?(?=\\.|")|\\.)*?(?:"|$)/g,
           description: '‹string›',
         },
         ['`']: {
@@ -327,7 +336,6 @@ export const {
           closer: '`',
           goal: symbols.ECMAScriptTemplateLiteralGoalSymbol,
           parentGoal: symbols.ECMAScriptGoalSymbol,
-          lookAhead: /(?:[^\\`$]+?(?=\\.|`|\$\{)|\\.)*?(?:`|$|\$(?=\{))/g,
           description: '‹template›',
         },
         ['${']: {
