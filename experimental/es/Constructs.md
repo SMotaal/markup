@@ -59,32 +59,32 @@ In an expression, you do `Expression` things:
 <!--prettier-ignore-start-->
 
 ```js markup-mode=es
-                     ObjectLiteral: (                              {...$$}   );
-                      ArrayLiteral: (                              [...$$]   );
-                     RegExpLiteral: (                              /[{-}]/   );
-           ArrowFunctionExpression: (                 (...$$) => { {{ ; }} } );
-                                    (                 (...$$) =>   (( $ ))   );
-      AsyncArrowFunctionExpression: (           async (...$$) => { {{ ; }} } );
-                                    (           async (...$$) =>   (( $ ))   );
-                FunctionExpression: (        function $$ (...$$) { {{ ; }} } );
-           AsyncFunctionExpression: (  async function $$ (...$$) { {{ ; }} } );
-       GeneratorFunctionExpression: (       function* $$ (...$$) { {{ ; }} } );
-  AsyncGeneratorFunctionExpression: ( async function* $$ (...$$) { {{ ; }} } );
-                   ClassExpression: (                   class $$ {  /***/  } );
-                                    (   class $$ extends (( $ )) {  /***/  } );
-                 SpecialExpression: (                        await (( $ ))   );
-                                    (                       delete (( $ ))   );
-                                    (                     import ( (( $ )) ) );
-                                    (           (( $ )) instanceof (( $ ))   );
-                                    (                          new (( $ ))   );
-                                    (                new (( $ )) ( (( $ )) ) );
-                                    (                       typeof (( $ ))   );
-                                    (                        yield (( $ ))   );
-                                    (                       yield* (( $ ))   );
-                                    (                         void (( $ ))   );
-               ReferenceExpression: ( /* binding ‹keyword› */ this [( $ )]   );
-                                    ( /* or ‹identifier›   */ this  . $      );
-                                    ( /* like...           */ this( (($ )) ) );
+                    ObjectLiteral: (                               {... $}   );
+                     ArrayLiteral: (                               [... $]   );
+                    RegExpLiteral: (                               /[{-}]/   );
+          ArrowFunctionExpression: (                 (... $$) => { {{ ; }} } );
+                                   (                 (... $$) =>   (( $ ))   );
+     AsyncArrowFunctionExpression: (           async (... $$) => { {{ ; }} } );
+                                   (           async (... $$) =>   (( $ ))   );
+               FunctionExpression: (        function $$ (... $$) { {{ ; }} } );
+          AsyncFunctionExpression: (  async function $$ (... $$) { {{ ; }} } );
+      GeneratorFunctionExpression: (       function* $$ (... $$) { {{ ; }} } );
+ AsyncGeneratorFunctionExpression: ( async function* $$ (... $$) { {{ ; }} } );
+                  ClassExpression: (                    class $$ {  /***/  } );
+                                   (    class $$ extends (( $ )) {  /***/  } );
+                SpecialExpression: (                         await (( $ ))   );
+                                   (                        delete (( $ ))   );
+                                   (                      import ( (( $ )) ) );
+                                   (            (( $ )) instanceof (( $ ))   );
+                                   (                           new (( $ ))   );
+                                   (                 new (( $ )) ( (( $ )) ) );
+                                   (                        typeof (( $ ))   );
+                                   (                         yield (( $ ))   );
+                                   (                        yield* (( $ ))   );
+                                   (                          void (( $ ))   );
+              ReferenceExpression: (  /* binding ‹keyword› */ this [( $ )]   );
+                                   (  /* or ‹identifier›   */ this .  $      );
+                                   (  /* like...           */ this (... $)   );
 ```
 
 <!--prettier-ignore-end-->
@@ -127,21 +127,37 @@ In statements, you do `Statements` things:
 
 ```js  markup-mode=es
 
-              FunctionDeclaration: {         function $$$ (...$$) { {{ ; }} } };
-         AsyncFunctionDeclaration: {   async function $$$ (...$$) { {{ ; }} } };
-     GeneratorFunctionDeclaration: {        function* $$$ (...$$) { {{ ; }} } };
-AsyncGeneratorFunctionDeclaration: {  async function* $$$ (...$$) { {{ ; }} } };
+              FunctionDeclaration: {        function $$$ (... $$) { {{ ; }} } };
+         AsyncFunctionDeclaration: {  async function $$$ (... $$) { {{ ; }} } };
+     GeneratorFunctionDeclaration: {       function* $$$ (... $$) { {{ ; }} } };
+AsyncGeneratorFunctionDeclaration: { async function* $$$ (... $$) { {{ ; }} } };
                  ClassDeclaration: {                     class $$ {  /***/  } };
                                    {     class $$ extends (( $ )) {  /***/  } };
               VariableDeclaration: {                      var $$$ = (( $ ))   };
                                    {                  var [{$$$}] = (( $ ))   };
-                ControlStatements: {                    for (/***/) {{ ; }}   };
-                                   {              while ( (( $ )) ) {{ ; }}   };
-                                   {             do {{ ; }} while ( (( $ )) ) };
-                                   {             switch ( (( $ )) ) {/***/}   };
-                                   {    if ( (( $ )) ) {{ ; }} else {{ ; }}   };
-                                   { try … catch ($$) … finally { {{ ; }} } };
-                BindingStatements: {               with ( (( $ )) ) {{ ; }}   };
+                BindingStatements: {             with ( (( $ )) )   {{ ; }}   };
+                ControlStatements: {
+                                                              try { {{ ; }} }
+                                                       catch ($$) { {{ ; }} }
+                                                          finally { {{ ; }} }
+
+                                                   if ( (( $ )) )   {{ ; }}
+                                              else if ( (( $ )) )   {{ ; }}
+                                                             else   {{ ; }}
+
+
+                                                  for (  /***/  )   {{ ; }}
+
+
+                                                while ( (( $ )) )   {{ ; }}
+
+
+                                                              do    {{ ; }}
+                                                            while ( (( $ )) )
+
+
+                                               switch ( (( $ )) ) {  /***/  }
+                                                                              };
 ```
 
 <!--prettier-ignore-end-->
@@ -173,23 +189,23 @@ In a module, you do `Module` things:
 <!--prettier-ignore-start-->
 
 ```js  markup-mode=es
-            ImportDeclaration:                        import 'ModuleSpecifier';
-                                              import $$ from 'ModuleSpecifier';
-                                     import $$, {/***/} from 'ModuleSpecifier';
-                                         import {/***/} from 'ModuleSpecifier';
-            ExportDeclaration:           export {/***/} from 'ModuleSpecifier';
-                                         export * as $$ from 'ModuleSpecifier';
-                                                                export {/***/};
-                                                        export default (( $ ));
-                                                       export var $$ = (( $ ));
-                                                   export var { $$ } = (( $ ));
-                                                       export class $$ {/***/};
-                                       export class $$ extends (( $ )) {/***/};
-                                            export function  $$(...$$) {{ ; }};
-                                            export function  $$(...$$) {{ ; }};
-                                      export async function  $$(...$$) {{ ; }};
-                                            export function* $$(...$$) {{ ; }};
-                                      export async function* $$(...$$) {{ ; }};
+            ImportDeclaration:                               import 'specifier';
+                                                     import $$ from 'specifier';
+                                        import $$, {  /***/  } from 'specifier';
+                                            import {  /***/  } from 'specifier';
+            ExportDeclaration:                               export {  /***/  };
+                                                     export default   (( $ ))  ;
+                                                      export var $$ = (( $ ))  ;
+                                                 export var [{$$$}] = (( $ ))  ;
+                                                    export class $$ {  /***/  };
+                                    export class $$ extends (( $ )) {  /***/  };
+                                         export function  $$(...$$) { {{ ; }} };
+                                         export function  $$(...$$) { {{ ; }} };
+                                   export async function  $$(...$$) { {{ ; }} };
+                                         export function* $$(...$$) { {{ ; }} };
+                                   export async function* $$(...$$) { {{ ; }} };
+                                            export {  /***/  } from 'specifier';
+                                                export * as $$ from 'specifier';
 ```
 
 <!--prettier-ignore-end-->
