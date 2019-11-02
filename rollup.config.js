@@ -8,7 +8,7 @@ console.log({__dirname, 'import.meta.url': import.meta.url});
 const configuration = {
   variants: ['experimental', 'stable'],
 
-  /** @returns {BundleDefinitions} */
+  /** @returns {Record<string, RollupBundleOptions>} */
   createDefinitions(dirname = `${this.dirname || this.defaults.dirname}`) {
     return {
       ['markup']: {
@@ -56,7 +56,7 @@ const configuration = {
       output: {sourcemap: true, preferConst: true},
     }),
   }),
-  bundles: /** @type {Bundle[]} */ (undefined),
+  bundles: /** @type {RollupBundleOptions[]} */ (undefined),
   createConfiguration(options) {
     const stringify = value =>
       typeof value === symbol ? `‹symbol›` : value == null ? `${value}` : JSON.stringify(value);
@@ -183,10 +183,9 @@ const configuration = {
 
 export default configuration.create();
 
-/** @typedef {import('rollup').RollupDirOptions|import('rollup').RollupFileOptions} Bundle */
-/** @typedef {{[name: string]: Bundle}} BundleDefinitions */
+/** @typedef {import('rollup').RollupDirOptions|import('rollup').RollupFileOptions} RollupBundleOptions */
 /** @typedef {Partial<(typeof configuration)['defaults']>} Options */
-/** @typedef {typeof configuration & {options: Options, definitions: BundleDefinitions}} Configuration */
+/** @typedef {typeof configuration & {options: Options, definitions: Record<string, RollupBundleOptions>}} Configuration */
 
 // {
 //   transform(code, id) {
