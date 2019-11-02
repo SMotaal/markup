@@ -277,7 +277,7 @@ export const matcher = (ECMAScript =>
                   // Safely fast forward to end of string
                   (state.nextContext.goal.spans != null &&
                     state.nextContext.goal.spans[text] &&
-                    TokenMatcher.forward(state.nextContext.goal.spans[text], match, state),
+                    TokenMatcher.forward(state.nextContext.goal.spans[text], match, state, -1),
                   (match.punctuator =
                     (state.nextContext.goal.punctuation && state.nextContext.goal.punctuation[text]) ||
                     state.nextContext.goal.type ||
