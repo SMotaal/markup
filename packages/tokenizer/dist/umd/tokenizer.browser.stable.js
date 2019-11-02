@@ -2,7 +2,7 @@
   typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
   typeof define === 'function' && define.amd ? define(['exports'], factory) :
   (global = global || self, factory(global.markup = {}));
-}(this, function (exports) { 'use strict';
+}(this, (function (exports) { 'use strict';
 
   const {encodeEntity, encodeEntities} = (() => {
     const encodeEntity = entity => `&#${entity.charCodeAt(0)};`;
@@ -1229,8 +1229,8 @@
     },
   );
 
-  Definitions: {
-    Defaults: {
+   {
+     {
       markdown.DEFAULTS = {syntax: 'markdown', aliases: ['md'], requires: ['html']};
     }
 
@@ -1315,8 +1315,8 @@
     },
   );
 
-  Definitions: {
-    Defaults: {
+   {
+     {
       javascript.DEFAULTS = {syntax: 'javascript', aliases: ['js', 'es', 'ecmascript']};
       // javascript.DEFAULTS = {syntax: 'javascript', aliases: ['js']};
     }
@@ -1366,8 +1366,8 @@
     },
   );
 
-  Definitions: {
-    Defaults: {
+   {
+     {
       typescript.DEFAULTS = {syntax: 'typescript', aliases: ['ts'], requires: [javascript.defaults.syntax]};
     }
     typescript.KEYWORDS = {
@@ -1422,8 +1422,8 @@
     },
   );
 
-  Definitions: {
-    Defaults: {
+   {
+     {
       const requires = [javascript.defaults.syntax];
 
       mjs.DEFAULTS = {syntax: 'mjs', aliases: ['esm'], requires};
@@ -2048,5 +2048,5 @@
 
   Object.defineProperty(exports, '__esModule', { value: true });
 
-}));
+})));
 //# sourceMappingURL=tokenizer.browser.stable.js.map

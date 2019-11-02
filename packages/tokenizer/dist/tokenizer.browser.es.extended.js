@@ -2238,11 +2238,13 @@ const TokenMatcher = (() => {
       search.lastIndex = match.index + match[0].length;
       const matched = search.exec(match.input);
       // console.log(...matched, {matched});
-      if (matched[1]) {
+      if (!matched || matched[1] !== undefined) {
+        if (delta === false) return false;
         state.nextOffset = search.lastIndex;
         state.nextFault = true;
         return 'fault';
       } else {
+        if (delta === false) return true;
         state.nextOffset = search.lastIndex + (0 + delta || 0);
       }
     } else {
@@ -3045,6 +3047,12 @@ const {
     type: 'comment',
     flatten: true,
     fold: true,
+    spans: {
+      // This faults when match[1] === ''
+      '//': /.*?(?=\n|($))/g,
+      // This faults when match[1] === ''
+      '/*': /[^]*?(?=\*\/|($))/g,
+    },
   });
 
   const ECMAScriptRegExpGoal = (goals[(symbols.ECMAScriptRegExpGoalSymbol = defineSymbol('ECMAScriptRegExpGoal'))] = {
@@ -3064,9 +3072,9 @@ const {
       '{': 'combinator',
       '}': 'combinator',
     },
-    // TODO: Figure out how to not trip on /{/
     spans: {
-      '{': /(\s*\d+\s*,\s*\d+\s*}|\s*\d+\s*,\s*}|\s*\d+\s*}|\s*,\s*\d+\s*})|(?=.|$)/g,
+      // This faults when match[1] === ''
+      '{': /\s*(?:\d+\s*,\s*\d+|\d+\s*,|\d+|,\s*\d+)\s*}|()/g,
     },
   });
 
@@ -3100,9 +3108,11 @@ const {
     type: 'quote',
     flatten: true,
     fold: true,
-    lookAhead: {
-      "'": /(?:[^'\\\n]+?(?=\\.|')|\\.)*?(?:'|$)/g,
-      '"': /(?:[^"\\\n]+?(?=\\.|")|\\.)*?(?:"|$)/g,
+    spans: {
+      // This faults when match[1] === '\n' or ''
+      "'": /(?:[^'\\\n]+?(?=\\[^]|')|\\[^])*?(?='|($|\n))/g,
+      // This faults when match[1] === '\n' or ''
+      '"': /(?:[^"\\\n]+?(?=\\[^]|")|\\[^])*?(?="|($|\n))/g,
     },
   });
 
@@ -3118,8 +3128,10 @@ const {
     punctuation: {
       '${': 'opener',
     },
-    lookAhead: {
-      '`': /(?:[^\\`$]+?(?=\\.|`|\${)|\\.)*?(?:`|$|\$(?={))/g,
+    spans: {
+      // '`': /(?:[^\\`$]+?(?=\\.|`|\${)|\\.)*?(?:`|\$(?={|($)))/g,
+      // This faults when match[1] === ''
+      '`': /(?:[^\\`$]+?(?=\\.|`|\$\{)|\\.)*?(?=`|\$\{|($))/g,
     },
   });
 
@@ -3291,7 +3303,6 @@ const {
           closer: '"',
           goal: symbols.ECMAScriptStringGoalSymbol,
           parentGoal: symbols.ECMAScriptGoalSymbol,
-          lookAhead: /(?:[^"\\\n]+?(?=\\.|")|\\.)*?(?:"|$)/g,
           description: '‹string›',
         },
         ['`']: {
@@ -3299,7 +3310,6 @@ const {
           closer: '`',
           goal: symbols.ECMAScriptTemplateLiteralGoalSymbol,
           parentGoal: symbols.ECMAScriptGoalSymbol,
-          lookAhead: /(?:[^\\`$]+?(?=\\.|`|\$\{)|\\.)*?(?:`|$|\$(?=\{))/g,
           description: '‹template›',
         },
         ['${']: {
@@ -3448,10 +3458,11 @@ const matcher = (ECMAScript =>
           TokenMatcher.capture(
             state.context.goal.openers && state.context.goal.openers[text]
               ? TokenMatcher.open(text, state) ||
-                  (state.context.goal === ECMAScriptGoal &&
-                    // Safely fast forward to end of expression
-                    (TokenMatcher.forward(state.context.goal.groups[text].closer, match, state) ||
-                      (match[match.format] = ECMAScriptCommentGoal.type)),
+                  (state.nextContext.goal.spans != null &&
+                    state.nextContext.goal.spans[text] &&
+                    (TokenMatcher.forward(state.nextContext.goal.spans[text], match, state),
+                    (match[match.format] = state.nextContext.goal.type || 'comment')),
+                  // (match.flatten = true),
                   'opener')
               : state.context.group && state.context.group.closer === text
               ? TokenMatcher.close(text, state) ||
@@ -3478,12 +3489,14 @@ const matcher = (ECMAScript =>
             state.context.goal === ECMAScriptGoal
               ? TokenMatcher.open(text, state) ||
                   // Safely fast forward to end of string
-                  (state.nextContext.goal.lookAhead != null &&
-                    state.nextContext.goal.lookAhead[text] &&
-                    TokenMatcher.forward(state.nextContext.goal.lookAhead[text], match, state, -1),
-                  // (match.flatten = true),
+                  (state.nextContext.goal.spans != null &&
+                    state.nextContext.goal.spans[text] &&
+                    TokenMatcher.forward(state.nextContext.goal.spans[text], match, state),
                   (match.punctuator =
-                    (text === '`' ? ECMAScriptTemplateLiteralGoal.type : ECMAScriptStringGoal.type) || 'quote'),
+                    (state.nextContext.goal.punctuation && state.nextContext.goal.punctuation[text]) ||
+                    state.nextContext.goal.type ||
+                    'quote'),
+                  // (match.flatten = true),
                   'opener')
               : state.context.group.closer === text
               ? TokenMatcher.close(text, state) || ((match.punctuator = state.context.goal.type || 'quote'), 'closer')
@@ -3507,13 +3520,14 @@ const matcher = (ECMAScript =>
                 state.context.goal.openers[text] === true &&
                 (state.context.goal.spans == null ||
                   state.context.goal.spans[text] == null ||
-                  ((state.context.goal.spans[text].lastIndex = match.index + text.length),
-                  (match.span = state.context.goal.spans[text].exec(match.input)) && match.span[1] != null))
+                  // Check if conditional span faults
+                  TokenMatcher.forward(state.context.goal.spans[text], match, state, false))
               ? TokenMatcher.open(text, state) ||
                 ((match.punctuator =
                   (state.context.goal.punctuation && state.context.goal.punctuation[text]) || state.context.goal.type),
                 'opener')
-              : (text.length === 1 || ((state.nextOffset = match.index + 1), (text = match[0] = text[0])),
+              : // If it is passive sequence we keep only on character
+                (text.length === 1 || ((state.nextOffset = match.index + 1), (text = match[0] = text[0])),
                 state.context.goal.type || 'sequence'),
             match,
           );
@@ -3567,7 +3581,12 @@ const matcher = (ECMAScript =>
                   : state.lastAtom.type === 'closer'
                   ? state.lastAtom.text === '}'
                   : state.lastAtom.type === 'opener' || state.lastAtom.type === 'keyword')
-              ? TokenMatcher.open(text, state) || ((match.punctuator = 'pattern'), 'opener')
+              ? TokenMatcher.open(text, state) ||
+                ((match.punctuator =
+                  (state.nextContext.goal.punctuation && state.nextContext.goal.punctuation[text]) ||
+                  state.nextContext.goal.type ||
+                  'pattern'),
+                'opener')
               : (match.punctuator = 'operator'),
             match,
           );
@@ -4034,8 +4053,8 @@ const markdown = Object.defineProperties(
   },
 );
 
-Definitions: {
-  Defaults: {
+ {
+   {
     markdown.DEFAULTS = {syntax: 'markdown', aliases: ['md'], requires: ['html']};
   }
 
@@ -4120,8 +4139,8 @@ const javascript = Object.defineProperties(
   },
 );
 
-Definitions: {
-  Defaults: {
+ {
+   {
     javascript.DEFAULTS = {syntax: 'javascript', aliases: ['js', 'es', 'ecmascript']};
     // javascript.DEFAULTS = {syntax: 'javascript', aliases: ['js']};
   }
@@ -4171,8 +4190,8 @@ const typescript = Object.defineProperties(
   },
 );
 
-Definitions: {
-  Defaults: {
+ {
+   {
     typescript.DEFAULTS = {syntax: 'typescript', aliases: ['ts'], requires: [javascript.defaults.syntax]};
   }
   typescript.KEYWORDS = {
@@ -4227,8 +4246,8 @@ const esx = Object.defineProperties(
   },
 );
 
-Definitions: {
-  Defaults: {
+ {
+   {
     const requires = [javascript.defaults.syntax];
 
     mjs.DEFAULTS = {syntax: 'mjs', aliases: ['esm'], requires};

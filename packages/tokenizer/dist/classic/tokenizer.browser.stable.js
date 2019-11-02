@@ -1226,8 +1226,8 @@ const markup = (function (exports) {
     },
   );
 
-  Definitions: {
-    Defaults: {
+   {
+     {
       markdown.DEFAULTS = {syntax: 'markdown', aliases: ['md'], requires: ['html']};
     }
 
@@ -1312,8 +1312,8 @@ const markup = (function (exports) {
     },
   );
 
-  Definitions: {
-    Defaults: {
+   {
+     {
       javascript.DEFAULTS = {syntax: 'javascript', aliases: ['js', 'es', 'ecmascript']};
       // javascript.DEFAULTS = {syntax: 'javascript', aliases: ['js']};
     }
@@ -1363,8 +1363,8 @@ const markup = (function (exports) {
     },
   );
 
-  Definitions: {
-    Defaults: {
+   {
+     {
       typescript.DEFAULTS = {syntax: 'typescript', aliases: ['ts'], requires: [javascript.defaults.syntax]};
     }
     typescript.KEYWORDS = {
@@ -1419,8 +1419,8 @@ const markup = (function (exports) {
     },
   );
 
-  Definitions: {
-    Defaults: {
+   {
+     {
       const requires = [javascript.defaults.syntax];
 
       mjs.DEFAULTS = {syntax: 'mjs', aliases: ['esm'], requires};

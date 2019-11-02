@@ -1250,8 +1250,8 @@ const markdown = Object.defineProperties(
   },
 );
 
-Definitions: {
-  Defaults: {
+ {
+   {
     markdown.DEFAULTS = {syntax: 'markdown', aliases: ['md'], requires: ['html']};
   }
 
@@ -1336,8 +1336,8 @@ const javascript = Object.defineProperties(
   },
 );
 
-Definitions: {
-  Defaults: {
+ {
+   {
     javascript.DEFAULTS = {syntax: 'javascript', aliases: ['js', 'es', 'ecmascript']};
     // javascript.DEFAULTS = {syntax: 'javascript', aliases: ['js']};
   }
@@ -1387,8 +1387,8 @@ const typescript = Object.defineProperties(
   },
 );
 
-Definitions: {
-  Defaults: {
+ {
+   {
     typescript.DEFAULTS = {syntax: 'typescript', aliases: ['ts'], requires: [javascript.defaults.syntax]};
   }
   typescript.KEYWORDS = {
@@ -1443,8 +1443,8 @@ const esx = Object.defineProperties(
   },
 );
 
-Definitions: {
-  Defaults: {
+ {
+   {
     const requires = [javascript.defaults.syntax];
 
     mjs.DEFAULTS = {syntax: 'mjs', aliases: ['esm'], requires};
