@@ -117,7 +117,7 @@ In an expression, you do `Expression` things:
 
   - Also worth noting is that the contextually-sensitive keyword `super` which is omitted from this presentation and is closer in nature to `this`, ie are contextually bound identifiers relative to where they are used and nothing else.
 
-  - So in that regard, it is fair to also point out that `this[( $ )]` is actually omitting forms like `this(...$)` or `this.$`… etc., which will be addressed later on along with meta-properties that are applicable to `new` and `import`.
+  - So in that regard, it is fair to also point out that there omitted forms along with meta-properties that are applicable to `new` and `import`, to be addressed.
 
 ### `{{…}}` Statements Plane
 
@@ -199,11 +199,11 @@ In a module, you do `Module` things:
                                                  export var [{$$$}] = (( $ ))  ;
                                                     export class $$ {  /***/  };
                                     export class $$ extends (( $ )) {  /***/  };
-                                         export function  $$(...$$) { {{ ; }} };
-                                         export function  $$(...$$) { {{ ; }} };
-                                   export async function  $$(...$$) { {{ ; }} };
-                                         export function* $$(...$$) { {{ ; }} };
-                                   export async function* $$(...$$) { {{ ; }} };
+                                        export function  $$(... $$) { {{ ; }} };
+                                        export function  $$(... $$) { {{ ; }} };
+                                  export async function  $$(... $$) { {{ ; }} };
+                                        export function* $$(... $$) { {{ ; }} };
+                                  export async function* $$(... $$) { {{ ; }} };
                                             export {  /***/  } from 'specifier';
                                                 export * as $$ from 'specifier';
 ```
