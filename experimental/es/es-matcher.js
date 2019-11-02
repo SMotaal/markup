@@ -278,7 +278,10 @@ export const matcher = (ECMAScript =>
                   (state.nextContext.goal.spans != null &&
                     state.nextContext.goal.spans[text] &&
                     TokenMatcher.forward(state.nextContext.goal.spans[text], match, state),
-                  (match.punctuator = state.nextContext.goal || 'quote'),
+                  (match.punctuator =
+                    (state.nextContext.goal.punctuation && state.nextContext.goal.punctuation[text]) ||
+                    state.nextContext.goal.type ||
+                    'quote'),
                   // (match.flatten = true),
                   'opener')
               : state.context.group.closer === text
@@ -364,7 +367,12 @@ export const matcher = (ECMAScript =>
                   : state.lastAtom.type === 'closer'
                   ? state.lastAtom.text === '}'
                   : state.lastAtom.type === 'opener' || state.lastAtom.type === 'keyword')
-              ? TokenMatcher.open(text, state) || ((match.punctuator = 'pattern'), 'opener')
+              ? TokenMatcher.open(text, state) ||
+                ((match.punctuator =
+                  (state.nextContext.goal.punctuation && state.nextContext.goal.punctuation[text]) ||
+                  state.nextContext.goal.type ||
+                  'pattern'),
+                'opener')
               : (match.punctuator = 'operator'),
             match,
           );
