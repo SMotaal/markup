@@ -277,7 +277,16 @@ export const matcher = (ECMAScript =>
                   // Safely fast forward to end of string
                   (state.nextContext.goal.spans != null &&
                     state.nextContext.goal.spans[text] &&
-                    TokenMatcher.forward(state.nextContext.goal.spans[text], match, state, -1),
+                    TokenMatcher.forward(
+                      state.nextContext.goal.spans[text],
+                      match,
+                      state,
+                      // TODO: fix deltas for forwards expressions
+                      //  Meanwhile we are using -1 to always recapture
+                      //   one character ahead of the next significant
+                      //   token
+                      -1,
+                    ),
                   (match.punctuator =
                     (state.nextContext.goal.punctuation && state.nextContext.goal.punctuation[text]) ||
                     state.nextContext.goal.type ||
@@ -338,6 +347,7 @@ export const matcher = (ECMAScript =>
               : state.context.goal.type || 'sequence',
             match,
           );
+          // TODO: Figure out where to fast forward after ‹${…}›
         })}
       )`,
     ),

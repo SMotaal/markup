@@ -140,9 +140,11 @@ export const {
     spans: {
       // This faults when match[1] === '\n' or ''
       //   It forwards until ‹'›
+      // TODO: fix deltas for forwards expressions
       "'": /(?:[^'\\\n]+?(?=\\[^]|')|\\[^])*?(?='|($|\n))/g,
       // This faults when match[1] === '\n' or ''
       //   It forwards until ‹"›
+      // TODO: fix deltas for forwards expressions
       '"': /(?:[^"\\\n]+?(?=\\[^]|")|\\[^])*?(?="|($|\n))/g,
     },
   });
@@ -162,6 +164,7 @@ export const {
     spans: {
       // This faults when match[1] === ''
       //   It forwards until ‹\n› ‹`› or ‹${›
+      // TODO: fix deltas for forwards expressions
       '`': /(?:[^`$\\\n]+?(?=\n|\\.|`|\$\{)|\\.)*?(?=\n|`|\$\{|($))/g,
     },
   });
