@@ -75,8 +75,10 @@ export const {
     fold: true,
     spans: {
       // This faults when match[1] === ''
+      //   It forwards until ‹\n›
       '//': /.*?(?=\n|($))/g,
       // This faults when match[1] === ''
+      //   It forwards until ‹*/›
       '/*': /[^]*?(?=\*\/|($))/g,
     },
   });
@@ -100,6 +102,7 @@ export const {
     },
     spans: {
       // This faults when match[1] === ''
+      //   It forwards thru ‹•\d•,•}› ‹•,•\d•}› or ‹•\d•}› only
       '{': /\s*(?:\d+\s*,\s*\d+|\d+\s*,|\d+|,\s*\d+)\s*}|()/g,
     },
   });
@@ -136,8 +139,10 @@ export const {
     fold: true,
     spans: {
       // This faults when match[1] === '\n' or ''
+      //   It forwards until ‹'›
       "'": /(?:[^'\\\n]+?(?=\\[^]|')|\\[^])*?(?='|($|\n))/g,
       // This faults when match[1] === '\n' or ''
+      //   It forwards until ‹"›
       '"': /(?:[^"\\\n]+?(?=\\[^]|")|\\[^])*?(?="|($|\n))/g,
     },
   });
@@ -155,9 +160,9 @@ export const {
       '${': 'opener',
     },
     spans: {
-      // '`': /(?:[^\\`$]+?(?=\\.|`|\${)|\\.)*?(?:`|\$(?={|($)))/g,
       // This faults when match[1] === ''
-      '`': /(?:[^\\`$]+?(?=\\.|`|\$\{)|\\.)*?(?=`|\$\{|($))/g,
+      //   It forwards until ‹\n› ‹`› or ‹${›
+      '`': /(?:[^`$\\\n]+?(?=\n|\\.|`|\$\{)|\\.)*?(?=\n|`|\$\{|($))/g,
     },
   });
 
