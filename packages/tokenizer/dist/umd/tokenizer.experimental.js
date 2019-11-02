@@ -2,7 +2,7 @@
   typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
   typeof define === 'function' && define.amd ? define(['exports'], factory) :
   (global = global || self, factory(global.tokenizer = {}));
-}(this, function (exports) { 'use strict';
+}(this, (function (exports) { 'use strict';
 
   /** Shared context state handler for token generator instances  */
   class Contextualizer {
@@ -1188,8 +1188,8 @@
     },
   );
 
-  Definitions: {
-    Defaults: {
+   {
+     {
       markdown.DEFAULTS = {syntax: 'markdown', aliases: ['md'], requires: ['html']};
     }
 
@@ -1328,8 +1328,8 @@
     },
   );
 
-  Definitions: {
-    Defaults: {
+   {
+     {
       javascript.DEFAULTS = {syntax: 'javascript', aliases: ['js', 'es', 'ecmascript']};
       // javascript.DEFAULTS = {syntax: 'javascript', aliases: ['js']};
     }
@@ -1379,8 +1379,8 @@
     },
   );
 
-  Definitions: {
-    Defaults: {
+   {
+     {
       typescript.DEFAULTS = {syntax: 'typescript', aliases: ['ts'], requires: [javascript.defaults.syntax]};
     }
     typescript.KEYWORDS = {
@@ -1435,8 +1435,8 @@
     },
   );
 
-  Definitions: {
-    Defaults: {
+   {
+     {
       const requires = [javascript.defaults.syntax];
 
       mjs.DEFAULTS = {syntax: 'mjs', aliases: ['esm'], requires};
@@ -1484,5 +1484,5 @@
 
   Object.defineProperty(exports, '__esModule', { value: true });
 
-}));
+})));
 //# sourceMappingURL=tokenizer.experimental.js.map
