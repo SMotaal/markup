@@ -258,8 +258,8 @@ export const createToken = (match, state) => {
 
       goal: currentGoal,
       group: contextGroup,
-      // state,
-      // context: tokenContext,
+      state,
+      context: tokenContext,
     };
   }
   /* Context */
