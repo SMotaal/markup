@@ -11,7 +11,8 @@
   "exports": {},
   "scripts": {
     "serve": "http-server --cors -s",
-    "bundle": "rollup -c rollup.config.js"
+    "bundle": "rollup -c rollup.config.js",
+    "start": "./index.mjs"
   },
   "devDependencies": {
     "@types/node": "*",
