@@ -1477,8 +1477,10 @@ const {
     fold: true,
     spans: {
       // This faults when match[1] === ''
+      //   It forwards until ‹\n›
       '//': /.*?(?=\n|($))/g,
       // This faults when match[1] === ''
+      //   It forwards until ‹*/›
       '/*': /[^]*?(?=\*\/|($))/g,
     },
   });
@@ -1502,6 +1504,7 @@ const {
     },
     spans: {
       // This faults when match[1] === ''
+      //   It forwards thru ‹•\d•,•}› ‹•,•\d•}› or ‹•\d•}› only
       '{': /\s*(?:\d+\s*,\s*\d+|\d+\s*,|\d+|,\s*\d+)\s*}|()/g,
     },
   });
@@ -1538,8 +1541,10 @@ const {
     fold: true,
     spans: {
       // This faults when match[1] === '\n' or ''
+      //   It forwards until ‹'›
       "'": /(?:[^'\\\n]+?(?=\\[^]|')|\\[^])*?(?='|($|\n))/g,
       // This faults when match[1] === '\n' or ''
+      //   It forwards until ‹"›
       '"': /(?:[^"\\\n]+?(?=\\[^]|")|\\[^])*?(?="|($|\n))/g,
     },
   });
@@ -1557,9 +1562,9 @@ const {
       '${': 'opener',
     },
     spans: {
-      // '`': /(?:[^\\`$]+?(?=\\.|`|\${)|\\.)*?(?:`|\$(?={|($)))/g,
       // This faults when match[1] === ''
-      '`': /(?:[^\\`$]+?(?=\\.|`|\$\{)|\\.)*?(?=`|\$\{|($))/g,
+      //   It forwards until ‹\n› ‹`› or ‹${›
+      '`': /(?:[^`$\\\n]+?(?=\n|\\.|`|\$\{)|\\.)*?(?=\n|`|\$\{|($))/g,
     },
   });
 
@@ -1919,7 +1924,7 @@ const matcher = (ECMAScript =>
                   // Safely fast forward to end of string
                   (state.nextContext.goal.spans != null &&
                     state.nextContext.goal.spans[text] &&
-                    TokenMatcher.forward(state.nextContext.goal.spans[text], match, state),
+                    TokenMatcher.forward(state.nextContext.goal.spans[text], match, state, -1),
                   (match.punctuator =
                     (state.nextContext.goal.punctuation && state.nextContext.goal.punctuation[text]) ||
                     state.nextContext.goal.type ||
