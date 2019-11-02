@@ -78,7 +78,7 @@ In an expression, you do `Expression` things:
                                    (            (( χ )) instanceof  (( χ ))   );
                                    (                           new  (( χ ))   );
                                    (                  new (( χ )) (  ... χ  ) );
-                                   (                        typeof  (( χ ))    );
+                                   (                        typeof  (( χ ))   );
                                    (                         yield  (( χ ))   );
                                    (                        yield*  (( χ ))   );
                                    (                          void  (( χ ))   );
@@ -190,8 +190,8 @@ In a module, you do `Module` things:
 
 ```js  markup-mode=es
             ImportDeclaration:                               import 'specifier';
-                                                     import χ from 'specifier';
-                                        import χ, {  /***/  } from 'specifier';
+                                                      import χ from 'specifier';
+                                         import χ, {  /***/  } from 'specifier';
                                             import {  /***/  } from 'specifier';
             ExportDeclaration:                               export {  /***/  };
                                                      export default   (( χ ))  ;
