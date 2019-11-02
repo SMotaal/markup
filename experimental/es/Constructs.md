@@ -59,32 +59,32 @@ In an expression, you do `Expression` things:
 <!--prettier-ignore-start-->
 
 ```js markup-mode=es
-                    ObjectLiteral: (                               {... $}   );
-                     ArrayLiteral: (                               [... $]   );
-                    RegExpLiteral: (                               /[{-}]/   );
-          ArrowFunctionExpression: (                 (... $$) => { {{ ; }} } );
-                                   (                 (... $$) =>   (( $ ))   );
-     AsyncArrowFunctionExpression: (           async (... $$) => { {{ ; }} } );
-                                   (           async (... $$) =>   (( $ ))   );
-               FunctionExpression: (        function $$ (... $$) { {{ ; }} } );
-          AsyncFunctionExpression: (  async function $$ (... $$) { {{ ; }} } );
-      GeneratorFunctionExpression: (       function* $$ (... $$) { {{ ; }} } );
- AsyncGeneratorFunctionExpression: ( async function* $$ (... $$) { {{ ; }} } );
-                  ClassExpression: (                    class $$ {  /***/  } );
-                                   (    class $$ extends (( $ )) {  /***/  } );
-                SpecialExpression: (                         await (( $ ))   );
-                                   (                        delete (( $ ))   );
-                                   (                      import ( (( $ )) ) );
-                                   (            (( $ )) instanceof (( $ ))   );
-                                   (                           new (( $ ))   );
-                                   (                 new (( $ )) ( (( $ )) ) );
-                                   (                        typeof (( $ ))   );
-                                   (                         yield (( $ ))   );
-                                   (                        yield* (( $ ))   );
-                                   (                          void (( $ ))   );
-              ReferenceExpression: (  /* binding ‹keyword› */ this [( $ )]   );
-                                   (  /* or ‹identifier›   */ this .  $      );
-                                   (  /* like...           */ this (... $)   );
+                    ObjectLiteral: (                                {... χ}   );
+                     ArrayLiteral: (                                [... χ]   );
+                    RegExpLiteral: (                                /[{-}]/   );
+          ArrowFunctionExpression: (                     ( χ ) => { {{ ; }} } );
+                                   (                     ( χ ) =>   (( χ ))   );
+     AsyncArrowFunctionExpression: (               async ( χ ) => { {{ ; }} } );
+                                   (               async ( χ ) =>   (( χ ))   );
+               FunctionExpression: (         function ƒ ( ... χ ) { {{ ; }} } );
+          AsyncFunctionExpression: (   async function ƒ ( ... χ ) { {{ ; }} } );
+      GeneratorFunctionExpression: (        function* ƒ ( ... χ ) { {{ ; }} } );
+ AsyncGeneratorFunctionExpression: (  async function* ƒ ( ... χ ) { {{ ; }} } );
+                  ClassExpression: (                     class Χ  {  /***/  } );
+                                   (      class Χ extends (( χ )) {  /***/  } );
+                SpecialExpression: (                         await  (( χ ))   );
+                                   (                        delete  (( χ ))   );
+                                   (                       import ( (( χ )) ) );
+                                   (            (( χ )) instanceof  (( χ ))   );
+                                   (                           new  (( χ ))   );
+                                   (                  new (( χ )) (  ... χ  ) );
+                                   (                        typeof  (( χ ))    );
+                                   (                         yield  (( χ ))   );
+                                   (                        yield*  (( χ ))   );
+                                   (                          void  (( χ ))   );
+              ReferenceExpression: ( /* binding ‹keyword› */ this   [( χ )]   );
+                                   ( /* or ‹identifier›   */ this   .  χ      );
+                                   ( /* like...           */ this (  ... χ  ) );
 ```
 
 <!--prettier-ignore-end-->
@@ -95,13 +95,13 @@ In an expression, you do `Expression` things:
 
 - There is only one place where you can leave the current `Expression` context and immediately enter into a **nested** `Statements` context, which per specs today is always some form of a [Function Body `{{ ; }}`][ecma-script-function-body] other than [Methods][ecma-script-method-definition] as those are always nested further down somewhere.
 
-- The counterpart to this are places where you leave the current `Expression` context and immediately enter into another **nested** `Expression` of a respective [LeftHandSideExpression denomination `(( $ ))`][ecma-script-left-hand-side-expression].
+- The counterpart to this are places where you leave the current `Expression` context and immediately enter into another **nested** `Expression` of a respective [LeftHandSideExpression denomination `(( χ ))`][ecma-script-left-hand-side-expression].
 
-- Another unique aspect of an `Expression` context is that it can have no declarations, and as such in places (not omitted above) where you would expect a [Binding Identifier `$$`][ecma-script-binding-identifier], they will _always be optional_ and _may never_ take a [Computed Property `[( $ )]`][ecma-script-computed-property-name] form or any wrapped `Expression`form.
+- Another unique aspect of an `Expression` context is that it can have no declarations, and as such in places (not omitted above) where you would expect a [Binding Identifier `ƒ` or `Χ`][ecma-script-binding-identifier], they will _always be optional_ and _may never_ take a [Computed Property `[( χ )]`][ecma-script-computed-property-name] form or any wrapped `Expression`form.
 
-- To further articulate on the above point, it would specifically exclude omitted forms of arrow functions having a single unwrapped argument, ie the `$$ =>` form, which while not presenated are still like many undeniably `Expression` things per the spec, just not significantly relevant to the matter at hand.
+- To further articulate on the above point, it would specifically exclude omitted forms of arrow functions having a single unwrapped argument, ie the `χ =>` form, which while not presenated are still like many undeniably `Expression` things per the spec, just not significantly relevant to the matter at hand.
 
-- The remaining cases where you leave the current `Expression` context and enter into **nested** contexts of a clear intent include things like [Literal Object `{...$$}`][ecma-script-object], [Literal Array `[...$$]`][ecma-script-array], [Literal Pattern `/[{-}]/`][ecma-script-regular-expression], [Class Body `{/***/}`][ecma-script-class-body], and [Arguments `(...$$)`][ecma-script-arguments-list] which specifically excludes omitted forms of arrow functions with a single unwrapped argument.
+- The remaining cases where you leave the current `Expression` context and enter into **nested** contexts of a clear intent include things like [Literal Object `{ ... χ }`][ecma-script-object], [Literal Array `[ ... χ ]`][ecma-script-array], [Literal Pattern `/[{-}]/`][ecma-script-regular-expression], [Class Body `{/***/}`][ecma-script-class-body], and [Arguments `( ... χ )`][ecma-script-arguments-list] which specifically excludes omitted forms of arrow functions with a single unwrapped argument.
 
 - The non-spec thing introduced here (ie `SpecialExpression`) is simply to present `Expression` context forms for the set of keywords that are applicable in that context:
 
@@ -111,7 +111,7 @@ In an expression, you do `Expression` things:
 
   </blockquote>
 
-  - In most cases, such keywords are of an operative, and they can in fact repeat indefinitely, like `yield yield $` and so fourth.
+  - In most cases, such keywords are of an operative, and they can in fact repeat indefinitely, like `yield yield χ` and so fourth.
 
   - Keywords that will not work that way include `this`, `import`, `instanceof`, and `new`, but each for different reasons, and some of those are more of technical impracticality than absolutes.
 
@@ -127,36 +127,36 @@ In statements, you do `Statements` things:
 
 ```js  markup-mode=es
 
-              FunctionDeclaration: {        function $$$ (... $$) { {{ ; }} } };
-         AsyncFunctionDeclaration: {  async function $$$ (... $$) { {{ ; }} } };
-     GeneratorFunctionDeclaration: {       function* $$$ (... $$) { {{ ; }} } };
-AsyncGeneratorFunctionDeclaration: { async function* $$$ (... $$) { {{ ; }} } };
-                 ClassDeclaration: {                     class $$ {  /***/  } };
-                                   {     class $$ extends (( $ )) {  /***/  } };
-              VariableDeclaration: {                      var $$$ = (( $ ))   };
-                                   {                  var [{$$$}] = (( $ ))   };
-                BindingStatements: {             with ( (( $ )) )   {{ ; }}   };
+              FunctionDeclaration: {         function ƒ ( ... χ ) { {{ ; }} } };
+         AsyncFunctionDeclaration: {   async function ƒ ( ... χ ) { {{ ; }} } };
+     GeneratorFunctionDeclaration: {        function* ƒ ( ... χ ) { {{ ; }} } };
+AsyncGeneratorFunctionDeclaration: {  async function* ƒ ( ... χ ) { {{ ; }} } };
+                 ClassDeclaration: {                      class Χ {  /***/  } };
+                                   {      class Χ extends (( χ )) {  /***/  } };
+              VariableDeclaration: {                      var χ =   (( χ ))   };
+                                   {                var [{ χ }] =   (( χ ))   };
+                BindingStatements: {             with ( (( χ )) )   {{ ; }}   };
                 ControlStatements: {
                                                               try { {{ ; }} }
-                                                       catch ($$) { {{ ; }} }
+                                                        catch (χ) { {{ ; }} }
                                                           finally { {{ ; }} }
 
-                                                   if ( (( $ )) )   {{ ; }}
-                                              else if ( (( $ )) )   {{ ; }}
+                                                   if ( (( χ )) )   {{ ; }}
+                                              else if ( (( χ )) )   {{ ; }}
                                                              else   {{ ; }}
 
 
                                                   for (  /***/  )   {{ ; }}
 
 
-                                                while ( (( $ )) )   {{ ; }}
+                                                while ( (( χ )) )   {{ ; }}
 
 
                                                               do    {{ ; }}
-                                                            while ( (( $ )) )
+                                                            while ( (( χ )) )
 
 
-                                               switch ( (( $ )) ) {  /***/  }
+                                               switch ( (( χ )) ) {  /***/  }
                                                                               };
 ```
 
@@ -170,15 +170,15 @@ AsyncGeneratorFunctionDeclaration: { async function* $$$ (... $$) { {{ ; }} } };
 
 - The `for` statement is odd because it includes very unique `(/***/)` things which fall closer to being `Statements` than `Expression` things.
 
-- While things are far less distorted in a `switch` block, it is far enough from `Statements` due to the special clauses for `case (( $ )):` and `default:` which must precede any `Statements` stuff that is also not just `Statements`.
+- While things are far less distorted in a `switch` block, it is far enough from `Statements` due to the special clauses for `case (( χ )):` and `default:` which must precede any `Statements` stuff that is also not just `Statements`.
 
 - To further elaborate on the above point, `Statements` stuff in `switch` blocks along with `for`, `do`, and `while`, all introduce and/or affect the contextual significance of certain keywords like `continue`, not only in their immediate scope, but further down into other `ControlStatements`, where those keywords may or may not be expected normally, and are often also closely relate to [Label `$:…`][ecma-script-labelled-statement] things of `Statements` omitted here.
 
-- The rules for `function` and `class` that is directly in `Statements` are always declarations not expressions, so if they fall in an `AssignmentExpression` position, we can think of them as being implicitly `(( $ ))` wrapped from a constructional standpoint, and this way they remain strictly speaking `Expression` things in comparison.
+- The rules for `function` and `class` that is directly in `Statements` are always declarations not expressions, so if they fall in an `AssignmentExpression` position, we can think of them as being implicitly `(( χ ))` wrapped from a constructional standpoint, and this way they remain strictly speaking `Expression` things in comparison.
 
-- When you use operators like `=` in statements, don't forget, everything that follows is also a metaphorically wrapped `(( $ ))`.
+- When you use operators like `=` in statements, don't forget, everything that follows is also a metaphorically wrapped `(( χ ))`.
 
-- In fact, when you write an unwrapped expression thing (per the previous section), don't think of it as `Statements` because it is a metaphorically wrapped `Expression` and that will always be identical to the same physically wrapped `(( $ ))`.
+- In fact, when you write an unwrapped expression thing (per the previous section), don't think of it as `Statements` because it is a metaphorically wrapped `Expression` and that will always be identical to the same physically wrapped `(( χ ))`.
 
 - Last thing to note, from the perspective of this work, is that any form of SourceText that is not a `Module` is considered to be `Statements`.
 
@@ -190,22 +190,22 @@ In a module, you do `Module` things:
 
 ```js  markup-mode=es
             ImportDeclaration:                               import 'specifier';
-                                                     import $$ from 'specifier';
-                                        import $$, {  /***/  } from 'specifier';
+                                                     import χ from 'specifier';
+                                        import χ, {  /***/  } from 'specifier';
                                             import {  /***/  } from 'specifier';
             ExportDeclaration:                               export {  /***/  };
-                                                     export default   (( $ ))  ;
-                                                      export var $$ = (( $ ))  ;
-                                                 export var [{$$$}] = (( $ ))  ;
-                                                    export class $$ {  /***/  };
-                                    export class $$ extends (( $ )) {  /***/  };
-                                        export function  $$(... $$) { {{ ; }} };
-                                        export function  $$(... $$) { {{ ; }} };
-                                  export async function  $$(... $$) { {{ ; }} };
-                                        export function* $$(... $$) { {{ ; }} };
-                                  export async function* $$(... $$) { {{ ; }} };
+                                                     export default   (( χ ))  ;
+                                                     export var χ =   (( χ ))  ;
+                                               export var [{ χ }] =   (( χ ))  ;
+                                                     export class Χ {  /***/  };
+                                     export class Χ extends (( χ )) {  /***/  };
+                                       export function  ƒ ( ... χ ) { {{ ; }} };
+                                       export function  ƒ ( ... χ ) { {{ ; }} };
+                                 export async function  ƒ ( ... χ ) { {{ ; }} };
+                                       export function* ƒ ( ... χ ) { {{ ; }} };
+                                 export async function* ƒ ( ... χ ) { {{ ; }} };
                                             export {  /***/  } from 'specifier';
-                                                export * as $$ from 'specifier';
+                                                 export * as χ from 'specifier';
 ```
 
 <!--prettier-ignore-end-->
