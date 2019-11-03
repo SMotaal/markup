@@ -349,6 +349,7 @@ pre.markup[line-numbers] .markup-line::before {
   --color: var(--markup-whitespace, #999);
 }
 
+.markup-line.fault,
 .markup.fault {
   --color: var(--markup-faults, white);
   background-color: var(--markup-faults-highlight, #f219);
@@ -360,6 +361,24 @@ pre.markup[line-numbers] .markup-line::before {
 .markup.closer {
   font-weight: 500;
   /* font-variant-ligatures: none; */
+}
+
+/* .markup-line.fault > .fault::after, */
+.markup-line.fault::after,
+.markup-line.fault::before {
+  display: none;
+}
+
+.markup-line.fault {
+  --markup-gutter: 0;
+  --markup-soft-indent: 0;
+  color: var(--color, white);
+  padding: 1em;
+  border-radius: 0.5em;
+  /* display: inline-block; */
+  /* --markup-inset-margin: 0; */
+  /* margin: 1em; */
+  /* width: calc() */
 }
 
 @media only print {
