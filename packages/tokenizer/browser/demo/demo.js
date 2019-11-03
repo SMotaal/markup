@@ -22,10 +22,10 @@ const Examples = ({
   ['es-matcher-bundle']: {url: LOCAL('./dist/tokenizer.browser.es.js', import.meta.url), mode: 'es'},
   ['babel']: {url: UNPKG('@babel/standalone')},
   ['sesm']: {url: UNPKG('ses?module'), mode: 'es'},
-  ['acorn-esm']: {url: UNPKG('acorn?module'), mode: 'esm'},
-  ['acorn-cjs']: {url: UNPKG('acorn'), mode: 'cjs'},
   ['ses']: {url: UNPKG('ses?module'), mode: 'es'},
   ['ses-legacy']: {url: UNPKG('ses'), mode: 'es'},
+  ['acorn-esm']: {url: UNPKG('acorn?module'), mode: 'esm'},
+  ['acorn-cjs']: {url: UNPKG('acorn'), mode: 'cjs'},
   ['acorn-loose']: {url: CDNJS('acorn/5.7.3/acorn_loose.es.js')},
   ['esprima']: {url: CDNJS('esprima/2.7.3/esprima.js')},
   ['babel-core']: {url: CDNJS('babel-core/6.1.19/browser.js')},
@@ -80,11 +80,18 @@ export default (markup, overrides) => {
 
   const fetchSource = async (source, options) => (
     (source.sourceText = ''),
-    (source.response = await fetch(source.url, options).catch(console.warn)),
-    (source.sourceText = await source.response.text()),
-    // TODO: Revert if response.redirected is not honoured (again)
-    fetchSource.followRedirect(source, options)
-    // source
+    (source.response = await fetch(source.url, options).catch(console.warn))
+      ? ((source.sourceText = await source.response.text()),
+        // TODO: Revert if response.redirected is not honoured (again)
+        fetchSource.followRedirect(source, options))
+      : (source.exception = Error(
+          `Failed to load source from "${source.url}" — ${(source.response && source.response.statusText) ||
+            'see console for opaque errors related'}\n\n${
+            /\/unpkg.com\/\w+\/?(?:\?[^#]*)?(?:#.*)?^/.test(source.url)
+              ? `Please note that unpkg.com is known to run into issues with redirects for partially resolved specifiers`
+              : 'Please make sure that the specified URL supports CORS requests for the specified URL and/or the final redirected if applicable'
+          }.`,
+        ))
   );
 
   fetchSource.followRedirect = (source, options) =>
@@ -99,10 +106,17 @@ export default (markup, overrides) => {
     const source = {specifier, url};
     try {
       await fetchSource(source, options.fetch);
-      return (returned = source);
+      // if (source.exception) throw source.exception;
+      // return (returned = source);
+    } catch (exception) {
+      source.exception = exception;
     } finally {
-      returned || console.warn('Failed to load source from "%s" — %o', specifier, source);
+      if (source.exception) {
+        source.sourceText = `${source.exception}\n`;
+        console.warn('Failed to load source from "%s" — %o\n\n', specifier, source, source.exception);
+      }
     }
+    return source;
   };
 
   const renderMarkup = async (sourceText, markupOptions) => {
@@ -219,6 +233,9 @@ export default (markup, overrides) => {
 
     const content = document.createElement('div');
     content.className = 'markup-content markup-line-numbers';
+
+    const fault = document.createElement('div');
+    fault.className = 'markup-line fault';
 
     /** @type {HTMLDivElement & {mark?(element: HTMLSpanElement, scrollIntoView?: boolean); token?(position: string); token?(line: number, column: number)}} */
     const slot = content.appendChild(document.createElement('div'));
@@ -363,10 +380,12 @@ export default (markup, overrides) => {
       let sourceName = rewrite(specifier);
       await frame(header.status('source', sourceName, `${specifier}`), header.timing('source', true));
       const {
-        result: {sourceText, response},
+        result: {sourceText, response, exception},
       } = await time('source', () => loadFromURL(specifier));
 
-      const resourceType = `${response.headers.get('Content-Type')}`.replace(/^(?:.*?\/)?(\w+).*$/, '$1').toLowerCase();
+      const resourceType = `${(response && response.headers.get('Content-Type')) || 'text/plain'}`
+        .replace(/^(?:.*?\/)?(\w+).*$/, '$1')
+        .toLowerCase();
       const defaultType = `${sourceType ||
         resourceType ||
         options.sourceType ||
@@ -403,52 +422,65 @@ export default (markup, overrides) => {
       };
 
       render = async () => {
-        await frame(content.classList.add('rendering'));
+        await frame(
+          (fault.innerText = ''),
+          content.classList.remove('fault'),
+          content.classList.add('markup-line-numbers'),
+          content.classList.add('rendering'),
+        );
         await frame();
 
         header.stats({name: 'repeats', status: '', time: -1});
         header.stats({name: 'iterations', status: '', time: -1});
 
-        if (iterations > 0) {
-          const delay = !(repeats > 0) && 250;
+        if (!exception) {
+          if (iterations > 0) {
+            const delay = !(repeats > 0) && 250;
 
-          delay && (await timeout(delay));
+            delay && (await timeout(delay));
 
-          await frame(header.stats({name: 'iterations', status: `${iterations}`, time: true}));
+            await frame(header.stats({name: 'iterations', status: `${iterations}`, time: true}));
 
-          await timeout(100);
+            await timeout(100);
 
-          await timed(
-            `${iterations} iterations`,
-            'iterations',
-            async ƒ => void (await iterate(iterations)),
-            iterations,
-          );
+            await timed(
+              `${iterations} iterations`,
+              'iterations',
+              async ƒ => void (await iterate(iterations)),
+              iterations,
+            );
 
-          delay && (await timeout(delay));
+            delay && (await timeout(delay));
 
-          await frame(header.status('iterations', `${iterations}`));
-        }
-
-        // TODO: Why this seems to make Firefox rerender faster?
-        if (navigator.mozGetUserMedia) slot.innerText = '';
-
-        if (repeats > 0) {
-          // await timeDelay(100);
-          await frame(header.stats({name: 'repeats', status: `${repeats}`, time: true}));
-          content.classList.remove('rendering');
-          await frame();
-          await timed(`${repeats} repeats`, 'repeats', async ƒ => void (await repeat(repeats)), repeats);
-          await frame(header.status('repeats', `${repeats}`));
-          if ((slot.lines = slot.querySelectorAll(':scope>.markup-line')) && (slot.lines = [...slot.lines])) {
-            for (let i = 0, n = slot.lines.length; n--; slot.lines[i].lineNumber = ++i);
-
-            const anchor = slot.anchor || options.anchor;
-            anchor &&
-              slot.mark &&
-              requestAnimationFrame(element => void ((element = slot.token(anchor)) && slot.mark(element, true)));
+            await frame(header.status('iterations', `${iterations}`));
           }
-          // slot.columns = slot.innerText.length;
+
+          // TODO: Why this seems to make Firefox rerender faster?
+          if (navigator.mozGetUserMedia) slot.innerText = '';
+
+          if (repeats > 0) {
+            // await timeDelay(100);
+            await frame(header.stats({name: 'repeats', status: `${repeats}`, time: true}));
+            content.classList.remove('rendering');
+            await frame();
+            await timed(`${repeats} repeats`, 'repeats', async ƒ => void (await repeat(repeats)), repeats);
+            await frame(header.status('repeats', `${repeats}`));
+            if ((slot.lines = slot.querySelectorAll(':scope>.markup-line')) && (slot.lines = [...slot.lines])) {
+              for (let i = 0, n = slot.lines.length; n--; slot.lines[i].lineNumber = ++i);
+
+              const anchor = slot.anchor || options.anchor;
+              anchor &&
+                slot.mark &&
+                requestAnimationFrame(element => void ((element = slot.token(anchor)) && slot.mark(element, true)));
+            }
+            // slot.columns = slot.innerText.length;
+          }
+        } else {
+          fault.innerText = `${exception}`;
+          fragment.append(fault);
+          content.classList.add('fault'),
+            content.classList.remove('rendering'),
+            content.classList.remove('markup-line-numbers');
         }
 
         return fragment;
@@ -518,6 +550,7 @@ Header: {
       document.head.append(Object.assign(document.createElement('template'), {id, selectors, innerHTML})))(
       ((html, entity) => html`
         <div id="summary">
+          <!-- <span id="errors"></span> -->
           <span title="source"><span id="source"></span><time unit="ms"></time></span>
         </div>
         <div id="details">
@@ -535,6 +568,7 @@ Header: {
       `)(String.raw, string => `&#x${`${string}`.codePointAt(0).toString(16)};`),
       {
         ['source-span']: '#source',
+        // ['errors-span']: '#errors',
         ['source-time']: '#source + time',
         ['mode-span']: '#mode',
         ['variant-span']: '#variant',

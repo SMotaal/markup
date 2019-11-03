@@ -67,6 +67,10 @@
     margin: 0 1em 0 0;
   }
 
+  .markup-content.fault > .markup-wrapper {
+    margin: 0 0.5em;
+  }
+
   .markup-container .markup-content {
     padding-top: 4em;
     margin-top: -3em;
