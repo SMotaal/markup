@@ -86,10 +86,10 @@ export default (markup, overrides) => {
         fetchSource.followRedirect(source, options))
       : (source.exception = Error(
           `Failed to load source from "${source.url}" — ${(source.response && source.response.statusText) ||
-            'see console for opaque errors related'}\n\n${
+            'see console for opaque errors related to the fetch'}\n\n${
             /\/unpkg.com\/\w+\/?(?:\?[^#]*)?(?:#.*)?^/.test(source.url)
               ? `Please note that unpkg.com is known to run into issues with redirects for partially resolved specifiers`
-              : 'Please make sure that the specified URL supports CORS requests for the specified URL and/or the final redirected if applicable'
+              : 'Please make sure that CORS is supported at the host for the specified URL and where redirects happen they are not opaque'
           }.`,
         ))
   );
