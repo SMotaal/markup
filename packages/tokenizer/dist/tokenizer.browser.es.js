@@ -2241,12 +2241,21 @@ const {
     flatten: true,
     fold: true,
     spans: {
-      // This faults when match[1] === ''
-      //   It forwards until ‹\n›
+      // SINLE-LINE COMMENT
+      //
+      //    This faults when match[1] === ''
+      //    It forwards until ‹\n›
       '//': /.*?(?=\n|($))/g,
-      // This faults when match[1] === ''
+      //
+      //    Alternative: '\n' ie indexOf(…, lastIndex)
+      //
+      // MULTI-LINE COMMENT
+      //
+      //   This faults when match[1] === ''
       //   It forwards until ‹*/›
       '/*': /[^]*?(?=\*\/|($))/g,
+      //
+      //   Alternative: '*/' ie indexOf(…, lastIndex)
     },
   });
 
@@ -2305,12 +2314,21 @@ const {
     flatten: true,
     fold: true,
     spans: {
-      // This faults when match[1] === '\n' or ''
+      // SINGLE-QUOTE
+      //
+      //   This faults when match[1] === '\n' or ''
       //   It forwards until ‹'›
       "'": /(?:[^'\\\n]+?(?=\\[^]|')|\\[^])*?(?='|($|\n))/g,
-      // This faults when match[1] === '\n' or ''
+      //
+      //   We cannot use indexOf(…, lastIndex)
+      //
+      // DOUBLE-QUOTE
+      //
+      //   This faults when match[1] === '\n' or ''
       //   It forwards until ‹"›
       '"': /(?:[^"\\\n]+?(?=\\[^]|")|\\[^])*?(?="|($|\n))/g,
+      //
+      //   We cannot use indexOf(…, lastIndex)
     },
   });
 
@@ -2327,9 +2345,13 @@ const {
       '${': 'opener',
     },
     spans: {
-      // This faults when match[1] === ''
+      // GRAVE/BACKTIC QUOTE
+      //
+      //   This faults when match[1] === ''
       //   It forwards until ‹\n› ‹`› or ‹${›
       '`': /(?:[^`$\\\n]+?(?=\n|\\.|`|\$\{)|\\.)*?(?=\n|`|\$\{|($))/g,
+      //
+      //   We cannot use indexOf(…, lastIndex)
     },
   });
 
@@ -2493,7 +2515,6 @@ const {
           closer: "'",
           goal: symbols.ECMAScriptStringGoalSymbol,
           parentGoal: symbols.ECMAScriptGoalSymbol,
-          lookAhead: /(?:[^'\\\n]+?(?=\\.|')|\\.)*?(?:'|$)/g,
           description: '‹string›',
         },
         ['"']: {
@@ -2689,7 +2710,16 @@ const matcher = (ECMAScript =>
                   // Safely fast forward to end of string
                   (state.nextContext.goal.spans != null &&
                     state.nextContext.goal.spans[text] &&
-                    TokenMatcher.forward(state.nextContext.goal.spans[text], match, state, -1),
+                    TokenMatcher.forward(
+                      state.nextContext.goal.spans[text],
+                      match,
+                      state,
+                      // TODO: fix deltas for forwards expressions
+                      //  Meanwhile we are using -1 to always recapture
+                      //   one character ahead of the next significant
+                      //   token
+                      // -1,
+                    ),
                   (match.punctuator =
                     (state.nextContext.goal.punctuation && state.nextContext.goal.punctuation[text]) ||
                     state.nextContext.goal.type ||
@@ -2750,6 +2780,7 @@ const matcher = (ECMAScript =>
               : state.context.goal.type || 'sequence',
             match,
           );
+          // TODO: Figure out where to fast forward after ‹${…}›
         })}
       )`,
     ),
