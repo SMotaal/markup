@@ -3521,11 +3521,7 @@ const matcher = (ECMAScript =>
                       state.nextContext.goal.spans[text],
                       match,
                       state,
-                      // TODO: fix deltas for forwards expressions
-                      //  Meanwhile we are using -1 to always recapture
-                      //   one character ahead of the next significant
-                      //   token
-                      // -1,
+                      // DONE: fix deltas for forwards expressions
                     ),
                   (match.punctuator =
                     (state.nextContext.goal.punctuation && state.nextContext.goal.punctuation[text]) ||
