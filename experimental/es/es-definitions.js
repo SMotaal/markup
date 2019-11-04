@@ -74,12 +74,21 @@ export const {
     flatten: true,
     fold: true,
     spans: {
-      // This faults when match[1] === ''
-      //   It forwards until ‹\n›
+      // SINLE-LINE COMMENT
+      //
+      //    This faults when match[1] === ''
+      //    It forwards until ‹\n›
       '//': /.*?(?=\n|($))/g,
-      // This faults when match[1] === ''
+      //
+      //    Alternative: '\n' ie indexOf(…, lastIndex)
+      //
+      // MULTI-LINE COMMENT
+      //
+      //   This faults when match[1] === ''
       //   It forwards until ‹*/›
       '/*': /[^]*?(?=\*\/|($))/g,
+      //
+      //   Alternative: '*/' ie indexOf(…, lastIndex)
     },
   });
 
@@ -138,14 +147,21 @@ export const {
     flatten: true,
     fold: true,
     spans: {
-      // This faults when match[1] === '\n' or ''
+      // SINGLE-QUOTE
+      //
+      //   This faults when match[1] === '\n' or ''
       //   It forwards until ‹'›
-      // TODO: fix deltas for forwards expressions
       "'": /(?:[^'\\\n]+?(?=\\[^]|')|\\[^])*?(?='|($|\n))/g,
-      // This faults when match[1] === '\n' or ''
+      //
+      //   We cannot use indexOf(…, lastIndex)
+      //
+      // DOUBLE-QUOTE
+      //
+      //   This faults when match[1] === '\n' or ''
       //   It forwards until ‹"›
-      // TODO: fix deltas for forwards expressions
       '"': /(?:[^"\\\n]+?(?=\\[^]|")|\\[^])*?(?="|($|\n))/g,
+      //
+      //   We cannot use indexOf(…, lastIndex)
     },
   });
 
@@ -162,10 +178,13 @@ export const {
       '${': 'opener',
     },
     spans: {
-      // This faults when match[1] === ''
+      // GRAVE/BACKTIC QUOTE
+      //
+      //   This faults when match[1] === ''
       //   It forwards until ‹\n› ‹`› or ‹${›
-      // TODO: fix deltas for forwards expressions
       '`': /(?:[^`$\\\n]+?(?=\n|\\.|`|\$\{)|\\.)*?(?=\n|`|\$\{|($))/g,
+      //
+      //   We cannot use indexOf(…, lastIndex)
     },
   });
 
@@ -329,7 +348,6 @@ export const {
           closer: "'",
           goal: symbols.ECMAScriptStringGoalSymbol,
           parentGoal: symbols.ECMAScriptGoalSymbol,
-          lookAhead: /(?:[^'\\\n]+?(?=\\.|')|\\.)*?(?:'|$)/g,
           description: '‹string›',
         },
         ['"']: {
