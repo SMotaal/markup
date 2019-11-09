@@ -1,5 +1,5 @@
 {
-  "name": "@smotaal/tokenizer",
+  "name": "@smotaal.io/tokenizer",
   "displayName": "SMotaal's Markup Tokenizer",
   "version": "0.0.6",
   "description": "Nestable markup tokenizer using Regular Expressions",

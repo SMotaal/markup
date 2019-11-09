@@ -12,6 +12,7 @@
   "scripts": {
     "serve": "http-server --cors -s",
     "bundle": "rollup -c rollup.config.js",
+    "postbundle": "[ -d ./packages/markup/dist/tokenizer ] && rm -Rf ./packages/markup/dist/tokenizer; cp -R ./packages/tokenizer/dist/ ./packages/markup/dist/tokenizer/;",
     "start": "./index.mjs"
   },
   "devDependencies": {
@@ -19,18 +20,23 @@
     "http-server": "*",
     "prettier": "*",
     "rollup": "*",
-    "typescript": "*",
+    "typescript": "*"
+  },
+  "devDependencies.ignored": {
     "@smotaal/esm": "SMotaal/esm"
   },
-  "resolutions": {
+  "resolutions.ignored": {
     "SMotaal/esm": "../esm"
   },
   "workspaces": {
     "packages": [
-      "../esm",
       "packages/grammars",
       "packages/tokenizer",
-      "packages/pseudom"
+      "packages/pseudom",
+      "packages/markup"
+    ],
+    "packages.ignored": [
+      "../esm"
     ],
     "nohoist": [
       "**/pseudom"

@@ -121,3 +121,43 @@ rewrite.head = (specifier, head = '') => specifier && Head[Symbol.replace](speci
 
 export const frame = () => new Promise(requestAnimationFrame);
 export const timeout = timeout => new Promise(resolve => setTimeout(resolve, timeout));
+
+export const setupDarkMode = async toggle => {
+  toggle.hidden = true;
+  const darkMode = await setupDarkMode.darkMode;
+  if (darkMode) {
+    toggle.replaceWith((toggle = toggle.cloneNode(true)));
+    toggle['onmousedown' in toggle ? 'onmousedown' : 'onpointerdown'] = darkMode.onPointerDown;
+    toggle['onmouseup' in toggle ? 'onmouseup' : 'onpointerup'] = darkMode.onPointerUp;
+    toggle.hidden = false;
+    return toggle;
+  } else {
+    toggle.remove();
+  }
+};
+
+setupDarkMode.darkMode = (async (...specifiers) => {
+  const importFrom = async specifier => {
+    try {
+      const imported = await import(specifier);
+      const darkMode = imported.darkMode;
+      if (darkMode && typeof darkMode.onPointerDown === 'function' && typeof darkMode.onPointerUp === 'function')
+        return darkMode;
+      console.warn(`Incompatible dark mode interface: ${specifier}`);
+    } catch (exception) {}
+  };
+
+  for await (const specifier of specifiers) {
+    try {
+      const imported = await import(specifier);
+      const darkMode = imported.darkMode;
+      if (darkMode && typeof darkMode.onPointerDown === 'function' && typeof darkMode.onPointerUp === 'function')
+        return darkMode;
+      console.warn(`Incompatible dark mode interface: ${specifier}`);
+    } catch (exception) {}
+  }
+
+  console.warn(`Could not import dark mode helper from: \n\t${specifiers.join('\n\t')}`);
+})(...['/browser/dark-mode.js', 'https://unpkg.com/@smotaal.io/dark-mode-controller/browser/dark-mode.js?module']);
+
+Object.freeze(setupDarkMode.darkMode);

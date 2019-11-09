@@ -1,5 +1,5 @@
-@import '../styles/markup.css';
-@import '../styles/markup-debug.css';
+@import './styles/markup.css';
+@import './styles/markup-debug.css';
 
 @font-face {
   font-family: markup;

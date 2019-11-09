@@ -1,0 +1,8 @@
+{
+  "private": true,
+  "name": "@specs.smotaal.io/markup",
+  "type": "module",
+  "devDependencies": {
+    "@smotaal.io/markup": "../packages/markup"
+  }
+}

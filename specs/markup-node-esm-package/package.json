@@ -1,0 +1,15 @@
+{
+  "private": true,
+  "name": "@sepcs.smotaal.io/markup-node-esm-package",
+  "type": "module",
+  "main": "./index.mjs",
+  "scripts": {
+    "test": "./index.mjs"
+  },
+  "dependencies": {
+    "@smotaal.io/markup": "../../packages/markup",
+    "@smotaal.io/pseudom": "../../packages/pseudom",
+    "@smotaal.io/grammar": "../../packages/grammar",
+    "@smotaal.io/tokenizer": "../../packages/tokenizer"
+  }
+}
