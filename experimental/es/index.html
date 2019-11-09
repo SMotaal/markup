@@ -5,7 +5,8 @@
   <title>SMotaal's Markup (Playground)</title>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline';connect-src *;" />
+  <meta http-equiv="Content-Security-Policy"
+        content="script-src 'unsafe-inline' 'self' https://unpkg.com/@smotaal.io/;connect-src *;" />
   <meta name="theme-color" content="#333f46">
   <meta name="background-color" content="#999999">
   <script>(typeof self !== 'object' || !self || self.globalThis === self || (self.globalThis = self))</script>
@@ -15,14 +16,14 @@
   <link rel="stylesheet" href="/fonts/iosevka.css" />
   <link rel="manifest" href="./manifest.webmanifest">
   <script type="module" src="/markup/packages/tokenizer/browser/experimental.js"></script>
-  <script type="module" src="/markup/packages/tokenizer/browser/demo/demo.js"></script>
-  <link rel="stylesheet" href="/markup/packages/tokenizer/browser/demo/demo.css" />
+  <script type="module" src="/markup/packages/markup/browser/demo.js"></script>
+  <link rel="stylesheet" href="/markup/packages/markup/browser/demo.css" />
 </head>
 
 <body>
   <pre id="source-code" class="markup-container"></pre>
   <script type="module">
-    import demo from '/markup/packages/tokenizer/browser/demo/demo.js';
+    import demo from '/markup/packages/markup/browser/demo.js';
     import dynamicImport from '/browser/dynamic-import.js';
     // import markup from '/markup/packages/tokenizer/browser/experimental.js';
     import markup from '/markup/packages/tokenizer/browser/experimental.extended.js';

@@ -2,8 +2,8 @@
 
 Experimental parsing using regular expressions as a core building block.
 
-## In the Browser
+## Browser
 
-> **Source** — https://github.com/SMotaal/markup/tree/master/packages/markup/lib/
+> **Source** — https://github.com/SMotaal/markup/tree/master/packages/markup/browser/
 
-This folder contains the earliest prototype work for the markup parsing experiments.
+This folder contains the markup playground.

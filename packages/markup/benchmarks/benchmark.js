@@ -1,6 +1,6 @@
 import setup from './tasks/tasks.js';
 // import markup from '../lib/markup.js';
-import * as markup from '../packages/tokenizer/browser/extended.js';
+import * as markup from '../../tokenizer/browser/extended.js';
 
 (async (sources = [['<html/>', {sourceType: 'html'}], ['export default "js";', {sourceType: 'es'}]]) => {
   const {tokenize, render, capture} = await setup(markup);

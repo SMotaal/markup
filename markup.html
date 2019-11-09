@@ -5,7 +5,7 @@
   <title>SMotaal's Markup</title>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline';connect-src *;" />
+  <meta http-equiv="Content-Security-Policy" content="script-src 'unsafe-inline' 'self' https://unpkg.com/@smotaal.io/;connect-src *;" />
   <meta name="theme-color" content="#333f46">
   <meta name="background-color" content="#999999">
   <script>(typeof self !== 'object' || !self || self.globalThis === self || (self.globalThis = self))</script>
@@ -14,7 +14,7 @@
   <link rel="apple-touch-icon" href="/markup/assets/icon-192x192.png">
   <link rel="stylesheet" href="/fonts/iosevka.css" />
   <link rel="manifest" href="./manifest.webmanifest">
-  <link rel="stylesheet" href="./packages/tokenizer/browser/demo/demo.css" />
+  <link rel="stylesheet" href="./packages/markup/browser/demo.css" />
 </head>
 
 <body>
@@ -28,13 +28,13 @@
     markup.parsers.push(experimentalParser);
 
     // Baseline Parser
-    import * as baselineParser from './lib/markup-parser.js';
-    import * as baselineModes from './lib/markup-modes.js';
+    import * as baselineParser from './packages/markup/lib/markup-parser.js';
+    import * as baselineModes from './packages/markup/lib/markup-modes.js';
     baselineModes.install(baselineParser.defaults);
     markup.parsers.push(baselineParser);
 
     // Actual Demo
-    import demo from './packages/tokenizer/browser/demo/demo.js';
+    import demo from './packages/markup/browser/demo.js';
     demo(markup);
   </script>
 </body>

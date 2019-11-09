@@ -12,7 +12,7 @@ const configuration = {
   createDefinitions(dirname = `${this.dirname || this.defaults.dirname}`) {
     return {
       ['markup']: {
-        input: `${dirname}lib/markup.js`,
+        input: `${dirname}packages/markup/lib/markup.js`,
         output: {exports: 'named'},
       },
       ['tokenizer:stable:extended']: {
@@ -47,7 +47,7 @@ const configuration = {
   },
   defaults: Object.freeze({
     dirname: fileURLToPath(
-      new URL('./', import.meta.url.replace('/smotaal.io/rollup.config.js', '/smotaal.io/markup/rollup.config.js')),
+      new URL('./', /(?:\/markup\/|\/)(?=rollup.config.js)/[Symbol.replace](import.meta.url, '/markup/')),
     ),
     formats: ['esm', 'umd', 'iife'],
     variant: 'experimental',

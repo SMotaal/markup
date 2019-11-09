@@ -16,7 +16,7 @@ Markup is a monorepo which includes a number of experimental parsing-related wor
    - Strawman grammar definitions with contextual hooks — ie closure-level handling of `open` and `close`
    - Strawman parsing architecture to register and switch between modes — ie primed tokenizer of a specific grammar
 
-2. Early playground now lives in [/packages/tokenizer/browser/demo/][] — pending refactor to [/packages/markup/browser/playground/][]
+2. Early playground now lives in [/packages/markup/browser/][] — pending refactor to [/packages/markup/browser/playground/][]
 
    - Featherweight compositional DOM abstractions that live in [/packages/pseudom/][]
 
@@ -29,6 +29,29 @@ Markup is a monorepo which includes a number of experimental parsing-related wor
 4. Matcher-based implementation now lives in [/packages/matcher/][]
 
    - Experimental `RegExp` extension for stateful entity capturing hooks - ie handling of individual captures for a given match
+
+### Refactor
+
+<details>
+
+- [ ] Refactored `@smotaal.io/markup` into `packages/markup/`
+  - [x] Refactored `packages/tokenizer/browser/demo/` to `packages/markup/browser/`
+  - [x] Refactored `packages/tokenizer/browser/styles` to `packages/markup/browser/styles/`
+  - [x] Refactored `lib/` to `packages/markup/lib/`
+  - [x] Refactored `benchmarks/` to `packages/markup/benchmarks/`
+  - [x] Refactored `node/` to `packages/markup/node/`
+  - [x] Add `postbundle` task to copy `packages/tokenizer/dist/` into `packages/markup/dist/tokenizer/`
+  - [x] Update CSP and loading mechanism for `dark-mode` to fallback to `unpkg`
+  - [ ] Specs:
+    - [x] `specs/markup-node-esm-package`
+    - [ ] `specs/markup-node-cjs-package`
+    - [ ] `specs/markup-unpkg-esm-package`
+    - [ ] `specs/markup-unpkg-legacy-package`
+  - [ ] Publish
+- [ ] Refactor `@smotaal.io/tokenizer`
+- [ ] Refactor `@smotaal.io/matcher`
+
+</details>
 
 ---
 
@@ -140,7 +163,7 @@ All my experimental work is intended to remain open and freely available, with t
 [/lib/]: https://github.com/SMotaal/markup/tree/master/lib/
 [/packages/grammar/]: https://github.com/SMotaal/markup/tree/master/packages/grammar/
 [/packages/tokenizer/]: https://github.com/SMotaal/markup/tree/master/packages/tokenizer/
-[/packages/tokenizer/browser/demo/]: https://github.com/SMotaal/markup/tree/master/packages/tokenizer/browser/demo/
+[/packages/markup/browser/]: https://github.com/SMotaal/markup/tree/master/packages/markup/browser/
 [/packages/matcher/]: https://github.com/SMotaal/markup/tree/master/packages/matcher/
 [/packages/markup/lib/]: https://github.com/SMotaal/markup/tree/master/packages/markup/lib/
 [/packages/markup/browser/playground/]: https://github.com/SMotaal/markup/tree/master/packages/markup/browser/playground/
