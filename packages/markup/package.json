@@ -6,7 +6,7 @@
   "license": "MIT",
   "type": "module",
   "devDependencies": {
-    "@smotaal.tokenizer": "*"
+    "@smotaal/tokenizer": "*"
   },
   "publishConfig": {
     "access": "public"
