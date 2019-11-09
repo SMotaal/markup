@@ -2,8 +2,8 @@
 
 Experimental parsing using regular expressions as a core building block.
 
-## Prototype Implementation
+## Lib
 
 > **Source** — https://github.com/SMotaal/markup/tree/master/packages/markup/lib/
 
-This folder contains the earliest prototype work for the markup parsing experiments.
+This folder contains prototype implementation for the markup parsing experiments.

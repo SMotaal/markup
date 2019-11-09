@@ -2,8 +2,5 @@
   "name": "markup-benchmark",
   "version": "0.0.0",
   "type": "module",
-  "main": "index.js",
-  "exports": {
-    "./": "benchmark.js"
-  }
+  "main": "main.js"
 }

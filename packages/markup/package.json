@@ -1,0 +1,14 @@
+{
+  "name": "@smotaal.io/markup",
+  "displayName": "SMotaal's Markup Framework",
+  "version": "0.0.1",
+  "description": "Experimental parsing using regular expressions as a core building block",
+  "license": "MIT",
+  "type": "module",
+  "devDependencies": {
+    "@smotaal.tokenizer": "*"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

@@ -5,7 +5,7 @@
   <title>SMotaal's Markup (Experimental)</title>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline';connect-src *;" />
+  <meta http-equiv="Content-Security-Policy" content="script-src 'unsafe-inline' 'self' https://unpkg.com/@smotaal.io/;connect-src *;" />
   <meta name="theme-color" content="#333f46">
   <meta name="background-color" content="#999999">
   <script>(typeof self !== 'object' || !self || self.globalThis === self || (self.globalThis = self))</script>
@@ -14,16 +14,16 @@
   <link rel="apple-touch-icon" href="/markup/assets/icon-192x192.png">
   <link rel="manifest" href="../manifest.webmanifest">
   <script type="module" src="../packages/tokenizer/browser/experimental.extended.js"></script>
-  <script type="module" src="../packages/tokenizer/browser/demo/demo.js"></script>
+  <script type="module" src="../packages/markup/browser/demo.js"></script>
   <link rel="stylesheet" href="/fonts/iosevka.css" />
-  <link rel="stylesheet" href="../packages/tokenizer/browser/demo/demo.css" />
+  <link rel="stylesheet" href="../packages/markup/browser/demo.css" />
 </head>
 
 <body>
   <pre id="source-code" class="markup-container"></pre>
   <script type="module">
     import markup from '../packages/tokenizer/browser/experimental.extended.js';
-    import demo from '../packages/tokenizer/browser/demo/demo.js';
+    import demo from '../packages/markup/browser/demo.js';
     demo(markup);
   </script>
 </body>

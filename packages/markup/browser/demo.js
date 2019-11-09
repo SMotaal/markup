@@ -1,5 +1,5 @@
-﻿import {Resolvers, Hash, resolveURL as RELATIVE, rewrite, frame, timeout} from './helpers.js';
-import {darkMode} from '/browser/dark-mode.js';
+﻿import {Resolvers, Hash, resolveURL as RELATIVE, rewrite, frame, timeout, setupDarkMode} from './helpers.js';
+// import {darkMode} from '/browser/dark-mode.js';
 
 const Examples = ({
   ['es']: ES = LOCAL('./dist/tokenizer.experimental.js'),
@@ -14,10 +14,10 @@ const Examples = ({
   ['esm']: {url: ES, mode: 'esm'},
   ['cjs']: {url: ES, mode: 'cjs'},
   ['md']: {url: MD, mode: 'md'},
-  ['json']: {url: LOCAL('./examples/samples/sample.json')},
-  ['complex']: {url: LOCAL('./examples/samples/complex.html')},
+  ['json']: {url: LOCAL('./samples/sample.json')},
+  ['complex']: {url: LOCAL('./samples/complex.html')},
   ['complex.html']: {url: LOCAL('../markup/samples/complex.html')},
-  ['gfm']: {url: LOCAL('./examples/samples/gfm.md')},
+  ['gfm']: {url: LOCAL('./samples/gfm.md')},
   ['es-matcher']: {url: RELATIVE('/markup/experimental/es/es-matcher.js', import.meta.url), mode: 'es'},
   ['es-matcher-bundle']: {url: LOCAL('./dist/tokenizer.browser.es.js', import.meta.url), mode: 'es'},
   ['babel']: {url: UNPKG('@babel/standalone')},
@@ -36,7 +36,7 @@ const Examples = ({
 });
 
 const resolvers = Resolvers({
-  ['~']: RELATIVE('../../', import.meta.url),
+  ['~']: RELATIVE('../', import.meta.url),
   ['unpkg']: RELATIVE(`https://unpkg.com/`),
   ['cdnjs']: RELATIVE(`https://cdnjs.cloudflare.com/ajax/libs/`),
 });
@@ -50,7 +50,7 @@ const defaults = {
   variant: 1,
   repeats: 1,
   iterations: 1,
-  sourceURL: LOCAL('./examples/samples/complex.html'),
+  sourceURL: LOCAL('./samples/complex.html'),
   sourceType: undefined,
   element: 'pre#source-code',
   headerTemplate: 'template#source-header',
@@ -142,10 +142,7 @@ export default (markup, overrides) => {
       /** @type {{[name:string]: HTMLElement}} */
       const {'rerender-button': renderButton, 'contrast-button': contrastButton} = header.elements;
       renderButton && (renderButton.onclick = rerender);
-      if (contrastButton) {
-        contrastButton.onpointerdown = darkMode.onPointerDown;
-        contrastButton.onpointerup = darkMode.onPointerUp;
-      }
+      contrastButton && setupDarkMode(contrastButton);
     }
 
     {

@@ -1,0 +1,10 @@
+/specs/
+/tasks/
+/docs/
+/*.tgz
+**/trash/
+**/temp/
+**/.DS_Store
+**/tsconfig.json
+**/tsbuildinfo.json
+**/*.tsbuildinfo
