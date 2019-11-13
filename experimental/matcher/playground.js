@@ -1,8 +1,8 @@
-﻿import {TokenMatcher, createMatcherMode} from '../../packages/matcher/lib/token-matcher.js';
+﻿import {TokenMatcher} from '../../packages/matcher/lib/token-matcher.js';
 
 export default async markup => {
   const parser = markup.parsers[0];
-  const mode = createMatcherMode(
+  const mode = TokenMatcher.createMode(
     TokenMatcher.define(
       entity => TokenMatcher.sequence`
         (

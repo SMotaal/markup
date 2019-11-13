@@ -1,6 +1,6 @@
 ﻿//@ts-check
 import {countLineBreaks} from '../../../tokenizer/lib/core.js';
-import {createMatcherMode, TokenMatcher} from '../../lib/token-matcher.js';
+import {TokenMatcher} from '../../lib/token-matcher.js';
 import {RegExpRange} from '../../lib/range.js';
 import {SymbolMap} from '../../helpers/symbol-map.js';
 
@@ -16,7 +16,7 @@ import {SymbolMap} from '../../helpers/symbol-map.js';
 export const createMatcher = (goal, factory) =>
   TokenMatcher.define(factory(TokenMatcher)[goal](), 'gu', {goal: {value: goal, enumerable: true, writable: false}});
 
-export const createMode = ({matcher, ...options}) => createMatcherMode(matcher, {...defaults.mode, ...options});
+export const createMode = ({matcher, ...options}) => TokenMatcher.createMode(matcher, {...defaults.mode, ...options});
 
 /** @param {State} state */
 // TODO: Document initializeState

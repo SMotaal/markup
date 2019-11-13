@@ -1,13 +1,21 @@
 ﻿// Internal types
 
-interface Matcher extends import('./lib/matcher.js').Matcher {}
+interface Matcher extends import('./lib/matcher.js').Matcher, RegExp {}
 
 type MatcherFlags = string;
 type MatcherText = string;
 type MatcherPattern = (string | RegExp) & Definition;
 type MatcherPatternFactory = (entity: MatcherEntityFactory) => MatcherPattern;
 
-type MatcherMatch = MatcherExecArray | MatcherMatchArray;
+type MatcherMatch<T extends MatcherArray = RegExpExecArray | RegExpMatchArray> = T extends
+  | RegExpExecArray
+  | RegExpMatchArray
+  ? MatcherExecArray | MatcherMatchArray
+  : T extends RegExpMatchArray
+  ? MatcherMatchArray
+  : MatcherExecArray;
+
+type MatcherArray = RegExpExecArray | RegExpMatchArray;
 
 interface MatcherExecArray extends RegExpExecArray, MatcherMatchRecord {}
 interface MatcherMatchArray extends RegExpMatchArray, MatcherMatchRecord {}
@@ -64,11 +72,12 @@ interface TokenMatcher<U extends {} = Object> extends Matcher {
 interface Token<T extends {} = Object> extends Partial<Object & T> {
   type: string;
   text: string;
-  offset: number;
-  breaks: number;
-  inset?: text;
   hint?: string;
   capture?: MatchCapture;
+  index: number;
+  lineOffset: number;
+  lineBreaks: number;
+  lineInset?: text;
 }
 
 interface TokenizerState<T extends RegExp, U extends {} = Object> {

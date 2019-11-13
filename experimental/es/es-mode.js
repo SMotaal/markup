@@ -2,9 +2,9 @@
 
 import {matcher} from './es-matcher.js';
 import {initializeState, finalizeState, createToken} from '../../packages/matcher/experimental/common/helpers.js';
-import {createMatcherMode} from '../../packages/matcher/lib/token-matcher.js';
+import {TokenMatcher} from '../../packages/matcher/lib/token-matcher.js';
 
-export const mode = createMatcherMode(matcher, {
+export const mode = TokenMatcher.createMode(matcher, {
   USE_CONSTRUCTS: false,
 
   syntax: 'ecmascript',

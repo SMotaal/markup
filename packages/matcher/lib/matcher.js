@@ -222,6 +222,63 @@ export class Matcher extends RegExp {
 
     return matchAll;
   }
+
+  /**
+   * @template {Matcher} T
+   * @template {T} U
+   * @template {{}} V
+   * @param {T & V} matcher
+   * @param {U} [instance]
+   * @returns {U & V}
+   */
+  static clone(matcher, instance) {
+    const {
+      constructor: {prototype},
+      source,
+      flags,
+      lastIndex,
+      ...properties
+    } = matcher;
+    const clone = /** @type {U & V} */ (Object.assign(
+      instance ||
+        (prototype && 'source' in prototype && 'flags' in prototype
+          ? RegExp(source, flags || 'g')
+          : RegExp(matcher, 'g')),
+      properties,
+    ));
+    // prototype && Object.setPrototypeOf(clone, prototype);
+    Object.setPrototypeOf(
+      clone,
+      prototype || (this && this !== Matcher && this.prototype instanceof Matcher ? this.prototype : Matcher.prototype),
+    );
+    return clone;
+  }
+
+  /**
+   * @template {Matcher} T
+   * @template {{}} U
+   * @param {T} matcher
+   * @param {TokenizerState<T, U>} [state]
+   * @returns {TokenMatcher<U>}
+   */
+  static create(matcher, state) {
+    /** @type {typeof Matcher} */
+    const Species = !this || this === Matcher || !(this.prototype instanceof Matcher) ? Matcher : this;
+
+    return Object.defineProperty(
+      ((state || (state = Object.create(null))).matcher = /** @type {typeof Matcher} */ (matcher &&
+      matcher instanceof RegExp &&
+      matcher.constructor &&
+      typeof /** @type {typeof Matcher} */ (matcher.constructor).clone !== 'function'
+        ? matcher.constructor
+        : Species === Matcher || typeof Species.clone !== 'function'
+        ? Matcher
+        : Species
+      ).clone(matcher)),
+      'state',
+      {value: state},
+    );
+  }
 }
 
 // Well-known identities for meaningful debugging which are

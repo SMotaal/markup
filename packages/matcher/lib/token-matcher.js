@@ -1,64 +1,184 @@
-﻿/// <reference path="./types.d.ts" />
+﻿// @ts-check
+/// <reference path="./types.d.ts" />
 
 import {countLineBreaks} from '../../tokenizer/lib/core.js';
 import {Matcher} from './matcher.js';
 import {TokenizerState} from './state.js';
 
-export const {createTokenFromMatch, createMatcherInstance, createMatcherTokenizer, createMatcherMode} = (() => {
-  const {RegExp, Object, String} = globalThis;
+export const TokenMatcher = (() => {
+  /** @typedef {Object} State */
 
-  /**
-   * @template {Matcher} T
-   * @template {{}} U
-   * @param {T} matcher
-   * @param {TokenizerState<T, U>} [state]
-   * @returns {TokenMatcher<U>}
-   */
-  const createMatcherInstance = (matcher, state) =>
-    Object.defineProperty(
-      ((state || (state = Object.create(null))).matcher =
-        (matcher && matcher instanceof RegExp && createMatcherClone(matcher)) || RegExp(matcher, 'g')),
-      'state',
-      {value: state},
-    );
+  /** @template  U */
+  class TokenMatcher extends Matcher {
+    /**
+     * Safely updates the match to reflect the captured identity.
+     *
+     * NOTE: fault always sets match.flatten to false
+     *
+     * @template T @param {string} identity @param {T} match @returns {T}
+     */
+    static capture(identity, match) {
+      // @ts-ignore
+      match.capture[(match.identity = identity)] = match[0];
+      // @ts-ignore
+      (match.fault = identity === 'fault') && (match.flatten = false);
+      return match;
+    }
 
-  /**
-   * @template {Matcher} T
-   * @template {T} U
-   * @template {{}} V
-   * @type {(matcher: T & V, instance?: U) => U & V}
-   * @param {T} param0
-   * @param {U} [param1]
-   * @returns {U}
-   */
-  const createMatcherClone = ({constructor: {prototype}, source, flags, lastIndex, ...properties}, instance) => (
-    (instance = Object.assign(instance || RegExp(source, flags || 'g'), properties)),
-    prototype && Object.setPrototypeOf(instance, prototype),
-    instance
-  );
+    /**
+     * Safely mutates matcher state to open a new context.
+     *
+     * @template {State} S
+     * @param {string} text - Text of the intended { type = "opener" } token
+     * @param {S} state - Matcher state
+     * @returns {undefined | string} - String when context is **not** open
+     */
+    static open(text, state) {
+      const {
+        contexts,
+        context: parentContext,
+        context: {depth: index, goal: initialGoal},
+        groups,
+        initializeContext,
+      } = state;
+      const group = initialGoal.groups[text];
 
-  /** @type {(value: any) => string} */
-  const createString = String;
+      if (!group) return initialGoal.type || 'sequence';
+      groups.splice(index, groups.length, group);
+      groups.closers.splice(index, groups.closers.length, group.closer);
 
-  /**
-   * @type {<M extends MatchArray, T extends {}>(init: MatchResult<M>) => Token<T>}
-   * @param {MatchResult<MatchArray>} param0
-   */
-  const createTokenFromMatch = ({0: text, identity, capture, index}) => ({
-    type: (identity && (identity.description || identity)) || 'text',
-    text,
-    lineBreaks: countLineBreaks(text),
-    lineInset: (capture && capture.inset) || '',
-    offset: index,
-    capture,
-  });
+      parentContext.contextCount++;
+
+      const goal = group.goal === undefined ? initialGoal : group.goal;
+
+      const nextContext = {
+        id: `${parentContext.id} ${
+          goal !== initialGoal
+            ? `\n${goal[Symbol.toStringTag]} ${group[Symbol.toStringTag]}`
+            : group[Symbol.toStringTag]
+        }`,
+        number: ++contexts.count,
+        depth: index + 1,
+        parentContext,
+        goal,
+        group,
+        state,
+      };
+
+      typeof initializeContext === 'function' && initializeContext(nextContext);
+
+      state.nextContext = contexts[index] = nextContext;
+    }
+
+    /**
+     * Safely mutates matcher state to close the current context.
+     *
+     * @template {State} S
+     * @param {string} text - Text of the intended { type = "closer" } token
+     * @param {S} state - Matcher state
+     * @returns {undefined | string} - String when context is **not** closed
+     */
+    static close(text, state) {
+      const groups = state.groups;
+      const index = groups.closers.lastIndexOf(text);
+
+      if (index === -1 || index !== groups.length - 1) return 'fault';
+
+      groups.closers.splice(index, groups.closers.length);
+      groups.splice(index, groups.length);
+      state.nextContext = state.context.parentContext;
+    }
+
+    /**
+     * Safely mutates matcher state to skip ahead.
+     *
+     * TODO: Finish implementing forward helper
+     *
+     * @template {State} S
+     * @param {string | RegExp} search
+     * @param {MatcherMatch} match
+     * @param {S} state - Matcher state
+     * @param {number | boolean} [delta]
+     */
+    static forward(search, match, state, delta) {
+      if (typeof search === 'string' && search.length) {
+        state.nextOffset =
+          match.input.indexOf(search, match.index + match[0].length) + (0 + /** @type {number} */ (delta) || 0);
+      } else if (search != null && typeof search === 'object') {
+        // debugger;
+        search.lastIndex = match.index + match[0].length;
+        const matched = search.exec(match.input);
+        // console.log(...matched, {matched});
+        if (!matched || matched[1] !== undefined) {
+          if (delta === false) return false;
+          state.nextOffset = search.lastIndex;
+          state.nextFault = true;
+          return 'fault';
+        } else {
+          if (delta === false) return true;
+          state.nextOffset = search.lastIndex + (0 + /** @type {number} */ (delta) || 0);
+        }
+      } else {
+        throw new TypeError(`forward invoked with an invalid search argument`);
+      }
+    }
+
+    /**
+     * @param {Matcher} matcher
+     * @param {any} [options]
+     */
+    static createMode(matcher, options) {
+      const tokenizer = Object.defineProperties(
+        {matcher: Object.freeze(TokenMatcher.create(matcher))},
+        tokenizerPropertyDescriptors,
+      );
+
+      const mode = {syntax: 'matcher', tokenizer};
+      options &&
+        ({
+          syntax: mode.syntax = mode.syntax,
+          aliases: mode.aliases,
+          preregister: mode.preregister,
+          createToken: tokenizer.createToken = tokenizer.createToken,
+          initializeState: tokenizer.initializeState,
+          finalizeState: tokenizer.finalizeState,
+          ...mode.overrides
+        } = options);
+
+      Object.freeze(tokenizer);
+
+      return mode;
+    }
+  }
+
+  /** @type {import('../experimental/common/types').Goal|symbol} */
+  TokenMatcher.prototype.goal = undefined;
 
   class Tokenizer {
+    constructor() {
+      this.finalizeState = /** @type {<S extends TokenizerState>(state: S) => S} */ (undefined);
+      this.initializeState = /** @type {<V, S extends TokenizerState>(state: S) => V & S} */ (undefined);
+    }
+
+    /** @type {<M extends MatcherArray, T extends {}, S extends TokenizerState>(init: MatcherMatch<M>, state?: S) => Token<T>} */
+    createToken({0: text, identity, capture, index}, state) {
+      // @ts-ignore
+      return {
+        // @ts-ignore
+        type: (identity && (identity.description || identity)) || 'text',
+        text,
+        lineBreaks: countLineBreaks(text),
+        lineInset: (capture && /** @type {any} */ (capture).inset) || '',
+        lineOffset: index,
+        capture,
+      };
+    }
+
     /**
      * @template {Matcher} T
      * @template {{}} U
      * @param {string} string
-     * @param {U} properties
+     * @param {U & Partial<Record<'USE_ITERATOR'|'USE_GENERATOR', boolean>>} properties
      */
     tokenize(
       string,
@@ -78,35 +198,30 @@ export const {createTokenFromMatch, createMatcherInstance, createMatcherTokenize
      * @param {U} properties
      */
     TokenIterator(string, properties) {
-      /** @type {{createToken: typeof createTokenFromMatch, initializeState: <V>(state: V) => V & TokenizerState<T, U>}} */
-      const createToken = (this && this.createToken) || createTokenFromMatch;
-      [string] = Object.keys({[string]: null});
       const state = new TokenizerState({
         ...TokenizerState.defaults,
         ...((typeof properties === 'object' && properties) || undefined),
         source: string,
         initialize: this.initializeState && (() => void this.initializeState(state)),
         finalize: this.finalizeState && (() => void this.finalizeState(state)),
-        createToken: match => createToken(match, state),
+        createToken: match => this.createToken(match, state),
       });
 
       /** @type {TokenMatcher<U>} */
-      const matcher = createMatcherInstance(this.matcher, state);
+      const matcher = /** @type {any} */ (TokenMatcher.create(/** @type {any} */ (this).matcher, state));
       matcher.exec = matcher.exec;
       return state;
     }
 
     /** @template {Matcher} T @template {{}} U */
     *TokenGenerator() {
-      /** @type {{createToken: typeof createTokenFromMatch, initializeState: <V>(state: V) => V & TokenizerState<T, U>}} */
-      const createToken = (this && this.createToken) || createTokenFromMatch;
       /** @type {string} */
-      const string = createString(Object.keys({[arguments[0]]: 1})[0]);
+      const string = `${arguments[0]}`;
       /** @type {TokenMatcher<U>} */
-      const matcher = createMatcherInstance(this.matcher, arguments[1] || {});
+      const matcher = /** @type {any} */ (TokenMatcher.create(/** @type {any} */ (this).matcher, arguments[1] || {}));
 
-      /** @type {TokenizerState<T, U>} */
-      const state = matcher.state;
+      const state = /** @type {TokenizerState<T, U>} */ (matcher.state);
+
       this.initializeState && this.initializeState(state);
       matcher.exec = matcher.exec;
 
@@ -118,7 +233,8 @@ export const {createTokenFromMatch, createMatcherInstance, createMatcherTokenize
         (retainedToken !== undefined && (yield retainedToken), (state.nextToken = undefined));
 
       ) {
-        if ((capturedToken = createToken(match, state)) === undefined) continue;
+        // @ts-ignore
+        if ((capturedToken = this.createToken(match, state)) === undefined) continue;
 
         // HOLD back one grace token
         //   until createToken(…) !== undefined (ie new token)
@@ -139,186 +255,13 @@ export const {createTokenFromMatch, createMatcherInstance, createMatcherTokenize
   }
 
   const tokenizerPropertyDescriptors = Object.getOwnPropertyDescriptors(
-    Object.freeze(Object.freeze(Tokenizer).prototype),
+    Object.preventExtensions(
+      Object.setPrototypeOf(Object.freeze(Object.setPrototypeOf(Tokenizer, null)).prototype, null),
+    ),
   );
 
-  /** @type { {<T extends Matcher, U extends {} = {}>(sourceText: string, initialState?: Partial<TokenizerState<undefined, U>): IterableIterator<Token<U>>} } */
-  const createMatcherTokenizer = instance =>
-    Object.defineProperties(
-      instance,
-      tokenizerPropertyDescriptors,
-      // TODO: iteratorMode ? iteratorProperties : generatorProperties,
-    );
+  delete tokenizerPropertyDescriptors.constructor;
 
-  /**
-   * @param {Matcher} matcher
-   * @param {any} [options]
-   */
-  const createMatcherMode = (matcher, options) => {
-    const tokenizer = createMatcherTokenizer({
-      createToken: createTokenFromMatch,
-      /** @type {(state: {}) =>  void} */
-      initializeState: undefined,
-      finalizeState: undefined,
-      matcher: Object.freeze(createMatcherInstance(matcher)),
-    });
-
-    const mode = {syntax: 'matcher', tokenizer};
-    options &&
-      ({
-        syntax: mode.syntax = mode.syntax,
-        aliases: mode.aliases,
-        preregister: mode.preregister,
-        createToken: tokenizer.createToken = tokenizer.createToken,
-        initializeState: tokenizer.initializeState,
-        finalizeState: tokenizer.finalizeState,
-        ...mode.overrides
-      } = options);
-
-    Object.freeze(tokenizer);
-
-    return mode;
-  };
-
-  Object.freeze(createTokenFromMatch);
-  Object.freeze(createMatcherInstance);
-  Object.freeze(createMatcherTokenizer);
-  Object.freeze(createMatcherMode);
-
-  return {createTokenFromMatch, createMatcherInstance, createMatcherTokenizer, createMatcherMode};
-})();
-
-export const TokenMatcher = (() => {
-  /**
-   * Safely updates the match to reflect the captured identity.
-   *
-   * NOTE: fault always sets match.flatten to false
-   *
-   * @template T @param {string} identity @param {T} match @returns {T}
-   */
-  const capture = (identity, match) => {
-    match.capture[(match.identity = identity)] = match[0];
-    (match.fault = identity === 'fault') && (match.flatten = false);
-    return match;
-  };
-
-  /**
-   * Safely mutates matcher state to open a new context.
-   *
-   * @param {string} text - Text of the intended { type = "opener" } token
-   * @param {State} state - Matcher state
-   * @returns {undefined | string} - String when context is **not** open
-   */
-  const open = (text, state) => {
-    const {
-      contexts,
-      context: parentContext,
-      context: {depth: index, goal: initialGoal},
-      groups,
-      initializeContext,
-    } = state;
-    const group = initialGoal.groups[text];
-
-    if (!group) return initialGoal.type || 'sequence';
-    groups.splice(index, groups.length, group);
-    groups.closers.splice(index, groups.closers.length, group.closer);
-
-    parentContext.contextCount++;
-
-    const goal = group.goal === undefined ? initialGoal : group.goal;
-
-    const nextContext = {
-      id: `${parentContext.id} ${
-        goal !== initialGoal ? `\n${goal[Symbol.toStringTag]} ${group[Symbol.toStringTag]}` : group[Symbol.toStringTag]
-      }`,
-      number: ++contexts.count,
-      depth: index + 1,
-      parentContext,
-      goal,
-      group,
-      state,
-    };
-
-    typeof initializeContext === 'function' && initializeContext(nextContext);
-
-    state.nextContext = contexts[index] = nextContext;
-  };
-
-  /**
-   * Safely mutates matcher state to close the current context.
-   *
-   * @param {string} text - Text of the intended { type = "closer" } token
-   * @param {State} state - Matcher state
-   * @returns {undefined | string} - String when context is **not** closed
-   */
-  const close = (text, state) => {
-    const groups = state.groups;
-    const index = groups.closers.lastIndexOf(text);
-
-    if (index === -1 || index !== groups.length - 1) return 'fault';
-
-    groups.closers.splice(index, groups.closers.length);
-    groups.splice(index, groups.length);
-    state.nextContext = state.context.parentContext;
-  };
-
-  /**
-   * Safely mutates matcher state to skip ahead.
-   *
-   * TODO: Finish implementing forward helper
-   *
-   * @param {string | RegExp} search
-   * @param {Match} match
-   * @param {State} state
-   * @param {number} [delta]
-   */
-  const forward = (search, match, state, delta) => {
-    if (typeof search === 'string' && search.length) {
-      state.nextOffset = match.input.indexOf(search, match.index + match[0].length) + (0 + delta || 0);
-    } else if (search != null && typeof search === 'object') {
-      // debugger;
-      search.lastIndex = match.index + match[0].length;
-      const matched = search.exec(match.input);
-      // console.log(...matched, {matched});
-      if (!matched || matched[1] !== undefined) {
-        if (delta === false) return false;
-        state.nextOffset = search.lastIndex;
-        state.nextFault = true;
-        return 'fault';
-      } else {
-        if (delta === false) return true;
-        state.nextOffset = search.lastIndex + (0 + delta || 0);
-      }
-    } else {
-      throw new TypeError(`forward invoked with an invalid search argument`);
-    }
-  };
-
-  class TokenMatcher extends Matcher {}
-
-  /** @type {import('../experimental/common/types').Goal|symbol} */
-  TokenMatcher.prototype.goal = undefined;
-
-  Object.defineProperty(TokenMatcher, 'capture', {
-    value: capture,
-    enumerable: true,
-    writable: false,
-  });
-
-  Object.defineProperty(TokenMatcher, 'open', {value: open, enumerable: true, writable: false});
-
-  Object.defineProperty(TokenMatcher, 'close', {value: close, enumerable: true, writable: false});
-
-  Object.defineProperty(TokenMatcher, 'forward', {
-    value: forward,
-    enumerable: true,
-    writable: false,
-  });
-
-  Object.freeze(capture);
-  Object.freeze(open);
-  Object.freeze(close);
-  Object.freeze(forward);
   Object.freeze(TokenMatcher);
 
   return TokenMatcher;
