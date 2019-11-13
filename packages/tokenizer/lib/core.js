@@ -34,7 +34,7 @@ export const indexOf = Function.call.bind(String.prototype.indexOf);
 /** @type {(string: string) => number} */
 export const countLineBreaks = text => {
   let lineBreaks = 0;
-  for (let index = -1; (index = indexOf(text, '\n', index + 1)) > -1; lineBreaks++);
+  for (let index = -1; (index = indexOf(text, '\n', index + 1)) !== -1; lineBreaks++);
   return lineBreaks;
 };
 
