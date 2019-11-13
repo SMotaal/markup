@@ -2,7 +2,7 @@
 import {countLineBreaks} from '../../../tokenizer/lib/core.js';
 import {createMatcherMode, TokenMatcher} from '../../lib/token-matcher.js';
 import {RegExpRange} from '../../lib/range.js';
-import {SymbolMap} from './helpers/symbol-map.js';
+import {SymbolMap} from '../../helpers/symbol-map.js';
 
 /// Helpers
 /** @typedef {<T extends {}>(options?: T) => MatcherPatternFactory} PatternFactory */
