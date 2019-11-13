@@ -1,9 +1,1 @@
-{
-  "semi": true,
-  "arrowParens": "avoid",
-  "printWidth": 120,
-  "singleQuote": true,
-  "trailingComma": "all",
-  "bracketSpacing": false,
-  "jsxBracketSameLine": true
-}
+﻿"@smotaal.io/prettier.config"

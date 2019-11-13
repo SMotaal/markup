@@ -16,6 +16,7 @@
     "start": "./index.mjs"
   },
   "devDependencies": {
+		"@smotaal.io/prettier.config": "*",
     "@types/node": "*",
     "http-server": "*",
     "prettier": "*",

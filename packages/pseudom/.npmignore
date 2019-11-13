@@ -1,1 +1,14 @@
-/tests/
+.*
+specs/
+docs/
+meta/
+**/*.psd
+**/*.tgz
+**/*.visx
+**/trash/
+**/[[]trash[]]/
+**/.DS_Store
+.*/**
+**/tsconfig.json
+**/tsbuildinfo.json
+**/*.tsbuildinfo
