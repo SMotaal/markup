@@ -9,6 +9,7 @@
     "./debug": "./lib/debug.js",
     "./matches": "./lib/matches.js",
     "./token-matcher": "./lib/token-matcher.js",
-    "./segments-matcher": "./lib/segment-matcher.js"
+    "./segments-matcher": "./lib/segment-matcher.js",
+    "./helpers/": "./helpers/"
   }
 }
