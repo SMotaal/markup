@@ -16,18 +16,12 @@
     "start": "./index.mjs"
   },
   "devDependencies": {
-		"@smotaal.io/prettier.config": "*",
+    "@smotaal.io/tools": "*",
     "@types/node": "*",
     "http-server": "*",
     "prettier": "*",
     "rollup": "*",
     "typescript": "*"
-  },
-  "devDependencies.ignored": {
-    "@smotaal/esm": "SMotaal/esm"
-  },
-  "resolutions.ignored": {
-    "SMotaal/esm": "../esm"
   },
   "workspaces": {
     "packages": [
@@ -35,9 +29,6 @@
       "packages/tokenizer",
       "packages/pseudom",
       "packages/markup"
-    ],
-    "packages.ignored": [
-      "../esm"
     ],
     "nohoist": [
       "**/pseudom"

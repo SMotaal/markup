@@ -11,5 +11,10 @@
     "./token-matcher": "./lib/token-matcher.js",
     "./segments-matcher": "./lib/segment-matcher.js",
     "./helpers/": "./helpers/"
+  },
+  "workspaces": {
+    "packages": [
+      "./packages/*"
+    ]
   }
 }

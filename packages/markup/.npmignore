@@ -2,6 +2,7 @@
 specs/
 docs/
 meta/
+experiments/
 **/*.psd
 **/*.tgz
 **/*.visx
@@ -10,5 +11,6 @@ meta/
 **/.DS_Store
 .*/**
 **/tsconfig.json
+**/jsconfig.json
 **/tsbuildinfo.json
 **/*.tsbuildinfo

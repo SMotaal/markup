@@ -302,6 +302,7 @@ const tokenizer = (function (exports) {
       );
   };
 
+  /** The identity empty immutable iterable for debugging. */
   const EmptyTokenArray = (EmptyTokenArray =>
     Object.freeze(
       new (Object.freeze(Object.freeze(Object.setPrototypeOf(EmptyTokenArray.prototype, null)).constructor, null))(),
@@ -311,12 +312,24 @@ const tokenizer = (function (exports) {
     },
   );
 
-  /** @type {(string: string, sequence: string , index?: number) => number} */
+  /**
+   * Returns the first occurance of a sequence in the string
+   * starting from the index (or 0 where undefined), always
+   * returning -1 or the index of the occurance.
+   *
+   * @see https://tc39.es/ecma262/#sec-string.prototype.indexof
+   * @type {(string: string, sequence: string , index?: number) => number}
+   */
   const indexOf = Function.call.bind(String.prototype.indexOf);
-  /** @type {(string: string) => number} */
+
+  /**
+   * Returns the total number of `\n` sequences in the string.
+   *
+   * @type {(string: string) => number}
+   */
   const countLineBreaks = text => {
     let lineBreaks = 0;
-    for (let index = -1; (index = indexOf(text, '\n', index + 1)) > -1; lineBreaks++);
+    for (let index = -1; (index = indexOf(text, '\n', index + 1)) !== -1; lineBreaks++);
     return lineBreaks;
   };
 
@@ -417,7 +430,7 @@ const tokenizer = (function (exports) {
         }
       }
 
-      /** @param {ModeFactory | Mode} mode @param {ModeOptions} [options] */
+      /** @param {ModeFactory | Parser.Mode} mode @param {Parser.Mode.Options} [options] */
       register(mode, options) {
         if (!this[MAPPINGS]) return;
 
@@ -494,11 +507,12 @@ const tokenizer = (function (exports) {
     };
 
   /**
-   * @typedef { Partial<{syntax: string, matcher: RegExp, [name:string]: Set | Map | {[name:string]: Set | Map | RegExp} }> } Mode
-   * @typedef { {[name: string]: Mode} } Modes
-   * @typedef { {[name: string]: {syntax: string} } } Mappings
-   * @typedef { {aliases?: string[], syntax: string} } ModeOptions
-   * @typedef { (options: ModeOptions, modes: Modes) => Mode } ModeFactory
+   * @typedef { ReturnType<createParser> } Parser
+   * @typedef { Partial<{syntax: string, matcher: RegExp, [name:string]: Set | Map | {[name:string]: Set | Map | RegExp} }> } Parser.Mode
+   * @typedef { {[name: string]: Parser.Mode} } Parser.Modes
+   * @typedef { {[name: string]: {syntax: string} } } Parser.Mappings
+   * @typedef { {aliases?: string[], syntax: string} } Parser.Mode.Options
+   * @typedef { (options: Parser.Mode.Options, modes: Parser.Modes) => Parser.Mode } ModeFactory
    */
 
   class TokenSynthesizer {
