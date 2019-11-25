@@ -992,13 +992,16 @@ class Matcher extends RegExp {
     return match;
   }
 
-  /**
-   * @param {string} source
-   */
+  /** @param {string} source */
   exec(source) {
     const match = /** @type {MatcherExecArray} */ (super.exec(source));
     match == null || this.capture(match);
     return match;
+  }
+
+  /** @param {string} source */
+  matchAll(source) {
+    return /** @type {typeof Matcher} */ (this.constructor).matchAll(source, /** @type {any} */ (this));
   }
 
   /** @returns {entity is MatcherMetaEntity} */
@@ -1095,7 +1098,8 @@ class Matcher extends RegExp {
     sequence.span = value =>
       (value &&
         // TODO: Don't coerce to string here?
-        (typeof value !== 'symbol' && `${value}`)) ||
+        typeof value !== 'symbol' &&
+        `${value}`) ||
       '';
 
     sequence.WHITESPACE = /^\s+|\s*\n\s*|\s+$/g;
@@ -1198,10 +1202,12 @@ class Matcher extends RegExp {
     const Species = !this || this === Matcher || !(this.prototype instanceof Matcher) ? Matcher : this;
 
     return Object.defineProperty(
-      ((state || (state = Object.create(null))).matcher = /** @type {typeof Matcher} */ (matcher &&
+      ((
+        state || (state = Object.create(null))
+      ).matcher = /** @type {typeof Matcher} */ (matcher &&
       matcher instanceof RegExp &&
       matcher.constructor &&
-      typeof /** @type {typeof Matcher} */ (matcher.constructor).clone !== 'function'
+      'function' !== typeof (/** @type {typeof Matcher} */ (matcher.constructor).clone) // prettier-ignore
         ? matcher.constructor
         : Species === Matcher || typeof Species.clone !== 'function'
         ? Matcher
@@ -1221,9 +1227,9 @@ class Matcher extends RegExp {
 
 const {
   /** Identity for delimiter captures (like newlines) */
-  DELIMITER = (Matcher.DELIMITER = 'DELIMITER?'),
+  DELIMITER = (Matcher.DELIMITER = Matcher.prototype.DELIMITER = /** @type {MatcherIdentityString} */ ('DELIMITER?')),
   /** Identity for unknown captures */
-  UNKNOWN = (Matcher.UNKNOWN = 'UNKNOWN?'),
+  UNKNOWN = (Matcher.UNKNOWN = Matcher.prototype.UNKNOWN = /** @type {MatcherIdentityString} */ ('UNKNOWN?')),
 } = Matcher;
 
 // @ts-check
