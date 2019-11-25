@@ -67,6 +67,11 @@ export class Matcher extends RegExp {
     return match;
   }
 
+  /** @param {string} source */
+  matchAll(source) {
+    return /** @type {typeof Matcher} */ (this.constructor).matchAll(source, /** @type {any} */ (this));
+  }
+
   /** @returns {entity is MatcherMetaEntity} */
   static isMetaEntity(entity) {
     return typeof entity === 'string' && entity.endsWith('?');
@@ -290,7 +295,7 @@ export class Matcher extends RegExp {
 
 export const {
   /** Identity for delimiter captures (like newlines) */
-  DELIMITER = (Matcher.DELIMITER = 'DELIMITER?'),
+  DELIMITER = (Matcher.DELIMITER = Matcher.prototype.DELIMITER = /** @type {MatcherIdentityString} */ ('DELIMITER?')),
   /** Identity for unknown captures */
-  UNKNOWN = (Matcher.UNKNOWN = 'UNKNOWN?'),
+  UNKNOWN = (Matcher.UNKNOWN = Matcher.prototype.UNKNOWN = /** @type {MatcherIdentityString} */ ('UNKNOWN?')),
 } = Matcher;

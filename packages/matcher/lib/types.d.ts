@@ -39,7 +39,8 @@ interface Suffixed<T extends string, V extends boolean = false> {
   endsWith(suffix: T): V;
 }
 
-type MatcherIdentityEntity = symbol | (string & Trimmed & Suffixed<'?', false>);
+type MatcherIdentityString = string & Trimmed & Suffixed<'?', false>;
+type MatcherIdentityEntity = symbol | MatcherIdentityString;
 type MatcherMetaEntity = string & Suffixed<'?'>;
 
 type MatcherUnknownEntity = 'UNKNOWN?';

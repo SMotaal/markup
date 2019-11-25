@@ -71,11 +71,60 @@ export class SegmentMatcher extends Matcher {
 
     return match;
   }
+
+  async debug(options) {
+    const job = {options, ...options};
+    try {
+      job.timestamp = `?${encodeURIComponent(Date.now())}`;
+      job.location =
+        (typeof globalThis === 'object' &&
+          globalThis &&
+          globalThis.location != null &&
+          typeof globalThis.location === 'object' &&
+          globalThis.location &&
+          globalThis.location.href) ||
+        /\/(?:node_modules\/(?:@.+?\/|)|)(?:Markdown\/|)lib\/.*$/[Symbol.replace](import.meta.url, '/');
+      if (job.specifier != null) {
+        job.sourceText = null;
+        job.url = new URL(job.specifier, job.location);
+        job.response = await (job.request = fetch(job.url));
+        if (!job.response.ok) throw Error(`Failed to fetch ${job.url}`);
+        job.sourceText = await job.response.text();
+      }
+      job.sourceText === null ||
+        /** @type {import('./debug.js')} */ (await import('./debug.js')).debugMatcher(
+          this, // SegmentMatcher.prototype,
+          job.sourceText,
+          (job.debugging = {}),
+        );
+    } catch (exception) {
+      throw (job.error = (exception.stack, exception));
+    } finally {
+      console.group('%o', job);
+      if (job.error) console.warn(job.error);
+      console.groupEnd();
+    }
+  }
 }
 
 export const {
   /** Identity for delimiter captures (like newlines) */
-  INSET = (SegmentMatcher.INSET = 'INSET?'),
+  INSET = (SegmentMatcher.INSET = SegmentMatcher.prototype.INSET = /** @type {MatcherIdentityString} */ ('INSET?')),
   /** Identity for unknown captures */
-  LOOKAHEAD = (SegmentMatcher.LOOKAHEAD = 'LOOKAHEAD?'),
+  LOOKAHEAD = (SegmentMatcher.LOOKAHEAD = SegmentMatcher.prototype.LOOKAHEAD =
+    /** @type {MatcherIdentityString} */ ('LOOKAHEAD?')),
 } = SegmentMatcher;
+
+// await (SegmentMatcher.prototype.debug['implementation'] ||
+//   (SegmentMatcher.prototype.debug['implementation'] = import(
+//     // TODO: Find a better way to resolve matcher/lib/debug.js
+//     '/markup/packages/matcher/lib/debug.js'
+//   ).catch(exception => {
+//     console.warn(exception);
+//     return new Proxy(Object.seal(Object.freeze(() => {})), {
+//       get() {
+//         return arguments[0];
+//       },
+//       apply: Reflect.apply.bind(console.warn, null, [exception], undefined),
+//     });
+//   })))
