@@ -32,10 +32,10 @@ export class SegmentMatcher extends Matcher {
       entities: {[index]: entity, meta, identities},
       state,
     } = this;
-        // entity === INSET ||
-        // entity === LOOKAHEAD ||
-        // entity === Matcher.DELIMITER ||
-        // entity === Matcher.UNKNOWN ||
+    // entity === INSET ||
+    // entity === LOOKAHEAD ||
+    // entity === Matcher.DELIMITER ||
+    // entity === Matcher.UNKNOWN ||
     // debugger;
     if (!entity) return;
 
@@ -53,7 +53,6 @@ export class SegmentMatcher extends Matcher {
       match.identity = entity;
     }
     match.capture[/** @type {MatcherNamedEntity} */ (entity)] = text;
-
   }
 
   /** @param {MatcherExecArray} match */
@@ -65,7 +64,10 @@ export class SegmentMatcher extends Matcher {
 
     match &&
       (match.forEach(this.captureEntity || SegmentMatcher.prototype.captureEntity, this),
-      match.identity || (match.capture[(match.identity = this.UNKNOWN || Matcher.UNKNOWN)] = match[0]));
+      match.identity ||
+        (match.capture[
+          (/** @type {MatcherMatch} */(match)).identity = this.UNKNOWN || Matcher.UNKNOWN // prettier-ignore
+        ] = match[0]));
 
     return match;
   }
