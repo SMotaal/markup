@@ -1,9 +1,5 @@
 ﻿// @ts-check
 /// <reference path="./types.d.ts" />
-// TODO:  Fix Matcher/Debug types
-
-import {DELIMITER, UNKNOWN} from '../matcher.js';
-import {matchAll} from './helpers.js';
 
 /** @param {Matcher} matcher @param {string} sourceText @param {MatcherDebugOptions} [options] */
 export const debugMatcher = (matcher, sourceText, options = {}) => (
@@ -16,8 +12,10 @@ debugMatcher.matchAll = (matcher, sourceText, options = {}) => {
   const {timing = false} = options;
   const stamp = `${(timing === true && `-${Date.now()}`) || timing || ''}`;
   timing && console.time(`matching${stamp}`);
-  //@ts-ignore
-  options.matches = [...matchAll((options.sourceText = sourceText), (options.matcher = matcher))];
+  // @ts-ignore
+  options.matches = [
+    ...matcher.constructor['matchAll']((options.sourceText = sourceText), (options.matcher = matcher)),
+  ];
   timing && console.timeEnd(`matching${stamp}`);
   return options.matches;
 };
@@ -29,12 +27,12 @@ debugMatcher.matches = (matches, options = {}) => {
     timing = false,
     warnings = true,
     matcher,
-    //@ts-ignore
+    // @ts-ignore
     colors = (matcher && matcher.colors) || debugMatcher.colors,
     logs = [],
 
     uniqueTypes = matcher &&
-      //@ts-ignore
+      // @ts-ignore
       matcher.entities && [...new Set(matcher.entities.filter(entity => typeof entity === 'string'))],
   } = options;
   const stamp = `${(timing === true && `-${Date.now()}`) || timing || ''}`;
@@ -43,7 +41,7 @@ debugMatcher.matches = (matches, options = {}) => {
 
   const INITIAL = method === 'render' ? '' : RESET_STYLE;
 
-  // console.log({matches});
+  const {DELIMITER = 'DELIMITER?', UNKNOWN = 'UNKNOWN?', INSET = 'INSET?'} = /** @type {*} */ (matcher);
 
   try {
     let format;
@@ -52,12 +50,12 @@ debugMatcher.matches = (matches, options = {}) => {
       if (!match) continue;
       format = '';
       const {0: string, index, identity, entity, capture, meta, input, ...properties} = match;
-      //@ts-ignore
-      let {[DELIMITER]: delimiter, [UNKNOWN]: unknown, ['INSET?']: inset} = capture;
+      // @ts-ignore
+      let {[DELIMITER]: delimiter, [UNKNOWN]: unknown, [INSET]: inset} = capture;
       const values = [];
-      //@ts-ignore
+      // @ts-ignore
       const delta = (properties.index = index) - (properties.lastIndex = lastIndex);
-      //@ts-ignore
+      // @ts-ignore
       const skipped = (properties.skipped = lastIndex > 0 &&
         delta > 1 && {index, lastIndex, delta, text: input.slice(lastIndex, index) || ''});
 
@@ -72,7 +70,7 @@ debugMatcher.matches = (matches, options = {}) => {
             .slice(1, -1),
         );
         values.push(
-          //@ts-ignore
+          // @ts-ignore
           ...(skipped.lines = text.replace(/^\n/, '').split(/\n/)).flatMap((line, index) => [
             `${INITIAL} color: coral;`,
             index ? `\n${SEGMENT_MARGIN}` : `${'skipped'.padStart(SEGMENT_MARGIN.length - 1)}\u{00A0}`,
@@ -81,25 +79,25 @@ debugMatcher.matches = (matches, options = {}) => {
           ]),
           INITIAL,
         ),
-          //@ts-ignore
+          // @ts-ignore
           (format += `${`%c%s%c%s`.repeat(skipped.lines.length)}%c\0`);
 
         logs.push([method, [format, ...values.splice(0, values.length)]]);
         format = '';
       }
 
-      //@ts-ignore
+      // @ts-ignore
       unknown !== undefined && (properties.unknown = unknown);
-      //@ts-ignore
+      // @ts-ignore
       delimiter !== undefined && (properties.delimiter = delimiter);
 
-      //@ts-ignore
+      // @ts-ignore
       const overlap = (properties.overlap = (delta < 0 && string.slice(0, 1 - delta)) || '');
       overlap && warnings && logs.push(['warn', ['overlap:', {overlap, delta, match, index, lastIndex}]]);
 
       const color = !identity
         ? //
-          //@ts-ignore
+          // @ts-ignore
           colors.unknown || COLORS.unknown
         : identity in colors
         ? colors[identity]
@@ -146,7 +144,7 @@ debugMatcher.matches = (matches, options = {}) => {
             ]),
           );
         }
-        //@ts-ignore
+        // @ts-ignore
         format += `%c${identity.padStart(
           SEGMENT_MARGIN.length - 1,
         )}\u{00A0}${lineFormat}${`%c\n${SEGMENT_MARGIN}${lineFormat}`.repeat(lines.length - 1)}`;
@@ -192,13 +190,13 @@ const FORMATTING = /(.*?)(%c|%s|%d|%[\d\.]*f|%o|%O|$)/g;
 const COLORS = (debugMatcher.colors = ['#CCCC00', '#00CCCC', '#CC00CC', '#FF6600', '#00FF66', '#6600FF']);
 
 COLORS: {
-  //@ts-ignore
+  // @ts-ignore
   COLORS.empty = '#FF3333';
-  //@ts-ignore
+  // @ts-ignore
   COLORS.feed = '#3333FF';
-  //@ts-ignore
+  // @ts-ignore
   COLORS.sequence = '#33FF33';
-  //@ts-ignore
+  // @ts-ignore
   COLORS.unknown = '#FF00FF';
 }
 
@@ -212,7 +210,7 @@ const render = (format, ...values) => {
     let span;
     const push = text => (span ? span.push(text) : spans.push(text));
     const roll = () => (span && spans.push(render.span(span.style, ...span)), (span = undefined));
-    //@ts-ignore
+    // @ts-ignore
     for (const [, pre, formatting = '%O'] of matchAll(format, FORMATTING)) {
       const value = values[i++];
       pre && push(render.pre(pre));
@@ -220,7 +218,7 @@ const render = (format, ...values) => {
         case 'c':
           roll();
           span = [];
-          //@ts-ignore
+          // @ts-ignore
           span.style = value;
           break;
         case 's':
