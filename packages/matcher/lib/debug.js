@@ -13,6 +13,7 @@ debugMatcher.matchAll = (matcher, sourceText, options = {}) => {
   const stamp = `${(timing === true && `-${Date.now()}`) || timing || ''}`;
   timing && console.time(`matching${stamp}`);
   // @ts-ignore
+  // TODO: Find a cleaner way to reference RegExp.prototype[Symbol.matchAll]
   options.matches = [
     ...matcher.constructor['matchAll']((options.sourceText = sourceText), (options.matcher = matcher)),
   ];

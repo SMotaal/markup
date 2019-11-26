@@ -195,6 +195,7 @@ export class Matcher extends RegExp {
     /** @template {RegExp} T @type {(string: MatcherText, matcher: T) => MatcherIterator<T> } */
     // const matchAll = (string, matcher) => new MatcherState(string, matcher);
     const matchAll = (() =>
+      // TODO: Find a cleaner way to reference RegExp.prototype[Symbol.matchAll]
       Function.call.bind(
         // String.prototype.matchAll || // TODO: Uncomment eventually
         {
