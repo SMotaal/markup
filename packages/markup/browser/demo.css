@@ -76,8 +76,8 @@
     margin-top: -3em;
     margin-left: -1ch;
     margin-right: -1ch;
-    line-break: loose;
-    word-wrap: break-word;
+    /* line-break: loose; */
+    /* word-wrap: break-word; */
     user-select: text;
     -webkit-user-select: text;
     -moz-user-select: text;
@@ -100,7 +100,7 @@
   tab-size: var(--markup-tab-size, 2);
   font-family: Iosevka, markup, monospace;
   font-kerning: auto;
-  white-space: pre-wrap;
+  /* white-space: pre-wrap; */
 }
 
 .markup-container.fade {

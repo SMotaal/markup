@@ -1,4 +1,4 @@
-/** @param {Pick<globalThis, 'document'|'DocumentFragment'|'Element'|'Object'|'Node'|'Text'>} endowments */
+/** @param {Pick<typeof globalThis, 'document'|'DocumentFragment'|'Element'|'Object'|'Node'|'Text'>} endowments */
 export const createNativeDOM = (endowments = globalThis) => {
   if (
     !(
@@ -11,45 +11,45 @@ export const createNativeDOM = (endowments = globalThis) => {
   )
     return (endowments = undefined);
 
-  const dom = {};
+  const native = {};
 
-  dom.Object = endowments.Object || globalThis.Object;
+  native.Object = endowments.Object || globalThis.Object;
   // dom.String = endowments.String || globalThis.String;
   // dom.Set = endowments.Set || globalThis.Set;
   // dom.Symbol = endowments.Symbol || globalThis.Symbol;
-  dom.document = endowments.document;
+  native.document = endowments.document;
 
   /** @type {typeof endowments.DocumentFragment} */
-  dom.DocumentFragment = endowments.DocumentFragment || dom.document.createDocumentFragment().constructor;
+  native.DocumentFragment = endowments.DocumentFragment || native.document.createDocumentFragment().constructor;
 
   /** @type {typeof endowments.Element} */
-  dom.Element =
+  native.Element =
     endowments.Element ||
     (() => {
-      let prototype = dom.document.createElement('span');
+      let prototype = native.document.createElement('span');
       while (
         prototype.constructor &&
         prototype.constructor.name.startsWith('HTML') &&
-        prototype !== (prototype = dom.Object.getPrototypeOf(prototype) || prototype)
+        prototype !== (prototype = native.Object.getPrototypeOf(prototype) || prototype)
       );
       return prototype.constructor.name === 'Element' ? prototype.constructor : undefined;
     })();
 
   /** @type {typeof endowments.Node} */
-  dom.Node =
+  native.Node =
     endowments.Node ||
-    (dom.Element &&
+    (native.Element &&
       (() => {
-        let prototype = dom.Object.getPrototypeOf(dom.Element.prototype);
+        let prototype = native.Object.getPrototypeOf(native.Element.prototype);
         return prototype.constructor.name === 'Node' ? prototype.constructor : undefined;
       })());
 
   /** @type {typeof endowments.Text} */
-  dom.Text = endowments.Text || dom.document.createTextNode('').constructor;
+  native.Text = endowments.Text || native.document.createTextNode('').constructor;
 
-  dom.createElement = (tag, properties, ...children) => {
-    const element = dom.document.createElement(tag);
-    properties && dom.Object.assign(element, properties);
+  native.createElement = (tag, properties, ...children) => {
+    const element = native.document.createElement(tag);
+    properties && native.Object.assign(element, properties);
     if (!children.length) return element;
     if (element.append) {
       while (children.length > 500) element.append(...children.splice(0, 500));
@@ -59,10 +59,10 @@ export const createNativeDOM = (endowments = globalThis) => {
     }
     return element;
   };
-  dom.createText = (content = '') => dom.document.createTextNode(content);
-  dom.createFragment = () => dom.document.createDocumentFragment();
+  native.createText = (content = '') => native.document.createTextNode(content);
+  native.createFragment = () => native.document.createDocumentFragment();
 
   endowments = undefined;
 
-  return dom.Object.freeze(dom.Object.setPrototypeOf(dom, null));
+  return native.Object.freeze(native.Object.setPrototypeOf(native, null));
 };

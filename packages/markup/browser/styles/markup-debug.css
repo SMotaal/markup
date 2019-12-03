@@ -1,32 +1,45 @@
 @media only screen {
-  /*
-  .markup-wrapper .markup:hover,
-  .markup-wrapper .markup:hover::before,
-  .markup-wrapper :hover .markup,
-  .markup-wrapper :hover .markup::before,
-  .markup-wrapper:hover {
-    outline: 0.5px dotted var(--color, currentColor);
-  }
-  */
-
-  .markup-line {
+  .markup-line.markup {
     --widget-shadow: #00096;
     --widget-underlay: #6664;
     --widget-overlay: #ccc8;
     --marked-line-number-color: var(--markup-contrast, inherit);
     --marked-line-number-background-color: var(--widge, #9999996f);
-    cursor: text;
-    /* text-shadow: 0 0 0.5px #9999; */
+    --markup-line-number-opacity: 1;
+    --markup-line-cursor: text;
+    --markup-token-display: inline;
   }
 
-  .dark-mode .markup-line {
+  .markup-line.markup:hover {
+    --markup-line-number-background-color: var(--widge, #9999991f);
+  }
+
+  :not(.marked) > .markup-line.markup:hover {
+    --markup-line-background-color: #9999991f;
+  }
+
+  .markup-line.markup.marked {
+    --markup-line-background-color: #99999910;
+    --markup-line-outline: 1px solid #9999993f;
+    --markup-line-outline-offset: -1px;
+    --markup-line-number-opacity: 0.825;
+    --markup-line-number-color: var(--marked-line-number-color);
+    --markup-line-number-background-color: var(--marked-line-number-background-color);
+  }
+
+  .markup-line.markup.marked:hover {
+    --markup-line-background-color: #9999991f;
+  }
+
+  .markup-line.markup.dark-mode,
+  .dark-mode .markup-line.markup {
     --widget-shadow: #fff6;
     --widget-underlay: #ccc4;
     --widget-overlay: #ccc4;
   }
 
-  .markup-line > .markup {
-    --debug: var(--color, var(--markup-neutral, #999));
+  .markup-line.markup > .markup {
+    /* --debug: var(--color, var(--markup-neutral, #999));
     --ring: var(--debug, var(--markup-neutral, #999));
     --bezel: var(--markup-contrast, white);
     border-radius: 1ch;
@@ -34,23 +47,34 @@
     border: 2px solid transparent;
     position: relative;
     -webkit-box-decoration-break: clone;
-    box-decoration-break: clone;
-    /* box-sizing: border-box; */
+    box-decoration-break: clone; */
   }
 
-  .marked > .markup-line > .markup.marked,
-  :not(.marked) > .markup-line > .markup:hover {
+  .markup-line.markup > [data-markup-hint].markup:not(:empty) {
+    --debug: var(--color, var(--markup-neutral, #999));
+    --ring: var(--debug, var(--markup-neutral, #999));
+    --bezel: var(--markup-contrast, white);
+    --markup-token-display: inline;
+    --markup-token-margin: -2px;
+    border: 2px solid transparent;
+    border-radius: 1ch;
+    position: relative;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+  }
+
+  .marked > .markup-line.markup > .markup.marked,
+  :not(.marked) > .markup-line.markup > .markup:hover {
     background-color: var(--bezel, white);
     box-shadow: 0 0 0 2px var(--bezel, white), 0 3px 10px -2px #0006;
     z-index: 2;
   }
 
-  .marked > .markup-line > [data-hint].markup.marked::after,
-  .markup-wrapper:not(.marked) > .markup-line > [data-hint].markup:hover::after {
-    content: attr(data-hint);
+  .marked > .markup-line.markup > .markup.marked::after,
+  .markup-wrapper:not(.marked) > .markup-line.markup > [data-markup-hint].markup:hover::after {
+    content: attr(data-markup-hint);
     display: block;
     position: absolute;
-
     left: 50%;
     will-change: transform;
     transform: translateX(-50%);
@@ -61,18 +85,18 @@
     bottom: calc(100% + 0.5ch + -2 * var(--padding, 2px));
   }
 
-  .markup-line > .markup.comment,
-  .markup-line > .markup.in-comment,
-  .markup-line > .markup.whitespace {
+  .markup-line.markup > .markup.comment,
+  .markup-line.markup > .markup.in-comment,
+  .markup-line.markup > .markup.whitespace {
     --ring: var(--markup-whitespaces, var(--markup-neutral, #999));
   }
 
-  .markup-line > .markup.fault {
+  .markup-line.markup > .markup.fault {
     --bezel: var(--markup-faults-background, #f21);
     --debug: var(--markup-faults-background, #f21);
   }
 
-  .markup-line > [data-hint].markup::after {
+  .markup-line.markup > [data-markup-hint].markup::after {
     display: none;
 
     --padding: 1.75px;
@@ -109,35 +133,7 @@
     -moz-user-select: none;
   }
 
-  .markup-line:hover::before {
-    --markup-line-number-background-color: var(--widge, #9999991f);
-  }
-
-  .markup-line.marked {
-    --markup-line-background-color: #99999910;
-    --markup-line-outline: 1px solid #9999993f;
-    --markup-line-outline-offset: -1px;
-  }
-
-  .markup-wrapper:not(.marked) > .markup-line:hover {
-    --markup-line-background-color: #9999991f;
-  }
-
-  .markup-line.marked::before {
-    opacity: 0.825;
-    --markup-line-number-color: var(--marked-line-number-color);
-    --markup-line-number-background-color: var(--marked-line-number-background-color);
-  }
-
-  .markup-line.marked:hover {
-    --markup-line-background-color: #9999991f;
-  }
-
-  .markup-line.marked:hover::before {
-    opacity: 1;
-  }
-
-  .markup-line > .markup.break:last-child {
+  .markup-line.markup > .markup.break:last-child {
     display: inline-block;
     line-height: 100%;
     /* outline: 1px solid greenyellow; */
@@ -151,25 +147,32 @@
     overflow: visible;
   }
 
-  /* .markup-line > .markup.break:last-child::before, */
-  .markup-line.marked > .markup.break:last-child::before,
-  .markup-line:hover > .markup.break:last-child::before {
+  .markup-line.markup:hover > .markup.break {
+    /* overflow-x: visible; */
+  }
+
+  /* .markup-line.markup > .markup.break:last-child::before, */
+  .markup-line.markup.marked > .markup.break:last-child::before,
+  .markup-line.markup:hover > .markup.break:last-child::before {
     display: inline-block;
     position: relative;
     content: '\23CE';
     color: var(--widget-shadow, currentColor);
-    left: calc(1em + var(--markup-inset-margin, 0.0001em));
-    font-family: monospace;
-    /* pointer-events: all; */
     text-indent: var(--markup-text-indent, 0);
+    left: calc(1em + var(--markup-inset-margin, 0.0001em) - var(--markup-soft-indent, 0));
+    font-family: monospace;
+    padding: 0;
+    margin: 0;
+    /* pointer-events: all; */
+    word-break: initial;
+    white-space: nowrap;
   }
 
-  .markup.fault::before {
+  .markup-line.markup > .markup.fault::before {
     float: right;
     width: 1.5em;
     height: 1.5em;
     overflow: hidden;
-    /* contain: strict; */
     margin: 0 2px 0 0;
     padding: 0;
     order: -1;
@@ -189,11 +192,9 @@
     vertical-align: initial;
     text-align: center;
     text-indent: 0;
-    /* visibility: visible; */
     user-select: none;
     -webkit-user-select: none;
     -moz-user-select: none;
-    /* position: relative; */
   }
 }
 
@@ -210,7 +211,3 @@
     --widget-overlay: #ccc6;
   }
 }
-
-/* .markup-wrapper .marker {
-  display: none;
-} */
