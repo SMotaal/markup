@@ -197,30 +197,33 @@ export class Matcher extends RegExp {
     const matchAll = (() =>
       // TODO: Find a cleaner way to reference RegExp.prototype[Symbol.matchAll]
       Function.call.bind(
-        // String.prototype.matchAll || // TODO: Uncomment eventually
-        {
-          /**
-           * @this {string}
-           * @param {RegExp | string} pattern
-           */
-          *matchAll() {
-            const matcher =
-              arguments[0] &&
-              (arguments[0] instanceof RegExp
-                ? Object.setPrototypeOf(RegExp(arguments[0].source, arguments[0].flags || 'g'), arguments[0])
-                : RegExp(arguments[0], 'g'));
-            const string = String(this);
+        String.prototype.matchAll || // TODO: Uncomment eventually
+          {
+            /**
+             * @this {string}
+             * @param {RegExp | string} pattern
+             */
+            *matchAll() {
+              const matcher =
+                arguments[0] &&
+                (arguments[0] instanceof RegExp
+                  ? Object.setPrototypeOf(RegExp(arguments[0].source, arguments[0].flags || 'g'), arguments[0])
+                  : RegExp(arguments[0], 'g'));
+              const string = String(this);
 
-            if (!(matcher.flags.includes('g') || matcher.flags.includes('y'))) return void (yield matcher.exec(string));
+              if (!(matcher.flags.includes('g') || matcher.flags.includes('y')))
+                return void (yield matcher.exec(string));
 
-            for (
-              let match, lastIndex = -1;
-              lastIndex <
-              ((match = matcher.exec(string)) ? (lastIndex = matcher.lastIndex + (match[0].length === 0)) : lastIndex);
-              yield match, matcher.lastIndex = lastIndex
-            );
-          },
-        }.matchAll,
+              for (
+                let match, lastIndex = -1;
+                lastIndex <
+                ((match = matcher.exec(string))
+                  ? (lastIndex = matcher.lastIndex + (match[0].length === 0))
+                  : lastIndex);
+                yield match, matcher.lastIndex = lastIndex
+              );
+            },
+          }.matchAll,
       ))();
 
     Object.defineProperty(Matcher, 'matchAll', {value: Object.freeze(matchAll), enumerable: true, writable: false});
