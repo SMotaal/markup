@@ -14,6 +14,8 @@ Nestable syntax tokenizer using Regular Expressions.
 
 > **Important Note:** This package is designed for ECMAScript module supporting runtimes, including all major browsers and Node.js 12 or later.
 
+See [<samp>Changelog</samp>][changelog].
+
 ## Getting Started
 
 <figcaption><b>Single-Mode</b></figcaption>
@@ -44,7 +46,7 @@ parser.tokenize('/* source */', {sourceType: 'javascript'});
 
 ## Demo
 
-You can see a [live demo](https://www.smotaal.io/markup/markup) or serve it locally and navigate to [browser/demo/index.html](./browser/demo/index.html).
+You can see a [live demo](https://smotaal.io/markup/markup).
 
 <figure>
 
@@ -78,35 +80,5 @@ examples/browser/#‹specifier›!‹mode›*‹iterations›**‹repeats›
 
 </figure>
 
-## Important Changes
-
-_v0.0.7_
-
-- Add various line-oriented effects.
-- Improve performance and reliability of `extensions/dom.js`.
-- Refactor markup APIs to support a new `matcher` tokenizer.
-
-_v0.0.6_
-
-- Switch to `@smotaal/pseudom` scoped distribution.
-- Refactor `extensions/dom.js` to `export default new class {}`.
-- Cleanup extensions and related documentation.
-- Rename source entries using `tokenizer‹.variant›*.js`.
-- Cleanup implementation and examples.
-- Introduce `experimental` tokenizer variants from `lib/experimental`.
-
-_v0.0.5_
-
-- Refactor grammars into a separate package.
-- Remove `dist/extensions/` bundles.
-- Expose dom and grammar helpers directly `dist/tokenizer.browser.js`.
-
-_v0.0.4_
-
-- Rename ECMAScript module sources to `.js` instead of `.mjs`.
-- Add minimal `node/loader.mjs` for experimental Node.js mode.
-
-_v0.0.3_
-
-- Refactor source files for optimal bundling with `rollup`.
-- Add `dist/` with multiple dist `umd` and `esm` bundles.
+[package:repository]: https://github.com/SMotaal/markup/tree/master/packages/tokenizer
+[changelog]: ./CHANGELOG.md

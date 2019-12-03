@@ -1,7 +1,7 @@
 {
-  "name": "@smotaal.io/tokenizer",
+  "name": "@smotaal/tokenizer",
   "displayName": "SMotaal's Markup Tokenizer",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "Nestable markup tokenizer using Regular Expressions",
   "license": "MIT",
   "type": "module",
