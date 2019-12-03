@@ -13,7 +13,7 @@
     "access": "public"
   },
   "devDependencies": {
-    "@smotaal/grammars": "*",
+    "@smotaal/grammar": "*",
     "@smotaal/pseudom": "*"
   }
 }

@@ -30,7 +30,14 @@ export const html = Object.defineProperties(
     HTMLTagClosure.patterns = html.patterns;
 
     HTMLTagClosure.close = (next, state, context) => {
-      const parent = next && next.parent;
+      let parent = next && next.parent;
+      // TODO: Fix parent broken when HTMLTagClosure.punctuation {'='}
+      //       This is a temporary workaround (maybe)
+      if (parent.text !== '<') {
+        let previous = next.previous;
+        while (previous && !(previous.text === '<' && previous.punctuator === 'opener')) previous = previous.previous;
+        if (previous) next.parent = parent = previous;
+      }
       const first = parent && parent.next;
       const tag = first && first.text && TAG.test(first.text) && first.text.toUpperCase();
 
@@ -68,6 +75,7 @@ export const html = Object.defineProperties(
     };
     HTMLTagClosure.quotes = Symbols.from(`' "`);
     HTMLTagClosure.closer = /\/?>/;
+    HTMLTagClosure.punctuation = {'=': 'assigner'};
 
     return html;
   },

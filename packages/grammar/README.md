@@ -1,4 +1,4 @@
-# SMotaal's Grammars
+# SMotaal's Grammar
 
 Regular expression markup grammars.
 
@@ -13,6 +13,8 @@ These grammars are constantly being revised to meet experimental requirements of
 </blockquote>
 
 That said, they have been used reliably and responsibly to build the prototype of the Markout client-side engine I use on my own site.
+
+See [<samp>Changelog</samp>][changelog].
 
 ## `JS` JavaScript
 
@@ -31,3 +33,6 @@ That said, they have been used reliably and responsibly to build the prototype o
 ## `MOMD` Markout-Markdown
 
 - `markdown-grammar` is there to make `markout` happy.
+
+[package:repository]: https://github.com/SMotaal/markup/tree/master/packages/grammar
+[changelog]: ./CHANGELOG.md

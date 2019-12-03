@@ -42,43 +42,38 @@ export const javascript = Object.defineProperties(
   },
 );
 
-Definitions: {
-  Defaults: {
-    javascript.DEFAULTS = {syntax: 'javascript', aliases: ['js', 'es', 'ecmascript']};
-    // javascript.DEFAULTS = {syntax: 'javascript', aliases: ['js']};
-  }
+javascript.DEFAULTS = {syntax: 'javascript', aliases: ['js', 'es', 'ecmascript']};
 
-  javascript.REGEXPS = /\/(?=[^*/\n][^\n]*\/(?:[a-z]+\b|)(?:[ \t]+[^\n\s\(\[\{\w]|[.\[;,]|[ \t]*[)\]};,\n]|\n|$))(?:[^\\\/\n\t\[]+|\\[^\n]|\[(?:\\[^\n]|[^\\\n\t\]]+)*?\][+*]?\??)*\/(?:[a-z]+\b|)/g;
+javascript.REGEXPS = /\/(?=[^*/\n][^\n]*\/(?:[a-z]+\b|)(?:[ \t]+[^\n\s\(\[\{\w]|[.\[;,]|[ \t]*[)\]};,\n]|\n|$))(?:[^\\\/\n\t\[]+|\\[^\n]|\[(?:\\[^\n]|[^\\\n\t\]]+)*?\][+*]?\??)*\/(?:[a-z]+\b|)/g;
 
-  javascript.COMMENTS = /\/\/|\/\*|\*\/|^\#\!.*\n|<!--/g;
-  javascript.COMMENTS['(closures)'] = '//…\n /*…*/ <!--…\n';
+javascript.COMMENTS = /\/\/|\/\*|\*\/|^\#\!.*\n|<!--/g;
+javascript.COMMENTS['(closures)'] = '//…\n /*…*/ <!--…\n';
 
-  javascript.QUOTES = /`|"|'/g;
-  javascript.QUOTES['(symbols)'] = `' " \``;
+javascript.QUOTES = /`|"|'/g;
+javascript.QUOTES['(symbols)'] = `' " \``;
 
-  javascript.CLOSURES = /\{|\}|\(|\)|\[|\]/g;
-  javascript.CLOSURES['(closures)'] = '{…} (…) […]';
+javascript.CLOSURES = /\{|\}|\(|\)|\[|\]/g;
+javascript.CLOSURES['(closures)'] = '{…} (…) […]';
 
-  javascript.SPANS = {'`': {['(closures)']: '${…}'}};
+javascript.SPANS = {'`': {['(closures)']: '${…}'}};
 
-  javascript.KEYWORDS = {
-    ['(symbols)']:
-      // 'abstract enum interface package namespace declare type module public protected ' +
-      'arguments as async await break case catch class export const continue private debugger default delete do else export extends finally for from function get if import in instanceof let new of return set static super switch this throw try typeof var void while with yield',
-  };
+javascript.KEYWORDS = {
+  ['(symbols)']:
+    // 'abstract enum interface package namespace declare type module public protected ' +
+    'arguments as async await break case catch class export const continue private debugger default delete do else export extends finally for from function get if import in instanceof let new of return set static super switch this throw try typeof var void while with yield',
+};
 
-  javascript.PUNCTUATORS = [
-    /,|;|\.\.\.|\.|:|\?|=>/,
-    /\+\+|\+=|\+|--|-=|-|\*\*=|\*\*|\*=|\*|\/=|\//,
-    /&&|&=|&|\|\||\|=|\||%=|%|\^=|\^|~=|~/,
-    /<<=|<<|<=|<|>>>=|>>>|>>=|>>|>=|>/,
-    /!==|!=|!|===|==|=/,
-  ];
+javascript.PUNCTUATORS = [
+  /,|;|\.\.\.|\.|:|\?|=>/,
+  /\+\+|\+=|\+|--|-=|-|\*\*=|\*\*|\*=|\*|\/=|\//,
+  /&&|&=|&|\|\||\|=|\||%=|%|\^=|\^|~=|~/,
+  /<<=|<<|<=|<|>>>=|>>>|>>=|>>|>=|>/,
+  /!==|!=|!|===|==|=/,
+];
 
-  javascript.ASSIGNERS = {['(symbols)']: '= += -= *= /= **= %= &= |= <<= >>= >>>= ^= ~='};
+javascript.ASSIGNERS = {['(symbols)']: '= += -= *= /= **= %= &= |= <<= >>= >>>= ^= ~='};
 
-  javascript.COMBINATORS = {['(symbols)']: '=== == + - * / ** % & && | || ! !== != > < >= <= => >> << >>> ^ ~'};
-  javascript.NONBREAKERS = {['(symbols)']: '.'};
-  javascript.OPERATORS = {['(symbols)']: '++ -- ... ? :'};
-  javascript.BREAKERS = {['(symbols)']: ', ;'};
-}
+javascript.COMBINATORS = {['(symbols)']: '=== == + - * / ** % & && | || ! !== != > < >= <= => >> << >>> ^ ~'};
+javascript.NONBREAKERS = {['(symbols)']: '.'};
+javascript.OPERATORS = {['(symbols)']: '++ -- ... ? :'};
+javascript.BREAKERS = {['(symbols)']: ', ;'};

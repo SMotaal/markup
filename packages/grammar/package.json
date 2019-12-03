@@ -1,7 +1,7 @@
 {
-  "name": "@smotaal/grammars",
+  "name": "@smotaal/grammar",
   "displayName": "SMotaal's Markup Grammars",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Regular expression markup grammars",
   "license": "MIT",
   "mode": "esm",

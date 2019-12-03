@@ -46,25 +46,23 @@ export const esx = Object.defineProperties(
   },
 );
 
-Definitions: {
-  Defaults: {
-    const requires = [javascript.defaults.syntax];
+mjs.DEFAULTS = {syntax: 'mjs', aliases: ['esm'], requires: [javascript.defaults.syntax]};
+cjs.DEFAULTS = {syntax: 'cjs', requires: [javascript.defaults.syntax]};
+esx.DEFAULTS = {syntax: 'esx', requires: [javascript.defaults.syntax, 'cjs', 'mjs']};
 
-    mjs.DEFAULTS = {syntax: 'mjs', aliases: ['esm'], requires};
-    cjs.DEFAULTS = {syntax: 'cjs', requires};
-    esx.DEFAULTS = {syntax: 'esx', requires: [...requires, 'cjs', 'mjs']};
-  }
-
-  const {REGEXPS, CLOSURES, extended = (javascript.extended = {})} = javascript;
-
-  // TODO: Undo $ matching once fixed
-  const QUOTES = (javascript.extended.QUOTES = /`|"(?:[^\\"]+|\\.)*(?:"|$)|'(?:[^\\']+|\\.)*(?:'|$)/g);
-  const COMMENTS = (javascript.extended.COMMENTS = /\/\/.*(?:\n|$)|\/\*[^]*?(?:\*\/|$)|^\#\!.*\n|<!--/g);
-  const STATEMENTS = (javascript.extended.STATEMENTS = all(QUOTES, CLOSURES, REGEXPS, COMMENTS));
-  const BLOCKLEVEL = (javascript.extended.BLOCKLEVEL = sequence`(\n|\s+)|(${STATEMENTS})`);
-  const TOPLEVEL = (javascript.extended.TOPLEVEL = sequence`(\n|\s+)|(${STATEMENTS})`);
-  javascript.extended.CLOSURE = sequence`(\n+)|(${STATEMENTS})`;
-  javascript.extended.MJS = sequence`${TOPLEVEL}|\bexport\b|\bimport\b`;
-  javascript.extended.CJS = sequence`${BLOCKLEVEL}|\bexports\b|\bmodule.exports\b|\brequire\b|\bimport(?=\(|\.)`;
-  javascript.extended.ESX = sequence`${BLOCKLEVEL}|\bexports\b|\bimport\b|\bmodule.exports\b|\brequire\b`;
-}
+javascript.extended = {};
+// TODO: Undo $ matching once fixed
+javascript.extended.QUOTES = /`|"(?:[^\\"]+|\\.)*(?:"|$)|'(?:[^\\']+|\\.)*(?:'|$)/g;
+javascript.extended.COMMENTS = /\/\/.*(?:\n|$)|\/\*[^]*?(?:\*\/|$)|^\#\!.*\n|<!--/g;
+javascript.extended.STATEMENTS = all(
+  javascript.extended.QUOTES,
+  javascript.CLOSURES,
+  javascript.REGEXPS,
+  javascript.extended.COMMENTS,
+);
+javascript.extended.BLOCKLEVEL = sequence`(\n|\s+)|(${javascript.extended.STATEMENTS})`;
+javascript.extended.TOPLEVEL = sequence`(\n|\s+)|(${javascript.extended.STATEMENTS})`;
+javascript.extended.CLOSURE = sequence`(\n+)|(${javascript.extended.STATEMENTS})`;
+javascript.extended.MJS = sequence`${javascript.extended.TOPLEVEL}|\bexport\b|\bimport\b`;
+javascript.extended.CJS = sequence`${javascript.extended.BLOCKLEVEL}|\bexports\b|\bmodule.exports\b|\brequire\b|\bimport(?=\(|\.)`;
+javascript.extended.ESX = sequence`${javascript.extended.BLOCKLEVEL}|\bexports\b|\bimport\b|\bmodule.exports\b|\brequire\b`;
