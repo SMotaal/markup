@@ -84,6 +84,7 @@ export class Contexts {
           spans: (spans && spans[text]) || undefined,
           hinter,
           punctuator,
+          punctuation: (definedDefinitions && definedDefinitions.punctuation) || {},
         });
     } else if (parentContext.punctuator !== 'quote') {
       if (punctuator === 'quote') {
@@ -97,6 +98,7 @@ export class Contexts {
             spans: (spans && spans[text]) || undefined,
             hinter,
             punctuator,
+            punctuation: (definedDefinitions && definedDefinitions.punctuation) || {},
           });
       } else if (punctuator === 'comment') {
         const comment = comments.get(text);
@@ -109,6 +111,7 @@ export class Contexts {
             matcher: comment.matcher || (matchers && matchers.comment) || undefined,
             hinter,
             punctuator,
+            punctuation: (definedDefinitions && definedDefinitions.punctuation) || {},
           });
       } else if (punctuator === 'closure') {
         const closure = (definedDefinitions && definedDefinitions.closure) || closures.get(text);
@@ -123,6 +126,9 @@ export class Contexts {
               matcher: closure.matcher || (matchers && matchers.closure) || undefined,
               hinter,
               punctuator,
+              punctuation: (definedDefinitions && definedDefinitions.punctuation) || {
+                ...((closure && closure.punctuation) || undefined),
+              },
             }));
       }
     }

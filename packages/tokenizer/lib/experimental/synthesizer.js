@@ -14,6 +14,7 @@ export class TokenSynthesizer {
           } = (context.mode.patterns.segments = false),
         } = (context.mode.patterns = false),
       },
+      punctuation = (context.punctuation = {}),
       punctuators,
       aggregators,
       forming = (context.forming = true),
@@ -26,9 +27,11 @@ export class TokenSynthesizer {
       const {text, type, hint, previous, parent, last} = next;
       type === 'sequence'
         ? ((next.punctuator =
+            punctuation[text] ||
             (previous &&
               (aggregators[text] || (!(text in aggregators) && (aggregators[text] = matchAggregator(text))))) ||
-            (punctuators[text] || (!(text in punctuators) && (punctuators[text] = matchPunctuator(text)))) ||
+            punctuators[text] ||
+            (!(text in punctuators) && (punctuators[text] = matchPunctuator(text))) ||
             undefined) &&
             (next.type = 'punctuator')) ||
           (matchSegment &&
@@ -41,7 +44,8 @@ export class TokenSynthesizer {
         : forming && wording
         ? text &&
           (((!maybeKeyword || maybeKeyword.test(text)) &&
-            (keywords && keywords.includes(text)) &&
+            keywords &&
+            keywords.includes(text) &&
             (!last || last.punctuator !== 'nonbreaker' || (previous && previous.lineBreaks > 0)) &&
             (next.type = 'keyword')) ||
             (maybeIdentifier && maybeIdentifier.test(text) && (next.type = 'identifier')))

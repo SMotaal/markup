@@ -30,6 +30,7 @@ export class Contextualizer {
         syntax,
         matcher = (mode.matcher = (defaults && defaults.matcher) || undefined),
         quotes,
+        punctuation = (mode.punctuation = {}),
         punctuators = (mode.punctuators = {aggregators: {}}),
         punctuators: {aggregators = (punctuators.aggregators = {})},
         patterns = (mode.patterns = {maybeKeyword: null}),
@@ -40,7 +41,7 @@ export class Contextualizer {
         spans: {['(spans)']: spans} = (mode.spans = {}),
       } = mode;
 
-      context = {syntax, goal: syntax, mode, punctuators, aggregators, matcher, quotes, spans};
+      context = {syntax, goal: syntax, mode, punctuators, punctuation, aggregators, matcher, quotes, spans};
 
       initializeContext && apply(initializeContext, tokenizer, [context]);
 
@@ -65,6 +66,9 @@ export class Contextualizer {
       aggregators = (definitions.aggregate =
         (punctuators && punctuators.aggregators) || (punctuators.aggregators = {})),
 
+      // Assumes specific overrides
+      punctuation = definitions.punctuation || {},
+
       // Contextual identity
       punctuator,
       closer,
@@ -76,7 +80,20 @@ export class Contextualizer {
       forming = (definitions.forming = goal === mode.syntax),
     } = definitions;
 
-    const context = {mode, syntax, goal, punctuator, punctuators, aggregators, closer, spans, matcher, quotes, forming};
+    const context = {
+      mode,
+      syntax,
+      goal,
+      punctuation,
+      punctuator,
+      punctuators,
+      aggregators,
+      closer,
+      spans,
+      matcher,
+      quotes,
+      forming,
+    };
 
     mappings.set(definitions, context);
     return context;
@@ -96,13 +113,28 @@ export class Contextualizer {
     matcher = (grouping && grouping.matcher) || undefined,
     quotes = (grouping && grouping.quotes) || undefined,
     punctuators = {aggregators: {}},
+    punctuation,
     opener = quote || (grouping && grouping.opener) || undefined,
     closer = quote || (grouping && grouping.closer) || undefined,
     hinter,
     open = (grouping && grouping.open) || undefined,
     close = (grouping && grouping.close) || undefined,
   }) {
-    return {syntax, goal, punctuator, spans, matcher, quotes, punctuators, opener, closer, hinter, open, close};
+    return {
+      syntax,
+      goal,
+      punctuator,
+      spans,
+      matcher,
+      quotes,
+      punctuators,
+      punctuation,
+      opener,
+      closer,
+      hinter,
+      open,
+      close,
+    };
   }
 }
 
