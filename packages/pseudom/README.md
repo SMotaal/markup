@@ -9,13 +9,15 @@ Document composition using the standard DOM can be boggled down by unrelated ope
 **How?**
 
 - Provide purely compositional APIs independent from the DOM.
-  1. Reduced overhead by reusing elements (**work in progress**).
+  1. Reduced overhead by reusing elements (**being explored**).
   2. Fast HTML rendering (**work in progress**).
 - Provide interoperability APIs for operating directly on the DOM.
   1. Reduced overhead by reusing elements (**being explored**).
   2. Fast HTML rendering (**being explored**).
 
 > **Important Note:** This package is designed for ECMAScript module supporting runtimes, including all major browsers and Node.js 12 or later.
+
+See [<samp>Changelog</samp>][changelog].
 
 ## Intended Uses
 
@@ -97,3 +99,4 @@ console.log(
 If you find pseu·dom suitable for your particular case, please don't hesitate to contribute to this project. If not, please let me know why.
 
 [package:repository]: https://github.com/SMotaal/markup/tree/master/packages/pseudom
+[changelog]: ./CHANGELOG.md
