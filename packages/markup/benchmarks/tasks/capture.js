@@ -30,6 +30,8 @@ export const run = async (...jobs) => {
     results[index++] = result;
   }
 
+  // results.jobs = jobs;
+
   return results;
 };
 
