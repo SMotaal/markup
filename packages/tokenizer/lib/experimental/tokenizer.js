@@ -95,9 +95,9 @@ export class Tokenizer {
 
           if (after.syntax) {
             const {syntax, offset, index} = after;
-            let body = index > offset && source.slice(offset, index - 1);
+            let body = index > offset && source.slice(offset, index);
             if (body && body.length > 0) {
-              (tokens = tokenize(`${body}\n`, {options: {sourceType: syntax}}, this.defaults)), (nextIndex = index);
+              (tokens = tokenize(`${body}`, {options: {sourceType: syntax}}, this.defaults)), (nextIndex = index);
               // Workaround for lost token for script/style tags in in-html
               // TODO: Investigate lost token in script/style tags in in-html
               tokens.lastOffset = body.length;
@@ -119,12 +119,13 @@ export class Tokenizer {
               // TODO: Investigate lost token in script/style tags in in-html
               // tokens.lastOffset > 0 && console.log('next: %o', next, [tokens.lastOffset, next.offset]);
 
-              next.offset > tokens.lastOffset
-                ? tokens.return()
-                : (previousToken && ((next.previous = previousToken).next = next),
+              if(next.offset > tokens.lastOffset) break;
+
+              (previousToken && ((next.previous = previousToken).next = next),
                   createToken && createToken(next),
                   yield (previousToken = next));
             }
+            tokens.return && tokens.return();
             nextIndex > state.index && (state.index = nextIndex);
           }
         }
