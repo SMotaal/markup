@@ -84,8 +84,8 @@ console.log(
   pseudom.createElement(
     'div',
     {className: 'awesome'},
-    pseudom.createElement('span', pseudom.createText('Awesome')),
-    pseudom.createElement('span', pseudom.createText('Text')),
+    pseudom.createElement('span', null, pseudom.createText('Awesome')),
+    pseudom.createElement('span', null, pseudom.createText('Text')),
   ),
 );
 ```
