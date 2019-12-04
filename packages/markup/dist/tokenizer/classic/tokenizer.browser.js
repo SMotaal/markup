@@ -1,18 +1,75 @@
 const markup = (function (exports) {
   'use strict';
 
-  const {encodeEntity, encodeEntities} = (() => {
-    const encodeEntity = entity => `&#${entity.charCodeAt(0)};`;
+  // @ts-check
 
-    Object.freeze(encodeEntity);
+  const {
+    Pseudom,
+    Pseudom: {encodeEntity, encodeEntities},
+  } = (() => {
+    class Pseudom {
+      /** @param {*} source*/
+      static encodeEntities(source) {
+        return /[\u00A0-\u9999<>\&]/g[Symbol.replace](source, Pseudom.encodeEntity);
+      }
 
-    const EntityMatcher = /[\u00A0-\u9999<>\&]/g;
+      /** @param {*} source*/
+      static encodeEntity(source) {
+        return `&#${Pseudom.extractCodePoint(source, 0)};`;
+      }
+    }
 
-    const encodeEntities = string => EntityMatcher[Symbol.replace](string, encodeEntity);
+    Object.freeze(Pseudom.encodeEntities);
+    Object.freeze(Pseudom.encodeEntity);
 
-    Object.freeze(encodeEntities);
+    Pseudom.extractCodePoint = Object.freeze(
+      /** @type {(source: any, index: number) => number} */ (Function.call.bind(''.charCodeAt)),
+    );
 
-    return {encodeEntity, encodeEntities};
+    /**
+     * @template T, U
+     * @param {(new () => T & U)} Class
+     * @param {(new () => U) | null | undefined} Super
+     * @param {Pick<typeof globalThis, 'Object'>} endowments
+     */
+    Pseudom.fixClassInheritance = (Class, Super, endowments = globalThis) => {
+      endowments.Object.setPrototypeOf(
+        Class.prototype,
+        Super === null ? null : Super ? Super.prototype : endowments.Object.prototype,
+      );
+
+      endowments.Object.setPrototypeOf(Class, Super == null ? endowments.Object : Super);
+
+      return Class;
+    };
+
+    Pseudom.checkPrimordialEndowments = Object.freeze((endowments, ...primordials) => {
+      for (const endowment of `Object,${primordials}`.replace(/^,Object|(,\w+)(?=.*?\1)/g, '').split(',')) {
+        if (
+          endowment === 'Object'
+            ? !(
+                typeof endowments[endowment] === 'function' &&
+                typeof endowments[endowment].prototype === 'object' &&
+                endowments[endowment].prototype !== null &&
+                endowments[endowment].__proto__ &&
+                endowments[endowment].__proto__.__proto__ === endowments.Object.prototype
+              )
+            : endowment in endowments &&
+              !(
+                typeof endowments[endowment] === 'function' &&
+                endowments[endowment].prototype != null &&
+                // typeof endowments[endowment].prototype === 'object' &&
+                endowments[endowment].__proto__ === endowments.Object.__proto__ &&
+                endowments[endowment].prototype.__proto__ === endowments.Object.prototype
+              )
+        )
+          throw `Error: createPseudoDOM invoked with an invalid ‹${endowment}› endowment.`;
+      }
+    });
+
+    Object.freeze(Pseudom);
+
+    return {Pseudom};
   })();
 
   /// Helpers
@@ -342,6 +399,7 @@ const markup = (function (exports) {
           syntax,
           matcher = (mode.matcher = (defaults && defaults.matcher) || undefined),
           quotes,
+          punctuation = (mode.punctuation = {}),
           punctuators = (mode.punctuators = {aggregators: {}}),
           punctuators: {aggregators = (punctuators.aggregators = {})},
           patterns = (mode.patterns = {maybeKeyword: null}),
@@ -352,7 +410,7 @@ const markup = (function (exports) {
           spans: {['(spans)']: spans} = (mode.spans = {}),
         } = mode;
 
-        context = {syntax, goal: syntax, mode, punctuators, aggregators, matcher, quotes, spans};
+        context = {syntax, goal: syntax, mode, punctuators, punctuation, aggregators, matcher, quotes, spans};
 
         initializeContext && apply(initializeContext, tokenizer, [context]);
 
@@ -377,6 +435,9 @@ const markup = (function (exports) {
         aggregators = (definitions.aggregate =
           (punctuators && punctuators.aggregators) || (punctuators.aggregators = {})),
 
+        // Assumes specific overrides
+        punctuation = definitions.punctuation || {},
+
         // Contextual identity
         punctuator,
         closer,
@@ -388,7 +449,20 @@ const markup = (function (exports) {
         forming = (definitions.forming = goal === mode.syntax),
       } = definitions;
 
-      const context = {mode, syntax, goal, punctuator, punctuators, aggregators, closer, spans, matcher, quotes, forming};
+      const context = {
+        mode,
+        syntax,
+        goal,
+        punctuation,
+        punctuator,
+        punctuators,
+        aggregators,
+        closer,
+        spans,
+        matcher,
+        quotes,
+        forming,
+      };
 
       mappings.set(definitions, context);
       return context;
@@ -408,13 +482,28 @@ const markup = (function (exports) {
       matcher = (grouping && grouping.matcher) || undefined,
       quotes = (grouping && grouping.quotes) || undefined,
       punctuators = {aggregators: {}},
+      punctuation,
       opener = quote || (grouping && grouping.opener) || undefined,
       closer = quote || (grouping && grouping.closer) || undefined,
       hinter,
       open = (grouping && grouping.open) || undefined,
       close = (grouping && grouping.close) || undefined,
     }) {
-      return {syntax, goal, punctuator, spans, matcher, quotes, punctuators, opener, closer, hinter, open, close};
+      return {
+        syntax,
+        goal,
+        punctuator,
+        spans,
+        matcher,
+        quotes,
+        punctuators,
+        punctuation,
+        opener,
+        closer,
+        hinter,
+        open,
+        close,
+      };
     }
   }
 
@@ -507,6 +596,7 @@ const markup = (function (exports) {
             spans: (spans && spans[text]) || undefined,
             hinter,
             punctuator,
+            punctuation: (definedDefinitions && definedDefinitions.punctuation) || {},
           });
       } else if (parentContext.punctuator !== 'quote') {
         if (punctuator === 'quote') {
@@ -520,6 +610,7 @@ const markup = (function (exports) {
               spans: (spans && spans[text]) || undefined,
               hinter,
               punctuator,
+              punctuation: (definedDefinitions && definedDefinitions.punctuation) || {},
             });
         } else if (punctuator === 'comment') {
           const comment = comments.get(text);
@@ -532,6 +623,7 @@ const markup = (function (exports) {
               matcher: comment.matcher || (matchers && matchers.comment) || undefined,
               hinter,
               punctuator,
+              punctuation: (definedDefinitions && definedDefinitions.punctuation) || {},
             });
         } else if (punctuator === 'closure') {
           const closure = (definedDefinitions && definedDefinitions.closure) || closures.get(text);
@@ -546,6 +638,9 @@ const markup = (function (exports) {
                 matcher: closure.matcher || (matchers && matchers.closure) || undefined,
                 hinter,
                 punctuator,
+                punctuation: (definedDefinitions && definedDefinitions.punctuation) || {
+                  ...((closure && closure.punctuation) || undefined),
+                },
               }));
         }
       }
@@ -838,6 +933,7 @@ const markup = (function (exports) {
             } = (context.mode.patterns.segments = false),
           } = (context.mode.patterns = false),
         },
+        punctuation = (context.punctuation = {}),
         punctuators,
         aggregators,
         forming = (context.forming = true),
@@ -850,9 +946,11 @@ const markup = (function (exports) {
         const {text, type, hint, previous, parent, last} = next;
         type === 'sequence'
           ? ((next.punctuator =
+              punctuation[text] ||
               (previous &&
                 (aggregators[text] || (!(text in aggregators) && (aggregators[text] = matchAggregator(text))))) ||
-              (punctuators[text] || (!(text in punctuators) && (punctuators[text] = matchPunctuator(text)))) ||
+              punctuators[text] ||
+              (!(text in punctuators) && (punctuators[text] = matchPunctuator(text))) ||
               undefined) &&
               (next.type = 'punctuator')) ||
             (matchSegment &&
@@ -865,7 +963,8 @@ const markup = (function (exports) {
           : forming && wording
           ? text &&
             (((!maybeKeyword || maybeKeyword.test(text)) &&
-              (keywords && keywords.includes(text)) &&
+              keywords &&
+              keywords.includes(text) &&
               (!last || last.punctuator !== 'nonbreaker' || (previous && previous.lineBreaks > 0)) &&
               (next.type = 'keyword')) ||
               (maybeIdentifier && maybeIdentifier.test(text) && (next.type = 'identifier')))
@@ -1016,9 +1115,9 @@ const markup = (function (exports) {
 
             if (after.syntax) {
               const {syntax, offset, index} = after;
-              let body = index > offset && source.slice(offset, index - 1);
+              let body = index > offset && source.slice(offset, index);
               if (body && body.length > 0) {
-                (tokens = tokenize(`${body}\n`, {options: {sourceType: syntax}}, this.defaults)), (nextIndex = index);
+                (tokens = tokenize(`${body}`, {options: {sourceType: syntax}}, this.defaults)), (nextIndex = index);
                 // Workaround for lost token for script/style tags in in-html
                 // TODO: Investigate lost token in script/style tags in in-html
                 tokens.lastOffset = body.length;
@@ -1040,12 +1139,13 @@ const markup = (function (exports) {
                 // TODO: Investigate lost token in script/style tags in in-html
                 // tokens.lastOffset > 0 && console.log('next: %o', next, [tokens.lastOffset, next.offset]);
 
-                next.offset > tokens.lastOffset
-                  ? tokens.return()
-                  : (previousToken && ((next.previous = previousToken).next = next),
+                if(next.offset > tokens.lastOffset) break;
+
+                (previousToken && ((next.previous = previousToken).next = next),
                     createToken && createToken(next),
                     yield (previousToken = next));
               }
+              tokens.return && tokens.return();
               nextIndex > state.index && (state.index = nextIndex);
             }
           }
@@ -1075,11 +1175,14 @@ const markup = (function (exports) {
       comments: Closures.from('/*…*/'),
       closures: Closures.from('{…} (…) […]'),
       quotes: Symbols.from(`' "`),
-      assigners: Symbols.from(`:`),
-      combinators: Symbols.from('> :: + : / - *'),
-      nonbreakers: Symbols.from(`-`),
-      breakers: Symbols.from(', ;'),
-      matcher: /(\n|\s+)|(\\(?:(?:\\\\)*\\|[^\\\s])?|\/\*|\*\/|\(|\)|\[|\]|"|'|\{|\}|,|;|\.|\b:\/\/\b|::\b|\+|(?!\b)-(?![a-zA-Z])|\*|\/|>|:(?!active|after|any|any-link|backdrop|before|checked|default|defined|dir|disabled|empty|enabled|first|first-child|first-letter|first-line|first-of-type|focus|focus-visible|focus-within|fullscreen|host|hover|in-range|indeterminate|invalid|lang|last-child|last-of-type|left|link|matches|not|nth-child|nth-last-child|nth-last-of-type|nth-of-type|only-child|only-of-type|optional|out-of-range|read-only|required|right|root|scope|target|valid|visited))|[-\w]+|[^\s\n]/gi,
+      keywords: Symbols.from(css.KEYWORDS),
+      combinators: Symbols.from('--'),
+      operators: Symbols.from('> . : , - + / *'),
+      breakers: Symbols.from(';'),
+      patterns: {
+        maybeIdentifier: /^--\S+$/,
+      },
+      matcher: /(\n|\s+)|(\\(?:(?:\\\\)*\\|[^\\\s])?|\/\*|\*\/|\(|\)|\[|\]|"|'|\{|\}|,|;|\.|\b:\/\/\b|\+|\B-(?![a-z]*-)|\*|\/|>|:(?![-a-z:]))|#[0-9a-fA-F]{8}|#[0-9a-fA-F]{6}|#[0-9a-fA-F]{4}|#[0-9a-fA-F]{3}|::?[a-z][a-z-]+|@[a-z][a-z-]+|[-\w]+|[^\s\n]/gi,
       matchers: {
         quote: /(\n)|(\\(?:(?:\\\\)*\\|[^\\\s])?|\*\/|`|"|'|\$\{)/g,
         comment: /(\n)|(\*\/|\b(?:[a-z]+\:\/\/|\w[\w\+\.]*\w@[a-z]+)\S+|@[a-z]+)/gi,
@@ -1089,6 +1192,11 @@ const markup = (function (exports) {
       defaults: {value: {syntax: 'css'}},
     },
   );
+
+  css.KEYWORDS = {
+    ['(symbols)']:
+      ':active additive-symbols ::after align-content align-items align-self all animation animation-delay animation-direction animation-duration animation-fill-mode animation-iteration-count animation-name animation-play-state animation-timing-function @annotation annotation attr ::backdrop backface-visibility background background-attachment background-blend-mode background-clip background-color background-image background-origin background-position background-repeat background-size ::before block-size blur border border-block border-block-color border-block-end border-block-end-color border-block-end-style border-block-end-width border-block-start border-block-start-color border-block-start-style border-block-start-width border-block-style border-block-width border-bottom border-bottom-color border-bottom-left-radius border-bottom-right-radius border-bottom-style border-bottom-width border-collapse border-color border-end-end-radius border-end-start-radius border-image border-image-outset border-image-repeat border-image-slice border-image-source border-image-width border-inline border-inline-color border-inline-end border-inline-end-color border-inline-end-style border-inline-end-width border-inline-start border-inline-start-color border-inline-start-style border-inline-start-width border-inline-style border-inline-width border-left border-left-color border-left-style border-left-width border-radius border-right border-right-color border-right-style border-right-width border-spacing border-start-end-radius border-start-start-radius border-style border-top border-top-color border-top-left-radius border-top-right-radius border-top-style border-top-width border-width bottom @bottom-center box-decoration-break box-shadow box-sizing break-after break-before break-inside brightness calc caption-side caret-color ch @character-variant character-variant @charset :checked circle clamp clear clip clip-path cm color color-adjust column-count column-fill column-gap column-rule column-rule-color column-rule-style column-rule-width column-span column-width columns conic-gradient content contrast counter-increment counter-reset counter-set @counter-style counters cross-fade cubic-bezier ::cue cursor :default deg :dir direction :disabled display dpcm dpi dppx drop-shadow element ellipse em :empty empty-cells :enabled env ex fallback filter :first :first-child ::first-letter ::first-line :first-of-type fit-content flex flex-basis flex-direction flex-flow flex-grow flex-shrink flex-wrap float :focus font @font-face font-family font-family font-feature-settings font-feature-settings @font-feature-values font-kerning font-language-override font-optical-sizing font-size font-size-adjust font-stretch font-stretch font-style font-style font-synthesis font-variant font-variant font-variant-alternates font-variant-caps font-variant-east-asian font-variant-ligatures font-variant-numeric font-variant-position font-variation-settings font-weight font-weight format fr :fullscreen gap grad grayscale grid grid-area grid-auto-columns grid-auto-flow grid-auto-rows grid-column grid-column-end grid-column-start grid-row grid-row-end grid-row-start grid-template grid-template-areas grid-template-columns grid-template-rows Hz hanging-punctuation height height @historical-forms :host :hover hsl hsla hue-rotate hyphens image image-orientation image-rendering image-set @import in :in-range :indeterminate inherit initial inline-size inset inset inset-block inset-block-end inset-block-start inset-inline inset-inline-end inset-inline-start :invalid invert isolation justify-content justify-items justify-self kHz @keyframes :lang :last-child :last-of-type leader :left left @left-bottom letter-spacing line-clamp line-break line-height linear-gradient :link list-style list-style-image list-style-position list-style-type local margin margin-block margin-block-end margin-block-start margin-bottom margin-inline margin-inline-end margin-inline-start margin-left margin-right margin-top ::marker mask mask-clip mask-composite mask-image mask-mode mask-origin mask-position mask-repeat mask-size mask-type matrix matrix3d max max-height max-height max-width max-width max-zoom @media min min-block-size min-height min-height min-inline-size min-width min-width min-zoom minmax mix-blend-mode mm ms @namespace negative :not :nth-child :nth-last-child :nth-last-of-type :nth-of-type object-fit object-position :only-child :only-of-type opacity opacity :optional order orientation @ornaments ornaments orphans :out-of-range outline outline-color outline-offset outline-style outline-width overflow overflow-wrap overflow-x overflow-y pad padding padding-block padding-block-end padding-block-start padding-bottom padding-inline padding-inline-end padding-inline-start padding-left padding-right padding-top @page page-break-after page-break-before page-break-inside paint pc perspective perspective perspective-origin place-content place-items place-self ::placeholder pointer-events polygon position prefix pt px quotes rad radial-gradient range :read-only :read-write rect rem repeat repeating-linear-gradient repeating-radial-gradient :required resize revert rgb rgba :right right @right-bottom :root rotate rotate rotate3d rotateX rotateY rotateZ row-gap saturate scale scale scale3d scaleX scaleY scaleZ :scope scroll-behavior scroll-margin scroll-margin-block scroll-margin-block-end scroll-margin-block-start scroll-margin-bottom scroll-margin-inline scroll-margin-inline-end scroll-margin-inline-start scroll-margin-left scroll-margin-right scroll-margin-top scroll-padding scroll-padding-block scroll-padding-block-end scroll-padding-block-start scroll-padding-bottom scroll-padding-inline scroll-padding-inline-end scroll-padding-inline-start scroll-padding-left scroll-padding-right scroll-padding-top scroll-snap-align scroll-snap-stop scroll-snap-type scrollbar-color scrollbar-width ::selection selector sepia shape-image-threshold shape-margin shape-outside skew skewX skewY ::slotted speak-as src steps @styleset styleset @stylistic stylistic suffix @supports @swash swash symbols symbols system tab-size table-layout :target target-counter target-counters target-text text-align text-align-last text-combine-upright text-decoration text-decoration-color text-decoration-line text-decoration-style text-decoration-thickness text-emphasis text-emphasis-color text-emphasis-position text-emphasis-style text-indent text-justify text-orientation text-overflow text-rendering text-shadow text-transform text-underline-offset text-underline-position top @top-center touch-action transform transform-box transform-origin transform-style transition transition-delay transition-duration transition-property transition-timing-function translate translate translate3d translateX translateY translateZ turn unicode-bidi unicode-range unset url user-zoom user-select user-drag -webkit-user-select -moz-user-select :valid var vertical-align vh @viewport visibility :visited vmax vmin vw white-space widows width width will-change word-break word-spacing word-wrap writing-mode z-index zoom -webkit-margin-start -webkit-margin-end -webkit-margin-before -webkit-margin-after -webkit-padding-start -webkit-padding-end -webkit-padding-before -webkit-padding-after -webkit-justify-items -webkit-justify-content -webkit-align-content -webkit-align-items -webkit-align-self -webkit-alt -webkit-animation -webkit-animation-delay -webkit-animation-direction -webkit-animation-duration -webkit-animation-fill-mode -webkit-animation-iteration-count -webkit-animation-name -webkit-animation-play-state -webkit-animation-timing-function -webkit-appearance -webkit-aspect-ratio -webkit-backdrop-filter -webkit-backface-visibility -webkit-backdrop-filter -webkit-backface-visibility -webkit-background-clip -webkit-background-composite -webkit-background-origin -webkit-background-size -webkit-border-after -webkit-border-after-color -webkit-border-after-style -webkit-border-after-width -webkit-border-before -webkit-border-before-color -webkit-border-before-style -webkit-border-before-width -webkit-border-bottom-left-radius -webkit-border-bottom-right-radius -webkit-border-end -webkit-border-end-color -webkit-border-end-style -webkit-border-end-width -webkit-border-fit -webkit-border-horizontal-spacing -webkit-border-image -webkit-border-radius -webkit-border-start -webkit-border-start-color -webkit-border-start-style -webkit-border-start-width -webkit-border-top-left-radius -webkit-border-top-right-radius -webkit-border-vertical-spacing -webkit-box-align -webkit-box-decoration-break -webkit-box-direction -webkit-box-flex -webkit-box-flex-group -webkit-box-lines -webkit-box-ordinal-group -webkit-box-orient -webkit-box-pack -webkit-box-reflect -webkit-box-shadow -webkit-box-sizing -webkit-clip-path -webkit-box-sizing -webkit-box-shadow -webkit-box-reflect -webkit-box-pack -webkit-box-reflect -webkit-box-shadow -webkit-box-sizing -webkit-clip-path -webkit-column-axis -webkit-column-break-after -webkit-column-break-before -webkit-column-break-inside -webkit-column-count -webkit-column-fill -webkit-column-gap -webkit-column-progression -webkit-column-rule -webkit-column-rule-color -webkit-column-rule-style -webkit-column-rule-width -webkit-column-span -webkit-column-width -webkit-columns -webkit-cursor-visibility -webkit-filter -webkit-flex -webkit-flex-basis -webkit-flex-direction -webkit-flex-flow -webkit-flex-grow -webkit-flex-shrink -webkit-flex-wrap -webkit-flex-shrink -webkit-flex-wrap -webkit-font-kerning -webkit-font-smoothing -webkit-hyphenate-character -webkit-hyphenate-limit-after -webkit-hyphenate-limit-before -webkit-hyphenate-limit-lines -webkit-hyphens -webkit-hyphenate-limit-lines -webkit-hyphenate-limit-before -webkit-hyphenate-limit-after -webkit-hyphenate-character -webkit-font-smoothing -webkit-hyphenate-character -webkit-hyphenate-limit-after -webkit-hyphenate-limit-before -webkit-hyphenate-limit-lines -webkit-hyphenate-limit-before -webkit-hyphenate-limit-after -webkit-hyphenate-character -webkit-hyphenate-limit-after -webkit-hyphenate-character -webkit-font-smoothing -webkit-font-kerning -webkit-flex-wrap -webkit-font-kerning -webkit-font-smoothing -webkit-hyphenate-character -webkit-hyphenate-limit-after -webkit-hyphenate-limit-before -webkit-hyphenate-limit-lines -webkit-hyphens -webkit-initial-letter -webkit-hyphens -webkit-hyphenate-limit-lines -webkit-hyphenate-limit-before -webkit-hyphenate-limit-after -webkit-hyphenate-character -webkit-font-smoothing -webkit-font-kerning -webkit-flex-wrap -webkit-flex-shrink -webkit-flex-grow -webkit-flex-flow -webkit-flex-direction -webkit-flex-flow -webkit-flex-grow -webkit-flex-shrink -webkit-flex-wrap -webkit-font-kerning -webkit-font-smoothing -webkit-hyphenate-character -webkit-hyphenate-limit-after -webkit-hyphenate-limit-before -webkit-hyphenate-limit-lines -webkit-hyphens -webkit-initial-letter -webkit-justify-content -webkit-justify-items -webkit-line-align -webkit-line-box-contain -webkit-line-align -webkit-line-box-contain -webkit-line-break -webkit-line-clamp -webkit-line-break -webkit-line-box-contain -webkit-line-align -webkit-line-align -webkit-line-align -webkit-line-align -webkit-line-align -webkit-line-align -webkit-text-size-adjust',
+  };
 
   const html = Object.defineProperties(
     ({syntax} = html.defaults) => {
@@ -1120,7 +1228,14 @@ const markup = (function (exports) {
       HTMLTagClosure.patterns = html.patterns;
 
       HTMLTagClosure.close = (next, state, context) => {
-        const parent = next && next.parent;
+        let parent = next && next.parent;
+        // TODO: Fix parent broken when HTMLTagClosure.punctuation {'='}
+        //       This is a temporary workaround (maybe)
+        if (parent.text !== '<') {
+          let previous = next.previous;
+          while (previous && !(previous.text === '<' && previous.punctuator === 'opener')) previous = previous.previous;
+          if (previous) next.parent = parent = previous;
+        }
         const first = parent && parent.next;
         const tag = first && first.text && TAG.test(first.text) && first.text.toUpperCase();
 
@@ -1158,6 +1273,7 @@ const markup = (function (exports) {
       };
       HTMLTagClosure.quotes = Symbols.from(`' "`);
       HTMLTagClosure.closer = /\/?>/;
+      HTMLTagClosure.punctuation = {'=': 'assigner'};
 
       return html;
     },
@@ -1353,46 +1469,41 @@ const markup = (function (exports) {
     },
   );
 
-   {
-     {
-      javascript.DEFAULTS = {syntax: 'javascript', aliases: ['js', 'es', 'ecmascript']};
-      // javascript.DEFAULTS = {syntax: 'javascript', aliases: ['js']};
-    }
+  javascript.DEFAULTS = {syntax: 'javascript', aliases: ['js', 'es', 'ecmascript']};
 
-    javascript.REGEXPS = /\/(?=[^*/\n][^\n]*\/(?:[a-z]+\b|)(?:[ \t]+[^\n\s\(\[\{\w]|[.\[;,]|[ \t]*[)\]};,\n]|\n|$))(?:[^\\\/\n\t\[]+|\\[^\n]|\[(?:\\[^\n]|[^\\\n\t\]]+)*?\][+*]?\??)*\/(?:[a-z]+\b|)/g;
+  javascript.REGEXPS = /\/(?=[^*/\n][^\n]*\/(?:[a-z]+\b|)(?:[ \t]+[^\n\s\(\[\{\w]|[.\[;,]|[ \t]*[)\]};,\n]|\n|$))(?:[^\\\/\n\t\[]+|\\[^\n]|\[(?:\\[^\n]|[^\\\n\t\]]+)*?\][+*]?\??)*\/(?:[a-z]+\b|)/g;
 
-    javascript.COMMENTS = /\/\/|\/\*|\*\/|^\#\!.*\n|<!--/g;
-    javascript.COMMENTS['(closures)'] = '//…\n /*…*/ <!--…\n';
+  javascript.COMMENTS = /\/\/|\/\*|\*\/|^\#\!.*\n|<!--/g;
+  javascript.COMMENTS['(closures)'] = '//…\n /*…*/ <!--…\n';
 
-    javascript.QUOTES = /`|"|'/g;
-    javascript.QUOTES['(symbols)'] = `' " \``;
+  javascript.QUOTES = /`|"|'/g;
+  javascript.QUOTES['(symbols)'] = `' " \``;
 
-    javascript.CLOSURES = /\{|\}|\(|\)|\[|\]/g;
-    javascript.CLOSURES['(closures)'] = '{…} (…) […]';
+  javascript.CLOSURES = /\{|\}|\(|\)|\[|\]/g;
+  javascript.CLOSURES['(closures)'] = '{…} (…) […]';
 
-    javascript.SPANS = {'`': {['(closures)']: '${…}'}};
+  javascript.SPANS = {'`': {['(closures)']: '${…}'}};
 
-    javascript.KEYWORDS = {
-      ['(symbols)']:
-        // 'abstract enum interface package namespace declare type module public protected ' +
-        'arguments as async await break case catch class export const continue private debugger default delete do else export extends finally for from function get if import in instanceof let new of return set static super switch this throw try typeof var void while with yield',
-    };
+  javascript.KEYWORDS = {
+    ['(symbols)']:
+      // 'abstract enum interface package namespace declare type module public protected ' +
+      'arguments as async await break case catch class export const continue private debugger default delete do else export extends finally for from function get if import in instanceof let new of return set static super switch this throw try typeof var void while with yield',
+  };
 
-    javascript.PUNCTUATORS = [
-      /,|;|\.\.\.|\.|:|\?|=>/,
-      /\+\+|\+=|\+|--|-=|-|\*\*=|\*\*|\*=|\*|\/=|\//,
-      /&&|&=|&|\|\||\|=|\||%=|%|\^=|\^|~=|~/,
-      /<<=|<<|<=|<|>>>=|>>>|>>=|>>|>=|>/,
-      /!==|!=|!|===|==|=/,
-    ];
+  javascript.PUNCTUATORS = [
+    /,|;|\.\.\.|\.|:|\?|=>/,
+    /\+\+|\+=|\+|--|-=|-|\*\*=|\*\*|\*=|\*|\/=|\//,
+    /&&|&=|&|\|\||\|=|\||%=|%|\^=|\^|~=|~/,
+    /<<=|<<|<=|<|>>>=|>>>|>>=|>>|>=|>/,
+    /!==|!=|!|===|==|=/,
+  ];
 
-    javascript.ASSIGNERS = {['(symbols)']: '= += -= *= /= **= %= &= |= <<= >>= >>>= ^= ~='};
+  javascript.ASSIGNERS = {['(symbols)']: '= += -= *= /= **= %= &= |= <<= >>= >>>= ^= ~='};
 
-    javascript.COMBINATORS = {['(symbols)']: '=== == + - * / ** % & && | || ! !== != > < >= <= => >> << >>> ^ ~'};
-    javascript.NONBREAKERS = {['(symbols)']: '.'};
-    javascript.OPERATORS = {['(symbols)']: '++ -- ... ? :'};
-    javascript.BREAKERS = {['(symbols)']: ', ;'};
-  }
+  javascript.COMBINATORS = {['(symbols)']: '=== == + - * / ** % & && | || ! !== != > < >= <= => >> << >>> ^ ~'};
+  javascript.NONBREAKERS = {['(symbols)']: '.'};
+  javascript.OPERATORS = {['(symbols)']: '++ -- ... ? :'};
+  javascript.BREAKERS = {['(symbols)']: ', ;'};
 
   const typescript = Object.defineProperties(
     ({syntax} = typescript.defaults, {javascript}) => ({
@@ -1460,28 +1571,26 @@ const markup = (function (exports) {
     },
   );
 
-   {
-     {
-      const requires = [javascript.defaults.syntax];
+  mjs.DEFAULTS = {syntax: 'mjs', aliases: ['esm'], requires: [javascript.defaults.syntax]};
+  cjs.DEFAULTS = {syntax: 'cjs', requires: [javascript.defaults.syntax]};
+  esx.DEFAULTS = {syntax: 'esx', requires: [javascript.defaults.syntax, 'cjs', 'mjs']};
 
-      mjs.DEFAULTS = {syntax: 'mjs', aliases: ['esm'], requires};
-      cjs.DEFAULTS = {syntax: 'cjs', requires};
-      esx.DEFAULTS = {syntax: 'esx', requires: [...requires, 'cjs', 'mjs']};
-    }
-
-    const {REGEXPS, CLOSURES, extended = (javascript.extended = {})} = javascript;
-
-    // TODO: Undo $ matching once fixed
-    const QUOTES = (javascript.extended.QUOTES = /`|"(?:[^\\"]+|\\.)*(?:"|$)|'(?:[^\\']+|\\.)*(?:'|$)/g);
-    const COMMENTS = (javascript.extended.COMMENTS = /\/\/.*(?:\n|$)|\/\*[^]*?(?:\*\/|$)|^\#\!.*\n|<!--/g);
-    const STATEMENTS = (javascript.extended.STATEMENTS = all(QUOTES, CLOSURES, REGEXPS, COMMENTS));
-    const BLOCKLEVEL = (javascript.extended.BLOCKLEVEL = sequence`(\n|\s+)|(${STATEMENTS})`);
-    const TOPLEVEL = (javascript.extended.TOPLEVEL = sequence`(\n|\s+)|(${STATEMENTS})`);
-    javascript.extended.CLOSURE = sequence`(\n+)|(${STATEMENTS})`;
-    javascript.extended.MJS = sequence`${TOPLEVEL}|\bexport\b|\bimport\b`;
-    javascript.extended.CJS = sequence`${BLOCKLEVEL}|\bexports\b|\bmodule.exports\b|\brequire\b|\bimport(?=\(|\.)`;
-    javascript.extended.ESX = sequence`${BLOCKLEVEL}|\bexports\b|\bimport\b|\bmodule.exports\b|\brequire\b`;
-  }
+  javascript.extended = {};
+  // TODO: Undo $ matching once fixed
+  javascript.extended.QUOTES = /`|"(?:[^\\"]+|\\.)*(?:"|$)|'(?:[^\\']+|\\.)*(?:'|$)/g;
+  javascript.extended.COMMENTS = /\/\/.*(?:\n|$)|\/\*[^]*?(?:\*\/|$)|^\#\!.*\n|<!--/g;
+  javascript.extended.STATEMENTS = all(
+    javascript.extended.QUOTES,
+    javascript.CLOSURES,
+    javascript.REGEXPS,
+    javascript.extended.COMMENTS,
+  );
+  javascript.extended.BLOCKLEVEL = sequence`(\n|\s+)|(${javascript.extended.STATEMENTS})`;
+  javascript.extended.TOPLEVEL = sequence`(\n|\s+)|(${javascript.extended.STATEMENTS})`;
+  javascript.extended.CLOSURE = sequence`(\n+)|(${javascript.extended.STATEMENTS})`;
+  javascript.extended.MJS = sequence`${javascript.extended.TOPLEVEL}|\bexport\b|\bimport\b`;
+  javascript.extended.CJS = sequence`${javascript.extended.BLOCKLEVEL}|\bexports\b|\bmodule.exports\b|\brequire\b|\bimport(?=\(|\.)`;
+  javascript.extended.ESX = sequence`${javascript.extended.BLOCKLEVEL}|\bexports\b|\bimport\b|\bmodule.exports\b|\brequire\b`;
 
 
 
@@ -1598,7 +1707,7 @@ const markup = (function (exports) {
    * @typedef {DocumentFragment & {logs?: string[]}} Fragment
    */
 
-  /** @param {Pick<globalThis, 'document'|'DocumentFragment'|'Element'|'Object'|'Node'|'Text'>} endowments */
+  /** @param {Pick<typeof globalThis, 'document'|'DocumentFragment'|'Element'|'Object'|'Node'|'Text'>} endowments */
   const createNativeDOM = (endowments = globalThis) => {
     if (
       !(
@@ -1611,45 +1720,45 @@ const markup = (function (exports) {
     )
       return (endowments = undefined);
 
-    const dom = {};
+    const native = {};
 
-    dom.Object = endowments.Object || globalThis.Object;
+    native.Object = endowments.Object || globalThis.Object;
     // dom.String = endowments.String || globalThis.String;
     // dom.Set = endowments.Set || globalThis.Set;
     // dom.Symbol = endowments.Symbol || globalThis.Symbol;
-    dom.document = endowments.document;
+    native.document = endowments.document;
 
     /** @type {typeof endowments.DocumentFragment} */
-    dom.DocumentFragment = endowments.DocumentFragment || dom.document.createDocumentFragment().constructor;
+    native.DocumentFragment = endowments.DocumentFragment || native.document.createDocumentFragment().constructor;
 
     /** @type {typeof endowments.Element} */
-    dom.Element =
+    native.Element =
       endowments.Element ||
       (() => {
-        let prototype = dom.document.createElement('span');
+        let prototype = native.document.createElement('span');
         while (
           prototype.constructor &&
           prototype.constructor.name.startsWith('HTML') &&
-          prototype !== (prototype = dom.Object.getPrototypeOf(prototype) || prototype)
+          prototype !== (prototype = native.Object.getPrototypeOf(prototype) || prototype)
         );
         return prototype.constructor.name === 'Element' ? prototype.constructor : undefined;
       })();
 
     /** @type {typeof endowments.Node} */
-    dom.Node =
+    native.Node =
       endowments.Node ||
-      (dom.Element &&
+      (native.Element &&
         (() => {
-          let prototype = dom.Object.getPrototypeOf(dom.Element.prototype);
+          let prototype = native.Object.getPrototypeOf(native.Element.prototype);
           return prototype.constructor.name === 'Node' ? prototype.constructor : undefined;
         })());
 
     /** @type {typeof endowments.Text} */
-    dom.Text = endowments.Text || dom.document.createTextNode('').constructor;
+    native.Text = endowments.Text || native.document.createTextNode('').constructor;
 
-    dom.createElement = (tag, properties, ...children) => {
-      const element = dom.document.createElement(tag);
-      properties && dom.Object.assign(element, properties);
+    native.createElement = (tag, properties, ...children) => {
+      const element = native.document.createElement(tag);
+      properties && native.Object.assign(element, properties);
       if (!children.length) return element;
       if (element.append) {
         while (children.length > 500) element.append(...children.splice(0, 500));
@@ -1659,126 +1768,241 @@ const markup = (function (exports) {
       }
       return element;
     };
-    dom.createText = (content = '') => dom.document.createTextNode(content);
-    dom.createFragment = () => dom.document.createDocumentFragment();
+    native.createText = (content = '') => native.document.createTextNode(content);
+    native.createFragment = () => native.document.createDocumentFragment();
 
     endowments = undefined;
 
-    return dom.Object.freeze(dom.Object.setPrototypeOf(dom, null));
+    return native.Object.freeze(native.Object.setPrototypeOf(native, null));
   };
 
-  /** @param {Pick<globalThis, 'Object'|'Set'|'String'|'Symbol'>} endowments */
+  /** @param {Pick<typeof globalThis, 'Object'|'Set'|'String'|'Symbol'>} endowments */
   const createPseudoDOM = (endowments = globalThis) => {
-    const dom = {};
+    const pseudo = {};
 
-    dom.Object = endowments.Object || globalThis.Object;
-    dom.Set = endowments.Set || globalThis.Set;
-    dom.String = endowments.String || globalThis.String;
-    dom.Symbol = endowments.Symbol || globalThis.Symbol;
-    dom.document = null;
+    pseudo.Object = endowments.Object || globalThis.Object;
+    pseudo.Set = endowments.Set || globalThis.Set;
+    pseudo.String = endowments.String || globalThis.String;
+    pseudo.Symbol = endowments.Symbol || globalThis.Symbol;
 
-    dom.Node = class Node extends dom.Object {
-      get children() {
-        return dom.Object.defineProperty(this, 'children', {value: new dom.Set()}).children;
+    Pseudom.checkPrimordialEndowments(pseudo, ...['Object', 'Set', 'String', 'Symbol']);
+
+    pseudo.document = null;
+
+    pseudo.CSSStyleDeclaration = class CSSStyleDeclaration extends pseudo.Object {
+      get cssText() {
+        const cssProperties = [];
+
+        for (const [key, value] of pseudo.Object.entries(this))
+          typeof key !== 'string' ||
+            key !== key.trim() ||
+            // NOTE: We only ever expect strings and numbers
+            !(typeof value === 'string' ? value.trim() : typeof value === 'number' ? !isNaN(value) : null) ||
+            cssProperties.push(`${key}: ${CSSStyleDeclaration.normalizeValue(value)}`);
+
+        return cssProperties.join(';');
       }
+
+      toString() {
+        return this.cssText;
+      }
+
+      toJSON() {
+        return this.toString();
+      }
+
+      static normalizeValue(value) {
+        return value || value === 0 ? /\s*;*$/[pseudo.Symbol.replace](value, '') : '';
+      }
+    };
+
+    pseudo.Object.freeze(pseudo.Object.freeze(pseudo.CSSStyleDeclaration).prototype);
+
+    pseudo.DOMStringMap = class DOMStringMap extends pseudo.Object {};
+
+    pseudo.Object.freeze(pseudo.Object.freeze(pseudo.DOMStringMap).prototype);
+
+    // TODO: Consider support for Element.classList
+    //       For now we list the simplicity of Element.className
+    pseudo.DOMTokenList = class DOMTokenList extends pseudo.Set {
+      toString() {
+        return [...this].join(' ');
+      }
+
+      toJSON() {
+        return this.toString();
+      }
+
+      static normalizeString(string) {
+        return string ? /[\n\t\s]+/g[pseudo.Symbol.replace](string, ' ').trim() : '';
+      }
+
+      static from(...list) {
+        return new DOMTokenList(DOMTokenList.normalizeList(...list).split(' '));
+      }
+
+      static normalizeList(...list) {
+        return list.length ? DOMTokenList.normalizeString(list.filter(Boolean).join(' ')) : '';
+      }
+    };
+
+    pseudo.Object.freeze(pseudo.Object.freeze(pseudo.DOMTokenList).prototype);
+
+    pseudo.DOMNodeList = class DOMNodeList extends pseudo.Set {};
+
+    pseudo.Object.freeze(pseudo.Object.freeze(pseudo.DOMNodeList).prototype);
+
+    pseudo.Node = class Node extends pseudo.Object {
+      get children() {
+        return pseudo.Object.defineProperty(this, 'children', {value: new pseudo.DOMNodeList()}).children;
+      }
+
       get childElementCount() {
         return (this.hasOwnProperty('children') && this.children.size) || 0;
       }
+
       get textContent() {
         return (this.hasOwnProperty('children') && this.children.size && [...this.children].join('')) || '';
       }
+
       set textContent(text) {
         this.hasOwnProperty('children') && this.children.size && this.children.clear();
-        text && this.children.add(new dom.String(text));
+        text && this.children.add(new pseudo.Text(text));
       }
+
       appendChild(element) {
         return element && this.children.add(element), element;
       }
-      append(...elements) {
-        if (elements.length) for (const element of elements) element && this.children.add(element);
-      }
+
       removeChild(element) {
         element && this.hasOwnProperty('children') && this.children.size && this.children.delete(element);
         return element;
       }
-      remove(...elements) {
-        if (elements.length && this.hasOwnProperty('children') && this.children.size)
-          for (const element of elements) element && this.children.delete(element);
+
+      remove() {
+        //   if (elements.length && this.hasOwnProperty('children') && this.children.size)
+        //     for (const element of elements) element && this.children.delete(element);
+        throw `Unsupported: Compositional nodes cannot be directly removed!`;
       }
     };
 
-    dom.Element = class Element extends dom.Node {
+    pseudo.Object.freeze(pseudo.Object.freeze(pseudo.Node).prototype);
+
+    pseudo.Element = class Element extends pseudo.Node {
+      get style() {
+        if (this && this !== this.constructor.prototype)
+          return pseudo.Object.defineProperty(this, 'style', {value: new pseudo.CSSStyleDeclaration(), writable: false})
+            .style;
+        throw Error(`Invalid invocation of Element.style getter/setter.`);
+      }
+
+      set style(value) {
+        value == null || pseudo.Object.assign(this.style, {...value});
+      }
+
+      get dataset() {
+        if (this && this !== this.constructor.prototype)
+          return pseudo.Object.defineProperty(this, 'dataset', {value: new pseudo.DOMStringMap(), writable: false})
+            .dataset;
+        throw Error(`Invalid invocation of Element.dataset getter/setter.`);
+      }
+
+      set dataset(value) {
+        value == null || pseudo.Object.assign(this.dataset, {...value});
+      }
+
       get innerHTML() {
         return this.textContent;
       }
+
       set innerHTML(text) {
         this.textContent = text;
       }
+
       get outerHTML() {
-        let classList;
         let {className, tag, innerHTML, dataset} = this;
 
-        className &&
-          (className = className.trim()) &&
-          ({
-            [className]: classList = (className &&
-              (Element.classLists[className] = [...new dom.Set(className.split(/\s+/g))].join(' '))) ||
-              '',
-          } = Element.classLists || (Element.classLists = dom.Object.create(null)));
+        className && (className = className.trim()) && (className = pseudo.DOMTokenList.normalizeString(className));
 
         const openTag = [tag];
 
-        classList && openTag.push(`class="${classList}"`);
+        className && openTag.push(`class="${className}"`);
 
-        if (dataset)
-          for (const [key, value] of dom.Object.entries(dataset))
-            value == null || !key.trim || openTag.push(`data-${key}=${JSON.stringify(`${value}`)}`);
+        if (this.hasOwnProperty('style')) openTag.push(`style=${JSON.stringify(this.style.cssText)}`);
+
+        if (this.hasOwnProperty('dataset'))
+          for (const [key, value] of pseudo.Object.entries(this.dataset))
+            typeof key !== 'string' ||
+              key !== key.trim() ||
+              value == null ||
+              typeof value === 'symbol' ||
+              openTag.push(`data-${key}=${JSON.stringify(`${value}`)}`);
 
         return `<${openTag.join(' ')}>${innerHTML || ''}</${tag}>`;
+      }
+
+      append(...elements) {
+        if (elements.length)
+          for (const element of elements)
+            element === '' || this.children.add(typeof element === 'object' ? element : new pseudo.Text(element));
       }
 
       toString() {
         return this.outerHTML;
       }
+
       toJSON() {
         return this.toString();
       }
     };
 
-    dom.DocumentFragment = class DocumentFragment extends dom.Node {
+    pseudo.Object.freeze(pseudo.Object.freeze(pseudo.Element).prototype);
+
+    pseudo.DocumentFragment = class DocumentFragment extends pseudo.Node {
       toString() {
         return this.textContent;
       }
+
       toJSON() {
         return (this.childElementCount && [...this.children]) || [];
       }
-      [dom.Symbol.iterator]() {
-        return ((this.childElementCount && this.children) || '')[dom.Symbol.iterator]();
+
+      [pseudo.Symbol.iterator]() {
+        return ((this.childElementCount && this.children) || '')[pseudo.Symbol.iterator]();
       }
     };
+
+    pseudo.DocumentFragment.prototype.append = pseudo.Element.prototype.append;
+    pseudo.Object.freeze(pseudo.Object.freeze(pseudo.DocumentFragment).prototype);
 
     /** @type {typeof globalThis.Text} */
-    dom.Text = class Text extends dom.String {
+    pseudo.Text = class Text extends pseudo.String {
       toString() {
-        return encodeEntities(super.toString());
+        return Pseudom.encodeEntities(super.toString());
       }
     };
 
-    dom.createElement = (tag, properties, ...children) => {
-      const element = new dom.Element();
+    pseudo.Object.freeze(pseudo.Object.freeze(pseudo.Text).prototype);
+
+    pseudo.createElement = pseudo.Object.freeze((tag, properties, ...children) => {
+      const element = new pseudo.Element();
       element.tag = tag;
       properties == null ||
         (({dataset: element.dataset, className: element.className, ...element.properties} = properties),
         element.className || (element.className = ''));
-      children.length && dom.Object.defineProperty(element, 'children', {value: new dom.Set(children)});
+      children.length && element.append(...children);
       return element;
-    };
-    dom.createText = (content = '') => new dom.Text(content);
-    dom.createFragment = () => new dom.DocumentFragment();
+    });
+
+    pseudo.createText = pseudo.Object.freeze((content = '') => new pseudo.Text(content));
+
+    pseudo.createFragment = pseudo.Object.freeze(() => new pseudo.DocumentFragment());
 
     endowments = undefined;
 
-    return dom.Object.freeze(dom.Object.setPrototypeOf(dom, null));
+    // console.log(pseudo);
+
+    return pseudo.Object.freeze(pseudo);
   };
 
   const pseudo = createPseudoDOM(globalThis);
@@ -1834,55 +2058,184 @@ const markup = (function (exports) {
 
   class MarkupRenderer {
     constructor(options) {
-      // TODO: Consider making Renderer a thing
-      const {factory, defaults} = new.target;
+      this.defaults = new.target.defaults || MarkupRenderer.defaults;
 
-      const {SPAN = 'span', LINE = 'span', CLASS: classPrefix = 'markup', REFLOW = true} = {
-        ...defaults,
-        ...options,
-      };
+      Object.isFrozen(this.defaults) || Object.freeze((this.defaults = {...this.defaults}));
 
-      const PUNCTUATOR = `punctuator`;
-      const LITERAL = `literal`;
+      this.options = {defaults: this.defaults, ...this.defaults, ...options};
+
+      this.options.MARKUP_CLASS =
+        /^\w+$|$/.exec(this.options.MARKUP_CLASS || this.defaults.MARKUP_CLASS)[0].toLowerCase() || 'markup';
+
+      this.classes = {MARKUP_CLASS: this.options.MARKUP_CLASS, ...this.defaults.classes, ...this.options.classes};
+
+      if (this.options.classes !== this.defaults.classes || this.options.MARKUP_CLASS !== this.defaults.MARKUP_CLASS) {
+        const prefix = /^\w+(?=-|$)/;
+        for (const [key, value] of Object.entries(this.classes)) {
+          if (key === 'MARKUP_CLASS') continue;
+          if (typeof key !== 'string') continue;
+          if (!prefix.test(value) && key.includes('_'))
+            throw Error(`Invalid MarkupRenderer class ‹{${key}: ${JSON.stringify(value)}›.`);
+          this.classes[key] = /^\w+(?=-|$)/
+            [Symbol.replace](
+              value || this.defaults.classes[key] || key.toLowerCase().replace(/_/g, '-'),
+              this.options.MARKUP_CLASS,
+            )
+            .toLowerCase();
+        }
+      }
+
+      this.classes.MARKUP_SPACE = `whitespace ${this.classes.MARKUP_TOKEN} ${this.classes.MARKUP_WHITESPACE}`;
+      this.classes.MARKUP_COMMENT = `${this.classes.MARKUP_TOKEN} ${this.classes.MARKUP_ANNOTATION}`;
+      this.classes.MARKUP_KEYWORD = `${this.classes.MARKUP_TOKEN} ${this.classes.MARKUP_ENTITY}`;
+      this.classes.MARKUP_IDENTIFIER = `${this.classes.MARKUP_TOKEN} ${this.classes.MARKUP_IDENTITY}`;
+      this.classes.MARKUP_LITERAL = `${this.classes.MARKUP_TOKEN} ${this.classes.MARKUP_CLASS}-literal`;
+      this.classes.MARKUP_SPAN = `${this.classes.MARKUP_TOKEN} ${this.classes.MARKUP_CLASS}-span`;
+      this.classes.MARKUP_STRING = `${this.classes.MARKUP_TOKEN} ${this.classes.MARKUP_CLASS}-string`;
+      this.classes.MARKUP_PATTERN = `${this.classes.MARKUP_TOKEN} ${this.classes.MARKUP_CLASS}-pattern`;
+      this.classes.MARKUP_PUNCTUATOR = `${this.classes.MARKUP_TOKEN} ${this.classes.MARKUP_CLASS}-punctuator`;
+
+      this.elements = {...this.defaults.elements, ...this.options.elements};
+
+      this.options.classes = Object.freeze(this.classes);
+
+      this.dom = this.options.dom || (this.options.dom = new.target.dom || MarkupRenderer.dom);
+
+      Object.freeze(this.options);
 
       this.renderers = {
-        line: factory(LINE, {markupHint: `${classPrefix}-line`, markupClass: classPrefix}),
+        line: new.target.factory(
+          this.elements.LINE,
+          {markupHint: '', markupClass: this.classes.MARKUP_LINE},
+          this.options,
+        ),
+        fault: new.target.factory(
+          this.elements.MARKUP_TOKEN,
+          {markupHint: `fault`, markupClass: this.classes.MARKUP_FAULT},
+          this.options,
+        ),
+        text: new.target.factory(
+          this.elements.MARKUP_TOKEN,
+          {markupHint: `text`, markupClass: this.classes.MARKUP_TOKEN},
+          this.options,
+        ),
+        sequence: new.target.factory(
+          this.elements.MARKUP_TOKEN,
+          {markupHint: `sequence`, markupClass: this.classes.MARKUP_TOKEN},
+          this.options,
+        ),
 
-        fault: factory(SPAN, {markupHint: `fault`, markupClass: classPrefix}),
-        text: factory(SPAN, {markupHint: classPrefix, markupClass: classPrefix}),
+        whitespace: this.dom.Text,
 
-        whitespace: MarkupRenderer.dom.Text,
-        inset: factory(SPAN, {markupHint: `inset whitespace`, markupClass: classPrefix}),
-        break: factory(SPAN, {markupHint: `break whitespace`, markupClass: classPrefix}),
+        inset: new.target.factory(
+          this.elements.MARKUP_TOKEN,
+          {markupHint: `inset`, markupClass: `whitespace ${this.classes.MARKUP_SPACE}`},
+          this.options,
+        ),
 
-        comment: factory(SPAN, {markupHint: `comment`, markupClass: classPrefix}),
+        break: new.target.factory(
+          this.elements.MARKUP_TOKEN,
+          {markupHint: `break`, markupClass: `whitespace ${this.classes.MARKUP_SPACE}`},
+          this.options,
+        ),
 
-        keyword: factory(SPAN, {markupHint: `keyword`, markupClass: classPrefix}),
-        identifier: factory(SPAN, {markupHint: `identifier`, markupClass: classPrefix}),
+        comment: new.target.factory(
+          this.elements.MARKUP_TOKEN,
+          {markupHint: `comment`, markupClass: this.classes.MARKUP_COMMENT},
+          this.options,
+        ),
 
-        sequence: factory(SPAN, {markupHint: `sequence`, markupClass: classPrefix}),
+        keyword: new.target.factory(
+          this.elements.MARKUP_TOKEN,
+          {markupHint: `keyword`, markupClass: this.classes.MARKUP_KEYWORD},
+          this.options,
+        ),
+        identifier: new.target.factory(
+          this.elements.MARKUP_TOKEN,
+          {markupHint: `identifier`, markupClass: this.classes.MARKUP_IDENTIFIER},
+          this.options,
+        ),
 
-        literal: factory(SPAN, {markupHint: LITERAL, markupClass: classPrefix}),
-        number: factory(SPAN, {markupHint: `${LITERAL} number`, markupClass: classPrefix}),
-        quote: factory(SPAN, {markupHint: `string quote`, markupClass: classPrefix}),
-        string: factory(SPAN, {markupHint: `string`, markupClass: classPrefix}),
-        pattern: factory(SPAN, {markupHint: `pattern`, markupClass: classPrefix}),
+        literal: new.target.factory(
+          this.elements.MARKUP_TOKEN,
+          {markupHint: `literal`, markupClass: this.classes.MARKUP_LITERAL},
+          this.options,
+        ),
+        number: new.target.factory(
+          this.elements.MARKUP_TOKEN,
+          {markupHint: `number`, markupClass: `literal ${this.classes.MARKUP_LITERAL}`},
+          this.options,
+        ),
+        string: new.target.factory(
+          this.elements.MARKUP_TOKEN,
+          {markupHint: `string`, markupClass: this.classes.MARKUP_STRING},
+          this.options,
+        ),
+        quote: new.target.factory(
+          this.elements.MARKUP_TOKEN,
+          {markupHint: `quote`, markupClass: `string ${this.classes.MARKUP_STRING}`},
+          this.options,
+        ),
+        pattern: new.target.factory(
+          this.elements.MARKUP_TOKEN,
+          {markupHint: `pattern`, markupClass: this.classes.MARKUP_PATTERN},
+          this.options,
+        ),
 
-        punctuator: factory(SPAN, {markupHint: PUNCTUATOR, markupClass: classPrefix}),
-        operator: factory(SPAN, {markupHint: `${PUNCTUATOR} operator`, markupClass: classPrefix}),
-        assigner: factory(SPAN, {markupHint: `${PUNCTUATOR} operator assigner`, markupClass: classPrefix}),
-        combinator: factory(SPAN, {markupHint: `${PUNCTUATOR} operator combinator`, markupClass: classPrefix}),
-        delimiter: factory(SPAN, {markupHint: `${PUNCTUATOR} operator delimiter`, markupClass: classPrefix}),
-
-        punctuation: factory(SPAN, {markupHint: `${PUNCTUATOR} punctuation`, markupClass: classPrefix}),
-
-        breaker: factory(SPAN, {markupHint: `${PUNCTUATOR} breaker`, markupClass: classPrefix}),
-        opener: factory(SPAN, {markupHint: `${PUNCTUATOR} opener`, markupClass: classPrefix}),
-        closer: factory(SPAN, {markupHint: `${PUNCTUATOR} closer`, markupClass: classPrefix}),
-        span: factory(SPAN, {markupHint: `${PUNCTUATOR} span`, markupClass: classPrefix}),
+        punctuator: new.target.factory(
+          this.elements.MARKUP_TOKEN,
+          {markupHint: `punctuator`, markupClass: `${this.classes.MARKUP_PUNCTUATOR}`},
+          this.options,
+        ),
+        operator: new.target.factory(
+          this.elements.MARKUP_TOKEN,
+          {markupHint: `operator`, markupClass: `punctuator ${this.classes.MARKUP_PUNCTUATOR}`},
+          this.options,
+        ),
+        assigner: new.target.factory(
+          this.elements.MARKUP_TOKEN,
+          {markupHint: `assigner`, markupClass: `punctuator operator ${this.classes.MARKUP_PUNCTUATOR}`},
+          this.options,
+        ),
+        combinator: new.target.factory(
+          this.elements.MARKUP_TOKEN,
+          {
+            markupHint: `combinator`,
+            markupClass: `punctuator operator ${this.classes.MARKUP_PUNCTUATOR}`,
+          },
+          this.options,
+        ),
+        delimiter: new.target.factory(
+          this.elements.MARKUP_TOKEN,
+          {markupHint: `delimiter`, markupClass: `punctuator operator ${this.classes.MARKUP_PUNCTUATOR}`},
+          this.options,
+        ),
+        punctuation: new.target.factory(
+          this.elements.MARKUP_TOKEN,
+          {markupHint: `punctuation`, markupClass: `punctuator ${this.classes.MARKUP_PUNCTUATOR}`},
+          this.options,
+        ),
+        breaker: new.target.factory(
+          this.elements.MARKUP_TOKEN,
+          {markupHint: `breaker`, markupClass: `punctuator ${this.classes.MARKUP_PUNCTUATOR}`},
+          this.options,
+        ),
+        opener: new.target.factory(
+          this.elements.MARKUP_TOKEN,
+          {markupHint: `opener`, markupClass: `punctuator ${this.classes.MARKUP_PUNCTUATOR}`},
+          this.options,
+        ),
+        closer: new.target.factory(
+          this.elements.MARKUP_TOKEN,
+          {markupHint: `closer`, markupClass: `punctuator ${this.classes.MARKUP_PUNCTUATOR}`},
+          this.options,
+        ),
+        span: new.target.factory(
+          this.elements.MARKUP_TOKEN,
+          {markupHint: `span`, markupClass: `${this.classes.MARKUP_SPAN}`},
+          this.options,
+        ),
       };
-
-      this.reflows = REFLOW;
     }
 
     async render(tokens, fragment) {
@@ -1896,17 +2249,17 @@ const markup = (function (exports) {
           if (!MarkupRenderer.dom.native && template && 'textContent' in fragment) {
             logs && logs.push(`render method = 'text' in template`);
             const body = [first.value];
-            first.done || (await each(elements, element => body.push(element)));
+            first.done || (await each(elements, element => element && body.push(element)));
             template.innerHTML = body.join('');
             fragment.appendChild(template.content);
           } else if ('push' in fragment) {
             logs && logs.push(`render method = 'push' in fragment`);
             fragment.push(first.value);
-            first.done || (await each(elements, element => fragment.push(element)));
+            first.done || (await each(elements, element => element && fragment.push(element)));
           } else if ('append' in fragment) {
             logs && logs.push(`render method = 'append' in fragment`);
             fragment.append(first.value);
-            first.done || (await each(elements, element => fragment.append(element)));
+            first.done || (await each(elements, element => element && fragment.append(element)));
           }
         }
         return fragment;
@@ -1919,16 +2272,26 @@ const markup = (function (exports) {
     *renderer(tokens) {
       let renderedLine, LineInset, normalizedLineInset, normalizedLineText, lineBreak, insetHint;
       let type, text, punctuator, hint, lineInset, lineBreaks, renderer;
-      const {renderers, reflows} = this;
+      const {
+        renderers,
+        options: {REFLOW: reflows},
+      } = this;
+      const Lines = /^/gm;
+      const Tabs = /\t+/g;
       const createLine = reflows
         ? () => (renderedLine = renderers.line())
         : () => (renderedLine = renderers.line('', 'no-reflow'));
       const emit = (renderer, text, type, hint) => {
+        text == null && (text = '');
         (renderedLine || createLine()).appendChild((renderedLine.lastChild = renderer(text, hint || type)));
+        if (type === 'inset') {
+          renderedLine.style['--markup-line-inset-spaces'] =
+            text.length - (renderedLine.style['--markup-line-inset-tabs'] = text.length - text.replace(Tabs, '').length);
+          renderedLine.dataset['markup-line-inset'] = text;
+        }
       };
       const emitInset = (text, hint) => emit(renderers.inset, text, 'inset', hint);
       const emitBreak = hint => emit(renderers.break, '\n', 'break', hint);
-      const Lines = /^/gm;
 
       for (const token of tokens) {
         if (!token || !token.text) continue;
@@ -1960,13 +2323,13 @@ const markup = (function (exports) {
                 ? ((lineBreak = '\n'),
                   (normalizedLineText = normalizedLineText.slice(0, normalizedLineText.endsWith('\r\n') ? -2 : -1)))
                 : !(lineBreak = '')) && emit(renderer, normalizedLineText, type, hint),
-              lineBreak && (emitBreak(), (renderedLine = void (yield renderedLine))));
+              lineBreak && (emitBreak(), renderedLine && (renderedLine = void (yield renderedLine))));
           }
         } else {
           // TODO: See if pseudom children can be optimized for WBR/BR clones
           emit(renderer, text, type, hint);
           type === 'break'
-            ? (renderedLine = void (yield renderedLine))
+            ? renderedLine && (renderedLine = void (yield renderedLine))
             : type === 'whitespace' || renderedLine.appendChild(MarkupRenderer.dom.Element('wbr'));
         }
       }
@@ -1974,56 +2337,118 @@ const markup = (function (exports) {
     }
 
     /**
-     * @template {{defaults?: Partial<typeof MarkupRenderer.defaults>; markupClass?: string; markupHint?: string;}} T
+     * @template {{markupHint: string}} T
      * @param {string} tagName
-     * @param {Partial<HTMLElement> & T} [elementProperties]
+     * @param {T & Partial<HTMLElement>} properties
+     * @param {MarkupRenderer['options']} [options]
+     * @param {typeof MarkupRenderer['dom']} [dom]
      */
-    static factory(tagName, elementProperties) {
-      const [
-        tag,
-        {
-          defaults = (this || MarkupRenderer).defaults,
-          markupClass = defaults.CLASS || MarkupRenderer.defaults.CLASS || 'markup',
-          markupHint = '',
-          ...properties
-        } = {},
-      ] = arguments;
-      properties.className = markupHint ? `${markupClass} ${markupHint}` : markupClass;
-      Object.freeze(properties);
+    static factory(tagName, properties, options, dom) {
+      let defaults =
+        /** @type {MarkupRenderer['options']} */ ((this &&
+          Object.prototype.isPrototypeOf.call(MarkupRenderer, this) &&
+          this.defaults) ||
+        MarkupRenderer.defaults);
+      let markupClass = defaults.MARKUP_CLASS;
+      let markupHint = '';
+      ({
+        0: tagName = 'span',
+        2: options = defaults,
+        3: dom = options.dom || MarkupRenderer.dom,
+      } = /** @type {*} */ (arguments));
 
-      return Object.freeze((content, hint) => {
-        let element, hintSeparator;
+      //@ts-ignore
+      ({markupClass = options.MARKUP_CLASS || markupClass, markupHint = '', ...properties} = /** @type {*} */ ({
+        ...properties,
+      }));
 
-        element =
-          (typeof content === 'string' && (content = MarkupRenderer.dom.Text(content))) || content != null
-            ? MarkupRenderer.dom.Element(tag, properties, content)
-            : MarkupRenderer.dom.Element(tag, properties);
+      properties.className = `${markupHint ? `${markupClass} ${markupHint}` : markupClass} ${options.MARKUP_CLASS ||
+      defaults.MARKUP_CLASS}`;
 
-        typeof hint === 'string' && hint !== '' && (hintSeparator = hint.indexOf('\n\n')) !== -1
-          ? ((element.dataset = {
-              hint: `${markupHint}${MarkupRenderer.dom.escape(hint.slice(hintSeparator))}`,
-            }),
-            hintSeparator === 0 || (element.className = `${element.className} ${hint.slice(0, hintSeparator)}`))
-          : (hint && (element.className = `${element.className} ${hint}`),
-            (element.dataset = {hint: hint || markupHint || element.className}));
-
-        return element;
-      });
+      return new (this.Factory || MarkupRenderer.Factory)({tagName, options, markupHint, markupClass, properties, dom})
+        .render;
     }
   }
 
-  MarkupRenderer.defaults = Object.freeze({
+  {
+    const defaults = {};
+
     /** Specifies the intended mode for rendering a token @type {'html'} */
-    MODE: 'html',
+    defaults.MODE = 'html';
     /** Tag name of the element to use for rendering a token. */
-    SPAN: 'span',
+    defaults.SPAN = 'span';
     /** Tag name of the element to use for grouping tokens in a single line. */
-    LINE: 'span',
-    /** The class name of the element to use for rendering a token. */
-    CLASS: 'markup',
+    defaults.LINE = 'span';
+    /** The bare class name for all rendered markup nodes. */
+    defaults.MARKUP_CLASS = 'markup';
     /** Enable renderer-side unpacking { inset } || { breaks > 0 } tokens */
-    REFLOW: true,
-  });
+    defaults.REFLOW = true;
+
+    defaults.elements = {
+      MARKUP_LINE: 'span',
+      MARKUP_TOKEN: 'span',
+    };
+
+    defaults.classes = {
+      /** The bare class name for all rendered markup nodes. */
+      MARKUP_CLASS: 'markup',
+      /** The prefixed class name for rendered markup lines. */
+      MARKUP_LINE: 'markup-line',
+      /** The prefixed class name for rendered markup tokens. */
+      MARKUP_TOKEN: 'markup-token',
+      /** The prefixed class name for rendered markup tokens. */
+      MARKUP_FAULT: 'markup-fault',
+      /** The prefixed class name for rendered markup whitespace tokens. */
+      MARKUP_WHITESPACE: 'markup-whitespace',
+      /** The prefixed class name for rendered markup punctuation tokens. */
+      MARKUP_PUNCTUATION: 'markup-punctuation',
+      /** The prefixed class name for rendered markup annotation tokens. */
+      MARKUP_ANNOTATION: 'markup-annotation',
+      /** The prefixed class name for rendered markup entity tokens. */
+      MARKUP_ENTITY: 'markup-entity',
+      /** The prefixed class name for rendered markup identity tokens. */
+      MARKUP_IDENTITY: 'markup-identity',
+      /** The prefixed class name for rendered markup atoms. */
+      MARKUP_ATOM: 'markup-atom',
+    };
+
+    MarkupRenderer.defaults = defaults;
+
+    Object.freeze(defaults);
+  }
+
+  MarkupRenderer.Factory = class Factory {
+    /** @param {{tagName: string, markupHint: string, markupClass: string, properties: Partial<HTMLElement>, options: MarkupRenderer['options'], dom: typeof MarkupRenderer['dom']}} configuration */
+    constructor({tagName, markupHint, markupClass, properties, options, dom}) {
+      this.tagName = tagName;
+      this.properties = Object.freeze({...properties});
+      this.markupHint = markupHint || '';
+      this.markupClass = markupClass || MarkupRenderer.defaults.MARKUP_CLASS;
+      this.options = options;
+      this.dom = dom;
+      this.render = this.render.bind(this);
+      Object.freeze(this);
+    }
+
+    render(content, hint) {
+      let element, hintSeparator;
+
+      element =
+        (typeof content === 'string' && (content = this.dom.Text(content))) || content != null
+          ? this.dom.Element(this.tagName, this.properties, content)
+          : this.dom.Element(this.tagName, this.properties);
+
+      typeof hint === 'string' && hint !== '' && (hintSeparator = hint.indexOf('\n\n')) !== -1
+        ? ((element.dataset = {
+            'markup-hint': `${this.markupHint}${this.dom.escape(hint.slice(hintSeparator))}`,
+          }),
+          hintSeparator === 0 || (element.className = `${element.className} ${hint.slice(0, hintSeparator)}`))
+        : (hint && (element.className = `${element.className} ${hint}`),
+          (element.dataset = {'markup-hint': hint || this.markupHint || element.className}));
+
+      return element;
+    }
+  };
 
   MarkupRenderer.dom = (() => {
     /** Uses lightweight proxy objects that can be serialized into HTML text */
