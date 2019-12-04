@@ -22,6 +22,8 @@ By default:
 
 **`Token Matcher`** extends the _`Matcher`_ interface with a `tokenize` method that
 
+<!-- See [<samp>Changelog</samp>][changelog]. -->
+
 ## Progress
 
 - [x] Experiments
@@ -39,3 +41,6 @@ By default:
     - [x] Refactor Debugging helpers — [`lib/debug.js`](./lib/debug.js)
     - [x] Refactor Matches wrapper — [`lib/matches.js`](./lib/matches.js)
   - [x] Refactor RegExpRange — [`lib/range.js`](./lib/range.js)
+
+[package:repository]: https://github.com/SMotaal/markup/tree/master/packages/matcher
+[changelog]: ./CHANGELOG.md
