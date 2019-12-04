@@ -1,3 +1,3 @@
-#!/usr/bin/env node --experimental-modules --loader @smotaal.io/markup
+#!/usr/bin/env node
 
-import('@smotaal.io/markup');
+import('./packages/markup/benchmarks/benchmark.js');
