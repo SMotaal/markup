@@ -1,0 +1,25 @@
+```markdown syntax=ibis indentation=inset
+? What interface should the user be expected to provide a test fixture?
+  :+ An arrow function that is a task with an interleaved sequence of setup and assertions
+    + tasks can be repurposed
+    + tasks can be run in [parallel/distributed]
+      - cannot have local bindings
+    - not declarative
+  :+ Fixtures can be named exports from modules
+    ? What is the module format?
+      : the top-level of the module has no side-effects
+        + never a problem to import or reuse a fixture
+        - need to declare the dependencies as explicit within a test
+        ? how are dependencies declared?
+      : the top-level can import side-effecting modules
+        - distribution becomes very difficult
+        + simpler to understand
+    :~+ exports should be conventional names (`test*`, `bench*`, etc)
+      + task runners can differentiate the environment to supply to the task
+      + convention over configuration
+  : .spec.js
+
+---
+
+[parallel/distributed]: #
+```
