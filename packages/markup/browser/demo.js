@@ -54,6 +54,7 @@ const defaults = {
   sourceType: undefined,
   element: 'pre#source-code',
   headerTemplate: 'template#source-header',
+  resolvers,
   fetch: /** @type {RequestInit} */ ({
     mode: 'cors',
     // referrer: 'no-referrer',
@@ -70,6 +71,7 @@ export default (markup, overrides) => {
       ...((defaults && defaults.fetch) || undefined),
       ...((overrides && overrides.fetch) || undefined),
     },
+    resolvers,
   };
 
   options.defaults = {...options};
