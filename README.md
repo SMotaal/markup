@@ -150,10 +150,10 @@ The minimalistic isomorphic compositional DOM used to render tokenized.
 
 > **Note** — The following are incomplete thoughts.
 
-- `2019-09` [Articulative Parsing](/experimental-modules-shim/documentation/Articulative-Parsing.md)
+- `2019-09` [Articulative Parsing](/experimental/modules/shim/documentation/Articulative-Parsing.md)
 - `2019-06` [ECMAScript Constructs](/markup/experimental/es/Constructs.md)
-- `2019-05` [Contemplative Parsing](/experimental-modules-shim/documentation/Contemplative-Parsing.md)
-  - `2019-05` [Disambiguation](/experimental-modules-shim/documentation/Contemplative-Parsing-Disambiguation.md)
+- `2019-05` [Contemplative Parsing](/experimental/modules/shim/documentation/Contemplative-Parsing.md)
+  - `2019-05` [Disambiguation](/experimental/modules/shim/documentation/Contemplative-Parsing-Disambiguation.md)
 
 ---
 
