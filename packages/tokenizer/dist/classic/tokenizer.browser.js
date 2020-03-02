@@ -1616,7 +1616,7 @@ const markup = (function (exports) {
       /** @type {API.Options} */
       const {
         parsers = [],
-        tokenize = (source, options = {}, flags) => {
+        tokenize = /** @type {API.tokenize} */ ((source, options = {}, flags) => {
           /** @type {{[name: string]: any} & TokenizerAPI.State} */
           const state = new TokenizerAPI.State({options, flags: {}});
           //@ts-ignore
@@ -1641,11 +1641,12 @@ const markup = (function (exports) {
           try {
             this.lastParser === (this.lastParser = parser) ||
               console.info('[tokenize‹parser›]: %o', parser.MODULE_URL || {parser});
+            //@ts-ignore
             return (returned = parser.tokenize((this.lastSource = source), (this.lastState = state)));
           } finally {
             returned !== UNSET || !state.flags.debug || console.info('[tokenize‹state›]: %o', state);
           }
-        },
+        }),
 
         warmup = (source, options, flags) => {
           const key = (options && JSON.stringify(options)) || '';
@@ -1689,7 +1690,7 @@ const markup = (function (exports) {
   const UNSET = Symbol('');
 
   /**
-   * @typedef {import('./legacy/parser.js').Parser & {MODULE_URL?: string}} Parser
+   * @typedef {import('./legacy/parser.js').Parser & {MODULE_URL?: string, tokenize?: API.tokenize}} Parser
    * @typedef {Partial<{variant?: number | string, fragment?: Fragment, [name: string]: any}>} Parser.Options
    */
 
@@ -2330,7 +2331,9 @@ const markup = (function (exports) {
           emit(renderer, text, type, hint);
           type === 'break'
             ? renderedLine && (renderedLine = void (yield renderedLine))
-            : type === 'whitespace' || renderedLine.appendChild(MarkupRenderer.dom.Element('wbr'));
+            : type === 'whitespace' ||
+              //@ts-ignore
+              renderedLine.appendChild(MarkupRenderer.dom.Element('wbr'));
         }
       }
       renderedLine && (yield renderedLine);
