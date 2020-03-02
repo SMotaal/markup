@@ -1,12 +1,11 @@
 ﻿{
-  "extends": "../jsconfig.json",
-  "exclude": [
-    "node_modules",
-    "**/node_modules/*",
-    "trash",
-    "**/trash/*",
-    "[[]trash[]]",
-    "**/[[]trash[]]/*",
-    "[[]more[]]",
-    "**/[[]more[]]/*"]
+  "extends": "@smotaal.io/tools/typescript/jsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "baseUrl": "../",
+    "paths": {
+      "/*": ["../*"]
+    },
+  },
+  "exclude": ["**/[[]*[]]/*", "samples/*", "**/node_modules/*", "**/trash/*", "**/samples/*", "**/dist/*"]
 }
