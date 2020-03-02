@@ -9,7 +9,7 @@ Experimentals lead to two types of packages:
 
 Those packages abstract away patterns conceived in the experiment to make it possible to resuse them elsewhere.
 
-**pseu·dom**
+**pseud·om**
 
 Abstractional document composition without the actual DOM.
 

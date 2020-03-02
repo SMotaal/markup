@@ -1,4 +1,4 @@
-# @smotaal/pseu·dom
+# @smotaal/pseud·om
 
 Featherweight compositional DOM for document/less runtimes.
 
@@ -96,7 +96,7 @@ console.log(
 
 ---
 
-If you find pseu·dom suitable for your particular case, please don't hesitate to contribute to this project. If not, please let me know why.
+If you find pseud·om suitable for your particular case, please don't hesitate to contribute to this project. If not, please let me know why.
 
 [package:repository]: https://github.com/SMotaal/markup/tree/master/packages/pseudom
 [changelog]: ./CHANGELOG.md
