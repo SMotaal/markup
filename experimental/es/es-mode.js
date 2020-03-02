@@ -4,6 +4,7 @@ import {matcher} from './es-matcher.js';
 import {initializeState, finalizeState, createToken} from '../../packages/matcher/experimental/common/helpers.js';
 import {TokenMatcher} from '../../packages/matcher/lib/token-matcher.js';
 
+//@ts-ignore
 export const mode = TokenMatcher.createMode(matcher, {
   USE_CONSTRUCTS: false,
 
@@ -31,6 +32,7 @@ export const mode = TokenMatcher.createMode(matcher, {
 
     if (state.USE_CONSTRUCTS === true && token !== undefined) {
       const {type, text, context = state.nextTokenContext} = token;
+      //@ts-ignore
       if (token.goal === matcher.goal) {
         switch (type) {
           case 'inset':
