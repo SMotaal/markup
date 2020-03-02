@@ -14,7 +14,7 @@ const Tokens = Symbol('Tokens');
 
 /** @template {RegExp} T  @implements {MatcherIterator<T>} */
 export class MatcherState {
-  /** @param {Partial<MatcherState<T>>} properties */
+  /** @param {Partial<MatcherState<T>> & {initialize?(): void, finalize?(): void}} properties */
   constructor({source, matcher, initialize, finalize, ...properties}) {
     Object.assign(this, properties);
 
@@ -124,7 +124,10 @@ export class TokenizerState extends MatcherState {
     return Object.defineProperty(this, Tokens, {value: [], writable: false, configurable: true})[Tokens];
   }
 
-  createToken(match, state) {}
+  /** @template T @returns {T} */
+  createToken(match, state) {
+    return;
+  }
 }
 
 TokenizerState.prototype.previousToken = TokenizerState.prototype.nextToken = /** @type {Token} */ (undefined);

@@ -278,7 +278,9 @@ class MarkupRenderer {
         emit(renderer, text, type, hint);
         type === 'break'
           ? renderedLine && (renderedLine = void (yield renderedLine))
-          : type === 'whitespace' || renderedLine.appendChild(MarkupRenderer.dom.Element('wbr'));
+          : type === 'whitespace' ||
+            //@ts-ignore
+            renderedLine.appendChild(MarkupRenderer.dom.Element('wbr'));
       }
     }
     renderedLine && (yield renderedLine);

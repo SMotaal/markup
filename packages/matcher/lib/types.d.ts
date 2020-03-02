@@ -1,4 +1,3 @@
-﻿// Internal types
 
 interface Matcher extends import('./lib/matcher.js').Matcher, RegExp {}
 

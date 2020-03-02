@@ -74,6 +74,7 @@ export class Closures extends Map {
   static from(...sources) {
     const Species = this || Closures;
     const closures = (sources.length && Species.split(sources)) || [];
+    //@ts-ignore
     return new Species(closures);
   }
   static split(...sources) {
