@@ -20,13 +20,15 @@
   <pre id="source-code" class="markup-container"></pre>
   <script type="module">
     // import markup from '/markup/packages/tokenizer/browser/experimental.js';
-    import demo from '/markup/packages/markup/browser/demo.js';
-    import dynamicImport from '/browser/dynamic-import.js';
+    // import dynamicImport from '/browser/dynamic-import.js';
+    import bootstrap from '/markup/packages/markup/browser/demo.js';
     import markup from '/markup/packages/tokenizer/browser/experimental.extended.js';
+
     (async () => {
       try {
-        const experiment = await dynamicImport('./playground.js');
-        demo(markup, await experiment.default(markup));
+        const experiment = await import('./playground.js');
+        const playground = bootstrap(markup, await experiment.default(markup));
+        if (playground && playground.sourceURL) console.log('example: %O', await (await fetch(playground.sourceURL)).text());
       } catch (exception) {
         (document.body.querySelector('.markup-container') || document.body).appendChild(new Text(`${exception}`));
       }

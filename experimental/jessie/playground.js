@@ -23,6 +23,5 @@ export default ((
   markup.parsers[0].register(JSONMode);
   markup.parsers[0].register(JessieMode);
   markup.parsers[0].register(ECMAScriptMode);
-  // dumpExample();
   return {sourceURL, sourceType, resolveSourceType};
 })();

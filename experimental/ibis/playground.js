@@ -1,6 +1,4 @@
-﻿const dumpExample = async () => console.log('example: %O', await (await fetch('./example')).text());
-
-import {TokenMatcher} from '../../packages/matcher/lib/token-matcher.js';
+﻿import {TokenMatcher} from '../../packages/matcher/lib/token-matcher.js';
 import {
   createToken,
   generateDefinitions,
@@ -189,7 +187,6 @@ export default ((
   );
 
   markup.parsers[0].register(IBISMode);
-  dumpExample();
   return {sourceURL, sourceType, resolveSourceType};
 })();
 
@@ -211,3 +208,5 @@ export default ((
 //   '!': 'combinator',
 //   '#': 'combinator',
 // },
+
+// const dumpExample = async () => console.log('example: %O', await (await fetch('./example')).text());

@@ -3,8 +3,6 @@ import {mode as ECMAScriptMode} from '../es/es-mode.js';
 
 ECMAScriptMode.USE_CONSTRUCTS = true;
 
-const dumpExample = async () => console.log('example: %O', await (await fetch('./example')).json());
-
 /**
  * @param {import('/markup/packages/tokenizer/lib/api').API} markup
  */
@@ -20,6 +18,7 @@ export default ((
 ) => async markup => {
   markup.parsers[0].register(JSONMode);
   markup.parsers[0].register(ECMAScriptMode);
-  dumpExample();
   return {sourceURL, sourceType, resolveSourceType};
 })();
+
+// const dumpExample = async () => console.log('example: %O', await (await fetch('./example')).json());
