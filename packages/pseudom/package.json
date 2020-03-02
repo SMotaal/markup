@@ -1,8 +1,13 @@
 {
   "name": "@smotaal/pseudom",
-  "displayName": "pseu·dom",
+  "displayName": "pseud·om",
   "version": "0.0.10",
   "description": "Featherweight compositional DOM for document/less runtimes",
+  "author": "Saleh Abdel Motaal <saleh@smotaal.io>",
+  "repository": {
+    "url": "https://github.com/SMotaal/markup"
+  },
+  "homepage": "https://github.com/SMotaal/markup/tree/master/packages/pseudom/",
   "license": "MIT",
   "type": "module",
   "main": "pseudom.js",

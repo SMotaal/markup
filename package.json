@@ -3,7 +3,7 @@
   "name": "@smotaal/markup",
   "description": "smotaal.io/markup",
   "version": "0.0.0-alpha.2",
-  "author": "Saleh Abdel Motaal <saleh@grasppe.com>",
+  "author": "Saleh Abdel Motaal <saleh@smotaal.io>",
   "repository": "https://github.com/SMotaal/markup.git",
   "license": "MIT",
   "type": "module",
