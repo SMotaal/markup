@@ -6,7 +6,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta http-equiv="Content-Security-Policy"
-        content="default-src 'self' https://* http://*.smotaal.io; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com/@smotaal.io/ https://*.smotaal.io; connect-src *;" />
+        content="default-src 'self' 'unsafe-inline' https://* http://*.smotaal.io; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com/@smotaal.io/ https://*.smotaal.io; connect-src *;" />
   <meta name="theme-color" content="#999">
   <meta name="color-scheme" content="dark light">
   <link rel="manifest" href="/markup/manifest.webmanifest">
@@ -15,6 +15,13 @@
   <script type="module" src="/markup/packages/markup/browser/demo.js"></script>
   <link rel="stylesheet" href="/fonts/iosevka.css" />
   <link rel="stylesheet" href="/markup/packages/markup/browser/demo.css" />
+  <style type="text/css">
+    :root {
+      color-adjust: exact;
+      forced-color-adjust: none;
+      forced-colors: none;
+    }
+  </style>
 </head>
 
 <body>
