@@ -19,10 +19,48 @@
   /**/ /**/ /**/ /**/ /** DEFAULTS **/ /**/ /**/ /**/ /**/
   --markup-tab-size: 2;
   --markup-soft-inset-size: 2;
+
+  /**/ /**/ /**/ /**/ /** GLOBALS **/ /**/ /**/ /**/ /**/
+  --font-display: block;
+  --color-scheme: auto;
+}
+
+@media screen and (prefers-color-scheme: light) {
+  :root {
+    --color-scheme: light;
+  }
+}
+
+@media screen and (prefers-color-scheme: dark) {
+  :root {
+    --color-scheme: dark;
+  }
+}
+
+@media screen {
+  .dark-mode,
+  :host(.dark-mode) {
+    --color-scheme: dark;
+  }
+
+  .light-mode,
+  :host(.light-mode) {
+    --color-scheme: light;
+  }
+}
+
+:root,
+:host(.dark-mode),
+:host(.light-mode),
+.dark-mode,
+.light-mode {
+  color-scheme: var(--color-scheme);
 }
 
 :root,
 :host {
+  --markup-color-scheme: var(--color-scheme);
+
   /**/ /**/ /**/ /**/ /** NEUTRALS **/ /**/ /**/ /**/ /**/
   --markup-neutral-light: #aaa;
   --markup-neutral: #999;
@@ -104,7 +142,6 @@
 }
 
 @media screen {
-  /* TODO: Add support for @media (prefers-dark-mode) when it lands */
   pre.dark-mode,
   html.dark-mode,
   :host(.dark-mode) {
@@ -163,6 +200,7 @@
   outline-offset: var(--markup-line-outline-offset, -0.5px);
   opacity: var(--markup-line-opacity);
   color: var(--markup-line-color);
+  color-scheme: var(--markup-color-scheme);
   background-color: var(--markup-line-background-color);
   break-before: auto;
   break-inside: avoid;
