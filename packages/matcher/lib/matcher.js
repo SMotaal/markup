@@ -9,7 +9,7 @@ export class Matcher extends RegExp {
    * @param {MatcherPattern} pattern
    * @param {MatcherFlags} [flags]
    * @param {MatcherEntities} [entities]
-   * @param {{}} [state]
+   * @param {{currentMatch?:MatcherExecArray|null, lastMatch?:MatcherExecArray|null}} [state]
    */
   constructor(pattern, flags, entities, state) {
     //@ts-ignore
@@ -38,7 +38,12 @@ export class Matcher extends RegExp {
   /** @param {MatcherExecArray} match */
   capture(match) {
     // @ts-ignore
-    if (match === null) return null;
+    if (match === null) {
+      if (this.state) this.state.lastMatch = this.state.currentMatch = null;
+      return;
+    }
+
+    if (this.state) this.state.currentMatch = match;
 
     // @ts-ignore
     match.matcher = this;
@@ -56,6 +61,9 @@ export class Matcher extends RegExp {
       );
 
     );
+
+    this.state.lastMatch = match;
+    this.state.currentMatch = null;
 
     return match;
   }
@@ -180,11 +188,7 @@ export class Matcher extends RegExp {
   static get join() {
     const {sequence} = this;
 
-    const join = (...values) =>
-      values
-        .map(sequence.span)
-        .filter(Boolean)
-        .join('|');
+    const join = (...values) => values.map(sequence.span).filter(Boolean).join('|');
 
     Object.defineProperty(Matcher, 'join', {value: Object.freeze(join), enumerable: true, writable: false});
 
@@ -283,8 +287,7 @@ export class Matcher extends RegExp {
         ? matcher.constructor
         : Species === Matcher || typeof Species.clone !== 'function'
         ? Matcher
-        : Species
-      ).clone(matcher)),
+        : Species).clone(matcher)),
       'state',
       {value: state},
     );

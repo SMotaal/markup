@@ -1,5 +1,7 @@
 ﻿//@ts-check
 import {generateDefinitions, defineSymbol, Keywords} from '../common/helpers.js';
+import {TokenMatcher} from '../../lib/token-matcher.js';
+import {JSONRanges} from './json-ranges.js';
 
 export const {JSONGoal, JSONStringGoal, JSONObjectGoal, JSONArrayGoal, JSONDefinitions} = (() => {
   const identities = {Keyword: 'JSON.Keyword'};
@@ -19,6 +21,7 @@ export const {JSONGoal, JSONStringGoal, JSONObjectGoal, JSONArrayGoal, JSONDefin
     fold: undefined,
     openers: ['{', '[', '"'],
     keywords: Keywords({[identities.Keyword]: ['true', 'false', 'null']}),
+    punctuation: {'"': 'quote'},
   });
 
   const JSONObjectGoal = (goals[(symbols.JSONObjectGoal = defineSymbol('JSONObjectGoal'))] = {
@@ -41,6 +44,27 @@ export const {JSONGoal, JSONStringGoal, JSONObjectGoal, JSONArrayGoal, JSONDefin
     openers: [],
     closers: ['"'],
     punctuators: ['\\"', '\\\\', '\\/', '\\b', '\\n', '\\r', '\\t', '\\u'],
+    punctuation: {},
+    spans: {
+      '"': new RegExp(
+        //  SEE: https://tc39.es/ecma262/#table-json-single-character-escapes
+        TokenMatcher.sequence/* regexp */ `
+          (?:
+            [^${JSONRanges.ControlCharacter}"\\\n]+?(?=\\[^]|")
+            |\\["/\\bntr]
+            |\\u[${JSONRanges.HexDigit}]{4}
+            |\\[^]
+          )*?(?="|(
+            $
+            |\n
+            |\\$
+            |\\u[${JSONRanges.HexDigit}]{0,3}[^${JSONRanges.HexDigit}]
+            |\\[^"/\\bntru]
+            |[${JSONRanges.ControlCharacter}"]
+          ))`,
+        'g',
+      ),
+    },
   });
 
   return {

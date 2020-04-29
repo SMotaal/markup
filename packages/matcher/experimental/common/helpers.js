@@ -311,6 +311,26 @@ export const defineSymbol = (description, symbol) => symbolMap.define(descriptio
 export const describeSymbol = symbol => symbolMap.describe(symbol);
 
 export const generateDefinitions = ({groups = {}, goals = {}, identities = {}, symbols = {}, tokens = {}}) => {
+  const seen = new WeakSet();
+
+  for (const symbol of Object.getOwnPropertySymbols(goals)) {
+    // @ts-ignore
+    const {[symbol]: goal} = goals;
+
+    if (!goal || typeof goal != 'object') throw TypeError('generateDefinitions invoked with an invalid goal type');
+
+    if (seen.has(goal)) throw TypeError('generateDefinitions invoked with a redundant goal entry');
+
+    seen.add(goal);
+
+    if (!goal || typeof goal != 'object' || (goal.symbol != null && goal.symbol !== symbol))
+      throw Error('generateDefinitions invoked with goal-symbol mismatch');
+
+    if (generateDefinitions.NullGoal == null) throw Error('generateDefinitions invoked with the NullGoal goal');
+
+    if (generateDefinitions.FaultGoal == null) throw Error('generateDefinitions invoked with the FaultGoal goal');
+  }
+
   const FaultGoal = generateDefinitions.FaultGoal;
 
   const punctuators = Object.create(null);
@@ -407,11 +427,16 @@ export const generateDefinitions = ({groups = {}, goals = {}, identities = {}, s
   }
 };
 
-// generateDefinitions.Empty = Object.freeze(new class Empty extends Array{});
 generateDefinitions.Empty = Object.freeze({[Symbol.iterator]: (iterator => iterator).bind([][Symbol.iterator])});
+
+export const NullGoal = Object.freeze(
+  (generateDefinitions.NullGoal = {type: undefined, flatten: undefined, fold: undefined}),
+);
 
 export const FaultGoal = (generateDefinitions.FaultGoal = {symbol: defineSymbol('FaultGoal'), type: 'fault'});
 generateDefinitions({goals: {[FaultGoal.symbol]: FaultGoal}});
+
+Object.freeze(generateDefinitions);
 
 /**
  * @template {string} K

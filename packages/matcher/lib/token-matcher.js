@@ -29,27 +29,45 @@ export const TokenMatcher = (() => {
      * Safely mutates matcher state to open a new context.
      *
      * @template {State} S
-     * @param {string} text - Text of the intended { type = "opener" } token
+     * @param {string} opener - Text of the intended { type = "opener" } token
      * @param {S} state - Matcher state
      * @returns {undefined | string} - String when context is **not** open
      */
-    static open(text, state) {
+    static open(opener, state) {
       const {
-        contexts,
         context: parentContext,
-        context: {depth: index, goal: initialGoal},
-        groups,
-        initializeContext,
+        context: {
+          depth: index,
+          goal: initialGoal,
+          goal: {
+            groups: {[opener]: group},
+          },
+        },
       } = state;
-      const group = initialGoal.groups[text];
 
       if (!group) return initialGoal.type || 'sequence';
-      groups.splice(index, groups.length, group);
-      groups.closers.splice(index, groups.closers.length, group.closer);
+      state.groups.splice(index, state.groups.length, group);
+      state.groups.closers.splice(index, state.groups.closers.length, group.closer);
 
       parentContext.contextCount++;
 
       const goal = group.goal === undefined ? initialGoal : group.goal;
+      const forward = state.currentMatch != null && goal.spans != null && goal.spans[opener] != null;
+
+      if (forward) {
+        if (
+          this.forward(
+            goal.spans[opener],
+            state,
+            // DONE: fix deltas for forwards expressions
+            // typeof goal.spans[text] === 'string' ? undefined : false,
+          ) === 'fault'
+        )
+          return 'fault';
+
+        // if (goal.type) state.currentMatch.format = goal.type;
+        // if (match[match.format] = state.nextContext.goal.type || 'comment')
+      }
 
       const nextContext = {
         id: `${parentContext.id} ${
@@ -57,7 +75,7 @@ export const TokenMatcher = (() => {
             ? `\n${goal[Symbol.toStringTag]} ${group[Symbol.toStringTag]}`
             : group[Symbol.toStringTag]
         }`,
-        number: ++contexts.count,
+        number: ++state.contexts.count,
         depth: index + 1,
         parentContext,
         goal,
@@ -65,27 +83,58 @@ export const TokenMatcher = (() => {
         state,
       };
 
-      typeof initializeContext === 'function' && initializeContext(nextContext);
+      typeof state.initializeContext === 'function' && state.initializeContext(nextContext);
 
-      state.nextContext = contexts[index] = nextContext;
+      state.nextContext = state.contexts[index] = nextContext;
+    }
+
+    /**
+     * Safely ensures matcher state can open a new context.
+     *
+     * @template {State} S
+     * @param {string} opener - Text of the intended { type = "opener" } token
+     * @param {S} state - Matcher state
+     * @returns {boolean}
+     */
+    static canOpen(opener, state) {
+      // const upperCase = text.toUpperCase();
+      return /** @type {boolean} */ (state.context.goal.openers != null &&
+        state.context.goal.openers[opener] === true &&
+        (state.context.goal.spans == null ||
+          state.context.goal.spans[opener] == null ||
+          // Check if conditional span faults
+          this.lookAhead(state.context.goal.spans[opener], state)));
+    }
+    /**
+     * Safely ensures matcher state can open a new context.
+     *
+     * @template {State} S
+     * @param {string} closer - Text of the intended { type = "opener" } token
+     * @param {S} state - Matcher state
+     * @returns {boolean}
+     */
+    static canClose(closer, state) {
+      // const upperCase = text.toUpperCase();
+      return /** @type {boolean} */ (state.context.group.closer === closer ||
+        (state.context.goal.closers != null && state.context.goal.closers[closer] === true));
     }
 
     /**
      * Safely mutates matcher state to close the current context.
      *
      * @template {State} S
-     * @param {string} text - Text of the intended { type = "closer" } token
+     * @param {string} closer - Text of the intended { type = "closer" } token
      * @param {S} state - Matcher state
      * @returns {undefined | string} - String when context is **not** closed
      */
-    static close(text, state) {
-      const groups = state.groups;
-      const index = groups.closers.lastIndexOf(text);
+    static close(closer, state) {
+      // const groups = state.groups;
+      const index = state.groups.closers.lastIndexOf(closer);
 
-      if (index === -1 || index !== groups.length - 1) return 'fault';
+      if (index === -1 || index !== state.groups.length - 1) return 'fault';
 
-      groups.closers.splice(index, groups.closers.length);
-      groups.splice(index, groups.length);
+      state.groups.closers.splice(index, state.groups.closers.length);
+      state.groups.splice(index, state.groups.length);
       state.nextContext = state.context.parentContext;
     }
 
@@ -96,26 +145,44 @@ export const TokenMatcher = (() => {
      *
      * @template {State} S
      * @param {string | RegExp} search
-     * @param {MatcherMatch} match
      * @param {S} state - Matcher state
-     * @param {number | boolean} [delta]
      */
-    static forward(search, match, state, delta) {
+    static lookAhead(search, state) {
+      return this.forward(search, state, null);
+    }
+    /**
+     * Safely mutates matcher state to skip ahead.
+     *
+     * TODO: Finish implementing forward helper
+     *
+     * @template {State} S
+     * @param {string | RegExp} search
+     * @param {S} state - Matcher state
+     * @param {number | boolean | null} [delta]
+     */
+    static forward(search, state, delta) {
       if (typeof search === 'string' && search.length) {
+        if (delta === null)
+          return (
+            state.currentMatch.input.slice(
+              state.currentMatch.index + state.currentMatch[0].length,
+              state.currentMatch.index + state.currentMatch[0].length + search.length,
+            ) === search
+          );
         state.nextOffset =
-          match.input.indexOf(search, match.index + match[0].length) + (0 + /** @type {number} */ (delta) || 0);
+          state.currentMatch.input.indexOf(search, state.currentMatch.index + state.currentMatch[0].length) +
+          (0 + /** @type {number} */ (delta) || 0);
       } else if (search != null && typeof search === 'object') {
-        // debugger;
-        search.lastIndex = match.index + match[0].length;
-        const matched = search.exec(match.input);
+        search.lastIndex = state.currentMatch.index + state.currentMatch[0].length;
+        const matched = search.exec(state.currentMatch.input);
         // console.log(...matched, {matched});
         if (!matched || matched[1] !== undefined) {
-          if (delta === false) return false;
+          if (delta === null) return false;
           state.nextOffset = search.lastIndex;
           state.nextFault = true;
           return 'fault';
         } else {
-          if (delta === false) return true;
+          if (delta === null) return true;
           state.nextOffset = search.lastIndex + (0 + /** @type {number} */ (delta) || 0);
         }
       } else {
@@ -153,6 +220,113 @@ export const TokenMatcher = (() => {
 
   /** @type {import('../experimental/common/types').Goal|symbol} */
   TokenMatcher.prototype.goal = undefined;
+
+  /**
+   * @template {State} T
+   * @param {string} text
+   * @param {number} capture
+   * @param {MatcherMatch & {format?: string, upperCase?: string, punctuator?: string}} match
+   * @param {T} [state]
+   */
+  TokenMatcher.Opener = (text, capture, match, state) => {
+    match.upperCase = text.toUpperCase();
+    match.format = 'punctuator';
+    TokenMatcher.capture(
+      state.context.goal.punctuators != null && state.context.goal.punctuators[match.upperCase] === true
+        ? (match.punctuator =
+            (state.context.goal.punctuation && state.context.goal.punctuation[match.upperCase]) || 'combinator')
+        : TokenMatcher.canOpen(match.upperCase, state)
+        ? TokenMatcher.open(match.upperCase, state) ||
+          ((match.punctuator =
+            (state.context.goal.punctuation && state.context.goal.punctuation[match.upperCase]) ||
+            state.context.goal.type),
+          'opener')
+        : // If it is passive sequence we keep only on character
+          (text.length === 1 || ((state.nextOffset = match.index + 1), (text = match[0] = text[0])),
+          state.context.goal.type),
+      match,
+    );
+  };
+
+  /**
+   * @template {State} T
+   * @param {string} text
+   * @param {number} capture
+   * @param {MatcherMatch & {format?: string, upperCase?: string, punctuator?: string}} match
+   * @param {T} [state]
+   */
+  TokenMatcher.Closer = (text, capture, match, state) => {
+    match.upperCase = text.toUpperCase();
+    match.format = 'punctuator';
+    TokenMatcher.capture(
+      state.context.goal.punctuators && state.context.goal.punctuators[text] === true
+        ? (match.punctuator = 'combinator')
+        : TokenMatcher.canClose(match.upperCase, state)
+        ? TokenMatcher.close(match.upperCase, state) ||
+          ((match.punctuator =
+            (state.context.goal.punctuation && state.context.goal.punctuation[text]) || state.context.goal.type),
+          'closer')
+        : state.context.goal.type,
+      match,
+    );
+  };
+
+  /**
+   * @template {State} T
+   * @param {string} text
+   * @param {number} capture
+   * @param {MatcherMatch & {format?: string, punctuator?: string, flatten?: boolean}} match
+   * @param {T} [state]
+   */
+  TokenMatcher.Quote = (text, capture, match, state) => {
+    match.format = 'punctuator';
+    TokenMatcher.capture(
+      state.context.goal.punctuation[text] === 'quote' && TokenMatcher.canOpen(text, state)
+        ? TokenMatcher.open(text, state) ||
+            ((match.punctuator =
+              (state.nextContext.goal.punctuation && state.nextContext.goal.punctuation[text]) ||
+              state.nextContext.goal.type ||
+              'quote'),
+            'opener')
+        : state.context.group.closer === text && TokenMatcher.canClose(text, state)
+        ? TokenMatcher.close(text, state) || ((match.punctuator = state.context.goal.type || 'quote'), 'closer')
+        : state.context.goal.type || 'quote',
+      match,
+    );
+  };
+
+  /**
+   * @template {State} T
+   * @param {string} text
+   * @param {number} capture
+   * @param {MatcherMatch & {format?: string, flatten?: boolean}} match
+   * @param {T} [state]
+   */
+  TokenMatcher.Whitespace = (text, capture, match, state) => {
+    match.format = 'whitespace';
+    TokenMatcher.capture(
+      state.context.goal.type || (match.flatten = state.lineOffset !== match.index) ? 'whitespace' : 'inset',
+      match,
+    );
+  };
+  /**
+   * @template {State} T
+   * @param {string} text
+   * @param {number} capture
+   * @param {MatcherMatch & {format?: string, flatten?: boolean}} match
+   * @param {T} [state]
+   */
+  TokenMatcher.Break = (text, capture, match, state) => {
+    match.format = 'whitespace';
+    TokenMatcher.capture(
+      (state.context.group != null && state.context.group.closer === '\n' && TokenMatcher.close(text, state)) ||
+        // NOTE: ‹break› takes precedence over ‹closer›
+        state.context.goal.punctuation['\n'] ||
+        'break',
+      match,
+    );
+    match.flatten = false;
+  };
 
   class Tokenizer {
     constructor() {

@@ -33,7 +33,7 @@ export const {
   const goals = {};
   const symbols = {};
 
-  const ECMAScriptGoal = (goals[(symbols.ECMAScriptGoalSymbol = defineSymbol('ECMAScriptGoal'))] = {
+  const ECMAScriptGoal = (goals[(symbols.ECMAScriptGoal = defineSymbol('ECMAScriptGoal'))] = {
     type: undefined,
     flatten: undefined,
     fold: undefined,
@@ -64,12 +64,13 @@ export const {
       ':': 'delimiter',
       ',': 'delimiter',
       ';': 'breaker',
+      '"': 'quote',
+      "'": 'quote',
+      '`': 'quote',
     },
   });
 
-  const ECMAScriptCommentGoal = (goals[
-    (symbols.ECMAScriptCommentGoalSymbol = defineSymbol('ECMAScriptCommentGoal'))
-  ] = {
+  const ECMAScriptCommentGoal = (goals[(symbols.ECMAScriptCommentGoal = defineSymbol('ECMAScriptCommentGoal'))] = {
     type: 'comment',
     flatten: true,
     fold: true,
@@ -90,9 +91,12 @@ export const {
       //
       //   Alternative: '*/' ie indexOf(…, lastIndex)
     },
+    punctuation: {
+      '\n': 'fault',
+    },
   });
 
-  const ECMAScriptRegExpGoal = (goals[(symbols.ECMAScriptRegExpGoalSymbol = defineSymbol('ECMAScriptRegExpGoal'))] = {
+  const ECMAScriptRegExpGoal = (goals[(symbols.ECMAScriptRegExpGoal = defineSymbol('ECMAScriptRegExpGoal'))] = {
     type: 'pattern',
     flatten: undefined,
     fold: undefined,
@@ -108,6 +112,7 @@ export const {
       ')': 'combinator',
       '{': 'combinator',
       '}': 'combinator',
+      '\n': 'fault',
     },
     spans: {
       // This faults when match[1] === ''
@@ -134,15 +139,16 @@ export const {
       ')': 'pattern',
       '{': 'pattern',
       '}': 'pattern',
+      '\n': 'fault',
     },
   });
 
   ECMAScriptRegExpGoal.openers['['] = {
     goal: symbols.ECMAScriptRegExpClassGoal,
-    parentGoal: symbols.ECMAScriptRegExpGoalSymbol,
+    parentGoal: symbols.ECMAScriptRegExpGoal,
   };
 
-  const ECMAScriptStringGoal = (goals[(symbols.ECMAScriptStringGoalSymbol = defineSymbol('ECMAScriptStringGoal'))] = {
+  const ECMAScriptStringGoal = (goals[(symbols.ECMAScriptStringGoal = defineSymbol('ECMAScriptStringGoal'))] = {
     type: 'quote',
     flatten: true,
     fold: true,
@@ -163,10 +169,13 @@ export const {
       //
       //   We cannot use indexOf(…, lastIndex)
     },
+    punctuation: {
+      '\n': 'fault',
+    },
   });
 
   const ECMAScriptTemplateLiteralGoal = (goals[
-    (symbols.ECMAScriptTemplateLiteralGoalSymbol = defineSymbol('ECMAScriptTemplateLiteralGoal'))
+    (symbols.ECMAScriptTemplateLiteralGoal = defineSymbol('ECMAScriptTemplateLiteralGoal'))
   ] = {
     type: 'quote',
     flatten: true,
@@ -296,12 +305,12 @@ export const {
           DEBUG_CONSTRUCTS === true && console.log(context));
     };
 
-    goals[symbols.ECMAScriptRegExpGoalSymbol].initializeContext = goals[
-      symbols.ECMAScriptStringGoalSymbol
-    ].initializeContext = goals[symbols.ECMAScriptTemplateLiteralGoalSymbol].initializeContext = initializeContext;
+    goals[symbols.ECMAScriptRegExpGoal].initializeContext = goals[
+      symbols.ECMAScriptStringGoal
+    ].initializeContext = goals[symbols.ECMAScriptTemplateLiteralGoal].initializeContext = initializeContext;
 
     /** @param {Context} context */
-    goals[symbols.ECMAScriptGoalSymbol].initializeContext = context => {
+    goals[symbols.ECMAScriptGoal].initializeContext = context => {
       context.captureKeyword = captureKeyword;
       context.state['USE_CONSTRUCTS'] === true && initializeContext(context);
     };
@@ -325,50 +334,50 @@ export const {
         ['//']: {
           opener: '//',
           closer: '\n',
-          goal: symbols.ECMAScriptCommentGoalSymbol,
-          parentGoal: symbols.ECMAScriptGoalSymbol,
+          goal: symbols.ECMAScriptCommentGoal,
+          parentGoal: symbols.ECMAScriptGoal,
           description: '‹comment›',
         },
         ['/*']: {
           opener: '/*',
           closer: '*/',
-          goal: symbols.ECMAScriptCommentGoalSymbol,
-          parentGoal: symbols.ECMAScriptGoalSymbol,
+          goal: symbols.ECMAScriptCommentGoal,
+          parentGoal: symbols.ECMAScriptGoal,
           description: '‹comment›',
         },
         ['/']: {
           opener: '/',
           closer: '/',
-          goal: symbols.ECMAScriptRegExpGoalSymbol,
-          parentGoal: symbols.ECMAScriptGoalSymbol,
+          goal: symbols.ECMAScriptRegExpGoal,
+          parentGoal: symbols.ECMAScriptGoal,
           description: '‹pattern›',
         },
         ["'"]: {
           opener: "'",
           closer: "'",
-          goal: symbols.ECMAScriptStringGoalSymbol,
-          parentGoal: symbols.ECMAScriptGoalSymbol,
+          goal: symbols.ECMAScriptStringGoal,
+          parentGoal: symbols.ECMAScriptGoal,
           description: '‹string›',
         },
         ['"']: {
           opener: '"',
           closer: '"',
-          goal: symbols.ECMAScriptStringGoalSymbol,
-          parentGoal: symbols.ECMAScriptGoalSymbol,
+          goal: symbols.ECMAScriptStringGoal,
+          parentGoal: symbols.ECMAScriptGoal,
           description: '‹string›',
         },
         ['`']: {
           opener: '`',
           closer: '`',
-          goal: symbols.ECMAScriptTemplateLiteralGoalSymbol,
-          parentGoal: symbols.ECMAScriptGoalSymbol,
+          goal: symbols.ECMAScriptTemplateLiteralGoal,
+          parentGoal: symbols.ECMAScriptGoal,
           description: '‹template›',
         },
         ['${']: {
           opener: '${',
           closer: '}',
-          goal: symbols.ECMAScriptGoalSymbol,
-          parentGoal: symbols.ECMAScriptTemplateLiteralGoalSymbol,
+          goal: symbols.ECMAScriptGoal,
+          parentGoal: symbols.ECMAScriptTemplateLiteralGoal,
           description: '‹span›',
         },
       },

@@ -4,6 +4,7 @@ interface Matcher extends import('./lib/matcher.js').Matcher, RegExp {}
 type MatcherFlags = string;
 type MatcherText = string;
 type MatcherPattern = (string | RegExp) & Definition;
+type MatcherEntityFactory = (entity: MatcherEntity) => void;
 type MatcherPatternFactory = (entity: MatcherEntityFactory) => MatcherPattern;
 
 type MatcherMatch<T extends MatcherArray = RegExpExecArray | RegExpMatchArray> = T extends
@@ -45,6 +46,7 @@ type MatcherMetaEntity = string & Suffixed<'?'>;
 type MatcherUnknownEntity = 'UNKNOWN?';
 type MatcherNamedEntity = MatcherIdentityEntity | MatcherMetaEntity;
 
+type MatcherStatefulOperator<T> = (text: string, capture: number, match: MatcherMatch, state) => void;
 type MatcherOperator = <T>(text: string, capture: number, match: MatcherMatch, state?: T) => void;
 
 type MatcherEntity = MatcherNamedEntity | MatcherOperator | undefined;
