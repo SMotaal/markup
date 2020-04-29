@@ -131,7 +131,7 @@ export default ((
                       // (match.punctuator = 'combinator'),
                       state.nextContext.goal.spans != null &&
                         state.nextContext.goal.spans[text] != null &&
-                        TokenMatcher.forward(state.nextContext.goal.spans[text], match, state)),
+                        TokenMatcher.forward(state.nextContext.goal.spans[text], state)),
                     // // (match[match.format] = state.nextContext.goal.type || 'sequence'),
                     // console.log({match, ...state})),
                     //
@@ -156,7 +156,7 @@ export default ((
                 state.context.goal.spans[text] != null &&
                 ((match.punctuator = 'combinator'),
                 (match.flatten = state.context.goal.flatten),
-                TokenMatcher.forward(state.context.goal.spans[text], match, state) || state.context.goal.type)) ||
+                TokenMatcher.forward(state.context.goal.spans[text], state) || state.context.goal.type)) ||
                 'sequence',
               // state.context != null && state.context.goal != null && state.context.goal.type) ||
               // (state.lastToken != null && state.lastToken.type === 'combinator' && 'string') ||
