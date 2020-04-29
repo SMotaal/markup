@@ -1589,8 +1589,6 @@ javascript.extended.MJS = sequence`${javascript.extended.TOPLEVEL}|\bexport\b|\b
 javascript.extended.CJS = sequence`${javascript.extended.BLOCKLEVEL}|\bexports\b|\bmodule.exports\b|\brequire\b|\bimport(?=\(|\.)`;
 javascript.extended.ESX = sequence`${javascript.extended.BLOCKLEVEL}|\bexports\b|\bimport\b|\bmodule.exports\b|\brequire\b`;
 
-
-
 const modes = /*#__PURE__*/Object.freeze({
   __proto__: null,
   css: css,
