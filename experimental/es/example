@@ -1,0 +1,135 @@
+Identifiers: {
+      $\u0032; \u0024\u0032; this.new.target;
+}
+
+Numerals: {
+  0, -0, 1, -1, +1.1, 0.1, 0.1e3
+  0b01, 0x0123456789abcdef
+  NaN, Infinity, -Infinity
+  // 1_1 // [ ] Proposal Numeric Separators
+}
+
+RegExp: {
+  /[^[\]]/g;
+  /{(.)}{{1,}|{}}/g;
+  /(?:[^'\\\n]+?(?=\\.|')|\\.)*?(?:'|$)/g;
+  /(?:[^\\`$]+?(?=\\.|`|\${)|\\.)*?(?:`|$|\$(?={))/g;
+}
+
+Strings: {
+  '@@'            // [x] Not a ‹fault›
+
+  '\
+  a\a'            // [x] ‹quote›•‹comment›
+
+  "\
+  \\n\\b"/**/     // [x] ‹quote›•‹comment›•‹comment›
+}
+
+Templates: {
+  `(
+    ,|;|\.\.\.|\.|:|\?${
+      // We're including non-conflicting RegExp atoms here
+      '[:=!]?'
+    }
+    |\+\+|--|=>
+    |\+=|-=|\*\*=|\*=
+    |&&|&=|&|\|\||\|=|\||%=|%|\^=|\^|~=|~
+    |<<=|<<|<=|<|>>>=|>>>|>>=|>>|>=|>
+    |!==|!=|!|===|==|=
+    |\+|-|\*\*|\*
+    ${(({}) => ({[`${'{}'}`]:`${'}"{'}`})['{}'])((text, entity, match, state) => {
+      match.format = 'punctuator';
+      TokenMatcher.capture(
+        state.context.goal === ECMAScriptGoal
+          ? (text === '*' && state.lastAtom && state.lastAtom.text === 'function' && 'keyword') ||
+              ECMAScriptGoal.punctuation[text] ||
+              'operator'
+          : state.context.goal.punctuators && state.context.goal.punctuators[text] === true
+          ? (match.punctuator =
+              (state.context.goal.punctuation && state.context.goal.punctuation[text]) || 'punctuation')
+          : (text.length === 1 || ((state.nextOffset = match.index + 1), (text = match[0] = text[0])),
+            state.context.goal.type || 'sequence'),
+        match,
+      );
+    })}
+  )`
+}
+
+Solidus: {
+                    // [x] ExpressionStart never divide
+  ( ([              /([(regexp)])/g / [] ] ) );
+  ( [] /( [         /([(regexp)])/g / [] ] ) );
+  ( ([]) /( [       /([(regexp)])/g / [] ] ) );
+  ( [] /* */ /( [   /([(regexp)])/g / [] ] ) );
+  ( []/( [/*/*//*/*//([(regexp)])/g / [] ] ) );
+
+                    // [x] Literals always divide (never ASI)
+  ( []              /([(divisor)])/g / [] );
+  ( ([])            /([(divisor)])/g / [] );
+  ( []/*/*//**//*/*//([(divisor)])/g / [] );
+
+  a = b             // [x] Identifiers always divide (never ASI)
+                    /(divisor)/g.exec(c).map(d);
+
+                    // [x] Declaration (ASI) then ExpressionStart
+  function ƒ () {}  /(regexp)/g.exec(c).map(d);
+
+
+  async () => {}    // [x] Curly+LineBreak is ASI
+                    /(regexp)/g.exec(c).map(d);
+  async () => {}    /* [x] and with Multiline Comment */
+                    /(regexp)/g.exec(c).map(d);
+
+  async () => ({})  // [x] Parenthsized Expression (no ASI)
+                    /(divisor)/g.exec(c).map(d);
+
+  async ()          // [x] Function calls always in Expression
+                    /(divisor)/g.exec(c).map(d);
+  async ()          /(divisor)/g.exec(c).map(d);
+
+  async () =>       // [x] Arrow Function Body is Expression
+                    /(regexp)/g.exec(c).map(d);
+
+                    // [ ] ObjectLiteral is "a literal"
+  const x = {}      /(divisor)/g.exec(c).map(d);
+
+                    // [ ] Function/ClassExpression is "an expression"
+  const y = function ƒ () {}
+                    /(divisor)/g.exec(c).map(d);
+
+                    // Keyword always regexp (regardless of ASI)
+  return await/*/\*//(regexp)/g.exec(c).map(d);
+
+  (function () {
+                    // Recursively operative Keywords
+                    void    void
+                    typeof  typeof
+                    delete  this
+
+    (async function () {
+                    // Recursively operative Keywords
+                    await   await
+                    ('')
+    });
+
+    (function* () {
+                    // Recursively operative Keywords
+                    yield   yield
+                    ('')
+    });
+
+                    return  new     class {}
+                    return
+                    return
+                    return  async   function () {}
+
+                    // [ ] Non-Keywords
+                    async
+                    async   ('')
+  });
+
+  // Matt Austin's
+  Function("arg=`", "/*body`){});({x: this/**/");
+  (function(arg=`/*``*/){/*body`){});({x: this/**/})
+}
