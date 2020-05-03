@@ -21,4 +21,11 @@ export default ((
   return {sourceURL, sourceType, resolveSourceType};
 })();
 
+/*
+
+Comparing with JSON.parse in the console:
+  ((text) => {console.time('parse');for (let i = 33; i--; JSON.parse(text));console.timeEnd('parse');})($0.innerText);
+
+*/
+
 // const dumpExample = async () => console.log('example: %O', await (await fetch('./example')).json());
