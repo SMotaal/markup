@@ -2,4 +2,6 @@
 
 type Match = Matcher.Capture;
 
+type x = MatcherCapture
+
 class X extends Matcher {}
