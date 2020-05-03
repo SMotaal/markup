@@ -55,21 +55,21 @@ export const matcher = (HTMLGrammar =>
   Opener: () =>
     TokenMatcher.define(
       entity => TokenMatcher.sequence/* regexp */ `(
-        \[|<\?|<!--|<(?=/?[A-Za-z]+[-A-Za-z0-9:]*)|<!(?:\[(?:[Cc][Dd][Aa][Tt][Aa])\[|(?=[A-Za-z]+\b))
+        \[|<\?|<!--|<(?=/?[A-Za-z]+(?:[-A-Za-z0-9:]*|\\.)*)|<!(?:\[(?:[Cc][Dd][Aa][Tt][Aa])\[|(?=[A-Za-z]+\b))
         ${entity(TokenMatcher.Opener)}
       )`,
     ),
   Closer: () =>
     TokenMatcher.define(
       entity => TokenMatcher.sequence/* regexp */ `(
-        -->|\?>|\]\]>|\]>|>|\]
+        -->|\?>|>|\]\]>|\]>|>|\]
         ${entity(TokenMatcher.Closer)}
       )`,
     ),
   Punctuator: () =>
     TokenMatcher.define(
       entity => TokenMatcher.sequence/* regexp */ `(
-        =|\b:|\b-\b|/(?=[>A-Za-z])
+        =|\b:|\b-\b|/(?=>)
         ${entity((text, entity, match, state) => {
           match.format = 'punctuation';
           TokenMatcher.capture(

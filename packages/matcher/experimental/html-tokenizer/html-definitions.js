@@ -111,12 +111,9 @@ export const HTMLGoal = (() => {
           closer: '>',
           punctuators: ['-', ':', '/', '='],
           punctuation: {'/': 'delimiter', '"': 'quote'},
-        };
-        groups['</'] = {
-          opener: '</',
-          closer: '>',
-          goal: symbols.HTMLTagGoal,
-          parentGoal: symbols.HTMLGoal,
+          spans: {
+            '<': /\/?[A-Za-z]+(?:[-A-Za-z0-9:]*|\\.)*|($|(?=.))/g,
+          },
         };
         groups['<'] = {
           opener: '<',
@@ -143,7 +140,7 @@ export const HTMLGoal = (() => {
             },
             punctuation: {
               '\n': 'fault',
-            }
+            },
           };
           groups['"'] = {
             opener: '"',
