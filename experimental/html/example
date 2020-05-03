@@ -8,6 +8,8 @@ s<![CDATA[...]]>s
 .]]>
 <![C[…]]>
 
+> < a < b
+
 <!-- `markout-details` renders like `div` in markdown and as actual `details` in markout -->
 
 <center width:=100% color:="var(--markout--band-text, initial)">
