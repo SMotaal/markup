@@ -29,8 +29,8 @@ The Matcher-based tokenizer implementation for JSON.
   - [x] ControlCharacter `\0-\x1F`
     - [x] NullCharacter `\0`
   - [x] DecimalDigit `0-9`
-  - [x] HexDigit `0-9a-fA-F`
-    - [x] HexLetter `a-fA-F`
+  - [x] HexDigit `0-9 a-f A-F`
+    - [x] HexLetter `a-f A-F`
 
 - [x] Matcher Template — [`json-matcher.js`](./json-matcher.js)
 
@@ -68,3 +68,11 @@ The Matcher-based tokenizer implementation for JSON.
 - https://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf
 - https://github.com/erights/quasiParserGenerator/blob/master/test/jessie/quasi-json.js
 - https://cswr.github.io/JsonSchema/spec/grammar/
+
+<!--
+
+For some reason we get "Error composing block page" with some patterns of fenced code above when rendering markout over http.
+
+SEE: https://gist.github.com/SMotaal/1d877e3459082160793bc330cb9d2ec4
+
+-->
