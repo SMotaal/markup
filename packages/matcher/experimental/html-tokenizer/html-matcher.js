@@ -23,26 +23,21 @@ export const matcher = (HTMLGrammar =>
     TokenMatcher.define(
       entity => TokenMatcher.sequence/* regexp */ `(
         \w+|.+?|.
-        ${entity((text, entity, match, state) => {
-          state.context.goal.span != null &&
-            TokenMatcher.forward(state.context.goal.span, state) &&
-            (match.flatten = true);
-          TokenMatcher.capture(state.context.goal.type || 'text', match);
-        })}
+        ${entity(TokenMatcher.fallthroughEntity)}
       )`,
     ),
   Break: ({lf = true, crlf = false} = {}) =>
     TokenMatcher.define(
       entity => TokenMatcher.sequence/* regexp */ `(
         ${TokenMatcher.join(lf && '\\n', crlf && '\\r\\n')}
-        ${entity(TokenMatcher.Break)}
+        ${entity(TokenMatcher.breakEntity)}
       )`,
     ),
   Whitespace: () =>
     TokenMatcher.define(
       entity => TokenMatcher.sequence/* regexp */ `(
         \s+
-        ${entity(TokenMatcher.Whitespace)}
+        ${entity(TokenMatcher.whitespaceEntity)}
       )`,
     ),
   String: () =>

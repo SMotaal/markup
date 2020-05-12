@@ -1,33 +1,33 @@
-﻿# HTML Token Matcher (Experimental)
+﻿# ECMAScript Token Matcher (Experimental)
 
-The Matcher-based tokenizer implementation for HTML.
+The Matcher-based tokenizer implementation for ECMAScript.
 
 ## Progress
 
-- [ ] Contextual Definitions — [`html-definitions.js`](./html-definitions.js)
+- [ ] Contextual Definitions — [`es-definitions.js`](./es-definitions.js)
 
   Structured definitions for keywords, goals, symbols… etc, used by the tokenization process.
 
-  - [ ] HTMLGoal `(…)`
+  - [ ] ECMAScriptGoal `(…)`
 
-    <!--
+  <!--
 
-    Special subset of ECMAScriptGoal grammar specific to the PrimaryExpression production further restricted to derivatives of NullLiteral, BooleanLiteral, NumericLiteral, StringLiteral, ObjectLiteral, and ArrayLiteral.
+  Special subset of ECMAScriptGoal grammar specific to the PrimaryExpression production further restricted to derivatives of NullLiteral, BooleanLiteral, NumericLiteral, StringLiteral, ObjectLiteral, and ArrayLiteral.
 
 
-    - [x] HTMLStringGoal `"…"`
+    - [x] ECMAScriptStringGoal `"…"`
       - [x] Loose
       - [x] Strict
-    - [ ] HTMLArrayGoal `[…]`
+    - [ ] ECMAScriptArrayGoal `[…]`
       - [x] Loose
       - [ ] Strict
-    - [ ] HTMLOpenTagGoal `{…}`
+    - [ ] ECMAScriptOpenTagGoal `{…}`
       - [x] Loose
       - [ ] Strict
 
     -->
 
-- [x] Matcher Ranges — [`html-ranges.js`](./html-ranges.js)
+- [x] Matcher Ranges — [`es-ranges.js`](./es-ranges.js)
 
   Special regular expressions instances of `RegExpRange` that take the range or class form (ie `/[…]/`) reflecting ones found in actual specifications to be used as the building blocks of the matcher.
 
@@ -41,7 +41,8 @@ The Matcher-based tokenizer implementation for HTML.
 
   ->
 
-- [x] Matcher Template — [`html-matcher.js`](./html-matcher.js)
+
+- [x] Matcher Template — [`es-matcher.js`](./es-matcher.js)
 
   The actual template expression used to define an internal instance of the matcher used as a template to create additional instances for matching.
 
@@ -62,13 +63,13 @@ The Matcher-based tokenizer implementation for HTML.
 
   -->
 
-- [x] Markup Mode — [`html-mode.js`](./html-mode.js)
+- [x] Markup Mode — [`es-mode.js`](./es-mode.js)
 
   Safely interfaces with Markup's tokenizer APIs.
 
 ## Notes
 
-- Development playground [/markup/experimental/html/](./../../../../experimental/html/)
+- Development playground [/markup/experimental/html/](./../../../../experimental/es/)
 
 - Imperative `TokenMatcher.forward` optimizations used for Strings.
 

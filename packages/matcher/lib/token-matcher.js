@@ -63,7 +63,8 @@ export const TokenMatcher = (() => {
             // typeof goal.spans[text] === 'string' ? undefined : false,
           ) === 'fault'
         )
-          return 'fault';
+          state.nextFault = true;
+        // return 'fault';
 
         // if (goal.type) state.currentMatch.format = goal.type;
         // if (match[match.format] = state.nextContext.goal.type || 'comment')
@@ -77,6 +78,7 @@ export const TokenMatcher = (() => {
         }`,
         number: ++state.contexts.count,
         depth: index + 1,
+        faults: state.nextFault === true ? 1 : 0,
         parentContext,
         goal,
         group,
@@ -86,6 +88,11 @@ export const TokenMatcher = (() => {
       typeof state.initializeContext === 'function' && state.initializeContext(nextContext);
 
       state.nextContext = state.contexts[index] = nextContext;
+
+      if (state.nextFault === true && !(state.nextOffset > state.currentMatch.index + state.currentMatch[0].length)) {
+        state.nextFault = undefined;
+        return 'fault';
+      }
     }
 
     /**
@@ -131,7 +138,12 @@ export const TokenMatcher = (() => {
       // const groups = state.groups;
       const index = state.groups.closers.lastIndexOf(closer);
 
-      if (index === -1 || index !== state.groups.length - 1) return 'fault';
+      // if (index === -1 || index !== state.groups.length - 1) return 'fault';
+      if (
+        index === -1 ||
+        !(state.groups.length - index === 1 || (state.context.faults > 0 && state.groups.length - index === 2))
+      )
+        return 'fault';
 
       state.groups.closers.splice(index, state.groups.closers.length);
       state.groups.splice(index, state.groups.length);
@@ -302,13 +314,14 @@ export const TokenMatcher = (() => {
    * @param {MatcherMatch & {format?: string, flatten?: boolean}} match
    * @param {T} [state]
    */
-  TokenMatcher.Whitespace = (text, capture, match, state) => {
+  TokenMatcher.whitespaceEntity = (text, capture, match, state) => {
     match.format = 'whitespace';
     TokenMatcher.capture(
       state.context.goal.type || (match.flatten = state.lineOffset !== match.index) ? 'whitespace' : 'inset',
       match,
     );
   };
+
   /**
    * @template {State} T
    * @param {string} text
@@ -316,7 +329,7 @@ export const TokenMatcher = (() => {
    * @param {MatcherMatch & {format?: string, flatten?: boolean}} match
    * @param {T} [state]
    */
-  TokenMatcher.Break = (text, capture, match, state) => {
+  TokenMatcher.breakEntity = (text, capture, match, state) => {
     match.format = 'whitespace';
     TokenMatcher.capture(
       (state.context.group != null && state.context.group.closer === '\n' && TokenMatcher.close(text, state)) ||
@@ -326,6 +339,25 @@ export const TokenMatcher = (() => {
       match,
     );
     match.flatten = false;
+  };
+
+  /**
+   * @template {State} T
+   * @param {string} text
+   * @param {number} capture
+   * @param {MatcherMatch & {format?: string, flatten?: boolean, fault?: boolean}} match
+   * @param {T} [state]
+   */
+  TokenMatcher.fallthroughEntity = (text, capture, match, state) => {
+    TokenMatcher.capture(
+      state.context.group.fallthrough !== 'fault' &&
+        state.context.goal.fallthrough !== 'fault' &&
+        (state.context.goal.span == null || TokenMatcher.forward(state.context.goal.span, state) !== 'fault')
+        ? ((match.flatten = true), state.context.goal.type || 'text')
+        : 'fault',
+      match,
+    );
+    // match.identity === 'fault' && (match.flatten = false);
   };
 
   class Tokenizer {

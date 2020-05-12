@@ -1,6 +1,5 @@
 ﻿import {TokenMatcher} from '../../lib/token-matcher.js';
-import {JSONRanges} from './json-ranges.js';
-import {JSONGoal, JSONStringGoal} from './json-definitions.js';
+import {JSONGoal} from './json-definitions.js';
 
 export const matcher = (JSONGrammar =>
   TokenMatcher.define(
@@ -26,23 +25,21 @@ export const matcher = (JSONGrammar =>
     TokenMatcher.define(
       entity => TokenMatcher.sequence/* regexp */ `(
         .
-        ${entity((text, entity, match, state) => {
-          TokenMatcher.capture(state.context.goal.type || 'fault', match, text);
-        })}
+        ${entity(TokenMatcher.fallthroughEntity)}
       )`,
     ),
   Break: ({lf = true, crlf = false} = {}) =>
     TokenMatcher.define(
       entity => TokenMatcher.sequence/* regexp */ `(
         ${TokenMatcher.join(lf && '\\n', crlf && '\\r\\n')}
-        ${entity(TokenMatcher.Break)}
+        ${entity(TokenMatcher.breakEntity)}
       )`,
     ),
   Whitespace: () =>
     TokenMatcher.define(
       entity => TokenMatcher.sequence/* regexp */ `(
         \s+
-        ${entity(TokenMatcher.Whitespace)}
+        ${entity(TokenMatcher.whitespaceEntity)}
       )`,
     ),
   String: () =>
@@ -104,9 +101,11 @@ export const matcher = (JSONGrammar =>
   Number: () =>
     TokenMatcher.define(
       entity => TokenMatcher.sequence/* regexp */ `(
-        \b[${JSONRanges.DecimalDigit}]+\.[${JSONRanges.DecimalDigit}]+[eE][-+]?[${JSONRanges.DecimalDigit}]+
-        |(?:-|\b)[${JSONRanges.DecimalDigit}]+\.[${JSONRanges.DecimalDigit}]+
-        |(?:-|\b)(?:0|0*[${JSONRanges.DecimalDigit}]+)
+        \b[${JSONGoal.ranges.DecimalDigit}]+\.[${JSONGoal.ranges.DecimalDigit}]+[eE][-+]?[${
+        JSONGoal.ranges.DecimalDigit
+      }]+
+        |(?:-|\b)[${JSONGoal.ranges.DecimalDigit}]+\.[${JSONGoal.ranges.DecimalDigit}]+
+        |(?:-|\b)(?:0|0*[${JSONGoal.ranges.DecimalDigit}]+)
         ${entity((text, entity, match, state) => {
           match.format = 'number';
           TokenMatcher.capture(state.context.goal.type || 'number', match, text);

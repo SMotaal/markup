@@ -30,11 +30,9 @@ export interface Group {
 }
 
 export interface Groups extends Array<Group> {
-  root?: Group;
   closers?: string[];
 }
 
-export interface SpanRegExp extends RegExp {}
 export interface Goal {
   name: string;
   type: string;
@@ -48,14 +46,12 @@ export interface Goal {
   groups: Group[];
   initializeContext: (context: Context) => void;
   tokens?: {[symbol: symbol]: MutableState & {symbol: symbol; text: string; type: string; goal: Goal}};
-  spans?: null | {[name: string]: SpanRegExp};
 }
 
 export interface Context extends ContextStats, Partial<MutableState> {
   id: string;
   number: number;
   depth: number;
-  faults: number;
   intent: string;
 
   parentContext: Context;
@@ -171,7 +167,6 @@ export interface Token {
   contextNumber: number;
   contextDepth: number;
   isWhitespace: boolean;
-  isOperator: boolean;
   isDelimiter: boolean;
   isComment: boolean;
   // FIXME: Nondescript
@@ -184,3 +179,31 @@ export interface Token {
   context?: Context;
   construct?: string;
 }
+
+// declare global {
+//   namespace symbol {
+//     interface KnownSymbol<K extends string> {
+//       readonly ['description']?: K;
+//     }
+//     // type known<K extends string> = unique symbol & KnownSymbol<K>;
+//     type known<K extends string = string> = symbol & KnownSymbol<K>
+//   }
+
+//   interface SymbolConstructor {
+//     <K extends string>(key: K): symbol.known<K>;
+//   }
+
+//   interface Symbol {
+//     description: string;
+//   }
+// }
+
+// /** @typedef {import('./types').Match} Match */
+// /** @typedef {import('./types').Capture} Capture */
+// /** @typedef {import('./types').Group} Group */
+// /** @typedef {import('./types').Groups} Groups */
+// /** @typedef {import('./types').Goal} Goal */
+// /** @typedef {import('./types').Context} Context */
+// /** @typedef {import('./types').Contexts} Contexts */
+// /** @typedef {import('./types').State} State */
+// /** @typedef {import('./types').Token} Token */

@@ -32,6 +32,7 @@ export const initializeState = state => {
     id: `«${state.matcher.goal.name}»`,
     number: (contexts.count = state.totalContextCount = 1),
     depth: 0,
+    faults: 0,
     parentContext: undefined,
     goal: state.matcher.goal,
     //@ts-ignore
@@ -215,6 +216,8 @@ export const createToken = (match, state) => {
 
     tokenNumber = ++tokenContext.tokenCount;
     state.totalTokenCount++;
+
+    if (fault === true) tokenContext.faults++;
 
     // hint = `${(isDelimiter ? type : currentGoalType && `in-${currentGoalType}`) ||
     hint = `${
@@ -501,8 +504,7 @@ export const Construct = class Construct extends Array {
 
 /**
  * @template {string} K
- * @template {{[k in K]: (range: typeof RegExpRange.define, ranges: Record<K, RegExpRange>) => RegExpRange}} T
- * @param {T} factories
+ * @param {RegExpRange.Factories<K>} factories
  */
 export const Ranges = factories => {
   /** @type {PropertyDescriptorMap} */

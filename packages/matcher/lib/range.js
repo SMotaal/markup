@@ -5,7 +5,7 @@ import {Matcher} from './matcher.js';
 
 const RegExpClass = /^(?:\[(?=.*(?:[^\\](?:\\\\)*|)\]$)|)((?:\\.|[^\\\n\[\]]*)*)\]?$/;
 
-export class RegExpRange extends RegExp {
+class RegExpRange extends RegExp {
   /**
    * @param {string|RegExp} source
    * @param {string} [flags]
@@ -37,6 +37,8 @@ export class RegExpRange extends RegExp {
     // this.arguments = [...arguments];
 
     Object.defineProperty(this, 'range', {value: range, enumerable: true, writable: false});
+
+    Object.freeze(this);
   }
 
   /** @type {string} */
@@ -50,8 +52,9 @@ export class RegExpRange extends RegExp {
   }
 
   /**
+   * @template T
    * @param {TemplateStringsArray} strings
-   * @param {... any[]} values
+   * @param {... T} values
    */
   static define(strings, ...values) {
     let source = String.raw(strings, ...values);
@@ -59,13 +62,11 @@ export class RegExpRange extends RegExp {
     // @ts-ignore
     return (
       RegExpRange.ranges[source] ||
-      Object.freeze(
-        (RegExpRange.ranges[source] = (flags = Matcher.flags(
-          ...values.map(value => (value instanceof RegExpRange ? value : undefined)),
-        ))
-          ? new (this || RegExpRange)(source, flags)
-          : new (this || RegExpRange)(source)),
-      )
+      (RegExpRange.ranges[source] = (flags = Matcher.flags(
+        ...values.map(value => (value instanceof RegExpRange ? value : undefined)),
+      ))
+        ? new (this || RegExpRange)(source, flags)
+        : new (this || RegExpRange)(source))
     );
   }
 }
@@ -74,3 +75,15 @@ export class RegExpRange extends RegExp {
 RegExpRange.ranges = {};
 
 globalThis.RegExpRange = RegExpRange;
+
+/**
+ * @template {string} K
+ * @typedef {{[k in K]: (range: typeof RegExpRange.define, ranges: RegExpRange.Ranges<K>) => RegExpRange}} RegExpRange.Factories
+ */
+
+/**
+ * @template {string} K
+ * @typedef {{[k in K]: RegExpRange}} RegExpRange.Ranges
+ */
+
+export {RegExpRange};

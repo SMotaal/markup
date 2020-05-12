@@ -1,11 +1,10 @@
-﻿import {ECMAScriptRanges} from './es-ranges.js';
-import {
+﻿import {
   // TODO: Always import expected goals even if not directly referenced
   ECMAScriptGoal,
   ECMAScriptCommentGoal,
   ECMAScriptRegExpGoal,
 } from './es-definitions.js';
-import {TokenMatcher} from '../../packages/matcher/lib/token-matcher.js';
+import {TokenMatcher} from '../../lib/token-matcher.js';
 
 /** @type {TokenMatcher} */
 export const matcher = (ECMAScript =>
@@ -27,12 +26,8 @@ export const matcher = (ECMAScript =>
         entity(ECMAScript.Identifier()),
 
         // Defines how to address non-entity character(s):
-        entity(
-          ECMAScript.Fallthrough({
-            type: 'fault',
-            flatten: true,
-          }),
-        ),
+        // entity(ECMAScript.Fallthrough({type: 'fault',flatten: true})),
+        entity(ECMAScript.Fallthrough()),
       ),
     // RegExp flags for this matcher instance
     'gu',
@@ -41,67 +36,81 @@ export const matcher = (ECMAScript =>
       goal: {value: ECMAScriptGoal, enumerable: true, writable: false},
     },
   ))({
-  Fallthrough: ({fallthrough = '.', type, flatten} = {}) =>
+  // Fallthrough: ({fallthrough = '.', type, flatten} = {}) =>
+  //   TokenMatcher.define(
+  //     (typeof fallthrough === 'string' || (fallthrough = '.'), type && typeof type === 'string')
+  //       ? entity => TokenMatcher.sequence/* regexp */ `(
+  //           ${fallthrough}
+  //           ${entity((text, entity, match, state) => {
+  //             TokenMatcher.capture(
+  //               type !== 'fault'
+  //                 ? type || state.context.goal.type || 'sequence'
+  //                 : state.context.goal !== ECMAScriptGoal
+  //                 ? state.context.goal.type || 'sequence'
+  //                 : 'fault',
+  //               match,
+  //             );
+  //             typeof flatten === 'boolean' && (match.flatten = flatten);
+  //           })}
+  //         )`
+  //       : entity => `${fallthrough}`,
+  //   ),
+  Fallthrough: () =>
     TokenMatcher.define(
-      (typeof fallthrough === 'string' || (fallthrough = '.'), type && typeof type === 'string')
-        ? entity => TokenMatcher.sequence/* regexp */ `(
-            ${fallthrough}
-            ${entity((text, entity, match, state) => {
-              TokenMatcher.capture(
-                type !== 'fault'
-                  ? type || state.context.goal.type || 'sequence'
-                  : state.context.goal !== ECMAScriptGoal
-                  ? state.context.goal.type || 'sequence'
-                  : 'fault',
-                match,
-              );
-              typeof flatten === 'boolean' && (match.flatten = flatten);
-            })}
-          )`
-        : entity => `${fallthrough}`,
+      entity => TokenMatcher.sequence/* regexp */ `(
+        .
+        ${entity(TokenMatcher.fallthroughEntity)}
+      )`,
     ),
   Break: ({lf = true, crlf = false} = {}) =>
     TokenMatcher.define(
       entity => TokenMatcher.sequence/* regexp */ `(
         ${TokenMatcher.join(lf && '\\n', crlf && '\\r\\n')}
-        ${entity(TokenMatcher.Break)}
+        ${entity(TokenMatcher.breakEntity)}
       )`,
     ),
   Whitespace: () =>
     TokenMatcher.define(
       entity => TokenMatcher.sequence/* regexp */ `(
         \s+
-        ${entity(TokenMatcher.Whitespace)}
+        ${entity(TokenMatcher.whitespaceEntity)}
       )`,
     ),
   Escape: ({
-    IdentifierStartCharacter = RegExp(TokenMatcher.sequence/* regexp */ `[${ECMAScriptRanges.IdentifierStart}]`, 'u'),
-    IdentifierPartSequence = RegExp(TokenMatcher.sequence/* regexp */ `[${ECMAScriptRanges.IdentifierPart}]+`, 'u'),
+    IdentifierStartCharacter = RegExp(
+      TokenMatcher.sequence/* regexp */ `[${ECMAScriptGoal.ranges.IdentifierStart}]`,
+      'u',
+    ),
+    IdentifierPartSequence = RegExp(
+      TokenMatcher.sequence/* regexp */ `[${ECMAScriptGoal.ranges.IdentifierPart}]+`,
+      'u',
+    ),
     fromUnicodeEscape = (fromCodePoint => text => fromCodePoint(parseInt(text.slice(2), 16)))(String.fromCodePoint),
   } = {}) =>
     TokenMatcher.define(
       entity => TokenMatcher.sequence/* regexp */ `(
-        \\u[${ECMAScriptRanges.HexDigit}][${ECMAScriptRanges.HexDigit}][${ECMAScriptRanges.HexDigit}][${
-        ECMAScriptRanges.HexDigit
+        \\u[${ECMAScriptGoal.ranges.HexDigit}][${ECMAScriptGoal.ranges.HexDigit}][${ECMAScriptGoal.ranges.HexDigit}][${
+        ECMAScriptGoal.ranges.HexDigit
       }]
         ${entity((text, entity, match, state) => {
           match.format = 'escape';
           TokenMatcher.capture(
-            state.context.goal.type ||
-              (state.context.goal === ECMAScriptGoal &&
-              state.lastToken != null &&
-              (state.lastToken.type === 'identifier'
-                ? IdentifierPartSequence.test(fromUnicodeEscape(text))
-                : IdentifierStartCharacter.test(fromUnicodeEscape(text)))
-                ? ((match.flatten = true), 'identifier')
-                : 'escape'),
+            state.context.goal !== ECMAScriptGoal
+              ? state.context.goal.type || 'escape'
+              : (
+                  state.lastToken === null || state.lastToken.type !== 'identifier'
+                    ? IdentifierStartCharacter.test(fromUnicodeEscape(text))
+                    : IdentifierPartSequence.test(fromUnicodeEscape(text))
+                )
+              ? ((match.flatten = true), 'identifier')
+              : 'fault',
             match,
           );
         })}
       )|(
-        \\f|\\n|\\r|\\t|\\v|\\c[${ECMAScriptRanges.ControlLetter}]
-        |\\x[${ECMAScriptRanges.HexDigit}][${ECMAScriptRanges.HexDigit}]
-        |\\u\{[${ECMAScriptRanges.HexDigit}]*\}
+        \\f|\\n|\\r|\\t|\\v|\\c[${ECMAScriptGoal.ranges.ControlLetter}]
+        |\\x[${ECMAScriptGoal.ranges.HexDigit}][${ECMAScriptGoal.ranges.HexDigit}]
+        |\\u\{[${ECMAScriptGoal.ranges.HexDigit}]*\}
         |\\[^]
         ${entity((text, entity, match, state) => {
           TokenMatcher.capture(state.context.goal.type || 'escape', match);
@@ -252,7 +261,7 @@ export const matcher = (ECMAScript =>
   } = {}) =>
     TokenMatcher.define(
       entity => TokenMatcher.sequence/* regexp */ `(
-        [${ECMAScriptRanges.IdentifierStart}][${ECMAScriptRanges.IdentifierPart}]*
+        [${ECMAScriptGoal.ranges.IdentifierStart}][${ECMAScriptGoal.ranges.IdentifierPart}]*
         ${entity((text, entity, match, state) => {
           match.format = 'identifier';
           TokenMatcher.capture(
@@ -269,16 +278,16 @@ export const matcher = (ECMAScript =>
           );
         })}
       )`,
-      `${ECMAScriptRanges.IdentifierStart}${ECMAScriptRanges.IdentifierPart}`.includes('\\p{') ? 'u' : '',
+      `${ECMAScriptGoal.ranges.IdentifierStart}${ECMAScriptGoal.ranges.IdentifierPart}`.includes('\\p{') ? 'u' : '',
     ),
   Number: ({
     NumericSeparator,
     Digits = NumericSeparator
       ? Digit => TokenMatcher.sequence/* regexp */ `[${Digit}][${Digit}${TokenMatcher.escape(NumericSeparator)}]*`
       : Digit => TokenMatcher.sequence/* regexp */ `[${Digit}]+`,
-    DecimalDigits = Digits(ECMAScriptRanges.DecimalDigit),
-    HexDigits = Digits(ECMAScriptRanges.HexDigit),
-    BinaryDigits = Digits(ECMAScriptRanges.BinaryDigit),
+    DecimalDigits = Digits(ECMAScriptGoal.ranges.DecimalDigit),
+    HexDigits = Digits(ECMAScriptGoal.ranges.HexDigit),
+    BinaryDigits = Digits(ECMAScriptGoal.ranges.BinaryDigit),
   } = {}) =>
     TokenMatcher.define(
       entity => TokenMatcher.sequence/* regexp */ `\b(

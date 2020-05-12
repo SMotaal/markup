@@ -40,7 +40,7 @@ const configuration = {
         output: {exports: 'named', name: 'markup'},
       },
       ['tokenizer:experimental:es:standalone']: {
-        input: `${dirname}experimental/es/standalone.js`,
+        input: `${dirname}packages/matcher/experimental/es-tokenizer/es-tokenizer.standalone.js`,
         output: {exports: 'named', name: 'markup'},
       },
     };

@@ -1,5 +1,5 @@
 ﻿import {mode as HTMLMode} from '../../packages/matcher/experimental/html-tokenizer/html-mode.js';
-import {mode as ECMAScriptMode} from '../es/es-mode.js';
+import {mode as ECMAScriptMode} from '../../packages/matcher/experimental/es-tokenizer/es-mode.js';
 
 ECMAScriptMode.USE_CONSTRUCTS = true;
 
