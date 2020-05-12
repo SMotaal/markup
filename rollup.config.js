@@ -59,7 +59,7 @@ const configuration = {
   bundles: /** @type {RollupBundleOptions[]} */ (undefined),
   createConfiguration(options) {
     const stringify = value =>
-      typeof value === symbol ? `‹symbol›` : value == null ? `${value}` : JSON.stringify(value);
+      typeof value === 'symbol' ? `‹symbol›` : value == null ? `${value}` : JSON.stringify(value);
     const logify = (strings, ...values) => String.raw(strings, values.map(stringify));
     const lowerCase = Function.call.bind(''.toLowerCase);
     const configuration = /** @type {Configuration} */ (Object.setPrototypeOf(
