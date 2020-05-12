@@ -64,7 +64,7 @@ const defaults = {
 };
 
 export default (markup, overrides) => {
-  const {examples = Examples(), resolveSourceType, ...options} = {
+  const {examples = Examples((overrides && overrides.examples) || undefined), resolveSourceType, ...options} = {
     ...(defaults || undefined),
     ...(overrides || undefined),
     fetch: {
@@ -87,8 +87,9 @@ export default (markup, overrides) => {
         // TODO: Revert if response.redirected is not honoured (again)
         fetchSource.followRedirect(source, options))
       : (source.exception = Error(
-          `Failed to load source from "${source.url}" — ${(source.response && source.response.statusText) ||
-            'see console for opaque errors related to the fetch'}\n\n${
+          `Failed to load source from "${source.url}" — ${
+            (source.response && source.response.statusText) || 'see console for opaque errors related to the fetch'
+          }\n\n${
             /\/unpkg.com\/\w+\/?(?:\?[^#]*)?(?:#.*)?^/.test(source.url)
               ? `Please note that unpkg.com is known to run into issues with redirects for partially resolved specifiers`
               : 'Please make sure that CORS is supported at the host for the specified URL and where redirects happen they are not opaque'
@@ -385,11 +386,9 @@ export default (markup, overrides) => {
       const resourceType = `${(response && response.headers.get('Content-Type')) || 'text/plain'}`
         .replace(/^(?:.*?\/)?(\w+).*$/, '$1')
         .toLowerCase();
-      const defaultType = `${sourceType ||
-        resourceType ||
-        options.sourceType ||
-        options.defaults.sourceType ||
-        ''}`.toLowerCase();
+      const defaultType = `${
+        sourceType || resourceType || options.sourceType || options.defaults.sourceType || ''
+      }`.toLowerCase();
       const resolvedType =
         typeof resolveSourceType === 'function' && resolveSourceType(defaultType, {sourceType, resourceType, options});
       // console.log({resourceType, defaultType, sourceType, resolvedType});
