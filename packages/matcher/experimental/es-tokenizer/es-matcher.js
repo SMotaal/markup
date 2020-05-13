@@ -281,6 +281,7 @@ export const matcher = (ECMAScript =>
       `${ECMAScriptGoal.ranges.IdentifierStart}${ECMAScriptGoal.ranges.IdentifierPart}`.includes('\\p{') ? 'u' : '',
     ),
   Number: ({
+    //@ts-ignore
     NumericSeparator,
     Digits = NumericSeparator
       ? Digit => TokenMatcher.sequence/* regexp */ `[${Digit}][${Digit}${TokenMatcher.escape(NumericSeparator)}]*`

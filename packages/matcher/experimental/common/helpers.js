@@ -444,16 +444,12 @@ Object.freeze(generateDefinitions);
 /**
  * @template {string} K
  * @template {string} I
- * @param {{[i in I]: K[]}} mappings
+ * @param {Record<I, K[]>} mappings
+ * @returns {Iterable<K> & Readonly<Record<K, I>> & Readonly<Record<I, ReadonlyArray<K>>>}
  */
 export const Keywords = mappings => {
-  /** @type {{[i in I]: ReadonlyArray<K>}} */
-  //@ts-ignore
-  const identities = {};
-
-  /** @type {{[k in K]: I}} */
-  //@ts-ignore
-  const keywords = {...Keywords.prototype};
+  const identities = /** @type {any} */ ({});
+  const keywords = /** @type {any} */ ({...Keywords.prototype});
 
   for (const identity in mappings) {
     identities[identity] = Object.freeze([...mappings[identity]]);
@@ -462,11 +458,7 @@ export const Keywords = mappings => {
     }
   }
 
-  Object.setPrototypeOf(keywords, identities);
-  Object.freeze(identities);
-  Object.freeze(keywords);
-
-  return keywords;
+  return Object.freeze(Object.setPrototypeOf(keywords, Object.freeze(identities)));
 };
 
 Keywords.prototype = {

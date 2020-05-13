@@ -1,10 +1,9 @@
-
 interface Matcher extends import('./lib/matcher.js').Matcher, RegExp {}
 
 type MatcherFlags = string;
 type MatcherText = string;
 type MatcherPattern = (string | RegExp) & Definition;
-type MatcherEntityFactory = (entity: MatcherEntity) => void;
+type MatcherEntityFactory = (entity: MatcherEntity | Matcher) => void;
 type MatcherPatternFactory = (entity: MatcherEntityFactory) => MatcherPattern;
 
 type MatcherMatch<T extends MatcherArray = RegExpExecArray | RegExpMatchArray> = T extends

@@ -1,3 +1,5 @@
+//@ts-check
+
 import {TokenMatcher} from '../../lib/token-matcher.js';
 import {HTMLGoal} from './html-definitions.js';
 
