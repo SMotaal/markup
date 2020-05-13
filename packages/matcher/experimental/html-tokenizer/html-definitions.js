@@ -1,4 +1,4 @@
-﻿//@ts-check
+//@ts-check
 import {generateDefinitions, defineSymbol, NullGoal} from '../common/helpers.js';
 
 export const HTMLGoal = (() => {

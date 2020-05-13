@@ -1,4 +1,4 @@
-﻿//@ts-check
+//@ts-check
 import {generateDefinitions, defineSymbol, Keywords, Construct, Ranges} from '../common/helpers.js';
 
 export const {

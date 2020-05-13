@@ -1,4 +1,4 @@
-﻿import {TokenMatcher} from '../../lib/token-matcher.js';
+import {TokenMatcher} from '../../lib/token-matcher.js';
 import {HTMLGoal} from './html-definitions.js';
 
 export const matcher = (HTMLGrammar =>
