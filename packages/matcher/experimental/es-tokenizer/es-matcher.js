@@ -36,25 +36,6 @@ export const matcher = (ECMAScript =>
       goal: {value: ECMAScriptGoal, enumerable: true, writable: false},
     },
   ))({
-  // Fallthrough: ({fallthrough = '.', type, flatten} = {}) =>
-  //   TokenMatcher.define(
-  //     (typeof fallthrough === 'string' || (fallthrough = '.'), type && typeof type === 'string')
-  //       ? entity => TokenMatcher.sequence/* regexp */ `(
-  //           ${fallthrough}
-  //           ${entity((text, entity, match, state) => {
-  //             TokenMatcher.capture(
-  //               type !== 'fault'
-  //                 ? type || state.context.goal.type || 'sequence'
-  //                 : state.context.goal !== ECMAScriptGoal
-  //                 ? state.context.goal.type || 'sequence'
-  //                 : 'fault',
-  //               match,
-  //             );
-  //             typeof flatten === 'boolean' && (match.flatten = flatten);
-  //           })}
-  //         )`
-  //       : entity => `${fallthrough}`,
-  //   ),
   Fallthrough: () =>
     TokenMatcher.define(
       entity => TokenMatcher.sequence/* regexp */ `(
