@@ -10,7 +10,12 @@ export const HTMLGoal = (() => {
 
     const HTMLGoal = (goals[(symbols.HTMLGoal = defineSymbol('HTMLGoal'))] = {
       ...NullGoal,
+      flatten: true,
       openers: ['<!DOCTYPE', '<![CDATA[', '<!--', '<?', '</', '<'],
+      span: /(?:[^<\\]+?(?=\\[^]|<)|\\[^])*?(?=<\?|<!--|<[A-Za-z]|<\/[A-Za-z]|<![A-Za-z]|<!\[[A-Za-z]|$)/g,
+      punctuation: {
+        '<!--': 'comment',
+      },
     });
 
     HTMLTags: {
@@ -89,17 +94,20 @@ export const HTMLGoal = (() => {
         symbols.HTMLCommentGoal = defineSymbol('HTMLCommentGoal');
         goals[symbols.HTMLCommentGoal] = {
           ...NullGoal,
-          // SEE: https://html.spec.whatwg.org/dev/syntax.html#comments
           type: 'comment',
           flatten: true,
-          closer: '-->',
-          span: /[^]*?(?=-->|($))/g,
+          fold: true,
+          spans: {
+            // SEE: https://html.spec.whatwg.org/dev/syntax.html#comments
+            '<!--': /[^]*?(?=-->|($))/g,
+          },
         };
         groups['<!--'] = {
           opener: '<!--',
           closer: '-->',
           goal: symbols.HTMLCommentGoal,
           parentGoal: symbols.HTMLGoal,
+          description: '‹comment›',
         };
       }
 
@@ -110,7 +118,7 @@ export const HTMLGoal = (() => {
           openers: ['"'],
           closer: '>',
           punctuators: ['-', ':', '/', '='],
-          punctuation: {'/': 'delimiter', '"': 'quote'},
+          punctuation: {'/': 'delimiter', '"': 'quote', ':': false, '-': false},
           spans: {
             '<': /[A-Za-z]+(?:[-A-Za-z0-9:]*|\\.)*(?=(?:[\s\n].*?|)\/?>)|\/[A-Za-z]+(?:[-A-Za-z0-9:]*|\\.)*(?=(?:[\s\n](?:[^\/>]|\/[^>])*?|)>)|($|(?=.))/g,
           },

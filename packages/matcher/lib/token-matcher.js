@@ -89,6 +89,18 @@ class TokenMatcher extends Matcher {
       state.nextFault = undefined;
       return 'fault';
     }
+
+    if (!!state.currentMatch.format && !!state.nextContext.goal.type)
+      state.currentMatch[state.currentMatch.format] = state.nextContext.goal.type;
+
+    if (state.currentMatch.format === 'punctuator')
+      state.currentMatch.punctuator =
+        (state.context.goal.punctuation != null && state.context.goal.punctuation[opener]) ||
+        state.nextContext.goal.type ||
+        undefined;
+
+    if (state.nextContext.goal.flatten === true && state.currentMatch.flatten !== false)
+      state.currentMatch.flatten = true;
   }
 
   /**
@@ -144,6 +156,30 @@ class TokenMatcher extends Matcher {
     state.groups.closers.splice(index, state.groups.closers.length);
     state.groups.splice(index, state.groups.length);
     state.nextContext = state.context.parentContext;
+
+    if (!!state.currentMatch.format && !!state.context.goal.type)
+      state.currentMatch[state.currentMatch.format] = state.context.goal.type;
+
+    if (state.currentMatch.format === 'punctuator')
+      state.currentMatch.punctuator =
+        (state.context.goal.punctuation != null && state.context.goal.punctuation[closer]) ||
+        state.context.goal.type ||
+        undefined;
+
+    if (state.context.goal.flatten === true && state.currentMatch.flatten !== false) state.currentMatch.flatten = true;
+  }
+
+  /**
+   * Safely mutates matcher state to close the current context.
+   *
+   * @template {TokenMatcher.State} S
+   * @param {string} delimiter - Text of the intended { type = "closer" | "opener" } token
+   * @param {S} state - Matcher state
+   * @returns {undefined | string} - String when context is **not** closed
+   */
+  static punctuate(delimiter, state) {
+    if (TokenMatcher.canOpen(delimiter, state)) return TokenMatcher.open(delimiter, state) || 'opener';
+    else if (TokenMatcher.canClose(delimiter, state)) return TokenMatcher.close(delimiter, state) || 'closer';
   }
 
   /**
@@ -242,11 +278,11 @@ TokenMatcher.Opener = (text, capture, match, state) => {
   TokenMatcher.capture(
     state.context.goal.punctuators != null && state.context.goal.punctuators[match.upperCase] === true
       ? (match.punctuator =
-          (state.context.goal.punctuation && state.context.goal.punctuation[match.upperCase]) || 'combinator')
+          (state.context.goal.punctuation != null && state.context.goal.punctuation[match.upperCase]) || 'combinator')
       : TokenMatcher.canOpen(match.upperCase, state)
       ? TokenMatcher.open(match.upperCase, state) ||
         ((match.punctuator =
-          (state.context.goal.punctuation && state.context.goal.punctuation[match.upperCase]) ||
+          (state.context.goal.punctuation != null && state.context.goal.punctuation[match.upperCase]) ||
           state.context.goal.type),
         'opener')
       : // If it is passive sequence we keep only on character
@@ -267,12 +303,12 @@ TokenMatcher.Closer = (text, capture, match, state) => {
   match.upperCase = text.toUpperCase();
   match.format = 'punctuator';
   TokenMatcher.capture(
-    state.context.goal.punctuators && state.context.goal.punctuators[text] === true
+    state.context.goal.punctuators != null && state.context.goal.punctuators[text] === true
       ? (match.punctuator = 'combinator')
       : TokenMatcher.canClose(match.upperCase, state)
       ? TokenMatcher.close(match.upperCase, state) ||
         ((match.punctuator =
-          (state.context.goal.punctuation && state.context.goal.punctuation[text]) || state.context.goal.type),
+          (state.context.goal.punctuation != null && state.context.goal.punctuation[text]) || state.context.goal.type),
         'closer')
       : state.context.goal.type,
     match,
@@ -290,13 +326,8 @@ TokenMatcher.Quote = (text, capture, match, state) => {
   match.format = 'punctuator';
   TokenMatcher.capture(
     state.context.goal.punctuation[text] === 'quote' && TokenMatcher.canOpen(text, state)
-      ? TokenMatcher.open(text, state) ||
-          ((match.punctuator =
-            (state.nextContext.goal.punctuation && state.nextContext.goal.punctuation[text]) ||
-            state.nextContext.goal.type ||
-            'quote'),
-          'opener')
-      : state.context.group.closer === text && TokenMatcher.canClose(text, state)
+      ? TokenMatcher.open(text, state) || 'opener'
+      : state.context.goal.type === 'quote' && state.context.group.closer === text && TokenMatcher.canClose(text, state)
       ? TokenMatcher.close(text, state) || ((match.punctuator = state.context.goal.type || 'quote'), 'closer')
       : state.context.goal.type || 'quote',
     match,
@@ -313,7 +344,9 @@ TokenMatcher.Quote = (text, capture, match, state) => {
 TokenMatcher.whitespaceEntity = (text, capture, match, state) => {
   match.format = 'whitespace';
   TokenMatcher.capture(
-    state.context.goal.type || (match.flatten = state.lineOffset !== match.index) ? 'whitespace' : 'inset',
+    state.context.goal.type || state.lineOffset !== match.index
+      ? ((match.flatten = state.context.goal.flatten !== false), 'whitespace')
+      : ((match.flatten = false), 'inset'),
     match,
   );
 };
@@ -330,7 +363,7 @@ TokenMatcher.breakEntity = (text, capture, match, state) => {
   TokenMatcher.capture(
     (state.context.group != null && state.context.group.closer === '\n' && TokenMatcher.close(text, state)) ||
       // NOTE: ‹break› takes precedence over ‹closer›
-      state.context.goal.punctuation['\n'] ||
+      (state.context.goal.punctuation != null && state.context.goal.punctuation['\n']) ||
       'break',
     match,
   );

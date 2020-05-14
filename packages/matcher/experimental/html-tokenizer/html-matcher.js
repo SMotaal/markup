@@ -66,14 +66,16 @@ export const matcher = (HTMLGrammar =>
   Punctuator: () =>
     TokenMatcher.define(
       entity => TokenMatcher.sequence/* regexp */ `(
-        =|\b:|\b-\b|/(?=>)
+        =|\b:|\b-\b|/(?=>)|\\.
         ${entity((text, entity, match, state) => {
           match.format = 'punctuation';
           TokenMatcher.capture(
             state.context.goal.type ||
               (state.context.goal === HTMLGoal
-                ? 'text'
-                : state.context.goal.punctuators && state.context.goal.punctuators[text] === true
+                ? ((match.flatten = true), 'text')
+                : state.context.goal.punctuation != null && state.context.goal.punctuation[text] === false
+                ? ((match.flatten = true), (state.lastAtom && state.lastAtom.type) || state.context.goal.type || 'text')
+                : state.context.goal.punctuators != null && state.context.goal.punctuators[text] === true
                 ? (match.punctuator =
                     (state.context.goal.punctuation && state.context.goal.punctuation[text]) || 'punctuation')
                 : 'fault'),

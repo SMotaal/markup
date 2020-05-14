@@ -22,6 +22,7 @@ export const {
     ContextualWord: 'ECMAScript.ContextualWord',
     RestrictedWord: 'ECMAScript.RestrictedWord',
     FutureReservedWord: 'ECMAScript.FutureReservedWord',
+    MetaProperty: 'ECMAScript.MetaProperty',
     Keyword: 'ECMAScript.Keyword',
   };
 
@@ -37,34 +38,14 @@ export const {
     closers: ['}', ')', ']'],
     keywords: Keywords({
       // TODO: Let's make those constructs (this.new.target borks)
-      // [identities.MetaProperty]: 'new.target import.meta',
-      [identities.Keyword]: /** @type {ECMAScript.Keyword[]} */ ([
-        ...['await', 'break', 'case', 'catch', 'class', 'const', 'continue'],
-        ...['debugger', 'default', 'delete', 'do', 'else', 'export', 'extends'],
-        ...['finally', 'for', 'function', 'if', 'import', 'in', 'instanceof'],
-        ...['let', 'new', 'return', 'super', 'switch', 'this', 'throw', 'try'],
-        ...['typeof', 'var', 'void', 'while', 'with', 'yield'],
-      ]),
-      [identities.RestrictedWord]: /** @type {ECMAScript.RestrictedWord[]} */ ([
-        'interface',
-        'implements',
-        'package',
-        'private',
-        'protected',
-        'public',
-      ]),
-      [identities.FutureReservedWord]: /** @type {ECMAScript.FutureReservedWord[]} */ (['enum']),
+      [identities.MetaProperty]: ['new.target', 'import.meta'],
+      [identities.Keyword]: /** @type {Array<'await'|'break'|'case'|'catch'|'class'|'const'|'continue'|'debugger'|'default'|'delete'|'do'|'else'|'export'|'extends'|'finally'|'for'|'function'|'if'|'import'|'in'|'instanceof'|'new'|'return'|'super'|'switch'|'this'|'throw'|'try'|'typeof'|'var'|'void'|'while'|'with'|'yield'>} */ (Keywords.split(
+        'await|break|case|catch|class|const|continue|debugger|default|delete|do|else|export|extends|finally|for|function|if|import|in|instanceof|let|new|return|super|switch|this|throw|try|typeof|var|void|while|with|yield',
+      )),
+      [identities.RestrictedWord]: ['interface', 'implements', 'package', 'private', 'protected', 'public'],
+      [identities.FutureReservedWord]: ['enum'],
       // NOTE: This is purposely not aligned with the spec
-      [identities.ContextualWord]: /** @type {ECMAScript.ContextualWord[]} */ ([
-        'arguments',
-        'async',
-        'as',
-        'from',
-        'of',
-        'static',
-        'get',
-        'set',
-      ]),
+      [identities.ContextualWord]: ['arguments', 'async', 'as', 'from', 'of', 'static', 'get', 'set'],
     }),
 
     punctuation: {
@@ -214,7 +195,7 @@ export const {
   ] = {
     type: 'quote',
     flatten: true,
-    fold: false,
+    fold: true,
     openers: ['${'],
     opener: '`',
     closer: '`',
@@ -422,11 +403,3 @@ export const {
 
 /** @typedef {import('./types').State} State */
 /** @typedef {import('./types').Context} Context */
-
-/**
- * @typedef {'await'|'break'|'case'|'catch'|'class'|'const'|'continue'|'debugger'|'default'|'delete'|'do'|'else'|'export'|'extends'|'finally'|'for'|'function'|'if'|'import'|'in'|'instanceof'|'new'|'return'|'super'|'switch'|'this'|'throw'|'try'|'typeof'|'var'|'void'|'while'|'with'|'yield'} ECMAScript.Keyword
- * @typedef {'interface'|'implements'|'package'|'private'|'protected'|'public'} ECMAScript.RestrictedWord
- * @typedef {'enum'} ECMAScript.FutureReservedWord
- * @typedef {'arguments'|'async'|'as'|'from'|'of'|'static'|'get'|'set'} ECMAScript.ContextualWord
- * @typedef {Record<ECMAScript.Keyword|ECMAScript.RestrictedWord|ECMAScript.FutureReservedWord|ECMAScript.ContextualWord, symbol>} ECMAScript.Keywords
- */

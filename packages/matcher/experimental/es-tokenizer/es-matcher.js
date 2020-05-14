@@ -1,7 +1,7 @@
 ﻿import {
   // TODO: Always import expected goals even if not directly referenced
   ECMAScriptGoal,
-  ECMAScriptCommentGoal,
+  // ECMAScriptCommentGoal,
   ECMAScriptRegExpGoal,
 } from './es-definitions.js';
 import {TokenMatcher} from '../../lib/token-matcher.js';
@@ -106,19 +106,13 @@ export const matcher = (ECMAScript =>
         ${entity((text, entity, match, state) => {
           match.format = 'punctuator';
           TokenMatcher.capture(
-            state.context.goal.openers && state.context.goal.openers[text]
-              ? TokenMatcher.open(text, state) ||
-                  ((match[match.format] = state.nextContext.goal.type || 'comment'), (match.flatten = true), 'opener')
-              : state.context.group && state.context.group.closer === text
-              ? TokenMatcher.close(text, state) ||
-                (state.context.goal === ECMAScriptCommentGoal && (match[match.format] = ECMAScriptCommentGoal.type),
-                'closer')
-              : (text.length === 1 || ((state.nextOffset = match.index + 1), (text = match[0] = text[0])),
-                (((match.punctuator = state.context.goal.punctuation && state.context.goal.punctuation[text]) ||
-                  (state.context.goal.punctuators && state.context.goal.punctuators[text] === true)) &&
-                  'punctuator') ||
-                  state.context.goal.type ||
-                  'sequence'),
+            TokenMatcher.punctuate(text, state) ||
+              (text.length === 1 || ((state.nextOffset = match.index + 1), (text = match[0] = text[0])),
+              (((match.punctuator = state.context.goal.punctuation && state.context.goal.punctuation[text]) ||
+                (state.context.goal.punctuators && state.context.goal.punctuators[text] === true)) &&
+                'punctuator') ||
+                state.context.goal.type ||
+                'sequence'),
             match,
           );
         })}

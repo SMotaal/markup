@@ -441,12 +441,14 @@ generateDefinitions({goals: {[FaultGoal.symbol]: FaultGoal}});
 
 Object.freeze(generateDefinitions);
 
-/**
- * @template {string} K
- * @template {string} I
- * @param {Record<I, K[]>} mappings
- * @returns {Iterable<K> & Readonly<Record<K, I>> & Readonly<Record<I, ReadonlyArray<K>>>}
- */
+/** @typedef {Record<string, string[]>} Keywords.Mappings */
+/** @template {Keywords.Mappings} T @typedef {keyof T} Keywords.Mappings.Identities  */
+/** @template {Keywords.Mappings} T @typedef {T[keyof T][number]} Keywords.Mappings.Keywords */
+/** @template {Keywords.Mappings} T @typedef {Record<Keywords.Mappings.Keywords<T>, Keywords.Mappings.Identities<T>>} Keywords.Records.Keywords */
+/** @template {Keywords.Mappings} T @typedef {Record<Keywords.Mappings.Identities<T>, ReadonlyArray<Keywords.Mappings.Keywords<T>>>} Keywords.Records.Identities */
+/** @template {Keywords.Mappings} T @typedef {Iterable<Keywords.Mappings.Keywords<T>> & Readonly<Keywords.Records.Keywords<T>> & Readonly<Keywords.Records.Identities<T>>} Keywords.Records */
+
+/** @template {Keywords.Mappings} T @param {T} mappings@returns {Keywords.Records<T>} */
 export const Keywords = mappings => {
   const identities = /** @type {any} */ ({});
   const keywords = /** @type {any} */ ({...Keywords.prototype});
@@ -466,6 +468,9 @@ Keywords.prototype = {
     return Object.getOwnPropertyNames(this)[Symbol.iterator]();
   },
 };
+
+/** @type {(keywords: string) => string[]} */
+Keywords.split = RegExp.prototype[Symbol.split].bind(/\W+/gu);
 
 export const Construct = class Construct extends Array {
   constructor() {
