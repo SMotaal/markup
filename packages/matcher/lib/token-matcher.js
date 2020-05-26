@@ -3,6 +3,7 @@
 
 import {Matcher} from './matcher.js';
 import {Tokenizer} from './tokenizer.js';
+import {countLineBreaks} from '../../tokenizer/lib/core.js';
 
 /** @typedef {Object} TokenMatcher.State */
 
@@ -388,6 +389,210 @@ TokenMatcher.fallthroughEntity = (text, capture, match, state) => {
     match,
   );
   // match.identity === 'fault' && (match.flatten = false);
+};
+
+TokenMatcher.createToken = (match, state) => {
+  let currentGoal;
+  // let goalName;
+  let currentGoalType;
+  let contextId;
+  let contextNumber;
+  let contextDepth;
+  let contextGroup;
+  let parentContext;
+  /** @type {'lastTrivia'|'lastAtom'} */ let tokenReference;
+  let tokenContext;
+  let nextToken;
+  let text;
+  /** @type {string} */ let type;
+  let fault;
+  let punctuator;
+  let offset;
+  let lineInset;
+  let lineBreaks;
+  let isOperator;
+  let isDelimiter;
+  let isComment;
+  let isWhitespace;
+  let flatten;
+  let fold;
+  let columnNumber;
+  let lineNumber;
+  let tokenNumber;
+  let captureNumber;
+  let hint;
+
+  const {
+    context: currentContext,
+    nextContext,
+    lineIndex,
+    lineOffset,
+    nextOffset,
+    nextFault,
+    lastToken,
+    lastTrivia,
+    lastAtom,
+  } = state;
+
+  /* Capture */
+  ({
+    0: text,
+    capture: {inset: lineInset},
+    // @ts-ignore
+    identity: type,
+    flatten,
+    fault,
+    punctuator,
+    index: offset,
+  } = match);
+
+  if (!text) return;
+
+  ({
+    id: contextId,
+    number: contextNumber,
+    depth: contextDepth,
+    goal: currentGoal,
+    group: contextGroup,
+    parentContext,
+  } = tokenContext = (type === 'opener' && nextContext) || currentContext);
+
+  currentGoalType = currentGoal.type;
+
+  if (nextOffset != null) {
+    state.nextOffset = undefined;
+    if (nextOffset > offset) {
+      text = match.input.slice(offset, nextOffset);
+      state.matcher.lastIndex = nextOffset;
+    }
+  } else if (nextFault != null) {
+    state.nextFault = undefined;
+    if (nextFault === true) {
+      fault = true;
+      flatten = false;
+      type = 'fault';
+      punctuator = undefined;
+      // console.log({state: {...state}, match, nextFault});
+    }
+  }
+
+  lineBreaks = (text === '\n' && 1) || countLineBreaks(text);
+  (isOperator = type === 'operator' || type === 'delimiter' || type === 'breaker' || type === 'combinator') ||
+    (isDelimiter = type === 'closer' || type === 'opener') ||
+    (isWhitespace = type === 'whitespace' || type === 'break' || type === 'inset');
+
+  (isComment = type === 'comment' || punctuator === 'comment')
+    ? (type = 'comment')
+    : type || (type = (!isDelimiter && !fault && currentGoalType) || 'text');
+
+  if (lineBreaks) {
+    state.lineIndex += lineBreaks;
+    state.lineOffset = offset + (text === '\n' ? 1 : text.lastIndexOf('\n'));
+  }
+
+  /* Flattening / Token Folding */
+
+  flatten === false ||
+    flatten === true ||
+    (flatten = fault !== true && (isDelimiter !== true || currentGoal.fold === true) && currentGoal.flatten === true);
+
+  captureNumber = ++tokenContext.captureCount;
+  state.totalCaptureCount++;
+
+  if (
+    fault !== true && // type ! 'fault' &&
+    (fold = flatten) && // fold only if flatten is allowed
+    lastToken != null &&
+    ((lastToken.contextNumber === contextNumber && lastToken.fold === true) ||
+      (type === 'closer' && flatten === true)) && // never fold across contexts
+    (lastToken.type === type ||
+      (currentGoal.fold === true && (lastToken.type === currentGoalType || lastToken.punctuator === currentGoalType)))
+  ) {
+    lastToken.captureCount++;
+    lastToken.text += text;
+    lineBreaks && (lastToken.lineBreaks += lineBreaks);
+  } else {
+    // The generator retains this new as state.nextToken
+    //   which means tokenContext is state.nextTokenContext
+    //   and the fact that we are returning a token here will
+    //   yield the current state.nextToken so we need to also
+    //   set state.lastTokenContext to match
+    //
+    //   TODO: Add parity tests for tokenizer's token/context states
+    state.lastTokenContext = state.nextTokenContext;
+    state.nextTokenContext = tokenContext;
+
+    /* Token Creation */
+    flatten = false;
+    columnNumber = 1 + (offset - lineOffset || 0);
+    lineNumber = 1 + (lineIndex || 0);
+
+    tokenNumber = ++tokenContext.tokenCount;
+    state.totalTokenCount++;
+
+    if (fault === true) tokenContext.faults++;
+
+    // hint = `${(isDelimiter ? type : currentGoalType && `in-${currentGoalType}`) ||
+    hint = `${
+      currentGoalType
+        ? isDelimiter && currentGoal.opener === text
+          ? `${type}`
+          : `in-${currentGoalType}`
+        : isDelimiter
+        ? type
+        : ''
+    }\n\n${contextId} #${tokenNumber}\n(${lineNumber}:${columnNumber})`;
+
+    tokenReference = isWhitespace || isComment ? 'lastTrivia' : 'lastAtom';
+
+    nextToken = tokenContext[tokenReference] = state[tokenReference] = tokenContext.lastToken = state.lastToken = {
+      text,
+      type,
+      offset,
+      punctuator,
+      hint,
+      lineOffset,
+      lineBreaks,
+      lineInset,
+      columnNumber,
+      lineNumber,
+      captureNumber,
+      captureCount: 1,
+      tokenNumber,
+      contextNumber,
+      contextDepth,
+
+      isWhitespace,
+      isOperator,
+      isDelimiter,
+      isComment,
+
+      // FIXME: Nondescript
+      fault,
+      fold,
+      flatten,
+
+      goal: currentGoal,
+      group: contextGroup,
+      state,
+      context: tokenContext,
+    };
+  }
+  /* Context */
+  !nextContext ||
+    ((state.nextContext = undefined), nextContext === currentContext) ||
+    ((state.lastContext = currentContext),
+    currentContext === nextContext.parentContext
+      ? (state.totalContextCount++,
+        (nextContext.precedingAtom = lastAtom),
+        (nextContext.precedingTrivia = lastTrivia),
+        (nextContext.precedingToken = lastToken))
+      : ((parentContext.nestedContextCount += currentContext.nestedContextCount + currentContext.contextCount),
+        (parentContext.nestedCaptureCount += currentContext.nestedCaptureCount + currentContext.captureCount),
+        (parentContext.nestedTokenCount += currentContext.nestedTokenCount + currentContext.tokenCount)),
+    (state.context = nextContext));
+
+  return nextToken;
 };
 
 Object.freeze(TokenMatcher);

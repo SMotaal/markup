@@ -1,7 +1,6 @@
 ﻿//@ts-check
 
 import {matcher} from './es-matcher.js';
-import {initializeState, finalizeState, createToken} from '../common/helpers.js';
 import {TokenMatcher} from '../../lib/token-matcher.js';
 
 //@ts-ignore
@@ -20,7 +19,7 @@ export const mode = TokenMatcher.createMode(matcher, {
   createToken: (log => (match, state) => {
     // let construct;
     // const lastAtom = state.lastAtom;
-    const token = createToken(match, state);
+    const token = TokenMatcher.createToken(match, state);
 
     if (state.USE_CONSTRUCTS === true && token !== undefined) {
       const {type, text, context = state.nextTokenContext} = token;

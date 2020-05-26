@@ -1,6 +1,5 @@
 ﻿import {TokenMatcher} from '../../packages/matcher/lib/token-matcher.js';
 import {
-  createToken,
   generateDefinitions,
   defineSymbol,
   initializeState,
@@ -179,7 +178,7 @@ export default ((
       initializeState,
       finalizeState,
       createToken: (match, state) => {
-        const token = createToken(match, state);
+        const token = TokenMatcher.createToken(match, state);
         token.flatten = false;
         // if (match.punctuator) token.punctuator = match.punctuator;
         return token;
