@@ -1,5 +1,5 @@
 ﻿//@ts-check
-import {generateDefinitions, defineSymbol, Keywords} from '../common/helpers.js';
+import {initializeState, finalizeState, generateDefinitions, defineSymbol, Keywords} from '../common/helpers.js';
 import {TokenMatcher} from '../../lib/token-matcher.js';
 import {Ranges} from '../common/helpers.js';
 
@@ -30,6 +30,8 @@ export const {JSONGoal, JSONStringGoal, JSONObjectGoal, JSONArrayGoal, JSONDefin
       HexLetter: range => range`A-Fa-f`,
       HexDigit: (range, {DecimalDigit, HexLetter}) => range`${DecimalDigit}${HexLetter}`,
     }),
+    initializeState,
+    finalizeState,
   });
 
   const JSONObjectGoal = (goals[(symbols.JSONObjectGoal = defineSymbol('JSONObjectGoal'))] = {

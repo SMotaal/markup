@@ -24,6 +24,7 @@ export const {IBISGoal, IBISStatementGoal, IBISCommentGoal, IBISDefinitions} = (
     openers: ['?', '?!', '?~', ':', ':+', ':-', ':~+', '+', '-', '!', '#'],
     closers: [],
     // punctuators: [],
+    initializeState, finalizeState,
   });
 
   const IBISStatementGoal = (goals[(symbols.IBISStatementGoalSymbol = defineSymbol('IBISStatementGoal'))] = {

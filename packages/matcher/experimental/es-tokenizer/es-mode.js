@@ -16,14 +16,6 @@ export const mode = TokenMatcher.createMode(matcher, {
     parser.unregister('ecmascript');
   },
 
-  initializeState: state => {
-    state.USE_CONSTRUCTS = mode.USE_CONSTRUCTS === true;
-    initializeState(state);
-  },
-
-  finalizeState: state => {
-    finalizeState(state);
-  },
 
   createToken: (log => (match, state) => {
     // let construct;

@@ -235,7 +235,7 @@ class TokenMatcher extends Matcher {
   }
 
   /**
-   * @param {Matcher} matcher
+   * @param {Matcher & {goal?: object}} matcher
    * @param {any} [options]
    */
   static createMode(matcher, options) {
@@ -251,10 +251,11 @@ class TokenMatcher extends Matcher {
         aliases: mode.aliases,
         preregister: mode.preregister,
         createToken: tokenizer.createToken = tokenizer.createToken,
-        initializeState: tokenizer.initializeState,
-        finalizeState: tokenizer.finalizeState,
         ...mode.overrides
       } = options);
+
+    matcher.goal &&
+      ({initializeState: tokenizer.initializeState, finalizeState: tokenizer.finalizeState} = matcher.goal);
 
     Object.freeze(tokenizer);
 

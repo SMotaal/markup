@@ -1,5 +1,5 @@
 ﻿//@ts-check
-import {generateDefinitions, defineSymbol, Keywords} from '../common/helpers.js';
+import {initializeState, finalizeState, generateDefinitions, defineSymbol, Keywords} from '../common/helpers.js';
 
 // TODO: Refactor from es-definitions and json-definitions
 
@@ -25,6 +25,8 @@ export const {JessieGoal, JessieStringGoal, JessieCommentGoal, JessieDefinitions
     openers: ['{', '[', '"', "'", '//', '/*'],
     closers: ['}', ']'],
     punctuators: [':', ','],
+    initializeState,
+    finalizeState,
   });
 
   const JessieStringGoal = (goals[(symbols.JessieStringGoal = defineSymbol('JessieStringGoal'))] = {

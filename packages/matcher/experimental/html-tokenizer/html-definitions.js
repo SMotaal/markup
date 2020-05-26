@@ -1,5 +1,5 @@
 //@ts-check
-import {generateDefinitions, defineSymbol, NullGoal} from '../common/helpers.js';
+import {initializeState, finalizeState, generateDefinitions, defineSymbol, NullGoal} from '../common/helpers.js';
 
 export const HTMLGoal = (() => {
   HTML: {
@@ -16,6 +16,8 @@ export const HTMLGoal = (() => {
       punctuation: {
         '<!--': 'comment',
       },
+      initializeState,
+      finalizeState,
     });
 
     HTMLTags: {
