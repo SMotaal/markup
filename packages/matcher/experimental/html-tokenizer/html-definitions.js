@@ -15,6 +15,7 @@ export const HTMLGoal = (() => {
       span: /(?:[^<\\]+?(?=\\[^]|<)|\\[^])*?(?=<\?|<!--|<[A-Za-z]|<\/[A-Za-z]|<![A-Za-z]|<!\[[A-Za-z]|$)/g,
       punctuation: {
         '<!--': 'comment',
+        '<?': 'comment',
       },
       initializeState,
       finalizeState,
@@ -81,9 +82,11 @@ export const HTMLGoal = (() => {
         goals[symbols.HTMLProcessingInstructionGoal] = {
           ...NullGoal,
           type: 'comment',
-          closer: '?>',
-          span: /[^]*?(?=\?>|($))/g,
+          flatten: true,
+          fold: true,
+          spans: {'<?': /[^]*?(?=\?>|($))/g},
         };
+
         groups['<?'] = {
           opener: '<?',
           closer: '?>',
@@ -94,15 +97,13 @@ export const HTMLGoal = (() => {
 
       HTMLComment: {
         symbols.HTMLCommentGoal = defineSymbol('HTMLCommentGoal');
+        // SEE: https://html.spec.whatwg.org/dev/syntax.html#comments
         goals[symbols.HTMLCommentGoal] = {
           ...NullGoal,
           type: 'comment',
           flatten: true,
           fold: true,
-          spans: {
-            // SEE: https://html.spec.whatwg.org/dev/syntax.html#comments
-            '<!--': /[^]*?(?=-->|($))/g,
-          },
+          spans: {'<!--': /[^]*?(?=-->|($))/g},
         };
         groups['<!--'] = {
           opener: '<!--',
