@@ -15,7 +15,6 @@ export const mode = TokenMatcher.createMode(matcher, {
     parser.unregister('ecmascript');
   },
 
-
   createToken: (log => (match, state) => {
     // let construct;
     // const lastAtom = state.lastAtom;
