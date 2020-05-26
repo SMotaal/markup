@@ -119,6 +119,7 @@ export class Matcher extends RegExp {
 
         return entity.source;
       } else {
+        //@ts-ignore
         entities.push(((entity != null || undefined) && entity) || undefined);
       }
     });
@@ -270,8 +271,8 @@ export class Matcher extends RegExp {
    * @template {Matcher} T
    * @template {{}} U
    * @param {T} matcher
-   * @param {TokenizerState<T, U>} [state]
-   * @returns {TokenMatcher<U>}
+   * @param {TokenMatcherState} [state]
+   * @returns {TokenMatcher}
    */
   static create(matcher, state) {
     /** @type {typeof Matcher} */

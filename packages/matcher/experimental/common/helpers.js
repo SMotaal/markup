@@ -4,7 +4,7 @@ import {RegExpRange} from '../../lib/range.js';
 import {SymbolMap} from '../../helpers/symbol-map.js';
 
 /// Helpers
-/** @typedef {<T extends {}>(options?: T) => MatcherPatternFactory} PatternFactory */
+/** @typedef {<T extends {}>(options?: T) => TokenMatcher.PatternFactory} PatternFactory */
 
 /**
  * @template {symbol} G
@@ -34,8 +34,9 @@ export const initializeState = state => {
     faults: 0,
     parentContext: undefined,
     goal: state.matcher.goal,
-    //@ts-ignore
+    // @ts-ignore
     group: (state.groups.root = Object.freeze({})),
+    //@ts-ignore
     state,
     ...(state.USE_CONSTRUCTS === true ? {currentConstruct: new Construct()} : {}),
   });
@@ -124,6 +125,7 @@ export const generateDefinitions = ({groups = {}, goals = {}, identities = {}, s
   const punctuators = Object.create(null);
 
   for (const opener of Object.getOwnPropertyNames(groups)) {
+    // @ts-ignore
     const {[opener]: group} = groups;
     'goal' in group && (group.goal = goals[group.goal] || FaultGoal);
     'parentGoal' in group && (group.parentGoal = goals[group.parentGoal] || FaultGoal);
@@ -206,7 +208,7 @@ export const generateDefinitions = ({groups = {}, goals = {}, identities = {}, s
    * @template {{}} T
    * @param {Goal} goal
    * @param {string} text
-   * @param {type} type
+   * @param {string} type
    * @param {T} properties
    */
   function GoalSpecificTokenRecord(goal, text, type, properties) {

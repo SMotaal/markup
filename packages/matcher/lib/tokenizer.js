@@ -10,7 +10,7 @@ class Tokenizer {
     this.initializeState = /** @type {<V, S extends TokenizerState>(state: S) => V & S} */ (undefined);
   }
 
-  /** @type {<M extends MatcherArray, T extends {}, S extends TokenizerState>(init: MatcherMatch<M>, state?: S) => Token<T>} */
+  /** @type {<M extends MatcherArray, T extends {}, S extends TokenizerState>(init: MatcherMatch<M>, state?: S) => TokenMatcherToken} */
   createToken({0: text, identity, capture, index}, state) {
     // @ts-ignore
     return {

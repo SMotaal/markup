@@ -130,6 +130,6 @@ export class TokenizerState extends MatcherState {
   }
 }
 
-TokenizerState.prototype.previousToken = TokenizerState.prototype.nextToken = /** @type {Token} */ (undefined);
+TokenizerState.prototype.previousToken = TokenizerState.prototype.nextToken = /** @type {TokenMatcherToken} */ (undefined);
 
 TokenizerState.defaults = {source: undefined, initialize: undefined, finalize: undefined};

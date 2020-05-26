@@ -391,6 +391,12 @@ TokenMatcher.fallthroughEntity = (text, capture, match, state) => {
   // match.identity === 'fault' && (match.flatten = false);
 };
 
+/**
+ * @template {TokenMatcherState} T
+ * @param {TokenMatcherMatch} match
+ * @param {T} state
+ * @returns {TokenMatcherToken}
+ */
 TokenMatcher.createToken = (match, state) => {
   let currentGoal;
   // let goalName;
