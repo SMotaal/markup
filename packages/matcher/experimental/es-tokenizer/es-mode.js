@@ -6,7 +6,7 @@ import {TokenMatcher} from '../../lib/token-matcher.js';
 
 //@ts-ignore
 export const mode = TokenMatcher.createMode(matcher, {
-  USE_CONSTRUCTS: false,
+  USE_CONSTRUCTS: true,
 
   syntax: 'ecmascript',
   aliases: ['es', 'js', 'javascript'],
