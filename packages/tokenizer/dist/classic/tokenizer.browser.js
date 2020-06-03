@@ -2,75 +2,135 @@ const markup = (function (exports) {
   'use strict';
 
   // @ts-check
+  const applyEntitiesMixin = (() => {
+    const entities = Object.freeze({
+      extractCodePoint: Object.freeze(
+        /** @type {(source: any, index: number) => number} */
+        (Function.call.bind(''.charCodeAt)),
+      ),
+      replaceEntities: Object.freeze(
+        /** @type {(source: any, replacer: string|Function) => string} */
+        (RegExp.prototype[Symbol.replace].bind(/[\u00A0-\u9999<>\&]/g)),
+      ),
+      encodeEntities: Object.freeze(
+        /** @type {(source: any) => string} */
+        source => entities.replaceEntities(source, entities.encodeEntity),
+      ),
+      encodeEntity: Object.freeze(
+        /** @type {(source: any) => string} */
+        source => `&#${entities.extractCodePoint(source, 0)};`,
+      ),
+    });
+
+    return Object.freeze(
+      /**
+       * @template {{}} T
+       * @param {T} Pseudom
+       * @return {T & typeof entities}
+       */
+      Pseudom => Object.defineProperties(Pseudom, Object.getOwnPropertyDescriptors(entities)),
+    );
+  })();
+
+  // @ts-check
+  const applyEndowmentsMixin = (() => {
+    const endowments = Object.freeze({
+      fixClassInheritance: Object.freeze(
+        /**
+         * @template T, U
+         * @param {(new () => T & U)} Class
+         * @param {(new () => U) | null | undefined} Super
+         * @param {Pick<typeof globalThis, 'Object'>} endowments
+         */
+        (Class, Super, endowments = globalThis) => {
+          endowments.Object.setPrototypeOf(
+            Class.prototype,
+            Super === null ? null : Super ? Super.prototype : endowments.Object.prototype,
+          );
+
+          endowments.Object.setPrototypeOf(Class, Super == null ? endowments.Object : Super);
+
+          return Class;
+        },
+      ),
+      checkPrimordialEndowments: Object.freeze(
+        /**
+         * @template {Pick<typeof globalThis, 'Object' | U>} T
+         * @template {keyof typeof globalThis} U
+         * @param {{[k in keyof T]?: T[k] & {__proto__: object}}} endowments
+         * @param {U[]} primordials
+         */
+        (endowments, ...primordials) => {
+          for (const endowment of `Object,${primordials}`.replace(/^,Object|(,\w+)(?=.*?\1)/g, '').split(',')) {
+            if (
+              endowment === 'Object'
+                ? !(
+                    typeof endowments[endowment] === 'function' &&
+                    typeof endowments[endowment].prototype === 'object' &&
+                    endowments[endowment].prototype !== null &&
+                    endowments[endowment].__proto__ &&
+                    endowments[endowment].__proto__.__proto__ === endowments.Object.prototype
+                  )
+                : endowment in endowments &&
+                  !(
+                    typeof endowments[endowment] === 'function' &&
+                    endowments[endowment].prototype != null &&
+                    // typeof endowments[endowment].prototype === 'object' &&
+                    endowments[endowment].__proto__ === endowments.Object.__proto__ &&
+                    endowments[endowment].prototype.__proto__ === endowments.Object.prototype
+                  )
+            )
+              throw `Error: createPseudoDOM invoked with an invalid ‹${endowment}› endowment.`;
+          }
+        },
+      ),
+    });
+
+    return Object.freeze(
+      /**
+       * @template {{}} T
+       * @param {T} Pseudom
+       * @return {T & typeof endowments}
+       */
+      Pseudom => Object.defineProperties(Pseudom, Object.getOwnPropertyDescriptors(endowments)),
+    );
+  })();
+
+  // @ts-check
+  const applyQueriesMixin = (() => {
+    const queries = Object.freeze({
+      querySelector: Object.freeze(
+        /**
+         * @param {Element | DocumentFragment} scope
+         * @param {string} selector
+         */
+        (scope, selector) => {},
+      ),
+      querySelectorAll: Object.freeze(
+        /**
+         * @param {Element | DocumentFragment} scope
+         * @param {string} selector
+         */
+        (scope, selector) => {},
+      ),
+    });
+
+    return Object.freeze(
+      /**
+       * @template {{}} T
+       * @param {T} Pseudom
+       * @return {T & typeof queries}
+       */
+      Pseudom => Object.defineProperties(Pseudom, Object.getOwnPropertyDescriptors(queries)),
+    );
+  })();
+
+  // @ts-check
 
   const {
     Pseudom,
     Pseudom: {encodeEntity, encodeEntities},
-  } = (() => {
-    class Pseudom {
-      /** @param {*} source*/
-      static encodeEntities(source) {
-        return /[\u00A0-\u9999<>\&]/g[Symbol.replace](source, Pseudom.encodeEntity);
-      }
-
-      /** @param {*} source*/
-      static encodeEntity(source) {
-        return `&#${Pseudom.extractCodePoint(source, 0)};`;
-      }
-    }
-
-    Object.freeze(Pseudom.encodeEntities);
-    Object.freeze(Pseudom.encodeEntity);
-
-    Pseudom.extractCodePoint = Object.freeze(
-      /** @type {(source: any, index: number) => number} */ (Function.call.bind(''.charCodeAt)),
-    );
-
-    /**
-     * @template T, U
-     * @param {(new () => T & U)} Class
-     * @param {(new () => U) | null | undefined} Super
-     * @param {Pick<typeof globalThis, 'Object'>} endowments
-     */
-    Pseudom.fixClassInheritance = (Class, Super, endowments = globalThis) => {
-      endowments.Object.setPrototypeOf(
-        Class.prototype,
-        Super === null ? null : Super ? Super.prototype : endowments.Object.prototype,
-      );
-
-      endowments.Object.setPrototypeOf(Class, Super == null ? endowments.Object : Super);
-
-      return Class;
-    };
-
-    Pseudom.checkPrimordialEndowments = Object.freeze((endowments, ...primordials) => {
-      for (const endowment of `Object,${primordials}`.replace(/^,Object|(,\w+)(?=.*?\1)/g, '').split(',')) {
-        if (
-          endowment === 'Object'
-            ? !(
-                typeof endowments[endowment] === 'function' &&
-                typeof endowments[endowment].prototype === 'object' &&
-                endowments[endowment].prototype !== null &&
-                endowments[endowment].__proto__ &&
-                endowments[endowment].__proto__.__proto__ === endowments.Object.prototype
-              )
-            : endowment in endowments &&
-              !(
-                typeof endowments[endowment] === 'function' &&
-                endowments[endowment].prototype != null &&
-                // typeof endowments[endowment].prototype === 'object' &&
-                endowments[endowment].__proto__ === endowments.Object.__proto__ &&
-                endowments[endowment].prototype.__proto__ === endowments.Object.prototype
-              )
-        )
-          throw `Error: createPseudoDOM invoked with an invalid ‹${endowment}› endowment.`;
-      }
-    });
-
-    Object.freeze(Pseudom);
-
-    return {Pseudom};
-  })();
+  } = {Pseudom: Object.freeze(applyQueriesMixin(applyEntitiesMixin(applyEndowmentsMixin(class Pseudom {}))))};
 
   /// Helpers
   const InspectSymbol = Symbol.for('nodejs.util.inspect.custom');
@@ -1772,7 +1832,7 @@ const markup = (function (exports) {
 
     endowments = undefined;
 
-    return native.Object.freeze(native.Object.setPrototypeOf(native, null));
+    return native.Object.freeze(/** @type {typeof native} */ (native.Object.setPrototypeOf(native, null)));
   };
 
   /** @param {Pick<typeof globalThis, 'Object'|'Set'|'String'|'Symbol'>} endowments */
@@ -1847,51 +1907,252 @@ const markup = (function (exports) {
 
     pseudo.Object.freeze(pseudo.Object.freeze(pseudo.DOMTokenList).prototype);
 
-    pseudo.DOMNodeList = class DOMNodeList extends pseudo.Set {};
+    pseudo.NodeList = class NodeList extends pseudo.Set {};
 
-    pseudo.Object.freeze(pseudo.Object.freeze(pseudo.DOMNodeList).prototype);
+    pseudo.Object.freeze(pseudo.Object.freeze(pseudo.NodeList).prototype);
 
     pseudo.Node = class Node extends pseudo.Object {
-      get children() {
-        return pseudo.Object.defineProperty(this, 'children', {value: new pseudo.DOMNodeList()}).children;
+      get childNodes() {
+        return pseudo.Object.defineProperty(this, 'childNodes', {value: new pseudo.NodeList()}).childNodes;
       }
 
       get childElementCount() {
-        return (this.hasOwnProperty('children') && this.children.size) || 0;
+        return (this.hasOwnProperty('childNodes') && this.childNodes.size) || 0;
       }
 
       get textContent() {
-        return (this.hasOwnProperty('children') && this.children.size && [...this.children].join('')) || '';
+        return (this.hasOwnProperty('childNodes') && this.childNodes.size && [...this.childNodes].join('')) || '';
       }
 
       set textContent(text) {
-        this.hasOwnProperty('children') && this.children.size && this.children.clear();
-        text && this.children.add(new pseudo.Text(text));
+        this.hasOwnProperty('childNodes') && this.childNodes.size && this.childNodes.clear();
+        text && this.appendChild(new pseudo.Text(text));
       }
 
-      appendChild(element) {
-        return element && this.children.add(element), element;
+      insertBefore(node, nextNode) {
+        if (!this.childNodes.has(nextNode))
+          throw ReferenceError(`Failed to execute 'insertBefore' on 'Node': argument 2 is not a child.`);
+        if (!(node !== null && typeof node === 'object' && node instanceof Node))
+          throw TypeError(`Failed to execute 'insertBefore' on 'Node': argument 1 is not a Node.`);
+        if (!(nextNode !== null && typeof nextNode === 'object' && nextNode instanceof Node))
+          throw TypeError(`Failed to execute 'insertBefore' on 'Node': argument 2 is not a Node.`);
+        node.parentNode == null || node.parentNode.removeChild(node);
+        pseudo.Object.defineProperties(node, {
+          parentNode: {value: this, writable: false, configurable: true},
+          previousSibling: {value: nextNode.previousSibling || null, writable: false, configurable: true},
+          nextSibling: {value: nextNode, writable: false, configurable: true},
+        });
+        !nextNode.previousSibling
+          ? pseudo.Object.defineProperty(this, 'firstNode', {value: node, writable: false, configurable: true})
+          : pseudo.Object.defineProperty(nextNode.previousSibling, 'nextSibling', {
+              value: node,
+              writable: false,
+              configurable: true,
+            });
+        pseudo.Object.defineProperty(nextNode, 'previousSibling', {value: node, writable: false, configurable: true});
+        const childNodes = [...this.childNodes];
+        childNodes.splice(childNodes.indexOf(nextNode), 0, node);
+        this.childNodes.clear();
+        this.childNodes.add(...childNodes);
+        return node;
       }
 
-      removeChild(element) {
-        element && this.hasOwnProperty('children') && this.children.size && this.children.delete(element);
-        return element;
+      appendChild(node) {
+        if (!(node !== null && typeof node === 'object' && node instanceof Node))
+          throw TypeError(`Failed to execute 'appendChild' on 'Node': 1 argument required, but only 0 present.`);
+        node.parentNode == null || node.parentNode.removeChild(node);
+        pseudo.Object.defineProperties(node, {
+          parentNode: {value: this, writable: false, configurable: true},
+          previousSibling: {value: this.lastChild || null, writable: false, configurable: true},
+          nextSibling: {value: null, writable: false, configurable: true},
+        });
+        !node.previousSibling ||
+          pseudo.Object.defineProperties(node.previousSibling, {
+            nextSibling: {value: node, writable: false, configurable: true},
+          });
+        pseudo.Object.defineProperties(this, {
+          firstChild: {value: this.firstChild || node, writable: false, configurable: true},
+          lastChild: {value: node, writable: false, configurable: true},
+        });
+        this.childNodes.add(node);
+        return node;
       }
 
-      remove() {
-        //   if (elements.length && this.hasOwnProperty('children') && this.children.size)
-        //     for (const element of elements) element && this.children.delete(element);
-        throw `Unsupported: Compositional nodes cannot be directly removed!`;
+      removeChild(node) {
+        if (!(node && node.parentNode === this))
+          throw TypeError(`Failed to execute 'removeChild' on 'Node': 1 argument required, but only 0 present.`);
+
+        node.previousSibling
+          ? pseudo.Object.defineProperty(node.previousSibling, 'nextSibling', {
+              value: node.nextSibling || null,
+              writable: false,
+              configurable: true,
+            })
+          : pseudo.Object.defineProperty(this, 'firstChild', {
+              value: null,
+              writable: false,
+              configurable: true,
+            });
+        node.nextSibling
+          ? pseudo.Object.defineProperty(node.nextSibling, 'previousSibling', {
+              value: node.previousSibling || null,
+              writable: false,
+              configurable: true,
+            })
+          : pseudo.Object.defineProperty(this, 'lastChild', {
+              value: null,
+              writable: false,
+              configurable: true,
+            });
+        pseudo.Object.defineProperties(node, {
+          parentNode: {value: null, writable: false, configurable: true},
+          previousSibling: {value: null, writable: false, configurable: true},
+          nextSibling: {value: null, writable: false, configurable: true},
+        });
+        this.childNodes.delete(node);
+        return node;
       }
     };
 
+    pseudo.Node.prototype.firstChild = /** @type {Node|null} */ (null);
+    pseudo.Node.prototype.lastChild = /** @type {Node|null} */ (null);
+    pseudo.Node.prototype.previousSibling = /** @type {Node|null} */ (null);
+    pseudo.Node.prototype.nextSibling = /** @type {Node|null} */ (null);
+    pseudo.Node.prototype.parentNode = /** @type {Node|null} */ (null);
+    pseudo.Node.prototype.parentElement = /** @type {Node|null} */ (null);
     pseudo.Object.freeze(pseudo.Object.freeze(pseudo.Node).prototype);
+
+    pseudo.HTMLCollection = class HTMLCollection extends pseudo.Set {
+      get length() {
+        return this.size;
+      }
+    };
+
+    pseudo.Object.freeze(pseudo.Object.freeze(pseudo.HTMLCollection).prototype);
+
+    pseudo.ParentNode = class ParentNode extends pseudo.Node {
+      get children() {
+        return pseudo.Object.defineProperty(this, 'children', {value: new pseudo.HTMLCollection()}).children;
+      }
+
+      get childElementCount() {
+        return ('children' in this && this.children.length) || 0;
+      }
+
+      append(...nodes) {
+        if (nodes.length)
+          for (const node of nodes)
+            node === '' || this.appendChild(typeof node === 'object' ? node : new pseudo.Text(node));
+      }
+
+      prepend(...nodes) {
+        if (nodes.length)
+          for (const node of nodes)
+            node === '' ||
+              (this.childElementCount > 0
+                ? this.insertBefore(typeof node === 'object' ? node : new pseudo.Text(node), this.firstChild)
+                : this.appendChild(typeof node === 'object' ? node : new pseudo.Text(node)));
+      }
+
+      insertBefore(node, nextNode) {
+        super.insertBefore(node, nextNode);
+        if (node instanceof pseudo.Element) {
+          pseudo.Object.defineProperties(node, {
+            parentElement: {value: this instanceof pseudo.Element ? this : null, writable: false, configurable: true},
+            previousElementSibling: {value: nextNode.previousElementSibling || null, writable: false, configurable: true},
+            nextElementSibling: {value: nextNode, writable: false, configurable: true},
+          });
+          !nextNode.previousElementSibling
+            ? pseudo.Object.defineProperty(this, 'firstElementChild', {value: node, writable: false, configurable: true})
+            : pseudo.Object.defineProperty(nextNode.previousElementSibling, 'nextElementSibling', {
+                value: node,
+                writable: false,
+                configurable: true,
+              });
+          pseudo.Object.defineProperty(nextNode, 'previousElementSibling', {
+            value: node,
+            writable: false,
+            configurable: true,
+          });
+          const children = [...this.children];
+          children.splice(children.indexOf(nextNode), 0, node);
+          this.children.clear();
+          this.children.add(...children);
+        }
+        return node;
+      }
+
+      appendChild(node) {
+        super.appendChild(node);
+        if (node instanceof pseudo.Element) {
+          pseudo.Object.defineProperties(node, {
+            parentElement: {value: this instanceof pseudo.Element ? this : null, writable: false, configurable: true},
+            previousElementSibling: {value: this.lastElementChild || null, writable: false, configurable: true},
+            nextElementSibling: {value: null, writable: false, configurable: true},
+          });
+          !node.previousElementSibling ||
+            pseudo.Object.defineProperty(node.previousElementSibling, 'previousElementSibling', {
+              value: node,
+              writable: false,
+              configurable: true,
+            });
+          pseudo.Object.defineProperties(this, {
+            firstElementChild: {value: this.firstElementChild || node, writable: false, configurable: true},
+            lastElementChild: {value: node, writable: false, configurable: true},
+          });
+          this.children.add(node);
+        }
+        return node;
+      }
+
+      removeChild(node) {
+        super.removeChild(node);
+        if (node instanceof pseudo.Element) {
+          node.previousElementSibling
+            ? pseudo.Object.defineProperty(node.previousElementSibling, 'nextElementSibling', {
+                value: node.nextElementSibling || null,
+                writable: false,
+                configurable: true,
+              })
+            : pseudo.Object.defineProperty(this, 'firstElementChild', {
+                value: null,
+                writable: false,
+                configurable: true,
+              });
+          node.nextElementSibling
+            ? pseudo.Object.defineProperty(node.nextElementSibling, 'previousElementSibling', {
+                value: node.previousElementSibling || null,
+                writable: false,
+                configurable: true,
+              })
+            : pseudo.Object.defineProperty(this, 'lastElementChild', {
+                value: null,
+                writable: false,
+                configurable: true,
+              });
+          pseudo.Object.defineProperties(node, {
+            parentElement: {value: null, writable: false, configurable: true},
+            previousElementSibling: {value: null, writable: false, configurable: true},
+            nextElementSibling: {value: null, writable: false, configurable: true},
+          });
+          this.children.delete(node);
+        }
+        return node;
+      }
+    };
+
+    pseudo.ParentNode.prototype.firstElementChild = /** @type {Element|null} */ (null);
+    pseudo.ParentNode.prototype.lastElementChild = /** @type {Element|null} */ (null);
+    pseudo.Object.freeze(pseudo.Object.freeze(pseudo.ParentNode).prototype);
 
     pseudo.Element = class Element extends pseudo.Node {
       get style() {
         if (this && this !== this.constructor.prototype)
-          return pseudo.Object.defineProperty(this, 'style', {value: new pseudo.CSSStyleDeclaration(), writable: false})
-            .style;
+          return pseudo.Object.defineProperty(this, 'style', {
+            value: new pseudo.CSSStyleDeclaration(),
+            writable: false,
+            configurable: true,
+          }).style;
         throw Error(`Invalid invocation of Element.style getter/setter.`);
       }
 
@@ -1901,8 +2162,11 @@ const markup = (function (exports) {
 
       get dataset() {
         if (this && this !== this.constructor.prototype)
-          return pseudo.Object.defineProperty(this, 'dataset', {value: new pseudo.DOMStringMap(), writable: false})
-            .dataset;
+          return pseudo.Object.defineProperty(this, 'dataset', {
+            value: new pseudo.DOMStringMap(),
+            writable: false,
+            configurable: true,
+          }).dataset;
         throw Error(`Invalid invocation of Element.dataset getter/setter.`);
       }
 
@@ -1940,12 +2204,6 @@ const markup = (function (exports) {
         return `<${openTag.join(' ')}>${innerHTML || ''}</${tag}>`;
       }
 
-      append(...elements) {
-        if (elements.length)
-          for (const element of elements)
-            element === '' || this.children.add(typeof element === 'object' ? element : new pseudo.Text(element));
-      }
-
       toString() {
         return this.outerHTML;
       }
@@ -1953,8 +2211,26 @@ const markup = (function (exports) {
       toJSON() {
         return this.toString();
       }
+
+      remove() {
+        this.parentElement && this.parentElement.removeChild(this);
+      }
     };
 
+    pseudo.Object.defineProperties(pseudo.Element.prototype, {
+      children: pseudo.Object.getOwnPropertyDescriptor(pseudo.ParentNode.prototype, 'children'),
+      childElementCount: pseudo.Object.getOwnPropertyDescriptor(pseudo.ParentNode.prototype, 'childElementCount'),
+      append: pseudo.Object.getOwnPropertyDescriptor(pseudo.ParentNode.prototype, 'append'),
+      prepend: pseudo.Object.getOwnPropertyDescriptor(pseudo.ParentNode.prototype, 'prepend'),
+      appendChild: pseudo.Object.getOwnPropertyDescriptor(pseudo.ParentNode.prototype, 'appendChild'),
+      removeChild: pseudo.Object.getOwnPropertyDescriptor(pseudo.ParentNode.prototype, 'removeChild'),
+      insertBefore: pseudo.Object.getOwnPropertyDescriptor(pseudo.ParentNode.prototype, 'insertBefore'),
+      firstElementChild: pseudo.Object.getOwnPropertyDescriptor(pseudo.ParentNode.prototype, 'firstElementChild'),
+      lastElementChild: pseudo.Object.getOwnPropertyDescriptor(pseudo.ParentNode.prototype, 'lastElementChild'),
+    });
+
+    pseudo.Element.prototype.previousElementSibling = /** @type {Element|null} */ (null);
+    pseudo.Element.prototype.nextElementSibling = /** @type {Element|null} */ (null);
     pseudo.Object.freeze(pseudo.Object.freeze(pseudo.Element).prototype);
 
     pseudo.DocumentFragment = class DocumentFragment extends pseudo.Node {
@@ -1963,23 +2239,45 @@ const markup = (function (exports) {
       }
 
       toJSON() {
-        return (this.childElementCount && [...this.children]) || [];
+        return (this.childElementCount && [...this.childNodes]) || [];
       }
 
       [pseudo.Symbol.iterator]() {
-        return ((this.childElementCount && this.children) || '')[pseudo.Symbol.iterator]();
+        return ((this.childElementCount && this.childNodes) || '')[pseudo.Symbol.iterator]();
       }
     };
 
-    pseudo.DocumentFragment.prototype.append = pseudo.Element.prototype.append;
+    pseudo.Object.defineProperties(pseudo.DocumentFragment.prototype, {
+      children: pseudo.Object.getOwnPropertyDescriptor(pseudo.ParentNode.prototype, 'children'),
+      childElementCount: pseudo.Object.getOwnPropertyDescriptor(pseudo.ParentNode.prototype, 'childElementCount'),
+      append: pseudo.Object.getOwnPropertyDescriptor(pseudo.ParentNode.prototype, 'append'),
+      prepend: pseudo.Object.getOwnPropertyDescriptor(pseudo.ParentNode.prototype, 'prepend'),
+      appendChild: pseudo.Object.getOwnPropertyDescriptor(pseudo.ParentNode.prototype, 'appendChild'),
+      removeChild: pseudo.Object.getOwnPropertyDescriptor(pseudo.ParentNode.prototype, 'removeChild'),
+      insertBefore: pseudo.Object.getOwnPropertyDescriptor(pseudo.ParentNode.prototype, 'insertBefore'),
+      firstElementChild: pseudo.Object.getOwnPropertyDescriptor(pseudo.ParentNode.prototype, 'firstElementChild'),
+      lastElementChild: pseudo.Object.getOwnPropertyDescriptor(pseudo.ParentNode.prototype, 'lastElementChild'),
+    });
+
     pseudo.Object.freeze(pseudo.Object.freeze(pseudo.DocumentFragment).prototype);
 
     /** @type {typeof globalThis.Text} */
-    pseudo.Text = class Text extends pseudo.String {
+    pseudo.Text = class Text extends pseudo.Node {
+      constructor(textContent) {
+        pseudo.Object.defineProperty(super(), 'textContent', {
+          value: `${textContent}`,
+          writable: false,
+          configurable: true,
+        });
+      }
       toString() {
-        return Pseudom.encodeEntities(super.toString());
+        return Pseudom.encodeEntities(this.textContent.toString());
       }
     };
+
+    pseudo.Object.defineProperties(pseudo.Text.prototype, {
+      textContent: {value: '', writable: false, configurable: true},
+    });
 
     pseudo.Object.freeze(pseudo.Object.freeze(pseudo.Text).prototype);
 
@@ -2282,7 +2580,7 @@ const markup = (function (exports) {
         : () => (renderedLine = renderers.line('', 'no-reflow'));
       const emit = (renderer, text, type, hint) => {
         text == null && (text = '');
-        (renderedLine || createLine()).appendChild((renderedLine.lastChild = renderer(text, hint || type)));
+        (renderedLine || createLine()).appendChild(renderer(text, hint || type));
         if (type === 'inset') {
           renderedLine.style['--markup-line-inset-spaces'] =
             text.length - (renderedLine.style['--markup-line-inset-tabs'] = text.length - text.replace(Tabs, '').length);
@@ -2345,10 +2643,9 @@ const markup = (function (exports) {
      * @param {typeof MarkupRenderer['dom']} [dom]
      */
     static factory(tagName, properties, options, dom) {
-      let defaults =
-        /** @type {MarkupRenderer['options']} */ ((this &&
-          Object.prototype.isPrototypeOf.call(MarkupRenderer, this) &&
-          this.defaults) ||
+      let defaults = /** @type {MarkupRenderer['options']} */ ((this &&
+        Object.prototype.isPrototypeOf.call(MarkupRenderer, this) &&
+        this.defaults) ||
         MarkupRenderer.defaults);
       let markupClass = defaults.MARKUP_CLASS;
       let markupHint = '';
@@ -2363,8 +2660,9 @@ const markup = (function (exports) {
         ...properties,
       }));
 
-      properties.className = `${markupHint ? `${markupClass} ${markupHint}` : markupClass} ${options.MARKUP_CLASS ||
-      defaults.MARKUP_CLASS}`;
+      properties.className = `${markupHint ? `${markupClass} ${markupHint}` : markupClass} ${
+      options.MARKUP_CLASS || defaults.MARKUP_CLASS
+    }`;
 
       return new (this.Factory || MarkupRenderer.Factory)({tagName, options, markupHint, markupClass, properties, dom})
         .render;
