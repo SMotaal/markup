@@ -16,7 +16,8 @@
     "./": "./pseudom.js",
     "./pseudo": "./pseudo.js",
     "./native": "./native.js",
-    "./helpers": "./helpers.js"
+    "./helpers": "./helpers.js",
+    "./tests": "./tests"
   },
   "publishConfig": {
     "access": "public"

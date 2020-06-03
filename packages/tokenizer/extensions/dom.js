@@ -231,7 +231,7 @@ class MarkupRenderer {
       : () => (renderedLine = renderers.line('', 'no-reflow'));
     const emit = (renderer, text, type, hint) => {
       text == null && (text = '');
-      (renderedLine || createLine()).appendChild((renderedLine.lastChild = renderer(text, hint || type)));
+      (renderedLine || createLine()).appendChild(renderer(text, hint || type));
       if (type === 'inset') {
         renderedLine.style['--markup-line-inset-spaces'] =
           text.length - (renderedLine.style['--markup-line-inset-tabs'] = text.length - text.replace(Tabs, '').length);
@@ -294,10 +294,9 @@ class MarkupRenderer {
    * @param {typeof MarkupRenderer['dom']} [dom]
    */
   static factory(tagName, properties, options, dom) {
-    let defaults =
-      /** @type {MarkupRenderer['options']} */ ((this &&
-        Object.prototype.isPrototypeOf.call(MarkupRenderer, this) &&
-        this.defaults) ||
+    let defaults = /** @type {MarkupRenderer['options']} */ ((this &&
+      Object.prototype.isPrototypeOf.call(MarkupRenderer, this) &&
+      this.defaults) ||
       MarkupRenderer.defaults);
     let markupClass = defaults.MARKUP_CLASS;
     let markupHint = '';
@@ -312,8 +311,9 @@ class MarkupRenderer {
       ...properties,
     }));
 
-    properties.className = `${markupHint ? `${markupClass} ${markupHint}` : markupClass} ${options.MARKUP_CLASS ||
-      defaults.MARKUP_CLASS}`;
+    properties.className = `${markupHint ? `${markupClass} ${markupHint}` : markupClass} ${
+      options.MARKUP_CLASS || defaults.MARKUP_CLASS
+    }`;
 
     return new (this.Factory || MarkupRenderer.Factory)({tagName, options, markupHint, markupClass, properties, dom})
       .render;

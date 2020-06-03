@@ -8,7 +8,7 @@
     "@smotaal/pseudom": "*"
   },
   "scripts": {
-    "start": "node --experimental-modules index.mjs"
+    "test": "node --experimental-modules index.mjs"
   },
   "files": [
     "index.mjs"

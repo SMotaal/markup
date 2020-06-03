@@ -64,5 +64,5 @@ export const createNativeDOM = (endowments = globalThis) => {
 
   endowments = undefined;
 
-  return native.Object.freeze(native.Object.setPrototypeOf(native, null));
+  return native.Object.freeze(/** @type {typeof native} */ (native.Object.setPrototypeOf(native, null)));
 };
