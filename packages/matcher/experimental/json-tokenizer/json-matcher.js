@@ -46,21 +46,21 @@ export const matcher = (JSONGrammar =>
     TokenMatcher.define(
       entity => TokenMatcher.sequence/* regexp */ `(
         \\u.{0,4}|\\.|"
-        ${entity(TokenMatcher.Quote)}
+        ${entity(TokenMatcher.quoteEntity)}
       )`,
     ),
   Opener: () =>
     TokenMatcher.define(
       entity => TokenMatcher.sequence/* regexp */ `(
         \{|\[
-        ${entity(TokenMatcher.Opener)}
+        ${entity(TokenMatcher.openerEntity)}
       )`,
     ),
   Closer: () =>
     TokenMatcher.define(
       entity => TokenMatcher.sequence/* regexp */ `(
         \}|\]
-        ${entity(TokenMatcher.Closer)}
+        ${entity(TokenMatcher.closerEntity)}
       )`,
     ),
   Operator: () =>

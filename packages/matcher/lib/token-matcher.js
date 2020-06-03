@@ -262,6 +262,24 @@ class TokenMatcher extends Matcher {
 
     return mode;
   }
+
+  /**
+   * @param {TokenMatcherPatternDefinitions} definitions
+   * @param {MatcherFlags} [flags]
+   * @param {PropertyDescriptorMap} [properties]
+   */
+  static define(definitions, flags, properties) {
+    if (typeof definitions === 'function') {
+      return super.define(definitions, flags, properties);
+    } else if (definitions != null) {
+      return super.define(
+        entity => TokenMatcher.join(...Object.keys(definitions).map(key => entity(definitions[key]()))),
+        flags,
+        properties,
+      );
+    }
+    throw TypeError(`TokenMatcher.define invoked with incompatible definitions.`);
+  }
 }
 
 /** @type {import('../experimental/common/types').Goal|symbol} */
@@ -274,7 +292,7 @@ TokenMatcher.prototype.goal = undefined;
  * @param {MatcherMatch & {format?: string, upperCase?: string, punctuator?: string}} match
  * @param {T} [state]
  */
-TokenMatcher.Opener = (text, capture, match, state) => {
+TokenMatcher.openerEntity = (text, capture, match, state) => {
   match.upperCase = text.toUpperCase();
   match.format = 'punctuator';
   TokenMatcher.capture(
@@ -301,7 +319,7 @@ TokenMatcher.Opener = (text, capture, match, state) => {
  * @param {MatcherMatch & {format?: string, upperCase?: string, punctuator?: string}} match
  * @param {T} [state]
  */
-TokenMatcher.Closer = (text, capture, match, state) => {
+TokenMatcher.closerEntity = (text, capture, match, state) => {
   match.upperCase = text.toUpperCase();
   match.format = 'punctuator';
   TokenMatcher.capture(
@@ -324,7 +342,7 @@ TokenMatcher.Closer = (text, capture, match, state) => {
  * @param {MatcherMatch & {format?: string, punctuator?: string, flatten?: boolean}} match
  * @param {T} [state]
  */
-TokenMatcher.Quote = (text, capture, match, state) => {
+TokenMatcher.quoteEntity = (text, capture, match, state) => {
   match.format = 'punctuator';
   TokenMatcher.capture(
     state.context.goal.punctuation[text] === 'quote' && TokenMatcher.canOpen(text, state)

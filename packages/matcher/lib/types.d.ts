@@ -68,6 +68,12 @@ type MatcherIterator<T extends RegExp = Matcher> = IterableIterator<
 
 // Tokenizing
 
+interface TokenMatcherPatternFactories {
+  [name: string]: <T = any>(options?: T) => MatcherPattern;
+}
+
+type TokenMatcherPatternDefinitions = MatcherPatternFactory | TokenMatcherPatternFactories;
+
 interface TokenMatcher extends Matcher {
   state: TokenMatcherState;
 }

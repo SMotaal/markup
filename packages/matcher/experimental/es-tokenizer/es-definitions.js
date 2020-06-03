@@ -94,7 +94,7 @@ export const {
     }),
 
     initializeState: state => {
-      state.USE_CONSTRUCTS = state.options.mode.USE_CONSTRUCTS;
+      state.USE_CONSTRUCTS = state && state.options && state.options.mode ? state.options.mode.USE_CONSTRUCTS : true;
       initializeState(state);
     },
 
