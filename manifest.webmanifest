@@ -1,7 +1,7 @@
 ﻿{
   "name": "smotaal.io/markup",
   "short_name": "℠/markup",
-  "theme_color": "#333f46",
+  "theme_color": "#262f36",
   "background_color": "#999999",
   "display": "minimal-ui",
   "start_url": "/markup/experimental/",

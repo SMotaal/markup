@@ -18,8 +18,8 @@
   --markup-light: var(--markup-light, #f9f9f9);
   --markup-light-fade: var(--markup-light-fade, #f9f9f933);
   --markup-dark-text: var(--markup-dark-text, #eee);
-  --markup-dark: var(--markup-dark, #333f46);
-  --markup-dark-fade: var(--markup-dark-fade, #333f4633);
+  --markup-dark: var(--markup-dark, #262f36);
+  --markup-dark-fade: var(--markup-dark-fade, #262f3633);
   --markup-color: var(--markup-color, currentColor);
   --markup-background: var(--markup-background, var(--markup-neutral-fade));
 }
@@ -113,7 +113,7 @@
   --light: var(--markup-light, #aaa);
   --medium: var(--markup-neutral, #999);
   --dim: var(--markup-neutral-fade, #9993);
-  --dark: var(--markup-dark, #333f46);
+  --dark: var(--markup-dark, #262f36);
   --border: transparent;
   --fill: var(--dim);
   --text: var(--medium);
